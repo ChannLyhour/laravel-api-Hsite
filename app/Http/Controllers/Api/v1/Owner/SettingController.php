@@ -21,7 +21,8 @@ class SettingController extends Controller
             return $dict;
         });
 
-        return response()->json($settingsDict);
+        return response()->json($settingsDict)
+            ->header('Cache-Control', 'public, max-age=60, s-maxage=300');
     }
 
     public function updateSettings(Request $request)
