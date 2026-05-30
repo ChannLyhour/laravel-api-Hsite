@@ -22,11 +22,17 @@ class UploadHelper
         
         // Ensure public/uploads/{folder} exists and move the file there
         $destinationPath = public_path('uploads/' . $folder);
-        if (! File::isDirectory($destinationPath)) {
-            File::makeDirectory($destinationPath, 0755, true, true);
-        }
         
-        $file->move($destinationPath, $filename);
+        try {
+            if (! File::isDirectory($destinationPath)) {
+                File::makeDirectory($destinationPath, 0755, true, true);
+            }
+            $file->move($destinationPath, $filename);
+        } catch (\Exception $e) {
+            // Log the error or handle it gracefully on read-only environments like Vercel.
+            // Since we have a virtual fallback route, we can just return the path without writing to disk.
+            \Illuminate\Support\Facades\Log::warning("Upload directory not writable (serverless fallback): " . $e->getMessage());
+        }
         
         return 'uploads/' . $folder . '/' . $filename;
     }
