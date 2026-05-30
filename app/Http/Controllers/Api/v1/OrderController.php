@@ -138,6 +138,16 @@ class OrderController extends Controller
         $query = Order::query();
         if ($user->role_id != 1) {
             $query->where('store_id', $store->id);
+        } else {
+            $createdBy = $request->query('created_by');
+            if ($createdBy !== null) {
+                $ownerStore = Store::where('created_by', $createdBy)->first();
+                if ($ownerStore) {
+                    $query->where('store_id', $ownerStore->id);
+                } else {
+                    $query->where('store_id', -1);
+                }
+            }
         }
         if ($status && strtolower($status) !== 'all') {
             $query->where('status', strtolower($status));

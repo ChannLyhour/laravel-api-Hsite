@@ -14,5 +14,6 @@ class Page extends Model
         'slug',
         'content',
         'status',
+        'created_by',
     ];
 }

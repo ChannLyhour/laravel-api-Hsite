@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Helpers\UploadHelper;
 
 class MenuItemController extends Controller
 {
@@ -19,18 +20,26 @@ class MenuItemController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable',
             'image_url' => 'nullable|string',
             'status' => 'required|in:available,unavailable',
             'category_id' => 'nullable|integer|exists:categories,id',
+            'created_by' => 'nullable|integer|exists:users,id',
         ]);
 
         $imagePath = $request->image_url;
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('static/menu-items'), $filename);
-            $imagePath = 'menu-items/' . $filename;
+            $imagePath = UploadHelper::uploadImage($request->file('image'), 'menu-items');
+        } elseif ($request->has('image') && is_string($request->image)) {
+            $imagePath = $request->image;
+        }
+
+        // Clean domain URL prefix if present to store clean relative path
+        if ($imagePath && (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://'))) {
+            $baseUrl = url('/');
+            if (str_starts_with($imagePath, $baseUrl)) {
+                $imagePath = ltrim(substr($imagePath, strlen($baseUrl)), '/');
+            }
         }
 
         $item = MenuItem::create([
@@ -40,7 +49,7 @@ class MenuItemController extends Controller
             'image' => $imagePath,
             'status' => $request->status,
             'category_id' => $request->category_id,
-            'created_by' => $request->user()->id,
+            'created_by' => $request->created_by ?? $request->user()->id,
         ]);
 
         return response()->json($item, 201);
@@ -56,6 +65,11 @@ class MenuItemController extends Controller
 
         if ($user && $user->role_id != 1) {
             $query->where('created_by', $user->id);
+        } else {
+            $createdBy = $request->query('created_by');
+            if ($createdBy !== null) {
+                $query->where('created_by', $createdBy);
+            }
         }
 
         $items = $query->skip($skip)->take($limit)->get();
@@ -94,18 +108,30 @@ class MenuItemController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'sometimes|required|numeric',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable',
             'image_url' => 'nullable|string',
             'status' => 'sometimes|required|in:available,unavailable',
             'category_id' => 'nullable|integer|exists:categories,id',
         ]);
 
-        $imagePath = $request->has('image_url') ? $request->image_url : $item->image;
+        $imagePath = $item->getRawOriginal('image'); // Default to raw database value
+
+        if ($request->has('image_url')) {
+            $imagePath = $request->image_url;
+        } elseif ($request->has('image') && is_string($request->image)) {
+            $imagePath = $request->image;
+        }
+
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('static/menu-items'), $filename);
-            $imagePath = 'menu-items/' . $filename;
+            $imagePath = UploadHelper::updateImage($item->getRawOriginal('image'), $request->file('image'), 'menu-items');
+        }
+
+        // Clean domain URL prefix if present to store clean relative path
+        if ($imagePath && (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://'))) {
+            $baseUrl = url('/');
+            if (str_starts_with($imagePath, $baseUrl)) {
+                $imagePath = ltrim(substr($imagePath, strlen($baseUrl)), '/');
+            }
         }
 
         $item->update([
@@ -127,6 +153,10 @@ class MenuItemController extends Controller
         }
 
         $item = MenuItem::findOrFail($id);
+        
+        // Clean up the physical file from storage
+        UploadHelper::deleteImage($item->getRawOriginal('image'));
+        
         $item->delete();
 
         return response()->json(['detail' => 'Menu item deleted successfully.']);

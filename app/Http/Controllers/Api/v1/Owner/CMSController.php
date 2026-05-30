@@ -18,7 +18,19 @@ class CMSController extends Controller
         $skip = $request->query('skip', 0);
         $limit = $request->query('limit', 100);
 
-        $pages = Page::skip($skip)->take($limit)->get();
+        $user = $request->user();
+        $query = Page::query();
+
+        if ($user && $user->role_id != 1) {
+            $query->where('created_by', $user->id);
+        } else {
+            $createdBy = $request->query('created_by');
+            if ($createdBy !== null) {
+                $query->where('created_by', $createdBy);
+            }
+        }
+
+        $pages = $query->skip($skip)->take($limit)->get();
         return response()->json($pages);
     }
 
@@ -57,9 +69,16 @@ class CMSController extends Controller
             'slug' => 'required|string|max:255|unique:pages,slug',
             'content' => 'nullable|string',
             'status' => 'required|string|max:20',
+            'created_by' => 'nullable|integer|exists:users,id',
         ]);
 
-        $page = Page::create($request->only(['title', 'slug', 'content', 'status']));
+        $page = Page::create([
+            'title' => $request->title,
+            'slug' => $request->slug,
+            'content' => $request->content,
+            'status' => $request->status,
+            'created_by' => $request->created_by ?? $request->user()->id,
+        ]);
         return response()->json($page, 201);
     }
 
@@ -108,6 +127,11 @@ class CMSController extends Controller
 
         if ($user && $user->role_id != 1) {
             $query->where('user_id', $user->id);
+        } else {
+            $createdBy = $request->query('created_by');
+            if ($createdBy !== null) {
+                $query->where('user_id', $createdBy);
+            }
         }
 
         $posts = $query->orderBy('created_at', 'desc')->skip($skip)->take($limit)->get();
@@ -150,10 +174,11 @@ class CMSController extends Controller
             'body' => 'nullable|string',
             'featured_image' => 'nullable|string',
             'status' => 'required|string|max:20',
+            'created_by' => 'nullable|integer|exists:users,id',
         ]);
 
         $post = Post::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $request->created_by ?? $request->user()->id,
             'title' => $request->title,
             'slug' => $request->slug,
             'body' => $request->body,

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('pages', function (Blueprint $table) {
             $table->integer('id')->autoIncrement();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('content')->nullable();

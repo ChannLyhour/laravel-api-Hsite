@@ -62,6 +62,11 @@ class CategoryController extends Controller
 
         if ($user->role_id != 1) {
             $query->where('created_by', $user->id);
+        } else {
+            $createdBy = $request->query('created_by');
+            if ($createdBy !== null) {
+                $query->where('created_by', $createdBy);
+            }
         }
 
         $categories = $query->skip($skip)->take($limit)->get();

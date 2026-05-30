@@ -17,6 +17,8 @@ class Store extends Model
         'store_email',
         'store_address',
         'tax_percentage',
+        'subscription_tier',
+        'custom_domain',
         'logo_url',
         'social_tiktok',
         'social_facebook',

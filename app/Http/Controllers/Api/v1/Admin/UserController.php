@@ -53,7 +53,7 @@ class UserController extends Controller
         
         // Authorize: Admin or the user themselves
         $currentUser = $request->user();
-        if ($currentUser->role_id != 1 && $currentUser->id != $user->id) {
+        if (! in_array($currentUser->role_id, [1, 30003]) && $currentUser->id != $user->id) {
             return response()->json(['detail' => 'Not authorized to update this user.'], 403);
         }
 
@@ -73,7 +73,7 @@ class UserController extends Controller
         if ($request->has('password')) {
             $data['password'] = Hash::make($request->password);
         }
-        if ($request->has('role_id') && $currentUser->role_id == 1) {
+        if ($request->has('role_id') && in_array($currentUser->role_id, [1, 30003])) {
             $data['role_id'] = $request->role_id;
         }
 
@@ -84,7 +84,7 @@ class UserController extends Controller
     public function destroy(Request $request, $id)
     {
         $currentUser = $request->user();
-        if ($currentUser->role_id != 1) {
+        if (! in_array($currentUser->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Only administrators can perform this operation.'], 403);
         }
 
