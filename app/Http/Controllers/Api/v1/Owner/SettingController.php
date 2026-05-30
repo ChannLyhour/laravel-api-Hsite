@@ -22,7 +22,7 @@ class SettingController extends Controller
         });
 
         return response()->json($settingsDict)
-            ->header('Cache-Control', 'public, max-age=60, s-maxage=300');
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
     public function updateSettings(Request $request)

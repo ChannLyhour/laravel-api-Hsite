@@ -62,8 +62,12 @@ class UploadHelper
 
         $fullPath = public_path($imagePath);
 
-        if (File::exists($fullPath)) {
-            return File::delete($fullPath);
+        try {
+            if (File::exists($fullPath)) {
+                return File::delete($fullPath);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not delete image (serverless fallback): " . $e->getMessage());
         }
 
         return false;
