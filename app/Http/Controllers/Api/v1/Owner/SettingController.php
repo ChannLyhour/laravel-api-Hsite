@@ -12,12 +12,14 @@ class SettingController extends Controller
     {
         $ownerId = $request->query('owner_id', 1);
 
-        $settings = Setting::where('created_by', $ownerId)->get();
-        
-        $settingsDict = [];
-        foreach ($settings as $setting) {
-            $settingsDict[$setting->key] = $setting->value;
-        }
+        $settingsDict = \Illuminate\Support\Facades\Cache::remember("settings_owner_{$ownerId}", 3600, function () use ($ownerId) {
+            $settings = Setting::where('created_by', $ownerId)->get();
+            $dict = [];
+            foreach ($settings as $setting) {
+                $dict[$setting->key] = $setting->value;
+            }
+            return $dict;
+        });
 
         return response()->json($settingsDict);
     }
@@ -41,6 +43,9 @@ class SettingController extends Controller
                 ['value' => $value]
             );
         }
+
+        // Clear the cache
+        \Illuminate\Support\Facades\Cache::forget("settings_owner_{$user->id}");
 
         // Return all settings
         $settings = Setting::where('created_by', $user->id)->get();

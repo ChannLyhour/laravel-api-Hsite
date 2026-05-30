@@ -62,6 +62,7 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA') && file_exists(env('MYSQL_ATTR_SSL_CA'))
                     ? env('MYSQL_ATTR_SSL_CA')
                     : (file_exists(base_path('ca.pem')) ? base_path('ca.pem') : null),
+                PDO::ATTR_PERSISTENT => true,
             ]) : [],
         ],
 
