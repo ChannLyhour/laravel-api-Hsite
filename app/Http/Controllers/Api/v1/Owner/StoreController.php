@@ -82,6 +82,9 @@ class StoreController extends Controller
             ]
         );
 
+        // Clear cached settings for owner
+        \Illuminate\Support\Facades\Cache::forget("settings_owner_{$user->id}");
+
         return response()->json($store);
     }
 
@@ -122,6 +125,9 @@ class StoreController extends Controller
             'social_telegram' => $request->social_telegram,
         ]);
 
+        // Clear cached settings for owner
+        \Illuminate\Support\Facades\Cache::forget("settings_owner_{$request->created_by}");
+
         return response()->json($store, 201);
     }
 
@@ -161,6 +167,9 @@ class StoreController extends Controller
             'social_facebook',
             'social_telegram',
         ]));
+
+        // Clear cached settings for owner
+        \Illuminate\Support\Facades\Cache::forget("settings_owner_{$store->created_by}");
 
         return response()->json($store);
     }
