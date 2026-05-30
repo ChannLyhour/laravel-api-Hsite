@@ -24,7 +24,7 @@
   "env": {
     "APP_NAME": "FoodOrderingAPI",
     "APP_ENV": "production",
-    "APP_DEBUG": "false",
+    "APP_DEBUG": "true",
     "APP_KEY": "base64:431VmB8uVpGqkp8yjKIJpEjtUr8NjI5enqdbXYRWpIk=",
     "APP_URL": "https://laravel-api-hsite.vercel.app",
     "LOG_CHANNEL": "stderr",
