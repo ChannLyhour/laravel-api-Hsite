@@ -7,9 +7,16 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.8.0"
+    },
+    "api/debug.php": {
+      "runtime": "vercel-php@0.8.0"
     }
   },
   "routes": [
+    {
+      "src": "/api/debug.php",
+      "dest": "/api/debug.php"
+    },
     {
       "src": "/(.*)",
       "dest": "/api/index.php"
