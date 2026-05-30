@@ -29,8 +29,8 @@ class Banner extends Model
             return asset('default.png');
         }
 
-        // If it's already a full URL, return it directly
-        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+        // If it's already a full URL or base64 data URL, return it directly
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://') || str_starts_with($value, 'data:')) {
             return $value;
         }
 

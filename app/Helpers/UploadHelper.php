@@ -23,15 +23,36 @@ class UploadHelper
         // Ensure public/uploads/{folder} exists and move the file there
         $destinationPath = public_path('uploads/' . $folder);
         
+        // Check if we are running in a read-only environment like Vercel
+        $isVercel = env('APP_ENV') === 'production' || !is_writable(public_path()) || str_contains(env('APP_URL', ''), 'vercel.app');
+
+        if ($isVercel) {
+            try {
+                $mimeType = $file->getMimeType();
+                $fileData = file_get_contents($file->getRealPath());
+                $base64 = base64_encode($fileData);
+                return 'data:' . $mimeType . ';base64,' . $base64;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to convert uploaded image to Base64: " . $e->getMessage());
+            }
+        }
+
         try {
             if (! File::isDirectory($destinationPath)) {
                 File::makeDirectory($destinationPath, 0755, true, true);
             }
             $file->move($destinationPath, $filename);
         } catch (\Exception $e) {
-            // Log the error or handle it gracefully on read-only environments like Vercel.
-            // Since we have a virtual fallback route, we can just return the path without writing to disk.
-            \Illuminate\Support\Facades\Log::warning("Upload directory not writable (serverless fallback): " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning("Upload directory not writable, using Base64 fallback: " . $e->getMessage());
+            try {
+                $mimeType = $file->getMimeType();
+                $fileData = file_get_contents($file->getRealPath());
+                $base64 = base64_encode($fileData);
+                return 'data:' . $mimeType . ';base64,' . $base64;
+            } catch (\Exception $ex) {
+                // Fallback to virtual URL
+                return 'uploads/' . $folder . '/' . $filename;
+            }
         }
         
         return 'uploads/' . $folder . '/' . $filename;
