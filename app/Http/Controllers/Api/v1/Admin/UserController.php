@@ -12,9 +12,10 @@ class UserController extends Controller
 {
     public function admins()
     {
-        $admins = User::where('role_id', 1)->get();
+        // Include both super admins (role_id=1) and store owners (role_id=30003)
+        $admins = User::whereIn('role_id', [1, 30003])->get();
         
-        // Filter admins who have created menu items
+        // Filter to those who have created menu items (active storefronts)
         $filtered = $admins->filter(function ($admin) {
             return MenuItem::where('created_by', $admin->id)->count() > 0;
         });
