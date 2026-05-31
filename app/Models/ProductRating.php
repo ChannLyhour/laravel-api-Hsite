@@ -5,14 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MenuItemRating extends Model
+class ProductRating extends Model
 {
     use HasFactory;
 
-    protected $table = 'menu_item_ratings';
-
     protected $fillable = [
-        'menu_item_id',
+        'product_id',
         'customer_id',
         'order_id',
         'rating',
@@ -20,13 +18,9 @@ class MenuItemRating extends Model
         'created_by',
     ];
 
-    protected $casts = [
-        'rating' => 'integer',
-    ];
-
-    public function menuItem()
+    public function product()
     {
-        return $this->belongsTo(MenuItem::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function customer()

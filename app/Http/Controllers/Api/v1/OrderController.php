@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\MenuItem;
+use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\Store;
 use App\Models\Customer;
 use Illuminate\Http\Request;
@@ -18,7 +19,8 @@ class OrderController extends Controller
         $request->validate([
             'store_id' => 'required|integer|exists:stores,id',
             'items' => 'required|array|min:1',
-            'items.*.menu_item_id' => 'required|integer|exists:menu_items,id',
+            'items.*.product_variant_id' => 'required_without:items.*.menu_item_id|nullable|integer|exists:product_variants,id',
+            'items.*.menu_item_id' => 'required_without:items.*.product_variant_id|nullable|integer|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
             'payment_method' => 'required|string',
             'customer_name' => 'required|string',
@@ -51,19 +53,28 @@ class OrderController extends Controller
 
         // 2. Process each item, verifying availability and snapshotting pricing
         foreach ($request->items as $itemData) {
-            $menuItem = MenuItem::findOrFail($itemData['menu_item_id']);
+            $variantId = $itemData['product_variant_id'] ?? $itemData['menu_item_id'];
+            $variant = ProductVariant::with('product.translations')->findOrFail($variantId);
+            $product = $variant->product;
 
-            if ($menuItem->status !== 'available') {
-                return response()->json(['detail' => "Menu item '{$menuItem->name}' is currently unavailable."], 400);
+            if ($product->status !== 'active') {
+                return response()->json(['detail' => "Product '{$product->name}' is currently unavailable."], 400);
             }
 
-            $price = (float) $menuItem->price;
             $qty = (int) $itemData['quantity'];
+            if ($variant->stock_qty < $qty) {
+                return response()->json(['detail' => "Insufficient stock for '{$product->name}' (Requested: {$qty}, Available: {$variant->stock_qty})."], 400);
+            }
+
+            $price = (float) $variant->retail_price;
             $subtotal += $price * $qty;
 
+            // Deduct stock
+            $variant->decrement('stock_qty', $qty);
+
             $orderItems[] = new OrderItem([
-                'menu_item_id' => $menuItem->id,
-                'name' => $menuItem->name,
+                'product_variant_id' => $variant->id,
+                'name' => $product->name . ($variant->variant_sku ? " ({$variant->variant_sku})" : ""),
                 'quantity' => $qty,
                 'price' => $price,
             ]);

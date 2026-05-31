@@ -21,7 +21,13 @@ class DatabaseSeeder extends Seeder
         DB::table('users')->truncate();
         DB::table('categories')->truncate();
         DB::table('stores')->truncate();
-        DB::table('menu_items')->truncate();
+        DB::table('product_variant_attribute_values')->truncate();
+        DB::table('product_attribute_values')->truncate();
+        DB::table('product_attributes')->truncate();
+        DB::table('product_images')->truncate();
+        DB::table('product_variants')->truncate();
+        DB::table('product_translations')->truncate();
+        DB::table('products')->truncate();
         DB::table('customers')->truncate();
         DB::table('orders')->truncate();
         DB::table('order_items')->truncate();
@@ -315,20 +321,105 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        // 6. Seed MenuItems
-        DB::table('menu_items')->insert([
-            ['id' => 11, 'category_id' => 2, 'name' => 'Hour Steak', 'description' => 'Premium beef steak with choice of sides', 'price' => 24.99, 'image' => 'menu-items/1780127684_favicon-removebg-preview.png', 'status' => 'unavailable', 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 07:55:13', 'created_by' => 1],
-            ['id' => 93, 'category_id' => 30015, 'name' => 'Lemonade', 'description' => 'Homemade fresh lemonade', 'price' => 3.99, 'image' => 'menu-items/1780118700_619ufv8EySL.jpg', 'status' => 'available', 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 06:38:39', 'created_by' => 2],
-            ['id' => 94, 'category_id' => 30015, 'name' => 'Milkshake', 'description' => 'Vanilla, chocolate, or strawberry', 'price' => 5.99, 'image' => 'menu-items/1780072255_download.png', 'status' => 'unavailable', 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 06:36:00', 'created_by' => 2],
-            ['id' => 90102, 'category_id' => 30015, 'name' => 'Amok', 'description' => 'kdfmdfkdnvkdnv', 'price' => 9.00, 'image' => 'menu-items/1780072290_photo_2026-05-21_22-32-24.jpg', 'status' => 'available', 'created_at' => '2026-05-29 09:37:57', 'updated_at' => '2026-05-29 16:31:31', 'created_by' => 2],
-            ['id' => 120103, 'category_id' => 2090013, 'name' => 'Soup chicken', 'description' => 'sdnjbsdjksbkchb', 'price' => 9.00, 'image' => 'menu-items/1780072442_IMG_4459.JPG', 'status' => 'available', 'created_at' => '2026-05-29 15:46:12', 'updated_at' => '2026-05-29 16:34:02', 'created_by' => 6],
-            ['id' => 120104, 'category_id' => 2090014, 'name' => 'Lok Lak', 'description' => 'jnsbjjbs', 'price' => 9.00, 'image' => 'menu-items/1780072449_IMG_4461.JPG', 'status' => 'available', 'created_at' => '2026-05-29 15:56:48', 'updated_at' => '2026-05-29 16:34:10', 'created_by' => 6],
-            ['id' => 150102, 'category_id' => 2120013, 'name' => 'Pizza Cambodai', 'description' => null, 'price' => 9.00, 'image' => 'menu-items/1780129103_download (2).jpg', 'status' => 'available', 'created_at' => '2026-05-30 03:21:41', 'updated_at' => '2026-05-30 08:18:23', 'created_by' => 9],
-            ['id' => 180102, 'category_id' => 30014, 'name' => 'qqw', 'description' => 'dsdsdsd', 'price' => 3.00, 'image' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'status' => 'available', 'created_at' => '2026-05-30 05:59:54', 'updated_at' => '2026-05-30 05:59:54', 'created_by' => 2],
-            ['id' => 180103, 'category_id' => 30014, 'name' => 'sdsdsdsd', 'description' => 'sdsdsd', 'price' => 1.00, 'image' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'status' => 'available', 'created_at' => '2026-05-30 06:00:05', 'updated_at' => '2026-05-30 06:00:05', 'created_by' => 2],
-            ['id' => 180104, 'category_id' => 30014, 'name' => 'sdsdsd', 'description' => 'sdsdsdsd', 'price' => 2.00, 'image' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'status' => 'available', 'created_at' => '2026-05-30 06:00:37', 'updated_at' => '2026-05-30 06:00:37', 'created_by' => 2],
-            ['id' => 210108, 'category_id' => null, 'name' => 'Burger Special', 'description' => null, 'price' => 12.50, 'image' => null, 'status' => 'available', 'created_at' => null, 'updated_at' => null, 'created_by' => 30017],
-            ['id' => 210109, 'category_id' => null, 'name' => 'Chilled Iced Latte', 'description' => null, 'price' => 4.00, 'image' => null, 'status' => 'available', 'created_at' => null, 'updated_at' => null, 'created_by' => 30017],
+        // 6. Seed Products and the complete Product Inventory System
+        // A. Base Products (includes both legacy menu items and new testing suite iPhone 15 Pro)
+        DB::table('products')->insert([
+            // Test suite core base product
+            ['id' => 1, 'category_id' => null, 'sku' => 'APP-IPH15-PRO', 'barcode' => '195949033321', 'status' => 'active', 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00', 'updated_at' => '2026-05-31 10:00:00'],
+            // Legacy menu items mapped as products
+            ['id' => 11, 'category_id' => 2, 'sku' => 'PROD-HOUR-STEAK', 'barcode' => null, 'status' => 'draft', 'created_by' => 1, 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 07:55:13'],
+            ['id' => 93, 'category_id' => 30015, 'sku' => 'PROD-LEMONADE', 'barcode' => null, 'status' => 'active', 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 06:38:39'],
+            ['id' => 94, 'category_id' => 30015, 'sku' => 'PROD-MILKSHAKE', 'barcode' => null, 'status' => 'draft', 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 06:36:00'],
+            ['id' => 90102, 'category_id' => 30015, 'sku' => 'PROD-AMOK', 'barcode' => null, 'status' => 'active', 'created_by' => 2, 'created_at' => '2026-05-29 09:37:57', 'updated_at' => '2026-05-29 16:31:31'],
+            ['id' => 120103, 'category_id' => 2090013, 'sku' => 'PROD-SOUP-CHICKEN', 'barcode' => null, 'status' => 'active', 'created_by' => 6, 'created_at' => '2026-05-29 15:46:12', 'updated_at' => '2026-05-29 16:34:02'],
+            ['id' => 120104, 'category_id' => 2090014, 'sku' => 'PROD-LOK-LAK', 'barcode' => null, 'status' => 'active', 'created_by' => 6, 'created_at' => '2026-05-29 15:56:48', 'updated_at' => '2026-05-29 16:34:10'],
+            ['id' => 150102, 'category_id' => 2120013, 'sku' => 'PROD-PIZZA-CAMBODAI', 'barcode' => null, 'status' => 'active', 'created_by' => 9, 'created_at' => '2026-05-30 03:21:41', 'updated_at' => '2026-05-30 08:18:23'],
+            ['id' => 180102, 'category_id' => 30014, 'sku' => 'PROD-QQW', 'barcode' => null, 'status' => 'active', 'created_by' => 2, 'created_at' => '2026-05-30 05:59:54', 'updated_at' => '2026-05-30 05:59:54'],
+            ['id' => 180103, 'category_id' => 30014, 'sku' => 'PROD-SDSDSDSD', 'barcode' => null, 'status' => 'active', 'created_by' => 2, 'created_at' => '2026-05-30 06:00:05', 'updated_at' => '2026-05-30 06:00:05'],
+            ['id' => 180104, 'category_id' => 30014, 'sku' => 'PROD-SDSDSD', 'barcode' => null, 'status' => 'active', 'created_by' => 2, 'created_at' => '2026-05-30 06:00:37', 'updated_at' => '2026-05-30 06:00:37'],
+            ['id' => 210108, 'category_id' => null, 'sku' => 'PROD-BURGER-SPECIAL', 'barcode' => null, 'status' => 'active', 'created_by' => 30017, 'created_at' => '2026-05-30 07:40:13', 'updated_at' => '2026-05-30 07:40:13'],
+            ['id' => 210109, 'category_id' => null, 'sku' => 'PROD-CHILLED-ICED-LATTE', 'barcode' => null, 'status' => 'active', 'created_by' => 30017, 'created_at' => '2026-05-30 07:40:13', 'updated_at' => '2026-05-30 07:40:13'],
+        ]);
+
+        // B. Localized Product Translations
+        DB::table('product_translations')->insert([
+            // Test suite translations
+            ['product_id' => 1, 'locale' => 'en', 'name' => 'iPhone 15 Pro', 'description' => 'Flagship dynamic smartphone.', 'slug' => 'iphone-15-pro', 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00', 'updated_at' => '2026-05-31 10:00:00'],
+            ['product_id' => 1, 'locale' => 'km', 'name' => 'iPhone 15 Pro', 'description' => 'ទូរស័ព្ទទំនើបចុងក្រោយបង្អស់។', 'slug' => 'iphone-15-pro-kh', 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00', 'updated_at' => '2026-05-31 10:00:00'],
+            // Legacy translations
+            ['product_id' => 11, 'locale' => 'en', 'name' => 'Hour Steak', 'description' => 'Premium beef steak with choice of sides', 'slug' => 'hour-steak', 'created_by' => 1, 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 07:55:13'],
+            ['product_id' => 93, 'locale' => 'en', 'name' => 'Lemonade', 'description' => 'Homemade fresh lemonade', 'slug' => 'lemonade', 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 06:38:39'],
+            ['product_id' => 94, 'locale' => 'en', 'name' => 'Milkshake', 'description' => 'Vanilla, chocolate, or strawberry', 'slug' => 'milkshake', 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 06:36:00'],
+            ['product_id' => 90102, 'locale' => 'en', 'name' => 'Amok', 'description' => 'kdfmdfkdnvkdnv', 'slug' => 'amok', 'created_by' => 2, 'created_at' => '2026-05-29 09:37:57', 'updated_at' => '2026-05-29 16:31:31'],
+            ['product_id' => 120103, 'locale' => 'en', 'name' => 'Soup chicken', 'description' => 'sdnjbsdjksbkchb', 'slug' => 'soup-chicken', 'created_by' => 6, 'created_at' => '2026-05-29 15:46:12', 'updated_at' => '2026-05-29 16:34:02'],
+            ['product_id' => 120104, 'locale' => 'en', 'name' => 'Lok Lak', 'description' => 'jnsbjjbs', 'slug' => 'lok-lak', 'created_by' => 6, 'created_at' => '2026-05-29 15:56:48', 'updated_at' => '2026-05-29 16:34:10'],
+            ['product_id' => 150102, 'locale' => 'en', 'name' => 'Pizza Cambodai', 'description' => null, 'slug' => 'pizza-cambodai', 'created_by' => 9, 'created_at' => '2026-05-30 03:21:41', 'updated_at' => '2026-05-30 08:18:23'],
+            ['product_id' => 180102, 'locale' => 'en', 'name' => 'qqw', 'description' => 'dsdsdsd', 'slug' => 'qqw', 'created_by' => 2, 'created_at' => '2026-05-30 05:59:54', 'updated_at' => '2026-05-30 05:59:54'],
+            ['product_id' => 180103, 'locale' => 'en', 'name' => 'sdsdsdsd', 'description' => 'sdsdsd', 'slug' => 'sdsdsdsd', 'created_by' => 2, 'created_at' => '2026-05-30 06:00:05', 'updated_at' => '2026-05-30 06:00:05'],
+            ['product_id' => 180104, 'locale' => 'en', 'name' => 'sdsdsd', 'description' => 'sdsdsdsd', 'slug' => 'sdsdsd', 'created_by' => 2, 'created_at' => '2026-05-30 06:00:37', 'updated_at' => '2026-05-30 06:00:37'],
+            ['product_id' => 210108, 'locale' => 'en', 'name' => 'Burger Special', 'description' => null, 'slug' => 'burger-special', 'created_by' => 30017, 'created_at' => '2026-05-30 07:40:13', 'updated_at' => '2026-05-30 07:40:13'],
+            ['product_id' => 210109, 'locale' => 'en', 'name' => 'Chilled Iced Latte', 'description' => null, 'slug' => 'chilled-iced-latte', 'created_by' => 30017, 'created_at' => '2026-05-30 07:40:13', 'updated_at' => '2026-05-30 07:40:13'],
+        ]);
+
+        // C. Dynamic Storefront Product Variants
+        // Mapping: variant ID equals original menu item ID for order items compatibility!
+        DB::table('product_variants')->insert([
+            // Test suite variants
+            ['id' => 1, 'product_id' => 1, 'variant_sku' => 'APP-IPH15-PRO-BLK-128', 'region_code' => 'KH', 'currency_code' => 'USD', 'purchase_price' => 810.0000, 'retail_price' => 1080.0000, 'compare_at_price' => null, 'stock_qty' => 25, 'low_stock_threshold' => 5, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00', 'updated_at' => '2026-05-31 10:00:00'],
+            ['id' => 2, 'product_id' => 1, 'variant_sku' => 'APP-IPH15-PRO-NAT-256', 'region_code' => 'KH', 'currency_code' => 'USD', 'purchase_price' => 910.0000, 'retail_price' => 1180.0000, 'compare_at_price' => null, 'stock_qty' => 10, 'low_stock_threshold' => 5, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00', 'updated_at' => '2026-05-31 10:00:00'],
+            // Legacy menu items mapped as variants
+            ['id' => 11, 'product_id' => 11, 'variant_sku' => 'PROD-HOUR-STEAK-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 24.99, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 1, 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 07:55:13'],
+            ['id' => 93, 'product_id' => 93, 'variant_sku' => 'PROD-LEMONADE-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 3.99, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 06:38:39'],
+            ['id' => 94, 'product_id' => 94, 'variant_sku' => 'PROD-MILKSHAKE-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 5.99, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05', 'updated_at' => '2026-05-30 06:36:00'],
+            ['id' => 90102, 'product_id' => 90102, 'variant_sku' => 'PROD-AMOK-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 9.00, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 2, 'created_at' => '2026-05-29 09:37:57', 'updated_at' => '2026-05-29 16:31:31'],
+            ['id' => 120103, 'product_id' => 120103, 'variant_sku' => 'PROD-SOUP-CHICKEN-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 9.00, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 6, 'created_at' => '2026-05-29 15:46:12', 'updated_at' => '2026-05-29 16:34:02'],
+            ['id' => 120104, 'product_id' => 120104, 'variant_sku' => 'PROD-LOK-LAK-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 9.00, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 6, 'created_at' => '2026-05-29 15:56:48', 'updated_at' => '2026-05-29 16:34:10'],
+            ['id' => 150102, 'product_id' => 150102, 'variant_sku' => 'PROD-PIZZA-CAMBODAI-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 9.00, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 9, 'created_at' => '2026-05-30 03:21:41', 'updated_at' => '2026-05-30 08:18:23'],
+            ['id' => 180102, 'product_id' => 180102, 'variant_sku' => 'PROD-QQW-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 3.00, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 2, 'created_at' => '2026-05-30 05:59:54', 'updated_at' => '2026-05-30 05:59:54'],
+            ['id' => 180103, 'product_id' => 180103, 'variant_sku' => 'PROD-SDSDSDSD-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 1.00, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:05', 'updated_at' => '2026-05-30 06:00:05'],
+            ['id' => 180104, 'product_id' => 180104, 'variant_sku' => 'PROD-SDSDSD-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 2.00, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:37', 'updated_at' => '2026-05-30 06:00:37'],
+            ['id' => 210108, 'product_id' => 210108, 'variant_sku' => 'PROD-BURGER-SPECIAL-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 12.50, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 30017, 'created_at' => '2026-05-30 07:40:13', 'updated_at' => '2026-05-30 07:40:13'],
+            ['id' => 210109, 'product_id' => 210109, 'variant_sku' => 'PROD-CHILLED-ICED-LATTE-GLO', 'region_code' => 'GLO', 'currency_code' => 'USD', 'purchase_price' => 0.0000, 'retail_price' => 4.00, 'compare_at_price' => null, 'stock_qty' => 100, 'low_stock_threshold' => 5, 'created_by' => 30017, 'created_at' => '2026-05-30 07:40:13', 'updated_at' => '2026-05-30 07:40:13'],
+        ]);
+
+        // D. Product Attributes Definitions
+        DB::table('product_attributes')->insert([
+            ['id' => 1, 'name' => 'Color', 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+            ['id' => 2, 'name' => 'Storage', 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+        ]);
+
+        // E. Attribute Choices Value Scope
+        DB::table('product_attribute_values')->insert([
+            ['id' => 1, 'product_attribute_id' => 1, 'value' => 'Titanium Black', 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+            ['id' => 2, 'product_attribute_id' => 1, 'value' => 'Natural Titanium', 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+            ['id' => 3, 'product_attribute_id' => 2, 'value' => '128GB', 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+            ['id' => 4, 'product_attribute_id' => 2, 'value' => '256GB', 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+        ]);
+
+        // F. Mapping Attribute Choices to Variants
+        DB::table('product_variant_attribute_values')->insert([
+            ['product_variant_id' => 1, 'product_attribute_value_id' => 1],
+            ['product_variant_id' => 1, 'product_attribute_value_id' => 3],
+            ['product_variant_id' => 2, 'product_attribute_value_id' => 2],
+            ['product_variant_id' => 2, 'product_attribute_value_id' => 4],
+        ]);
+
+        // G. Product Images
+        DB::table('product_images')->insert([
+            // Test suite images
+            ['id' => 1, 'product_id' => 1, 'product_variant_id' => 1, 'image_path' => 'https://cdn.example.com/products/iphone-15-blk.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+            ['id' => 2, 'product_id' => 1, 'product_variant_id' => 2, 'image_path' => 'https://cdn.example.com/products/iphone-15-natural.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+            // Legacy menu item images
+            ['id' => 11, 'product_id' => 11, 'product_variant_id' => null, 'image_path' => 'menu-items/1780127684_favicon-removebg-preview.png', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-24 11:20:05'],
+            ['id' => 93, 'product_id' => 93, 'product_variant_id' => null, 'image_path' => 'menu-items/1780118700_619ufv8EySL.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05'],
+            ['id' => 94, 'product_id' => 94, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072255_download.png', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05'],
+            ['id' => 90102, 'product_id' => 90102, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072290_photo_2026-05-21_22-32-24.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-29 09:37:57'],
+            ['id' => 120103, 'product_id' => 120103, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072442_IMG_4459.JPG', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 6, 'created_at' => '2026-05-29 15:46:12'],
+            ['id' => 120104, 'product_id' => 120104, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072449_IMG_4461.JPG', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 6, 'created_at' => '2026-05-29 15:56:48'],
+            ['id' => 150102, 'product_id' => 150102, 'product_variant_id' => null, 'image_path' => 'menu-items/1780129103_download (2).jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 9, 'created_at' => '2026-05-30 03:21:41'],
+            ['id' => 180102, 'product_id' => 180102, 'product_variant_id' => null, 'image_path' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 05:59:54'],
+            ['id' => 180103, 'product_id' => 180103, 'product_variant_id' => null, 'image_path' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:05'],
+            ['id' => 180104, 'product_id' => 180104, 'product_variant_id' => null, 'image_path' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:37'],
         ]);
 
         // 7. Seed Customers
@@ -433,8 +524,8 @@ class DatabaseSeeder extends Seeder
 
         // 9. Seed OrderItems
         DB::table('order_items')->insert([
-            ['id' => 1, 'order_id' => 30007, 'menu_item_id' => 210108, 'name' => 'Burger Special', 'quantity' => 2, 'price' => 12.50],
-            ['id' => 2, 'order_id' => 30007, 'menu_item_id' => 210109, 'name' => 'Chilled Iced Latte', 'quantity' => 3, 'price' => 4.00],
+            ['id' => 1, 'order_id' => 30007, 'product_variant_id' => 210108, 'name' => 'Burger Special', 'quantity' => 2, 'price' => 12.50],
+            ['id' => 2, 'order_id' => 30007, 'product_variant_id' => 210109, 'name' => 'Chilled Iced Latte', 'quantity' => 3, 'price' => 4.00],
         ]);
 
         // 10. Seed Payments

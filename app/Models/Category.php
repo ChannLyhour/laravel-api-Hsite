@@ -20,8 +20,8 @@ class Category extends Model
         'status' => 'boolean',
     ];
 
-    public function menuItems()
+    public function products()
     {
-        return $this->hasMany(MenuItem::class);
+        return $this->hasMany(Product::class);
     }
 }

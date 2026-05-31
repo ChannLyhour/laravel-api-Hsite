@@ -4,33 +4,36 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\File;
 
-class MenuItem extends Model
+class ProductImage extends Model
 {
     use HasFactory;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
-        'category_id',
-        'name',
-        'description',
-        'price',
-        'image',
-        'status',
+        'product_id',
+        'product_variant_id',
+        'image_path',
+        'is_primary',
+        'sort_order',
         'created_by',
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
+        'is_primary' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
-    public function category()
+    public function product()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Product::class);
     }
 
-    public function ratings()
+    public function variant()
     {
-        return $this->hasMany(MenuItemRating::class);
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
     public function creator()
@@ -38,20 +41,10 @@ class MenuItem extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function likes()
-    {
-        return $this->morphMany(Like::class, 'likeable');
-    }
-
-    public function orderItems()
-    {
-        return $this->hasMany(OrderItem::class);
-    }
-
     /**
-     * Get the full URL for the menu item image.
+     * Get the full URL for the image path.
      */
-    public function getImageAttribute($value)
+    public function getImagePathAttribute($value)
     {
         if (! $value) {
             return asset('default.png');
@@ -68,16 +61,15 @@ class MenuItem extends Model
         }
 
         // If it resides in uploads/
-        if (\Illuminate\Support\Facades\File::exists(public_path('uploads/' . $value))) {
+        if (File::exists(public_path('uploads/' . $value))) {
             return asset('uploads/' . $value);
         }
 
         // If it resides in static/
-        if (\Illuminate\Support\Facades\File::exists(public_path('static/' . $value))) {
+        if (File::exists(public_path('static/' . $value))) {
             return asset('static/' . $value);
         }
 
-        // Fallback to static if not found
-        return asset('static/' . $value);
+        return asset($value);
     }
 }

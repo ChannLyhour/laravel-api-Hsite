@@ -32,6 +32,6 @@ class Customer extends Model
 
     public function ratings()
     {
-        return $this->hasMany(MenuItemRating::class);
+        return $this->hasMany(ProductRating::class);
     }
 }
