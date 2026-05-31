@@ -665,7 +665,7 @@
       ]
     },
     {
-      "name": "Menu Items Manager",
+      "name": "Products Manager",
       "item": [
         {
           "name": "Top Selling Products (Public)",
@@ -673,12 +673,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/menu-items/top-selling?limit=3",
+              "raw": "{{base_url}}/products/top-selling?limit=3",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "menu-items",
+                "products",
                 "top-selling"
               ],
               "query": [
@@ -692,7 +692,7 @@
           "response": []
         },
         {
-          "name": "Create Menu Item (Owner/Admin)",
+          "name": "Create Product (Owner/Admin)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -737,19 +737,19 @@
               ]
             },
             "url": {
-              "raw": "{{base_url}}/menu-items",
+              "raw": "{{base_url}}/products",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "menu-items"
+                "products"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Get All My Items (Owner/Admin)",
+          "name": "Get All My Products (Owner/Admin)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -764,12 +764,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/menu-items?skip=0&limit=100",
+              "raw": "{{base_url}}/products?skip=0&limit=100",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "menu-items"
+                "products"
               ],
               "query": [
                 {
@@ -786,17 +786,17 @@
           "response": []
         },
         {
-          "name": "Get Specific Item (Public)",
+          "name": "Get Specific Product (Public)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/menu-items/93",
+              "raw": "{{base_url}}/products/93",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "menu-items",
+                "products",
                 "93"
               ]
             }
@@ -804,7 +804,7 @@
           "response": []
         },
         {
-          "name": "Update Menu Item (Owner/Admin)",
+          "name": "Update Product (Owner/Admin)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -839,12 +839,12 @@
               ]
             },
             "url": {
-              "raw": "{{base_url}}/menu-items/93",
+              "raw": "{{base_url}}/products/93",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "menu-items",
+                "products",
                 "93"
               ]
             }
@@ -852,7 +852,7 @@
           "response": []
         },
         {
-          "name": "Delete Menu Item (Owner/Admin)",
+          "name": "Delete Product (Owner/Admin)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -867,13 +867,363 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/menu-items/94",
+              "raw": "{{base_url}}/products/94",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "menu-items",
+                "products",
                 "94"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Product Variants (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/1/variants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "1",
+                "variants"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Product Variant (Owner)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"variant_sku\": \"APP-IPH15-PRO-NAT-128\",\n  \"region_code\": \"KH\",\n  \"currency_code\": \"USD\",\n  \"purchase_price\": 750,\n  \"retail_price\": 999,\n  \"compare_at_price\": 1099,\n  \"stock_qty\": 50,\n  \"low_stock_threshold\": 5,\n  \"attribute_values\": [2, 3]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/products/1/variants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "1",
+                "variants"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product Variant (Owner)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"retail_price\": 1050,\n  \"stock_qty\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/products/variants/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "variants",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product Variant (Owner)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/variants/2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "variants",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Dynamic Attributes (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "attributes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register New Attribute (Owner)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Material\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "attributes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Attribute Value Choice (Owner)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": \"Space Black\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/attributes/1/values",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "attributes",
+                "1",
+                "values"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Product Image (Owner)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image_url",
+                  "value": "https://cdn.example.com/products/iphone-extra.jpg",
+                  "type": "text"
+                },
+                {
+                  "key": "is_primary",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "3",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/products/1/images",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "1",
+                "images"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product Image (Owner)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/images/2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "images",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Product Reviews (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/1/ratings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "1",
+                "ratings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Product Customer Review (Customer)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": 1,\n  \"rating\": 5,\n  \"comment\": \"Absolutely love the camera and natural titanium look!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/products/1/ratings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "1",
+                "ratings"
               ]
             }
           },
@@ -1099,7 +1449,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"store_id\": 1,\n  \"payment_method\": \"Cash on Delivery\",\n  \"customer_name\": \"Chann Lyhour\",\n  \"customer_phone\": \"+855 99 999 999\",\n  \"customer_address\": \"Phnom Penh Resident St. 99\",\n  \"notes\": \"Please add extra cheese!\",\n  \"items\": [\n    {\n      \"menu_item_id\": 11,\n      \"quantity\": 2\n    },\n    {\n      \"menu_item_id\": 93,\n      \"quantity\": 3\n    }\n  ]\n}",
+              "raw": "{\n  \"store_id\": 1,\n  \"payment_method\": \"Cash on Delivery\",\n  \"customer_name\": \"Chann Lyhour\",\n  \"customer_phone\": \"+855 99 999 999\",\n  \"customer_address\": \"Phnom Penh Resident St. 99\",\n  \"notes\": \"Please add extra cheese!\",\n  \"items\": [\n    {\n      \"product_variant_id\": 11,\n      \"quantity\": 2\n    },\n    {\n      \"product_variant_id\": 93,\n      \"quantity\": 3\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -11,10 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('menu_items', function (Blueprint $table) {
-            $table->longText('image')->nullable()->change();
-        });
-
         Schema::table('banners', function (Blueprint $table) {
             $table->longText('image')->nullable()->change();
         });
@@ -33,10 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('menu_items', function (Blueprint $table) {
-            $table->string('image')->nullable()->change();
-        });
-
         Schema::table('banners', function (Blueprint $table) {
             $table->string('image')->nullable()->change();
         });

@@ -3,7 +3,11 @@
 use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\Admin\UserController;
 use App\Http\Controllers\Api\v1\CategoryController;
-use App\Http\Controllers\Api\v1\Owner\MenuItemController;
+use App\Http\Controllers\Api\v1\Owner\ProductController;
+use App\Http\Controllers\Api\v1\Owner\ProductAttributeController;
+use App\Http\Controllers\Api\v1\Owner\ProductVariantController;
+use App\Http\Controllers\Api\v1\Owner\ProductImageController;
+use App\Http\Controllers\Api\v1\ProductRatingController;
 use App\Http\Controllers\Api\v1\CustomerController;
 use App\Http\Controllers\Api\v1\OrderController;
 use App\Http\Controllers\Api\v1\Owner\StoreController;
@@ -58,9 +62,12 @@ Route::get('/users/admins', [UserController::class, 'admins']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category_id}', [CategoryController::class, 'show'])->whereNumber('category_id');
 
-// Menu Items (Public)
-Route::get('/menu-items/top-selling', [MenuItemController::class, 'topSelling']);
-Route::get('/menu-items/{item_id}', [MenuItemController::class, 'show'])->whereNumber('item_id');
+// Products (Public)
+Route::get('/products/top-selling', [ProductController::class, 'topSelling']);
+Route::get('/products/{id}', [ProductController::class, 'show'])->whereNumber('id');
+Route::get('/products/{id}/variants', [ProductVariantController::class, 'index'])->whereNumber('id');
+Route::get('/products/{id}/ratings', [ProductRatingController::class, 'index'])->whereNumber('id');
+Route::get('/attributes', [ProductAttributeController::class, 'index']);
 
 // Stores (Public)
 Route::get('/stores/owner/{owner_id}', [StoreController::class, 'showByOwner']);
@@ -103,12 +110,30 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/categories/{category_id}', [CategoryController::class, 'update'])->whereNumber('category_id');
     Route::delete('/categories/{category_id}', [CategoryController::class, 'destroy'])->whereNumber('category_id');
 
-    // Menu Items Manager
-    Route::get('/menu-items', [MenuItemController::class, 'index']);
-    Route::post('/menu-items', [MenuItemController::class, 'store']);
-    Route::put('/menu-items/{item_id}', [MenuItemController::class, 'update'])->whereNumber('item_id');
-    Route::post('/menu-items/{item_id}', [MenuItemController::class, 'update'])->whereNumber('item_id');
-    Route::delete('/menu-items/{item_id}', [MenuItemController::class, 'destroy'])->whereNumber('item_id');
+    // Products Manager
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{id}', [ProductController::class, 'update'])->whereNumber('id');
+    Route::post('/products/{id}', [ProductController::class, 'update'])->whereNumber('id');
+    Route::delete('/products/{id}', [ProductController::class, 'destroy'])->whereNumber('id');
+
+    // Product Variants Manager (Protected)
+    Route::post('/products/{id}/variants', [ProductVariantController::class, 'store'])->whereNumber('id');
+    Route::put('/products/variants/{id}', [ProductVariantController::class, 'update'])->whereNumber('id');
+    Route::delete('/products/variants/{id}', [ProductVariantController::class, 'destroy'])->whereNumber('id');
+
+    // Product Dynamic Attributes Manager (Protected)
+    Route::post('/attributes', [ProductAttributeController::class, 'store']);
+    Route::post('/attributes/{id}/values', [ProductAttributeController::class, 'storeValue'])->whereNumber('id');
+    Route::delete('/attributes/values/{value_id}', [ProductAttributeController::class, 'destroyValue'])->whereNumber('value_id');
+    Route::delete('/attributes/{id}', [ProductAttributeController::class, 'destroy'])->whereNumber('id');
+
+    // Product Image Gallery Manager (Protected)
+    Route::post('/products/{id}/images', [ProductImageController::class, 'store'])->whereNumber('id');
+    Route::delete('/products/images/{id}', [ProductImageController::class, 'destroy'])->whereNumber('id');
+
+    // Product Customer Ratings Manager (Protected)
+    Route::post('/products/{id}/ratings', [ProductRatingController::class, 'store'])->whereNumber('id');
 
     // Customers Manager
     Route::get('/customers', [CustomerController::class, 'index']);

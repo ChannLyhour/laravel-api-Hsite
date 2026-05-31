@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('menu_item_ratings', function (Blueprint $table) {
+        Schema::create('product_ratings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('menu_item_id')->constrained('menu_items')->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
             $table->unsignedInteger('rating');
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('created_by')->nullable();
 
-            $table->unique(['menu_item_id', 'customer_id', 'order_id'], 'menu_item_ratings_menu_item_id_customer_id_order_id_unique');
+            $table->unique(['product_id', 'customer_id', 'order_id'], 'product_ratings_product_id_customer_id_order_id_unique');
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('menu_item_ratings');
+        Schema::dropIfExists('product_ratings');
     }
 };
