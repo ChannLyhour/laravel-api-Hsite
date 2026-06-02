@@ -15,7 +15,7 @@ class ProductImage extends Model
     protected $fillable = [
         'product_id',
         'product_variant_id',
-        'image_path',
+        'image',
         'is_primary',
         'sort_order',
         'created_by',
@@ -24,7 +24,6 @@ class ProductImage extends Model
     protected $casts = [
         'is_primary' => 'boolean',
         'sort_order' => 'integer',
-        'image_path' => 'array',
     ];
 
     protected static function booted()
@@ -57,70 +56,65 @@ class ProductImage extends Model
     }
 
     /**
-     * Set/mutate the image path attribute to store as JSON array.
+     * Set/mutate the image attribute.
      */
-    public function setImagePathAttribute($value)
+    public function setImageAttribute($value)
     {
         if (is_array($value)) {
-            $this->attributes['image_path'] = json_encode(array_values($value));
+            $this->attributes['image'] = $value[0] ?? null;
         } elseif (is_string($value)) {
             if (str_starts_with($value, '[') || str_starts_with($value, '{')) {
-                $this->attributes['image_path'] = $value;
+                $decoded = json_decode($value, true);
+                $this->attributes['image'] = is_array($decoded) ? ($decoded[0] ?? null) : $value;
             } else {
-                $this->attributes['image_path'] = json_encode([$value]);
+                $this->attributes['image'] = $value;
             }
         } else {
-            $this->attributes['image_path'] = json_encode([]);
+            $this->attributes['image'] = null;
         }
     }
 
     /**
-     * Get the full URL for the image path.
+     * Get the full URL for the image.
      */
-    public function getImagePathAttribute($value)
+    public function getImageAttribute($value)
     {
-        $paths = [];
-        if (is_array($value)) {
-            $paths = $value;
-        } elseif (is_string($value) && $value !== '') {
+        if (! $value) {
+            return asset('default.png');
+        }
+
+        // Handle legacy json array strings stored in database gracefully
+        if (str_starts_with($value, '[') || str_starts_with($value, '{')) {
             $decoded = json_decode($value, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $paths = $decoded;
-            } else {
-                $paths = [$value];
+                $value = $decoded[0] ?? null;
             }
         }
 
-        if (empty($paths)) {
-            return [asset('default.png')];
+        if (! $value) {
+            return asset('default.png');
         }
 
-        return array_map(function ($path) {
-            if (! $path) {
-                return asset('default.png');
-            }
+        // If it's already a full URL or base64 data URL, return it directly
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://') || str_starts_with($value, 'data:')) {
+            return $value;
+        }
 
-            // If it's already a full URL or base64 data URL, return it directly
-            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')) {
-                return $path;
-            }
+        // If it starts with uploads/ or static/, return the full asset URL
+        if (str_starts_with($value, 'uploads/') || str_starts_with($value, 'static/')) {
+            return asset($value);
+        }
 
-            // If it starts with uploads/ or static/, return the full asset URL
-            if (str_starts_with($path, 'uploads/') || str_starts_with($path, 'static/')) {
-                return asset($path);
-            }
+        // If it resides in uploads/
+        if (File::exists(public_path('uploads/' . $value))) {
+            return asset('uploads/' . $value);
+        }
 
-            // If it resides in uploads/
-            if (File::exists(public_path('uploads/' . $path))) {
-                return asset('uploads/' . $path);
-            }
+        // If it resides in static/
+        if (File::exists(public_path('static/' . $value))) {
+            return asset('static/' . $value);
+        }
 
-            // If it resides in static/
-            if (File::exists(public_path('static/' . $path))) {
-                return asset('static/' . $path);
-            }
-
-            return asset($path);
-        }, $paths);
+        return asset($value);
     }
 }

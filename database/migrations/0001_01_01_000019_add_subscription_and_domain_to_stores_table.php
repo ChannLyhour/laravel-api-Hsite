@@ -11,10 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('stores', function (Blueprint $table) {
-            $table->string('subscription_tier')->default('free')->after('tax_percentage');
-            $table->string('custom_domain')->nullable()->unique()->after('subscription_tier');
-        });
+        // No-op: stores table is now a generic key-value store
     }
 
     /**
@@ -22,8 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('stores', function (Blueprint $table) {
-            $table->dropColumn(['subscription_tier', 'custom_domain']);
-        });
+        // No-op
     }
 };

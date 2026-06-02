@@ -15,10 +15,6 @@ return new class extends Migration
             $table->longText('image')->nullable()->change();
         });
 
-        Schema::table('stores', function (Blueprint $table) {
-            $table->longText('logo_url')->nullable()->change();
-        });
-
         Schema::table('settings', function (Blueprint $table) {
             $table->longText('value')->nullable()->change();
         });
@@ -31,10 +27,6 @@ return new class extends Migration
     {
         Schema::table('banners', function (Blueprint $table) {
             $table->string('image')->nullable()->change();
-        });
-
-        Schema::table('stores', function (Blueprint $table) {
-            $table->string('logo_url')->nullable()->change();
         });
 
         Schema::table('settings', function (Blueprint $table) {

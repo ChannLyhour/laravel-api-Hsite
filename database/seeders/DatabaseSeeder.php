@@ -228,98 +228,74 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 5. Seed Stores
-        DB::table('stores')->insert([
-            [
-                'id' => 1,
-                'created_by' => 1,
-                'store_name' => 'Food Ordering System',
-                'store_phone' => '09876543',
-                'store_email' => 'brohour00044@gmail.com',
-                'store_address' => 'Siem Reap',
-                'tax_percentage' => 0.01,
-                'subscription_tier' => 'premium',
-                'custom_domain' => 'foodsystem.com',
-                'logo_url' => '',
-                'social_tiktok' => 'https://www.tiktok.com/@fujinstatic',
-                'social_facebook' => 'https://web.facebook.com/bro.hour.1422409',
-                'social_telegram' => 'https://t.me/LHor2005',
-                'created_at' => '2026-05-30 03:02:45',
-                'updated_at' => '2026-05-30 03:06:48',
-                'deleted_at' => null
-            ],
-            [
-                'id' => 2,
-                'created_by' => 2,
-                'store_name' => 'Lyhour Store Kh',
-                'store_phone' => '068642521',
-                'store_email' => 'Hour@gmail.com',
-                'store_address' => 'Siem Reap',
-                'tax_percentage' => 1.0,
-                'subscription_tier' => 'standard',
-                'custom_domain' => null,
-                'logo_url' => '',
-                'social_tiktok' => 'https://www.tiktok.com/@raaaaaaaaaa715/video/7642162216027852053?is_from_webapp=1&sender_device=pc',
-                'social_facebook' => 'https://www.tiktok.com/@raaaaaaaaaa715/video/7642162216027852053?is_from_webapp=1&sender_device=pc',
-                'social_telegram' => 'https://www.tiktok.com/@raaaaaaaaaa715/video/7642162216027852053?is_from_webapp=1&sender_device=pc',
-                'created_at' => '2026-05-30 03:06:48',
-                'updated_at' => '2026-05-30 07:09:52',
-                'deleted_at' => null
-            ],
-            [
-                'id' => 3,
-                'created_by' => 6,
-                'store_name' => 'Chivorn Store kh',
-                'store_phone' => '---',
-                'store_email' => '---',
-                'store_address' => '---',
-                'tax_percentage' => 0.0,
-                'subscription_tier' => 'premium',
-                'custom_domain' => 'chivornstore.com',
-                'logo_url' => '',
-                'social_tiktok' => '#',
-                'social_facebook' => '#',
-                'social_telegram' => '#',
-                'created_at' => '2026-05-30 03:06:48',
-                'updated_at' => '2026-05-30 03:06:48',
-                'deleted_at' => null
-            ],
-            [
-                'id' => 4,
-                'created_by' => 9,
-                'store_name' => 'TiTong Store KH',
-                'store_phone' => '082838233',
-                'store_email' => 'Tong@gmail.com',
-                'store_address' => 'Siem Reap',
-                'tax_percentage' => 0.0,
-                'subscription_tier' => 'free',
-                'custom_domain' => null,
-                'logo_url' => '',
-                'social_tiktok' => '#',
-                'social_facebook' => '#',
-                'social_telegram' => '#',
-                'created_at' => '2026-05-30 03:06:48',
-                'updated_at' => '2026-05-30 03:08:20',
-                'deleted_at' => null
-            ],
-            [
-                'id' => 30004,
-                'created_by' => 30017,
-                'store_name' => 'Integration Test Cafe',
-                'store_phone' => '012345678',
-                'store_email' => 'testcafe@example.com',
-                'store_address' => null,
-                'tax_percentage' => 10.0,
-                'subscription_tier' => 'free',
-                'custom_domain' => null,
-                'logo_url' => null,
-                'social_tiktok' => null,
-                'social_facebook' => null,
-                'social_telegram' => null,
-                'created_at' => '2026-05-30 07:40:13',
-                'updated_at' => null,
-                'deleted_at' => null
-            ]
-        ]);
+        $seededStoreSettings = [
+            // Store 1 (created_by = 1)
+            ['created_by' => 1, 'key' => 'store_name', 'value' => 'Food Ordering System'],
+            ['created_by' => 1, 'key' => 'store_phone', 'value' => '09876543'],
+            ['created_by' => 1, 'key' => 'store_email', 'value' => 'brohour00044@gmail.com'],
+            ['created_by' => 1, 'key' => 'store_address', 'value' => 'Siem Reap'],
+            ['created_by' => 1, 'key' => 'tax_percentage', 'value' => '0.01'],
+            ['created_by' => 1, 'key' => 'subscription_tier', 'value' => 'premium'],
+            ['created_by' => 1, 'key' => 'custom_domain', 'value' => 'foodsystem.com'],
+            ['created_by' => 1, 'key' => 'logo_url', 'value' => ''],
+            ['created_by' => 1, 'key' => 'social_tiktok', 'value' => 'https://www.tiktok.com/@fujinstatic'],
+            ['created_by' => 1, 'key' => 'social_facebook', 'value' => 'https://web.facebook.com/bro.hour.1422409'],
+            ['created_by' => 1, 'key' => 'social_telegram', 'value' => 'https://t.me/LHor2005'],
+
+            // Store 2 (created_by = 2)
+            ['created_by' => 2, 'key' => 'store_name', 'value' => 'Lyhour Store Kh'],
+            ['created_by' => 2, 'key' => 'store_phone', 'value' => '068642521'],
+            ['created_by' => 2, 'key' => 'store_email', 'value' => 'Hour@gmail.com'],
+            ['created_by' => 2, 'key' => 'store_address', 'value' => 'Siem Reap'],
+            ['created_by' => 2, 'key' => 'tax_percentage', 'value' => '1.0'],
+            ['created_by' => 2, 'key' => 'subscription_tier', 'value' => 'standard'],
+            ['created_by' => 2, 'key' => 'custom_domain', 'value' => null],
+            ['created_by' => 2, 'key' => 'logo_url', 'value' => ''],
+            ['created_by' => 2, 'key' => 'social_tiktok', 'value' => 'https://www.tiktok.com/@raaaaaaaaaa715/video/7642162216027852053?is_from_webapp=1&sender_device=pc'],
+            ['created_by' => 2, 'key' => 'social_facebook', 'value' => 'https://www.tiktok.com/@raaaaaaaaaa715/video/7642162216027852053?is_from_webapp=1&sender_device=pc'],
+            ['created_by' => 2, 'key' => 'social_telegram', 'value' => 'https://www.tiktok.com/@raaaaaaaaaa715/video/7642162216027852053?is_from_webapp=1&sender_device=pc'],
+
+            // Store 3 (created_by = 6)
+            ['created_by' => 6, 'key' => 'store_name', 'value' => 'Chivorn Store kh'],
+            ['created_by' => 6, 'key' => 'store_phone', 'value' => '---'],
+            ['created_by' => 6, 'key' => 'store_email', 'value' => '---'],
+            ['created_by' => 6, 'key' => 'store_address', 'value' => '---'],
+            ['created_by' => 6, 'key' => 'tax_percentage', 'value' => '0.0'],
+            ['created_by' => 6, 'key' => 'subscription_tier', 'value' => 'premium'],
+            ['created_by' => 6, 'key' => 'custom_domain', 'value' => 'chivornstore.com'],
+            ['created_by' => 6, 'key' => 'logo_url', 'value' => ''],
+            ['created_by' => 6, 'key' => 'social_tiktok', 'value' => '#'],
+            ['created_by' => 6, 'key' => 'social_facebook', 'value' => '#'],
+            ['created_by' => 6, 'key' => 'social_telegram', 'value' => '#'],
+
+            // Store 4 (created_by = 9)
+            ['created_by' => 9, 'key' => 'store_name', 'value' => 'TiTong Store KH'],
+            ['created_by' => 9, 'key' => 'store_phone', 'value' => '082838233'],
+            ['created_by' => 9, 'key' => 'store_email', 'value' => 'Tong@gmail.com'],
+            ['created_by' => 9, 'key' => 'store_address', 'value' => 'Siem Reap'],
+            ['created_by' => 9, 'key' => 'tax_percentage', 'value' => '0.0'],
+            ['created_by' => 9, 'key' => 'subscription_tier', 'value' => 'free'],
+            ['created_by' => 9, 'key' => 'custom_domain', 'value' => null],
+            ['created_by' => 9, 'key' => 'logo_url', 'value' => ''],
+            ['created_by' => 9, 'key' => 'social_tiktok', 'value' => '#'],
+            ['created_by' => 9, 'key' => 'social_facebook', 'value' => '#'],
+            ['created_by' => 9, 'key' => 'social_telegram', 'value' => '#'],
+
+            // Store 5 (created_by = 30017)
+            ['created_by' => 30017, 'key' => 'store_name', 'value' => 'Integration Test Cafe'],
+            ['created_by' => 30017, 'key' => 'store_phone', 'value' => '012345678'],
+            ['created_by' => 30017, 'key' => 'store_email', 'value' => 'testcafe@example.com'],
+            ['created_by' => 30017, 'key' => 'store_address', 'value' => null],
+            ['created_by' => 30017, 'key' => 'tax_percentage', 'value' => '10.0'],
+            ['created_by' => 30017, 'key' => 'subscription_tier', 'value' => 'free'],
+            ['created_by' => 30017, 'key' => 'custom_domain', 'value' => null],
+            ['created_by' => 30017, 'key' => 'logo_url', 'value' => null],
+            ['created_by' => 30017, 'key' => 'social_tiktok', 'value' => null],
+            ['created_by' => 30017, 'key' => 'social_facebook', 'value' => null],
+            ['created_by' => 30017, 'key' => 'social_telegram', 'value' => null],
+        ];
+
+        DB::table('stores')->insert($seededStoreSettings);
 
         // 6. Seed Products and the complete Product Inventory System
         // A. Base Products (includes both legacy menu items and new testing suite iPhone 15 Pro)
@@ -407,27 +383,27 @@ class DatabaseSeeder extends Seeder
         // G. Product Images
         $productImages = [
             // Test suite images
-            ['id' => 1, 'product_id' => 1, 'product_variant_id' => 1, 'image_path' => 'https://cdn.example.com/products/iphone-15-blk.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
-            ['id' => 2, 'product_id' => 1, 'product_variant_id' => 2, 'image_path' => 'https://cdn.example.com/products/iphone-15-natural.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+            ['id' => 1, 'product_id' => 1, 'product_variant_id' => 1, 'image' => 'https://cdn.example.com/products/iphone-15-blk.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
+            ['id' => 2, 'product_id' => 1, 'product_variant_id' => 2, 'image' => 'https://cdn.example.com/products/iphone-15-natural.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
             // Legacy menu item images
-            ['id' => 11, 'product_id' => 11, 'product_variant_id' => null, 'image_path' => 'menu-items/1780127684_favicon-removebg-preview.png', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-24 11:20:05'],
-            ['id' => 93, 'product_id' => 93, 'product_variant_id' => null, 'image_path' => 'menu-items/1780118700_619ufv8EySL.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05'],
-            ['id' => 94, 'product_id' => 94, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072255_download.png', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05'],
-            ['id' => 90102, 'product_id' => 90102, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072290_photo_2026-05-21_22-32-24.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-29 09:37:57'],
-            ['id' => 120103, 'product_id' => 120103, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072442_IMG_4459.JPG', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 6, 'created_at' => '2026-05-29 15:46:12'],
-            ['id' => 120104, 'product_id' => 120104, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072449_IMG_4461.JPG', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 6, 'created_at' => '2026-05-29 15:56:48'],
-            ['id' => 150102, 'product_id' => 150102, 'product_variant_id' => null, 'image_path' => 'menu-items/1780129103_download (2).jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 9, 'created_at' => '2026-05-30 03:21:41'],
-            ['id' => 180102, 'product_id' => 180102, 'product_variant_id' => null, 'image_path' => '', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 05:59:54'],
-            ['id' => 180103, 'product_id' => 180103, 'product_variant_id' => null, 'image_path' => '', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:05'],
-            ['id' => 180104, 'product_id' => 180104, 'product_variant_id' => null, 'image_path' => '', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:37'],
+            ['id' => 11, 'product_id' => 11, 'product_variant_id' => null, 'image' => 'menu-items/1780127684_favicon-removebg-preview.png', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-24 11:20:05'],
+            ['id' => 93, 'product_id' => 93, 'product_variant_id' => null, 'image' => 'menu-items/1780118700_619ufv8EySL.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05'],
+            ['id' => 94, 'product_id' => 94, 'product_variant_id' => null, 'image' => 'menu-items/1780072255_download.png', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-24 11:20:05'],
+            ['id' => 90102, 'product_id' => 90102, 'product_variant_id' => null, 'image' => 'menu-items/1780072290_photo_2026-05-21_22-32-24.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-29 09:37:57'],
+            ['id' => 120103, 'product_id' => 120103, 'product_variant_id' => null, 'image' => 'menu-items/1780072442_IMG_4459.JPG', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 6, 'created_at' => '2026-05-29 15:46:12'],
+            ['id' => 120104, 'product_id' => 120104, 'product_variant_id' => null, 'image' => 'menu-items/1780072449_IMG_4461.JPG', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 6, 'created_at' => '2026-05-29 15:56:48'],
+            ['id' => 150102, 'product_id' => 150102, 'product_variant_id' => null, 'image' => 'menu-items/1780129103_download (2).jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 9, 'created_at' => '2026-05-30 03:21:41'],
+            ['id' => 180102, 'product_id' => 180102, 'product_variant_id' => null, 'image' => '', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 05:59:54'],
+            ['id' => 180103, 'product_id' => 180103, 'product_variant_id' => null, 'image' => '', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:05'],
+            ['id' => 180104, 'product_id' => 180104, 'product_variant_id' => null, 'image' => '', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:37'],
         ];
 
         $productImages = array_map(function ($img) {
-            $path = $img['image_path'];
+            $path = $img['image'];
             if ($path !== null && $path !== '') {
-                $img['image_path'] = json_encode([$path]);
+                $img['image'] = $path;
             } else {
-                $img['image_path'] = json_encode([]);
+                $img['image'] = null;
             }
             return $img;
         }, $productImages);

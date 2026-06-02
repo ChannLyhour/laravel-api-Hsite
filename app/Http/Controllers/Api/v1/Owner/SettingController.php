@@ -16,19 +16,13 @@ class SettingController extends Controller
             $dict = [];
 
             // 1. Fetch defaults from the stores table
-            $store = \App\Models\Store::where('created_by', $ownerId)->first();
-            if ($store) {
-                $dict['store_name'] = $store->store_name;
-                $dict['store_phone'] = $store->store_phone;
-                $dict['store_email'] = $store->store_email;
-                $dict['store_address'] = $store->store_address;
-                $dict['tax_percentage'] = strval($store->tax_percentage);
-                $dict['subscription_tier'] = $store->subscription_tier;
-                $dict['custom_domain'] = $store->custom_domain;
-                $dict['logo_url'] = $store->logo_url;
-                $dict['social_tiktok'] = $store->social_tiktok;
-                $dict['social_facebook'] = $store->social_facebook;
-                $dict['social_telegram'] = $store->social_telegram;
+            $storeSettings = \App\Models\Store::where('created_by', $ownerId)->get();
+            foreach ($storeSettings as $item) {
+                if ($item->key === 'tax_percentage') {
+                    $dict[$item->key] = strval($item->value);
+                } else {
+                    $dict[$item->key] = $item->value;
+                }
             }
 
             // 2. Override with custom key-value settings
@@ -47,11 +41,11 @@ class SettingController extends Controller
     {
         $user = $request->user();
         if (! in_array($user->role_id, [1, 30003])) {
-            return response()->json(['detail' => 'Access denied. Store owner or admin only.'], 403);
+            return response()->json(['detail' => 'Access denied. Only administrators and store owners are authorized to perform this operation.'], 403);
         }
 
         $request->validate([
-            '*' => 'nullable|string',
+            '*' => 'nullable',
         ]);
 
         $settingsDict = $request->all();
@@ -64,8 +58,8 @@ class SettingController extends Controller
         }
 
         // Also update the stores table to keep it in sync
-        $store = \App\Models\Store::where('created_by', $user->id)->first();
-        if ($store) {
+        $storeExists = \App\Models\Store::where('created_by', $user->id)->exists();
+        if ($storeExists) {
             $updatedFields = [];
             if (array_key_exists('store_name', $settingsDict)) $updatedFields['store_name'] = $settingsDict['store_name'];
             if (array_key_exists('store_phone', $settingsDict)) $updatedFields['store_phone'] = $settingsDict['store_phone'];
@@ -79,8 +73,11 @@ class SettingController extends Controller
             if (array_key_exists('social_facebook', $settingsDict)) $updatedFields['social_facebook'] = $settingsDict['social_facebook'];
             if (array_key_exists('social_telegram', $settingsDict)) $updatedFields['social_telegram'] = $settingsDict['social_telegram'];
 
-            if (!empty($updatedFields)) {
-                $store->update($updatedFields);
+            foreach ($updatedFields as $key => $value) {
+                \App\Models\Store::updateOrCreate(
+                    ['created_by' => $user->id, 'key' => $key],
+                    ['value' => $value]
+                );
             }
         }
 
@@ -92,18 +89,13 @@ class SettingController extends Controller
         $updatedDict = [];
         
         // Populate from Store first to return full synced payload
-        if ($store) {
-            $updatedDict['store_name'] = $store->store_name;
-            $updatedDict['store_phone'] = $store->store_phone;
-            $updatedDict['store_email'] = $store->store_email;
-            $updatedDict['store_address'] = $store->store_address;
-            $updatedDict['tax_percentage'] = strval($store->tax_percentage);
-            $updatedDict['subscription_tier'] = $store->subscription_tier;
-            $updatedDict['custom_domain'] = $store->custom_domain;
-            $updatedDict['logo_url'] = $store->logo_url;
-            $updatedDict['social_tiktok'] = $store->social_tiktok;
-            $updatedDict['social_facebook'] = $store->social_facebook;
-            $updatedDict['social_telegram'] = $store->social_telegram;
+        $storeSettings = \App\Models\Store::where('created_by', $user->id)->get();
+        foreach ($storeSettings as $item) {
+            if ($item->key === 'tax_percentage') {
+                $updatedDict[$item->key] = strval($item->value);
+            } else {
+                $updatedDict[$item->key] = $item->value;
+            }
         }
         
         foreach ($settings as $setting) {

@@ -142,7 +142,7 @@ class Product extends Model
 
         $primaryImage = $this->images->where('is_primary', true)->first() ?? $this->images->first();
         if ($primaryImage) {
-            $img = $primaryImage->image_path;
+            $img = $primaryImage->image;
             if (is_array($img)) {
                 return $img[0] ?? asset('default.png');
             }
@@ -176,7 +176,7 @@ class Product extends Model
         $rawImages = $this->images()
             ->orderByDesc('is_primary')
             ->orderBy('id')
-            ->pluck('image_path')
+            ->pluck('image')
             ->toArray();
 
         $paths = [];

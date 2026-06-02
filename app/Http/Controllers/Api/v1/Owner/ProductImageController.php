@@ -20,7 +20,6 @@ class ProductImageController extends Controller
 
         $request->validate([
             'image' => 'nullable',
-            'image_url' => 'nullable',
             'product_variant_id' => 'nullable|integer|exists:product_variants,id',
             'is_primary' => 'nullable|boolean',
             'sort_order' => 'nullable|integer',
@@ -36,53 +35,41 @@ class ProductImageController extends Controller
             } else {
                 $imagePath[] = UploadHelper::uploadImage($files, 'products');
             }
-        } elseif ($request->has('image') && is_array($request->image)) {
-            $imagePath = $request->image;
-        } elseif ($request->has('image') && is_string($request->image)) {
-            if (str_starts_with($request->image, '[') || str_starts_with($request->image, '{')) {
-                $decoded = json_decode($request->image, true);
-                $imagePath = is_array($decoded) ? $decoded : [$request->image];
-            } else {
-                $imagePath = [$request->image];
-            }
-        } elseif ($request->has('image_url')) {
-            if (is_array($request->image_url)) {
-                $imagePath = $request->image_url;
-            } else {
-                $imagePath = [$request->image_url];
-            }
         }
-
         if (empty($imagePath)) {
-            return response()->json(['detail' => 'No image file or URL was provided.'], 400);
+            return response()->json(['detail' => 'No image file was provided.'], 400);
         }
-
-        // Clean domain URL prefix if present
-        $imagePath = array_map(function ($path) {
-            if ($path && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
-                $baseUrl = url('/');
-                if (str_starts_with($path, $baseUrl)) {
-                    return ltrim(substr($path, strlen($baseUrl)), '/');
-                }
-            }
-            return $path;
-        }, $imagePath);
 
         // If is_primary is true, make sure to reset other images' is_primary flag for this product
         if ($request->is_primary) {
             ProductImage::where('product_id', $product->id)->update(['is_primary' => false]);
         }
 
-        $productImage = ProductImage::create([
-            'product_id' => $product->id,
-            'product_variant_id' => $request->product_variant_id,
-            'image_path' => $imagePath,
-            'is_primary' => $request->is_primary ?? false,
-            'sort_order' => $request->sort_order ?? 0,
-            'created_by' => $request->user()->id,
-        ]);
+        $productImages = [];
+        foreach ($imagePath as $index => $path) {
+            $isPrimary = false;
+            if ($index === 0) {
+                if ($request->is_primary) {
+                    $isPrimary = true;
+                } elseif (ProductImage::where('product_id', $product->id)->where('is_primary', true)->count() === 0) {
+                    $isPrimary = true;
+                }
+            }
 
-        return response()->json($productImage, 201);
+            $productImages[] = ProductImage::create([
+                'product_id' => $product->id,
+                'product_variant_id' => $request->product_variant_id,
+                'image' => $path,
+                'is_primary' => $isPrimary,
+                'sort_order' => ($request->sort_order ?? 0) + $index,
+                'created_by' => $request->user()->id,
+            ]);
+        }
+
+        // Sync thumbnails for product
+        $product->syncThumbnails();
+
+        return response()->json(count($productImages) === 1 ? $productImages[0] : $productImages, 201);
     }
 
     public function update(Request $request, $id)
@@ -127,7 +114,7 @@ class ProductImageController extends Controller
         $image = ProductImage::findOrFail($id);
 
         // Delete physical file from disk
-        UploadHelper::deleteImage($image->getRawOriginal('image_path'));
+        UploadHelper::deleteImage($image->getRawOriginal('image'));
 
         $image->delete();
 

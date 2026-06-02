@@ -59,7 +59,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->cascadeOnDelete();
-            $table->string('image_path', 2048);
+            $table->string('image')->nullable();
             $table->boolean('is_primary')->default(false);
             $table->integer('sort_order')->default(0);
             $table->foreignId('created_by')->constrained('users')->onDelete('restrict');

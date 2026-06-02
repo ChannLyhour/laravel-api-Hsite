@@ -17,7 +17,7 @@ class UploadHelper
      */
     public static function uploadImage(UploadedFile $file, string $folder): string
     {
-        $filename = date('dmy_His') . '.' . $file->getClientOriginalExtension();
+        $filename = date('dmy_His') . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
         
         // Ensure public/uploads/{folder} exists and move the file there
         $destinationPath = public_path('uploads/' . $folder);
