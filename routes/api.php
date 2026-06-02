@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\Admin\UserController;
 use App\Http\Controllers\Api\v1\CategoryController;
+use App\Http\Controllers\Api\v1\BrandController;
 use App\Http\Controllers\Api\v1\Owner\ProductController;
 use App\Http\Controllers\Api\v1\Owner\ProductAttributeController;
 use App\Http\Controllers\Api\v1\Owner\ProductVariantController;
@@ -62,6 +63,10 @@ Route::get('/users/admins', [UserController::class, 'admins']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category_id}', [CategoryController::class, 'show'])->whereNumber('category_id');
 
+// Brands (Public)
+Route::get('/brands', [BrandController::class, 'index']);
+Route::get('/brands/{id}', [BrandController::class, 'show'])->whereNumber('id');
+
 // Products (Public)
 Route::get('/products/top-selling', [ProductController::class, 'topSelling']);
 Route::get('/products/{id}', [ProductController::class, 'show'])->whereNumber('id');
@@ -110,6 +115,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/categories/{category_id}', [CategoryController::class, 'update'])->whereNumber('category_id');
     Route::delete('/categories/{category_id}', [CategoryController::class, 'destroy'])->whereNumber('category_id');
 
+    // Brands Manager
+    Route::get('/brands/mine', [BrandController::class, 'mine']);
+    Route::post('/brands', [BrandController::class, 'store']);
+    Route::put('/brands/{id}', [BrandController::class, 'update'])->whereNumber('id');
+    Route::delete('/brands/{id}', [BrandController::class, 'destroy'])->whereNumber('id');
+
     // Products Manager
     Route::get('/products', [ProductController::class, 'index']);
     Route::post('/products', [ProductController::class, 'store']);
@@ -130,6 +141,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Product Image Gallery Manager (Protected)
     Route::post('/products/{id}/images', [ProductImageController::class, 'store'])->whereNumber('id');
+    Route::put('/products/images/{id}', [ProductImageController::class, 'update'])->whereNumber('id');
     Route::delete('/products/images/{id}', [ProductImageController::class, 'destroy'])->whereNumber('id');
 
     // Product Customer Ratings Manager (Protected)
@@ -173,5 +185,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/items', [FoodItemController::class, 'store']);
     Route::put('/items/{item_id}', [FoodItemController::class, 'update'])->whereNumber('item_id');
     Route::delete('/items/{item_id}', [FoodItemController::class, 'destroy'])->whereNumber('item_id');
-
 });

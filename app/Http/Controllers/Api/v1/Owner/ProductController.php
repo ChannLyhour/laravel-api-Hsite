@@ -18,7 +18,7 @@ class ProductController extends Controller
 {
     public function store(Request $request)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 
@@ -31,7 +31,7 @@ class ProductController extends Controller
                 'description' => 'nullable|string',
                 'price' => 'required|numeric',
                 'image' => 'nullable',
-                'image_url' => 'nullable|string',
+                'image_url' => 'nullable',
                 'status' => 'required|in:available,unavailable,active,draft,archived',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'created_by' => 'nullable|integer|exists:users,id',
@@ -44,6 +44,15 @@ class ProductController extends Controller
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'created_by' => 'nullable|integer|exists:users,id',
                 'has_options' => 'nullable|boolean',
+                'product_type' => 'nullable|string|max:50',
+                'brand_id' => 'nullable|integer|exists:brands,id',
+                'unit' => 'nullable|string|max:50',
+                'search_tags' => 'nullable|string',
+                'min_order_qty' => 'nullable|integer|min:1',
+                'discount_amount' => 'nullable|numeric|min:0',
+                'discount_type' => 'nullable|string|in:flat,percent',
+                'shipping_cost' => 'nullable|numeric|min:0',
+                'multiply_qty_shipping' => 'nullable|boolean',
                 
                 // Translations
                 'translations' => 'required|array|min:1',
@@ -70,22 +79,43 @@ class ProductController extends Controller
         $userId = $request->created_by ?? $request->user()->id;
 
         return DB::transaction(function () use ($request, $isLegacy, $userId) {
-            $imagePath = null;
+            $imagePath = [];
             if ($request->hasFile('image')) {
-                $imagePath = UploadHelper::uploadImage($request->file('image'), 'products');
-            } elseif ($request->has('image') && is_string($request->image)) {
+                $files = $request->file('image');
+                if (is_array($files)) {
+                    foreach ($files as $file) {
+                        $imagePath[] = UploadHelper::uploadImage($file, 'products');
+                    }
+                } else {
+                    $imagePath[] = UploadHelper::uploadImage($files, 'products');
+                }
+            } elseif ($request->has('image') && is_array($request->image)) {
                 $imagePath = $request->image;
+            } elseif ($request->has('image') && is_string($request->image)) {
+                if (str_starts_with($request->image, '[') || str_starts_with($request->image, '{')) {
+                    $decoded = json_decode($request->image, true);
+                    $imagePath = is_array($decoded) ? $decoded : [$request->image];
+                } else {
+                    $imagePath = [$request->image];
+                }
             } elseif ($request->has('image_url')) {
-                $imagePath = $request->image_url;
+                if (is_array($request->image_url)) {
+                    $imagePath = $request->image_url;
+                } else {
+                    $imagePath = [$request->image_url];
+                }
             }
 
             // Clean domain URL prefix if present
-            if ($imagePath && (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://'))) {
-                $baseUrl = url('/');
-                if (str_starts_with($imagePath, $baseUrl)) {
-                    $imagePath = ltrim(substr($imagePath, strlen($baseUrl)), '/');
+            $imagePath = array_map(function ($path) {
+                if ($path && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
+                    $baseUrl = url('/');
+                    if (str_starts_with($path, $baseUrl)) {
+                        return ltrim(substr($path, strlen($baseUrl)), '/');
+                    }
                 }
-            }
+                return $path;
+            }, $imagePath);
 
             if ($isLegacy) {
                 // Determine status
@@ -128,7 +158,7 @@ class ProductController extends Controller
                     'created_by' => $userId,
                 ]);
 
-                if ($imagePath) {
+                if (!empty($imagePath)) {
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image_path' => $imagePath,
@@ -146,6 +176,15 @@ class ProductController extends Controller
                     'status' => $request->status,
                     'created_by' => $userId,
                     'has_options' => $request->has_options ?? false,
+                    'product_type' => $request->product_type ?? 'physical',
+                    'brand_id' => $request->brand_id ?? null,
+                    'unit' => $request->unit ?? 'pc',
+                    'search_tags' => $request->search_tags ?? null,
+                    'min_order_qty' => $request->min_order_qty ?? 1,
+                    'discount_amount' => $request->discount_amount ?? 0.00,
+                    'discount_type' => $request->discount_type ?? 'flat',
+                    'shipping_cost' => $request->shipping_cost ?? 0.00,
+                    'multiply_qty_shipping' => $request->multiply_qty_shipping ?? false,
                 ]);
 
                 foreach ($request->translations as $trans) {
@@ -179,20 +218,34 @@ class ProductController extends Controller
                     $variantModels[] = $variantModel;
 
                     // Handle variant image during creation
-                    $varImagePath = null;
+                    $varImagePath = [];
                     if ($request->hasFile("variants.{$index}.image")) {
-                        $varImagePath = UploadHelper::uploadImage($request->file("variants.{$index}.image"), 'products');
+                        $varFiles = $request->file("variants.{$index}.image");
+                        if (is_array($varFiles)) {
+                            foreach ($varFiles as $file) {
+                                $varImagePath[] = UploadHelper::uploadImage($file, 'products');
+                            }
+                        } else {
+                            $varImagePath[] = UploadHelper::uploadImage($varFiles, 'products');
+                        }
                     } elseif (isset($var['image_url'])) {
-                        $varImagePath = $var['image_url'];
+                        if (is_array($var['image_url'])) {
+                            $varImagePath = $var['image_url'];
+                        } else {
+                            $varImagePath = [$var['image_url']];
+                        }
                     }
 
-                    if ($varImagePath) {
-                        if (str_starts_with($varImagePath, 'http://') || str_starts_with($varImagePath, 'https://')) {
-                            $baseUrl = url('/');
-                            if (str_starts_with($varImagePath, $baseUrl)) {
-                                $varImagePath = ltrim(substr($varImagePath, strlen($baseUrl)), '/');
+                    if (!empty($varImagePath)) {
+                        $varImagePath = array_map(function ($path) {
+                            if ($path && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
+                                $baseUrl = url('/');
+                                if (str_starts_with($path, $baseUrl)) {
+                                    return ltrim(substr($path, strlen($baseUrl)), '/');
+                                }
                             }
-                        }
+                            return $path;
+                        }, $varImagePath);
 
                         ProductImage::create([
                             'product_id' => $product->id,
@@ -206,7 +259,7 @@ class ProductController extends Controller
                 }
 
                 // If root image provided, add it as primary
-                if ($imagePath) {
+                if (!empty($imagePath)) {
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image_path' => $imagePath,
@@ -236,7 +289,7 @@ class ProductController extends Controller
                 }
             }
 
-            $product->load(['translations', 'variants.attributeValues.attribute', 'images']);
+            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand']);
             return response()->json($product, 201);
         });
     }
@@ -247,7 +300,7 @@ class ProductController extends Controller
         $limit = $request->query('limit', 100);
 
         $user = $request->user();
-        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images']);
+        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand']);
 
         if ($user && $user->role_id != 1) {
             $query->where('created_by', $user->id);
@@ -272,7 +325,7 @@ class ProductController extends Controller
         $limit = $request->query('limit', 3);
         $createdBy = $request->query('created_by');
 
-        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images']);
+        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand']);
         if ($createdBy !== null) {
             $query->where('created_by', $createdBy);
         }
@@ -283,13 +336,13 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $product = Product::with(['translations', 'variants.attributeValues.attribute', 'images'])->findOrFail($id);
+        $product = Product::with(['translations', 'variants.attributeValues.attribute', 'images', 'brand'])->findOrFail($id);
         return response()->json($product);
     }
 
     public function update(Request $request, $id)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 
@@ -302,7 +355,7 @@ class ProductController extends Controller
                 'description' => 'nullable|string',
                 'price' => 'sometimes|required|numeric',
                 'image' => 'nullable',
-                'image_url' => 'nullable|string',
+                'image_url' => 'nullable',
                 'status' => 'sometimes|required|in:available,unavailable,active,draft,archived',
                 'category_id' => 'nullable|integer|exists:categories,id',
             ]);
@@ -313,6 +366,15 @@ class ProductController extends Controller
                 'status' => 'sometimes|required|in:active,draft,archived',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'has_options' => 'nullable|boolean',
+                'product_type' => 'nullable|string|max:50',
+                'brand_id' => 'nullable|integer|exists:brands,id',
+                'unit' => 'nullable|string|max:50',
+                'search_tags' => 'nullable|string',
+                'min_order_qty' => 'nullable|integer|min:1',
+                'discount_amount' => 'nullable|numeric|min:0',
+                'discount_type' => 'nullable|string|in:flat,percent',
+                'shipping_cost' => 'nullable|numeric|min:0',
+                'multiply_qty_shipping' => 'nullable|boolean',
                 'variants' => 'sometimes|array',
                 'variants.*.id' => 'nullable|integer|exists:product_variants,id',
                 'variants.*.variant_sku' => 'required|string|max:100',
@@ -346,30 +408,62 @@ class ProductController extends Controller
         }
 
         return DB::transaction(function () use ($request, $product, $isLegacy) {
-            $imagePath = null;
+            $imagePath = [];
             $hasNewImage = false;
 
             if ($request->hasFile('image')) {
-                // Delete previous primary image from disk if possible
-                $primaryImage = $product->images->where('is_primary', true)->first();
-                $oldPath = $primaryImage ? $primaryImage->getRawOriginal('image_path') : null;
-                $imagePath = UploadHelper::updateImage($oldPath, $request->file('image'), 'products');
+                $files = $request->file('image');
+                if ($isLegacy) {
+                    $primaryImage = $product->images->where('is_primary', true)->first();
+                    $oldPath = $primaryImage ? $primaryImage->getRawOriginal('image_path') : null;
+                    if (is_array($files)) {
+                        UploadHelper::deleteImage($oldPath);
+                        foreach ($files as $file) {
+                            $imagePath[] = UploadHelper::uploadImage($file, 'products');
+                        }
+                    } else {
+                        $imagePath[] = UploadHelper::updateImage($oldPath, $files, 'products');
+                    }
+                } else {
+                    if (is_array($files)) {
+                        foreach ($files as $file) {
+                            $imagePath[] = UploadHelper::uploadImage($file, 'products');
+                        }
+                    } else {
+                        $imagePath[] = UploadHelper::uploadImage($files, 'products');
+                    }
+                }
                 $hasNewImage = true;
-            } elseif ($request->has('image_url')) {
-                $imagePath = $request->image_url;
+            } elseif ($request->has('image') && is_array($request->image)) {
+                $imagePath = $request->image;
                 $hasNewImage = true;
             } elseif ($request->has('image') && is_string($request->image)) {
-                $imagePath = $request->image;
+                if (str_starts_with($request->image, '[') || str_starts_with($request->image, '{')) {
+                    $decoded = json_decode($request->image, true);
+                    $imagePath = is_array($decoded) ? $decoded : [$request->image];
+                } else {
+                    $imagePath = [$request->image];
+                }
+                $hasNewImage = true;
+            } elseif ($request->has('image_url')) {
+                if (is_array($request->image_url)) {
+                    $imagePath = $request->image_url;
+                } else {
+                    $imagePath = [$request->image_url];
+                }
                 $hasNewImage = true;
             }
 
             // Clean domain URL prefix
-            if ($imagePath && (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://'))) {
-                $baseUrl = url('/');
-                if (str_starts_with($imagePath, $baseUrl)) {
-                    $imagePath = ltrim(substr($imagePath, strlen($baseUrl)), '/');
+            $imagePath = array_map(function ($path) {
+                if ($path && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
+                    $baseUrl = url('/');
+                    if (str_starts_with($path, $baseUrl)) {
+                        return ltrim(substr($path, strlen($baseUrl)), '/');
+                    }
                 }
-            }
+                return $path;
+            }, $imagePath);
 
             if ($isLegacy) {
                 $status = $product->status;
@@ -415,18 +509,25 @@ class ProductController extends Controller
                 }
 
                 // Update primary image
-                if ($hasNewImage && $imagePath) {
+                if ($hasNewImage) {
                     $primaryImage = $product->images()->where('is_primary', true)->first();
-                    if ($primaryImage) {
-                        $primaryImage->update(['image_path' => $imagePath]);
+                    if (!empty($imagePath)) {
+                        if ($primaryImage) {
+                            $primaryImage->update(['image_path' => $imagePath]);
+                        } else {
+                            ProductImage::create([
+                                'product_id' => $product->id,
+                                'image_path' => $imagePath,
+                                'is_primary' => true,
+                                'sort_order' => 1,
+                                'created_by' => $request->user()->id,
+                            ]);
+                        }
                     } else {
-                        ProductImage::create([
-                            'product_id' => $product->id,
-                            'image_path' => $imagePath,
-                            'is_primary' => true,
-                            'sort_order' => 1,
-                            'created_by' => $request->user()->id,
-                        ]);
+                        if ($primaryImage) {
+                            UploadHelper::deleteImage($primaryImage->getRawOriginal('image_path'));
+                            $primaryImage->delete();
+                        }
                     }
                 }
 
@@ -438,6 +539,15 @@ class ProductController extends Controller
                     'status' => $request->status ?? $product->status,
                     'category_id' => $request->has('category_id') ? $request->category_id : $product->category_id,
                     'has_options' => $request->has('has_options') ? $request->has_options : $product->has_options,
+                    'product_type' => $request->product_type ?? $product->product_type,
+                    'brand_id' => $request->has('brand_id') ? $request->brand_id : $product->brand_id,
+                    'unit' => $request->unit ?? $product->unit,
+                    'search_tags' => $request->has('search_tags') ? $request->search_tags : $product->search_tags,
+                    'min_order_qty' => $request->min_order_qty ?? $product->min_order_qty,
+                    'discount_amount' => $request->discount_amount ?? $product->discount_amount,
+                    'discount_type' => $request->discount_type ?? $product->discount_type,
+                    'shipping_cost' => $request->shipping_cost ?? $product->shipping_cost,
+                    'multiply_qty_shipping' => $request->multiply_qty_shipping ?? $product->multiply_qty_shipping,
                 ]);
 
                 if ($request->has('translations')) {
@@ -494,27 +604,42 @@ class ProductController extends Controller
                         $keepIds[] = $variant->id;
 
                         // Handle variant image in update
-                        $varImagePath = null;
+                        $varImagePath = [];
                         $hasVarImage = false;
                         if ($request->hasFile("variants.{$index}.image")) {
                             $oldImage = ProductImage::where('product_variant_id', $variant->id)->first();
                             $oldPath = $oldImage ? $oldImage->getRawOriginal('image_path') : null;
-                            $varImagePath = UploadHelper::updateImage($oldPath, $request->file("variants.{$index}.image"), 'products');
+                            $varFiles = $request->file("variants.{$index}.image");
+                            if (is_array($varFiles)) {
+                                UploadHelper::deleteImage($oldPath);
+                                foreach ($varFiles as $file) {
+                                    $varImagePath[] = UploadHelper::uploadImage($file, 'products');
+                                }
+                            } else {
+                                $varImagePath[] = UploadHelper::updateImage($oldPath, $varFiles, 'products');
+                            }
                             $hasVarImage = true;
                         } elseif (isset($var['image_url'])) {
-                            $varImagePath = $var['image_url'];
+                            if (is_array($var['image_url'])) {
+                                $varImagePath = $var['image_url'];
+                            } else {
+                                $varImagePath = [$var['image_url']];
+                            }
                             $hasVarImage = true;
                         }
 
                         if ($hasVarImage) {
-                            if ($varImagePath && (str_starts_with($varImagePath, 'http://') || str_starts_with($varImagePath, 'https://'))) {
-                                $baseUrl = url('/');
-                                if (str_starts_with($varImagePath, $baseUrl)) {
-                                    $varImagePath = ltrim(substr($varImagePath, strlen($baseUrl)), '/');
+                            $varImagePath = array_map(function ($path) {
+                                if ($path && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
+                                    $baseUrl = url('/');
+                                    if (str_starts_with($path, $baseUrl)) {
+                                        return ltrim(substr($path, strlen($baseUrl)), '/');
+                                    }
                                 }
-                            }
+                                return $path;
+                            }, $varImagePath);
 
-                            if ($varImagePath) {
+                            if (!empty($varImagePath)) {
                                 ProductImage::updateOrCreate(
                                     ['product_id' => $product->id, 'product_variant_id' => $variant->id],
                                     [
@@ -536,30 +661,41 @@ class ProductController extends Controller
                     $product->variants()->whereNotIn('id', $keepIds)->delete();
                 }
 
-                if ($hasNewImage && $imagePath) {
-                    $primaryImage = $product->images()->where('is_primary', true)->first();
-                    if ($primaryImage) {
-                        $primaryImage->update(['image_path' => $imagePath]);
+                if ($hasNewImage) {
+                    if (!empty($imagePath)) {
+                        // Reset all other images of this product to non-primary
+                        ProductImage::where('product_id', $product->id)->update(['is_primary' => false]);
+
+                        $primaryImage = ProductImage::where('product_id', $product->id)->where('is_primary', true)->first();
+                        if ($primaryImage) {
+                            $primaryImage->update(['image_path' => $imagePath]);
+                        } else {
+                            ProductImage::create([
+                                'product_id' => $product->id,
+                                'image_path' => $imagePath,
+                                'is_primary' => true,
+                                'sort_order' => 1,
+                                'created_by' => $request->user()->id,
+                            ]);
+                        }
                     } else {
-                        ProductImage::create([
-                            'product_id' => $product->id,
-                            'image_path' => $imagePath,
-                            'is_primary' => true,
-                            'sort_order' => 1,
-                            'created_by' => $request->user()->id,
-                        ]);
+                        $primaryImage = $product->images()->where('is_primary', true)->first();
+                        if ($primaryImage) {
+                            UploadHelper::deleteImage($primaryImage->getRawOriginal('image_path'));
+                            $primaryImage->delete();
+                        }
                     }
                 }
             }
 
-            $product->load(['translations', 'variants.attributeValues.attribute', 'images']);
+            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand']);
             return response()->json($product);
         });
     }
 
     public function destroy(Request $request, $id)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 

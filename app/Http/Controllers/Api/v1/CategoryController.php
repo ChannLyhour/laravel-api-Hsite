@@ -19,6 +19,9 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'status' => 'boolean',
             'created_by' => 'nullable|integer|exists:users,id',
+            'parent_id' => 'nullable|integer|exists:categories,id',
+            'priority' => 'nullable|integer',
+            'image' => 'nullable|string',
         ]);
 
         $category = Category::create([
@@ -26,7 +29,12 @@ class CategoryController extends Controller
             'description' => $request->description,
             'status' => $request->status ?? true,
             'created_by' => $request->created_by ?? $request->user()->id,
+            'parent_id' => $request->parent_id ?? null,
+            'priority' => $request->priority ?? 0,
+            'image' => $request->image ?? null,
         ]);
+
+        $category->load('parent.parent');
 
         return response()->json($category, 201);
     }
@@ -38,7 +46,7 @@ class CategoryController extends Controller
         $createdBy = $request->query('created_by');
 
         // Public lists only active categories (status=true)
-        $query = Category::where('status', true);
+        $query = Category::where('status', true)->with('parent.parent');
 
         if ($createdBy !== null) {
             $query->where('created_by', $createdBy);
@@ -58,7 +66,7 @@ class CategoryController extends Controller
         $limit = $request->query('limit', 100);
 
         $user = $request->user();
-        $query = Category::query();
+        $query = Category::with('parent.parent');
 
         if ($user->role_id != 1) {
             $query->where('created_by', $user->id);
@@ -75,7 +83,7 @@ class CategoryController extends Controller
 
     public function show($id)
     {
-        $category = Category::findOrFail($id);
+        $category = Category::with('parent.parent')->findOrFail($id);
         return response()->json($category);
     }
 
@@ -91,9 +99,13 @@ class CategoryController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'boolean',
+            'parent_id' => 'nullable|integer|exists:categories,id',
+            'priority' => 'nullable|integer',
+            'image' => 'nullable|string',
         ]);
 
-        $category->update($request->only(['name', 'description', 'status']));
+        $category->update($request->only(['name', 'description', 'status', 'parent_id', 'priority', 'image']));
+        $category->load('parent.parent');
         return response()->json($category);
     }
 

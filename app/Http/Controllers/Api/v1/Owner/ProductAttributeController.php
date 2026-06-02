@@ -30,20 +30,21 @@ class ProductAttributeController extends Controller
 
     public function store(Request $request)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['message' => 'Only administrators are allowed to create attributes.'], 403);
         }
 
         $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:100',
-                Rule::unique('product_attributes')->where(function ($query) use ($request) {
-                    return $query->where('created_by', $request->user()->id);
-                }),
-            ],
+            'name' => 'required|string|max:100',
         ]);
+
+        $attribute = ProductAttribute::where('name', $request->name)
+            ->where('created_by', $request->user()->id)
+            ->first();
+
+        if ($attribute) {
+            return response()->json($attribute, 200);
+        }
 
         $attribute = ProductAttribute::create([
             'name' => $request->name,
@@ -55,7 +56,7 @@ class ProductAttributeController extends Controller
 
     public function storeValue(Request $request, $attributeId)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['message' => 'Only administrators are allowed to add values.'], 403);
         }
 
@@ -66,12 +67,12 @@ class ProductAttributeController extends Controller
         ]);
 
         // Check uniqueness for this specific attribute value pair
-        $exists = ProductAttributeValue::where('product_attribute_id', $attribute->id)
+        $value = ProductAttributeValue::where('product_attribute_id', $attribute->id)
             ->where('value', $request->value)
-            ->exists();
+            ->first();
 
-        if ($exists) {
-            return response()->json(['message' => 'This value already exists for this attribute.'], 400);
+        if ($value) {
+            return response()->json($value, 200);
         }
 
         $value = ProductAttributeValue::create([
@@ -85,7 +86,7 @@ class ProductAttributeController extends Controller
 
     public function destroyValue(Request $request, $valueId)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['message' => 'Only administrators are allowed to delete values.'], 403);
         }
 
@@ -101,7 +102,7 @@ class ProductAttributeController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['message' => 'Only administrators are allowed to delete attributes.'], 403);
         }
 

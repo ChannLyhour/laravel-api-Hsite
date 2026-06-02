@@ -19,7 +19,7 @@ class ProductVariantController extends Controller
 
     public function store(Request $request, $productId)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 
@@ -63,7 +63,7 @@ class ProductVariantController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 
@@ -105,7 +105,7 @@ class ProductVariantController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        if (! in_array($request->user()->role_id, [1, 30003])) {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 

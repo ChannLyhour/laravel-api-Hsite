@@ -349,9 +349,9 @@ INSERT INTO `menu_items` VALUES (90102, 30015, 'Amok', 'kdfmdfkdnvkdnv', 9.00, '
 INSERT INTO `menu_items` VALUES (120103, 2090013, 'Soup chicken', 'sdnjbsdjksbkchb', 9.00, 'menu-items/1780072442_IMG_4459.JPG', 'available', '2026-05-29 15:46:12', '2026-05-29 16:34:02', 6);
 INSERT INTO `menu_items` VALUES (120104, 2090014, 'Lok Lak', 'jnsbjjbs', 9.00, 'menu-items/1780072449_IMG_4461.JPG', 'available', '2026-05-29 15:56:48', '2026-05-29 16:34:10', 6);
 INSERT INTO `menu_items` VALUES (150102, 2120013, 'Pizza Cambodai', NULL, 9.00, 'menu-items/1780129103_download (2).jpg', 'available', '2026-05-30 03:21:41', '2026-05-30 08:18:23', 9);
-INSERT INTO `menu_items` VALUES (180102, 30014, 'qqw', 'dsdsdsd', 3.00, 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'available', '2026-05-30 05:59:54', '2026-05-30 05:59:54', 2);
-INSERT INTO `menu_items` VALUES (180103, 30014, 'sdsdsdsd', 'sdsdsd', 1.00, 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'available', '2026-05-30 06:00:05', '2026-05-30 06:00:05', 2);
-INSERT INTO `menu_items` VALUES (180104, 30014, 'sdsdsd', 'sdsdsdsd', 2.00, 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'available', '2026-05-30 06:00:37', '2026-05-30 06:00:37', 2);
+INSERT INTO `menu_items` VALUES (180102, 30014, 'qqw', 'dsdsdsd', 3.00, NULL, 'available', '2026-05-30 05:59:54', '2026-05-30 05:59:54', 2);
+INSERT INTO `menu_items` VALUES (180103, 30014, 'sdsdsdsd', 'sdsdsd', 1.00, NULL, 'available', '2026-05-30 06:00:05', '2026-05-30 06:00:05', 2);
+INSERT INTO `menu_items` VALUES (180104, 30014, 'sdsdsd', 'sdsdsdsd', 2.00, NULL, 'available', '2026-05-30 06:00:37', '2026-05-30 06:00:37', 2);
 INSERT INTO `menu_items` VALUES (210108, NULL, 'Burger Special', NULL, 12.50, NULL, 'available', NULL, NULL, 30017);
 INSERT INTO `menu_items` VALUES (210109, NULL, 'Chilled Iced Latte', NULL, 4.00, NULL, 'available', NULL, NULL, 30017);
 

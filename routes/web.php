@@ -32,7 +32,7 @@ Route::get('/static/{path}', function ($path) {
         return redirect('https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80');
     }
 
-    return redirect('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80');
+    abort(404);
 })->where('path', '.*');
 
 // Uploaded Asset Router & Premium Unsplash Fallback
@@ -61,5 +61,5 @@ Route::get('/uploads/{path}', function ($path) {
         return redirect('https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80');
     }
 
-    return redirect('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80');
+    abort(404);
 })->where('path', '.*');

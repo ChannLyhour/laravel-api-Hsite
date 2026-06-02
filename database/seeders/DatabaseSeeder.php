@@ -405,7 +405,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // G. Product Images
-        DB::table('product_images')->insert([
+        $productImages = [
             // Test suite images
             ['id' => 1, 'product_id' => 1, 'product_variant_id' => 1, 'image_path' => 'https://cdn.example.com/products/iphone-15-blk.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
             ['id' => 2, 'product_id' => 1, 'product_variant_id' => 2, 'image_path' => 'https://cdn.example.com/products/iphone-15-natural.jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 1, 'created_at' => '2026-05-31 10:00:00'],
@@ -417,11 +417,24 @@ class DatabaseSeeder extends Seeder
             ['id' => 120103, 'product_id' => 120103, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072442_IMG_4459.JPG', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 6, 'created_at' => '2026-05-29 15:46:12'],
             ['id' => 120104, 'product_id' => 120104, 'product_variant_id' => null, 'image_path' => 'menu-items/1780072449_IMG_4461.JPG', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 6, 'created_at' => '2026-05-29 15:56:48'],
             ['id' => 150102, 'product_id' => 150102, 'product_variant_id' => null, 'image_path' => 'menu-items/1780129103_download (2).jpg', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 9, 'created_at' => '2026-05-30 03:21:41'],
-            ['id' => 180102, 'product_id' => 180102, 'product_variant_id' => null, 'image_path' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 05:59:54'],
-            ['id' => 180103, 'product_id' => 180103, 'product_variant_id' => null, 'image_path' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:05'],
-            ['id' => 180104, 'product_id' => 180104, 'product_variant_id' => null, 'image_path' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:37'],
-        ]);
+            ['id' => 180102, 'product_id' => 180102, 'product_variant_id' => null, 'image_path' => '', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 05:59:54'],
+            ['id' => 180103, 'product_id' => 180103, 'product_variant_id' => null, 'image_path' => '', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:05'],
+            ['id' => 180104, 'product_id' => 180104, 'product_variant_id' => null, 'image_path' => '', 'is_primary' => 1, 'sort_order' => 1, 'created_by' => 2, 'created_at' => '2026-05-30 06:00:37'],
+        ];
 
+        $productImages = array_map(function ($img) {
+            $path = $img['image_path'];
+            if ($path !== null && $path !== '') {
+                $img['image_path'] = json_encode([$path]);
+            } else {
+                $img['image_path'] = json_encode([]);
+            }
+            return $img;
+        }, $productImages);
+
+        DB::table('product_images')->insert($productImages);
+
+        
         // 7. Seed Customers
         DB::table('customers')->insert([
             ['id' => 1, 'user_id' => 3, 'name' => 'Chann Lyhour', 'email' => 'ChannLyhour@gmail.com', 'phone' => '08188182121', 'address' => '301 Siem Reap, Cambodia', 'city' => 'Siem Reap', 'created_at' => '2026-05-24 11:42:31', 'updated_at' => '2026-05-24 11:49:38', 'created_by' => null, 'deleted_at' => null],
@@ -614,6 +627,12 @@ class DatabaseSeeder extends Seeder
             ['id' => 11, 'key' => 'footer_copyright', 'value' => '© 2026 Food Ordering System. All rights reserved.', 'created_at' => '2026-05-25 11:53:41', 'updated_at' => '2026-05-25 11:53:41', 'created_by' => 1],
             ['id' => 90024, 'key' => 'site_maintenance_mode', 'value' => 'false', 'created_at' => null, 'updated_at' => null, 'created_by' => 1],
         ]);
+
+        // Synchronize products_thumbnail column for seeded products
+        $products = \App\Models\Product::all();
+        foreach ($products as $product) {
+            $product->syncThumbnails();
+        }
 
         // Re-enable foreign key constraints
         Schema::enableForeignKeyConstraints();

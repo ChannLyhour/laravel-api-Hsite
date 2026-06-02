@@ -17,8 +17,7 @@ class UploadHelper
      */
     public static function uploadImage(UploadedFile $file, string $folder): string
     {
-        // Sanitize and generate unique filename
-        $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+        $filename = date('dmy_His') . '.' . $file->getClientOriginalExtension();
         
         // Ensure public/uploads/{folder} exists and move the file there
         $destinationPath = public_path('uploads/' . $folder);
@@ -61,12 +60,35 @@ class UploadHelper
     /**
      * Delete an image from the public directory.
      *
-     * @param string|null $imagePath The relative path of the image.
+     * @param string|array|null $imagePath The relative path of the image.
      * @return bool True if deleted, false otherwise.
      */
-    public static function deleteImage(?string $imagePath): bool
+    public static function deleteImage($imagePath): bool
     {
         if (! $imagePath) {
+            return false;
+        }
+
+        // If it's a PHP array, delete all paths
+        if (is_array($imagePath)) {
+            $success = true;
+            foreach ($imagePath as $path) {
+                if (!self::deleteImage($path)) {
+                    $success = false;
+                }
+            }
+            return $success;
+        }
+
+        // If it's a JSON array or object string
+        if (is_string($imagePath) && (str_starts_with($imagePath, '[') || str_starts_with($imagePath, '{'))) {
+            $decoded = json_decode($imagePath, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return self::deleteImage($decoded);
+            }
+        }
+
+        if (!is_string($imagePath)) {
             return false;
         }
 
@@ -97,15 +119,15 @@ class UploadHelper
     /**
      * Update/replace an image. Uploads the new image and deletes the old one.
      *
-     * @param string|null $oldPath The old relative image path.
+     * @param string|array|null $oldPath The old relative image path.
      * @param UploadedFile|null $newFile The newly uploaded file.
      * @param string $folder The subfolder name.
      * @return string|null The new image path.
      */
-    public static function updateImage(?string $oldPath, ?UploadedFile $newFile, string $folder): ?string
+    public static function updateImage($oldPath, ?UploadedFile $newFile, string $folder): ?string
     {
         if (! $newFile) {
-            return $oldPath;
+            return is_array($oldPath) ? json_encode($oldPath) : $oldPath;
         }
 
         // Delete the old image first
@@ -120,9 +142,23 @@ if (! function_exists('getImagePath')) {
     /**
      * Get the full URL of an image stored in the public directory.
      */
-    function getImagePath(?string $imagePath): string
+    function getImagePath($imagePath): string
     {
         if (! $imagePath) {
+            return asset('default.png');
+        }
+
+        // If it's a PHP array, get the first one
+        if (is_array($imagePath)) {
+            $imagePath = $imagePath[0] ?? null;
+        } elseif (is_string($imagePath) && (str_starts_with($imagePath, '[') || str_starts_with($imagePath, '{'))) {
+            $decoded = json_decode($imagePath, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $imagePath = $decoded[0] ?? null;
+            }
+        }
+
+        if (! $imagePath || !is_string($imagePath)) {
             return asset('default.png');
         }
 

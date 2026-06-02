@@ -14,11 +14,25 @@ class Category extends Model
         'description',
         'status',
         'created_by',
+        'parent_id',
+        'priority',
+        'image',
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'priority' => 'integer',
     ];
+
+    public function parent()
+    {
+        return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
 
     public function products()
     {
