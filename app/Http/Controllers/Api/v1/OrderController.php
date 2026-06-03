@@ -27,6 +27,9 @@ class OrderController extends Controller
             'customer_phone' => 'nullable|string',
             'customer_address' => 'nullable|string',
             'notes' => 'nullable|string',
+            'order_type' => 'nullable|string|in:delivery,pickup,shipping',
+            'shipping_fee' => 'nullable|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0',
         ]);
 
         $store = Store::findOrFail($request->store_id);
@@ -88,17 +91,22 @@ class OrderController extends Controller
         // 4. Generate order number
         $orderNo = 'ORD-' . strtoupper(Str::random(6));
 
+        $shippingFee = (float)$request->input('shipping_fee', 0.00);
+        $discountAmount = (float)$request->input('discount_amount', 0.00);
+        $finalTotal = $totalAmount + $shippingFee - $discountAmount;
+
         // 5. Create order
         $order = Order::create([
             'order_no' => $orderNo,
-            'order_type' => 'dine_in', // default value
-            'customer_id' => $customer ? $customer->id : null,
+            'order_type' => $request->input('order_type', \App\Enums\OrderType::Delivery->value),
             'user_id' => $user ? $user->id : null,
             'notes' => $request->notes,
             'status' => 'pending',
             'subtotal' => $subtotal,
             'tax' => $taxAmount,
-            'total_amount' => $totalAmount,
+            'shipping_fee' => $shippingFee,
+            'discount_amount' => $discountAmount,
+            'total_amount' => max(0.00, $finalTotal),
             'store_id' => $store->id,
             'payment_status' => 'Unpaid',
             'payment_method' => $request->payment_method,

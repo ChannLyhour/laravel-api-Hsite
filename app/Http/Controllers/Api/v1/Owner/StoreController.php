@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\Store;
 use Illuminate\Http\Request;
+use App\Helpers\UploadHelper;
 
 class StoreController extends Controller
 {
@@ -192,4 +193,49 @@ class StoreController extends Controller
         }
         return response()->json($dict);
     }
+
+    public function uploadLogo(Request $request)
+    {
+        $user = $request->user();
+        if (! in_array($user->role_id, [1, 30003])) {
+            return response()->json(['detail' => 'Access denied.'], 403);
+        }
+
+        $request->validate([
+            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('logo')) {
+            $path = UploadHelper::uploadImage($request->file('logo'), 'stores/logo');
+            return response()->json([
+                'url' => asset($path),
+                'path' => $path
+            ]);
+        }
+
+        return response()->json(['detail' => 'No file provided.'], 400);
+    }
+
+    public function uploadFavicon(Request $request)
+    {
+        $user = $request->user();
+        if (! in_array($user->role_id, [1, 30003])) {
+            return response()->json(['detail' => 'Access denied.'], 403);
+        }
+
+        $request->validate([
+            'favicon' => 'required|file|mimes:jpeg,png,jpg,gif,svg,ico,webp|max:1024',
+        ]);
+
+        if ($request->hasFile('favicon')) {
+            $path = UploadHelper::uploadImage($request->file('favicon'), 'stores/favicon');
+            return response()->json([
+                'url' => asset($path),
+                'path' => $path
+            ]);
+        }
+
+        return response()->json(['detail' => 'No file provided.'], 400);
+    }
 }
+

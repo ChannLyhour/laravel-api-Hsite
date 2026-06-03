@@ -5,25 +5,27 @@ namespace App\Helpers;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use Intervention\Image\Laravel\Facades\Image;
 
 class UploadHelper
 {
     /**
      * Upload an image to the public/uploads directory.
+     * Images are resized to max 800 px wide and saved as WebP at 80% quality
+     * using Intervention Image. Falls back to a direct file move if processing fails.
      *
      * @param UploadedFile $file The uploaded file object.
-     * @param string $folder The subfolder under public/uploads/ (e.g., 'menu-items', 'banners', 'users').
-     * @return string The relative path to the uploaded file (e.g., 'uploads/menu-items/filename.jpg').
+     * @param string $folder The subfolder under public/uploads/ (e.g., 'products').
+     * @return string The relative path to the uploaded file (e.g., 'uploads/products/filename.webp').
      */
     public static function uploadImage(UploadedFile $file, string $folder): string
     {
-        $filename = date('dmy_His') . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-        
-        // Ensure public/uploads/{folder} exists and move the file there
         $destinationPath = public_path('uploads/' . $folder);
-        
+
         // Check if we are running in a read-only environment like Vercel
-        $isVercel = env('APP_ENV') === 'production' || !is_writable(public_path()) || str_contains(env('APP_URL', ''), 'vercel.app');
+        $isVercel = env('APP_ENV') === 'production'
+            || !is_writable(public_path())
+            || str_contains(env('APP_URL', ''), 'vercel.app');
 
         if ($isVercel) {
             try {
@@ -40,21 +42,36 @@ class UploadHelper
             if (! File::isDirectory($destinationPath)) {
                 File::makeDirectory($destinationPath, 0755, true, true);
             }
-            $file->move($destinationPath, $filename);
+
+            // Use Intervention Image v4: scale down to max 800 px wide, save as WebP 80%
+            // In v4: read() → decode(), toWebp() removed — quality passed to save() directly
+            $filename = date('dmy_His') . '_' . Str::random(10) . '.webp';
+            Image::decode($file->getRealPath())
+                ->scaleDown(width: 800)
+                ->save($destinationPath . '/' . $filename, quality: 80);
+
+            return 'uploads/' . $folder . '/' . $filename;
+
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning("Upload directory not writable, using Base64 fallback: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning("Intervention Image failed, using direct file move: " . $e->getMessage());
+
+            // Fallback: move the original file without compression
+            $filename = date('dmy_His') . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
             try {
-                $mimeType = $file->getMimeType();
-                $fileData = file_get_contents($file->getRealPath());
-                $base64 = base64_encode($fileData);
-                return 'data:' . $mimeType . ';base64,' . $base64;
-            } catch (\Exception $ex) {
-                // Fallback to virtual URL
+                $file->move($destinationPath, $filename);
                 return 'uploads/' . $folder . '/' . $filename;
+            } catch (\Exception $ex) {
+                \Illuminate\Support\Facades\Log::warning("Upload directory not writable, using Base64 fallback: " . $ex->getMessage());
+                try {
+                    $mimeType = $file->getMimeType();
+                    $fileData = file_get_contents($file->getRealPath());
+                    $base64 = base64_encode($fileData);
+                    return 'data:' . $mimeType . ';base64,' . $base64;
+                } catch (\Exception $exx) {
+                    return 'uploads/' . $folder . '/' . $filename;
+                }
             }
         }
-        
-        return 'uploads/' . $folder . '/' . $filename;
     }
 
     /**

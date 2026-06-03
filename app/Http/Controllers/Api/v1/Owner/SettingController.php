@@ -50,15 +50,26 @@ class SettingController extends Controller
 
         $settingsDict = $request->all();
 
+        // If the user is an admin, check if owner_id is passed in request to update that owner's settings
+        $ownerId = $user->id;
+        if ($user->role_id === 1) {
+            if ($request->has('owner_id')) {
+                $ownerId = intval($request->input('owner_id'));
+            } elseif ($request->query('owner_id')) {
+                $ownerId = intval($request->query('owner_id'));
+            }
+        }
+
         foreach ($settingsDict as $key => $value) {
+            if ($key === 'owner_id') continue;
             Setting::updateOrCreate(
-                ['created_by' => $user->id, 'key' => $key],
+                ['created_by' => $ownerId, 'key' => $key],
                 ['value' => $value]
             );
         }
 
         // Also update the stores table to keep it in sync
-        $storeExists = \App\Models\Store::where('created_by', $user->id)->exists();
+        $storeExists = \App\Models\Store::where('created_by', $ownerId)->exists();
         if ($storeExists) {
             $updatedFields = [];
             if (array_key_exists('store_name', $settingsDict)) $updatedFields['store_name'] = $settingsDict['store_name'];
@@ -69,27 +80,28 @@ class SettingController extends Controller
             if (array_key_exists('subscription_tier', $settingsDict)) $updatedFields['subscription_tier'] = $settingsDict['subscription_tier'];
             if (array_key_exists('custom_domain', $settingsDict)) $updatedFields['custom_domain'] = $settingsDict['custom_domain'];
             if (array_key_exists('logo_url', $settingsDict)) $updatedFields['logo_url'] = $settingsDict['logo_url'];
+            if (array_key_exists('favicon_url', $settingsDict)) $updatedFields['favicon_url'] = $settingsDict['favicon_url'];
             if (array_key_exists('social_tiktok', $settingsDict)) $updatedFields['social_tiktok'] = $settingsDict['social_tiktok'];
             if (array_key_exists('social_facebook', $settingsDict)) $updatedFields['social_facebook'] = $settingsDict['social_facebook'];
             if (array_key_exists('social_telegram', $settingsDict)) $updatedFields['social_telegram'] = $settingsDict['social_telegram'];
 
             foreach ($updatedFields as $key => $value) {
                 \App\Models\Store::updateOrCreate(
-                    ['created_by' => $user->id, 'key' => $key],
+                    ['created_by' => $ownerId, 'key' => $key],
                     ['value' => $value]
                 );
             }
         }
 
         // Clear the cache
-        \Illuminate\Support\Facades\Cache::forget("settings_owner_{$user->id}");
+        \Illuminate\Support\Facades\Cache::forget("settings_owner_{$ownerId}");
 
         // Return all settings
-        $settings = Setting::where('created_by', $user->id)->get();
+        $settings = Setting::where('created_by', $ownerId)->get();
         $updatedDict = [];
         
         // Populate from Store first to return full synced payload
-        $storeSettings = \App\Models\Store::where('created_by', $user->id)->get();
+        $storeSettings = \App\Models\Store::where('created_by', $ownerId)->get();
         foreach ($storeSettings as $item) {
             if ($item->key === 'tax_percentage') {
                 $updatedDict[$item->key] = strval($item->value);

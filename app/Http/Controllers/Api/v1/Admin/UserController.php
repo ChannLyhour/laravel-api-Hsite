@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\v1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\MenuItem;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,7 +17,7 @@ class UserController extends Controller
         
         // Filter to those who have created menu items (active storefronts)
         $filtered = $admins->filter(function ($admin) {
-            return MenuItem::where('created_by', $admin->id)->count() > 0;
+            return Product::where('created_by', $admin->id)->count() > 0;
         });
 
         // Map to minimum public profile

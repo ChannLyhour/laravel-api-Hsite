@@ -425,7 +425,6 @@ class DatabaseSeeder extends Seeder
                 'id' => 1,
                 'order_no' => 'ORD-DLFEH3',
                 'order_type' => 'dine_in',
-                'customer_id' => null,
                 'user_id' => 1,
                 'notes' => null,
                 'status' => 'completed',
@@ -437,6 +436,7 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => '2026-05-24 11:26:12',
                 'created_by' => null,
                 'store_id' => null,
+                
                 'payment_status' => 'Unpaid',
                 'payment_method' => 'Cash on Delivery',
                 'customer_name' => null,
@@ -447,7 +447,6 @@ class DatabaseSeeder extends Seeder
                 'id' => 2,
                 'order_no' => 'ORD-31YD6B',
                 'order_type' => 'delivery',
-                'customer_id' => 1,
                 'user_id' => 3,
                 'notes' => 'hhh',
                 'status' => 'completed',
@@ -469,7 +468,6 @@ class DatabaseSeeder extends Seeder
                 'id' => 5,
                 'order_no' => 'ORD-HOVOBY',
                 'order_type' => 'delivery',
-                'customer_id' => 1,
                 'user_id' => 3,
                 'notes' => null,
                 'status' => 'pending',
@@ -489,9 +487,8 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'id' => 30007,
-                'order_no' => null,
+                'order_no' => 'ORD-30007X',
                 'order_type' => 'dine_in',
-                'customer_id' => 30006,
                 'user_id' => 30016,
                 'notes' => 'Extra cheese on burger',
                 'status' => 'complete',
@@ -593,16 +590,6 @@ class DatabaseSeeder extends Seeder
             ['id' => 28, 'user_id' => 8, 'likeable_type' => 'App\\Models\\MenuItem', 'likeable_id' => 99, 'created_at' => '2026-05-24 18:15:02', 'updated_at' => '2026-05-24 18:15:02', 'created_by' => null],
         ]);
 
-        // 13. Seed Settings
-        DB::table('settings')->insert([
-            ['id' => 5, 'key' => 'logo', 'value' => 'settings/1779684821_photo_2026-05-21_22-32-24.jpg', 'created_at' => '2026-05-24 11:35:03', 'updated_at' => '2026-05-25 11:53:41', 'created_by' => 1],
-            ['id' => 6, 'key' => 'favicon', 'value' => 'settings/1779684821_photo_2026-05-21_22-32-24.jpg', 'created_at' => '2026-05-24 11:35:03', 'updated_at' => '2026-05-25 11:53:41', 'created_by' => 1],
-            ['id' => 8, 'key' => 'weekday_hours', 'value' => 'Mon-Fri: 10am - 9pm', 'created_at' => '2026-05-24 16:29:48', 'updated_at' => '2026-05-24 16:29:48', 'created_by' => 1],
-            ['id' => 9, 'key' => 'weekend_hours', 'value' => 'Sat-Sun: 11am - 11pm', 'created_at' => '2026-05-24 16:29:48', 'updated_at' => '2026-05-24 16:29:48', 'created_by' => 1],
-            ['id' => 10, 'key' => 'footer_description', 'value' => 'Fine food, delivered with care. From our kitchen to your door.', 'created_at' => '2026-05-25 11:53:41', 'updated_at' => '2026-05-25 11:53:41', 'created_by' => 1],
-            ['id' => 11, 'key' => 'footer_copyright', 'value' => '© 2026 Food Ordering System. All rights reserved.', 'created_at' => '2026-05-25 11:53:41', 'updated_at' => '2026-05-25 11:53:41', 'created_by' => 1],
-            ['id' => 90024, 'key' => 'site_maintenance_mode', 'value' => 'false', 'created_at' => null, 'updated_at' => null, 'created_by' => 1],
-        ]);
 
         // Synchronize products_thumbnail column for seeded products
         $products = \App\Models\Product::all();

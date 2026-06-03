@@ -11,10 +11,13 @@ use App\Http\Controllers\Api\v1\Owner\ProductImageController;
 use App\Http\Controllers\Api\v1\ProductRatingController;
 use App\Http\Controllers\Api\v1\CustomerController;
 use App\Http\Controllers\Api\v1\OrderController;
+use App\Http\Controllers\Api\v1\Owner\OrderController as OwnerOrderController;
 use App\Http\Controllers\Api\v1\Owner\StoreController;
 use App\Http\Controllers\Api\v1\Owner\CMSController;
 use App\Http\Controllers\Api\v1\Owner\SettingController;
 use App\Http\Controllers\Api\v1\FoodItemController;
+use App\Http\Controllers\Api\v1\ShareController;
+use App\Http\Controllers\Api\v1\SocialMediaController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -89,6 +92,13 @@ Route::get('/posts/{identifier}', [CMSController::class, 'getPost']);
 // System Settings (Public)
 Route::get('/settings', [SettingController::class, 'getSettings']);
 
+// Shared layout configurations (Public)
+Route::post('/save-share', [ShareController::class, 'save']);
+Route::get('/get-share/{id}', [ShareController::class, 'load']);
+
+// Social Media Links (Public)
+Route::get('/social-media', [SocialMediaController::class, 'index']);
+
 // Temporary Food Items (Public)
 Route::get('/items', [FoodItemController::class, 'index']);
 Route::get('/items/{item_id}', [FoodItemController::class, 'show'])->whereNumber('item_id');
@@ -154,7 +164,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/customers/{customer_id}', [CustomerController::class, 'update'])->whereNumber('customer_id');
     Route::delete('/customers/{customer_id}', [CustomerController::class, 'destroy'])->whereNumber('customer_id');
 
-    // Orders Manager
+    // Orders Manager (Customer & General)
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/me', [OrderController::class, 'me']);
     Route::get('/orders/store/me', [OrderController::class, 'storeOrders']);
@@ -162,12 +172,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/orders/{order_id}/status', [OrderController::class, 'updateStatus'])->whereNumber('order_id');
     Route::put('/orders/{order_id}/payment-status', [OrderController::class, 'updatePaymentStatus'])->whereNumber('order_id');
 
+    // Owner Orders Manager
+    Route::get('/owner/orders', [OwnerOrderController::class, 'index']);
+    Route::get('/owner/orders/{id}', [OwnerOrderController::class, 'show'])->whereNumber('id');
+    Route::put('/owner/orders/{id}/status', [OwnerOrderController::class, 'updateStatus'])->whereNumber('id');
+    Route::put('/owner/orders/{id}/payment-status', [OwnerOrderController::class, 'updatePaymentStatus'])->whereNumber('id');
+
     // Stores Configuration
     Route::get('/stores', [StoreController::class, 'index']);
     Route::post('/stores', [StoreController::class, 'store']);
     Route::get('/stores/me', [StoreController::class, 'showMe']);
     Route::put('/stores/me', [StoreController::class, 'upsert']);
     Route::put('/stores/{store_id}', [StoreController::class, 'update'])->whereNumber('store_id');
+    Route::post('/stores/upload-logo', [StoreController::class, 'uploadLogo']);
+    Route::post('/stores/upload-favicon', [StoreController::class, 'uploadFavicon']);
 
     // CMS Configuration (Pages & Posts)
     Route::post('/pages', [CMSController::class, 'createPage']);
@@ -180,6 +198,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // System Settings Configuration
     Route::put('/settings', [SettingController::class, 'updateSettings']);
+
+    // Social Media Links Setup
+    Route::get('/social-media/mine', [SocialMediaController::class, 'mine']);
+    Route::post('/social-media', [SocialMediaController::class, 'store']);
+    Route::put('/social-media/{id}', [SocialMediaController::class, 'update']);
+    Route::put('/social-media/{id}/toggle', [SocialMediaController::class, 'toggle']);
+    Route::delete('/social-media/{id}', [SocialMediaController::class, 'destroy']);
 
     // Temporary Food Items Configuration
     Route::post('/items', [FoodItemController::class, 'store']);

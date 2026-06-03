@@ -22,6 +22,7 @@ class AuthController extends Controller
             'city' => 'nullable|string',
             'state' => 'nullable|string',
             'image' => 'nullable|string',
+            'created_by' => 'nullable|integer|exists:users,id',
         ]);
 
         $user = User::create([
@@ -34,6 +35,7 @@ class AuthController extends Controller
             'city' => $request->city,
             'state' => $request->state ?? 'active',
             'image' => $request->image,
+            'created_by' => $request->created_by,
         ]);
 
         // If the user's role is a customer, create a corresponding Customer model entry
@@ -45,6 +47,7 @@ class AuthController extends Controller
                 'phone' => $user->phone,
                 'address' => $user->address,
                 'city' => $user->city,
+                'created_by' => $request->created_by ?? $user->created_by,
             ]);
         }
 

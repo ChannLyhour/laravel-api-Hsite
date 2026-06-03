@@ -1449,7 +1449,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"store_id\": 1,\n  \"payment_method\": \"Cash on Delivery\",\n  \"customer_name\": \"Chann Lyhour\",\n  \"customer_phone\": \"+855 99 999 999\",\n  \"customer_address\": \"Phnom Penh Resident St. 99\",\n  \"notes\": \"Please add extra cheese!\",\n  \"items\": [\n    {\n      \"product_variant_id\": 11,\n      \"quantity\": 2\n    },\n    {\n      \"product_variant_id\": 93,\n      \"quantity\": 3\n    }\n  ]\n}",
+              "raw": "{\n  \"store_id\": 1,\n  \"payment_method\": \"Cash on Delivery\",\n  \"customer_name\": \"Chann Lyhour\",\n  \"customer_phone\": \"+855 99 999 999\",\n  \"customer_address\": \"Phnom Penh Resident St. 99\",\n  \"notes\": \"Please add extra cheese!\",\n  \"order_type\": \"delivery\",\n  \"shipping_fee\": 2.50,\n  \"discount_amount\": 1.00,\n  \"items\": [\n    {\n      \"product_variant_id\": 11,\n      \"quantity\": 2\n    },\n    {\n      \"product_variant_id\": 93,\n      \"quantity\": 3\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1645,6 +1645,167 @@
                 "{{base_url}}"
               ],
               "path": [
+                "orders",
+                "1",
+                "payment-status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Owner - Get Store Orders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owner/orders?status=pending&payment_status=unpaid&order_type=delivery&search=&skip=0&limit=100",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "owner",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending"
+                },
+                {
+                  "key": "payment_status",
+                  "value": "unpaid"
+                },
+                {
+                  "key": "order_type",
+                  "value": "delivery"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Owner - Get Specific Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owner/orders/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "owner",
+                "orders",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Owner - Update Order Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"processing\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/owner/orders/1/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "owner",
+                "orders",
+                "1",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Owner - Update Payment Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_status\": \"paid\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/owner/orders/1/payment-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "owner",
                 "orders",
                 "1",
                 "payment-status"

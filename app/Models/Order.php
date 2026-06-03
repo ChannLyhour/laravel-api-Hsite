@@ -13,12 +13,13 @@ class Order extends Model
     protected $fillable = [
         'order_no',
         'order_type',
-        'customer_id',
         'user_id',
         'notes',
         'status',
         'subtotal',
         'tax',
+        'shipping_fee',
+        'discount_amount',
         'total_amount',
         'created_by',
         'store_id',
@@ -32,13 +33,11 @@ class Order extends Model
     protected $casts = [
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
+        'shipping_fee' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'order_type' => \App\Enums\OrderType::class,
     ];
-
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class);
-    }
 
     public function user()
     {
