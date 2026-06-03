@@ -704,27 +704,52 @@ class ProductController extends Controller
                     if (!empty($imagePath)) {
                         // Reset all other images of this product to non-primary
                         ProductImage::where('product_id', $product->id)->update(['is_primary' => false]);
- 
-                        $primaryImage = ProductImage::where('product_id', $product->id)->where('is_primary', true)->first();
-                        if ($primaryImage) {
-                            $primaryImage->update(['image' => $imagePath[0]]);
-                        } else {
-                            ProductImage::create([
-                                'product_id' => $product->id,
-                                'image' => $imagePath[0],
+  
+                        // Check if primary image already exists to prevent duplicate rows
+                        $existingImage = ProductImage::where('product_id', $product->id)
+                            ->where('image', $imagePath[0])
+                            ->first();
+
+                        if ($existingImage) {
+                            $existingImage->update([
                                 'is_primary' => true,
                                 'sort_order' => 1,
-                                'created_by' => $request->user()->id,
                             ]);
+                        } else {
+                            $primaryImage = ProductImage::where('product_id', $product->id)->where('is_primary', true)->first();
+                            if ($primaryImage) {
+                                $primaryImage->update(['image' => $imagePath[0]]);
+                            } else {
+                                ProductImage::create([
+                                    'product_id' => $product->id,
+                                    'image' => $imagePath[0],
+                                    'is_primary' => true,
+                                    'sort_order' => 1,
+                                    'created_by' => $request->user()->id,
+                                ]);
+                            }
                         }
+
                         for ($i = 1; $i < count($imagePath); $i++) {
-                            ProductImage::create([
-                                'product_id' => $product->id,
-                                'image' => $imagePath[$i],
-                                'is_primary' => false,
-                                'sort_order' => $i + 1,
-                                'created_by' => $request->user()->id,
-                            ]);
+                            // Check if secondary image already exists
+                            $existingSecImage = ProductImage::where('product_id', $product->id)
+                                ->where('image', $imagePath[$i])
+                                ->first();
+
+                            if ($existingSecImage) {
+                                $existingSecImage->update([
+                                    'is_primary' => false,
+                                    'sort_order' => $i + 1,
+                                ]);
+                            } else {
+                                ProductImage::create([
+                                    'product_id' => $product->id,
+                                    'image' => $imagePath[$i],
+                                    'is_primary' => false,
+                                    'sort_order' => $i + 1,
+                                    'created_by' => $request->user()->id,
+                                ]);
+                            }
                         }
                     } else {
                         $primaryImage = $product->images()->where('is_primary', true)->first();
@@ -736,6 +761,7 @@ class ProductController extends Controller
                 }
             }
 
+            $product->syncThumbnails();
             $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand']);
             return response()->json($product);
         });
