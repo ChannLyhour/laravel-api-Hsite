@@ -88,6 +88,11 @@ class Product extends Model
         return $this->morphMany(Like::class, 'likeable');
     }
 
+    public function flashDeals()
+    {
+        return $this->belongsToMany(FlashDeal::class, 'flash_deal_product');
+    }
+
     /**
      * Get the translated name for the current active locale.
      */

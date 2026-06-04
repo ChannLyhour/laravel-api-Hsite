@@ -73,6 +73,7 @@ class ProductController extends Controller
                 'variants.*.low_stock_threshold' => 'nullable|integer|min:0',
                 'variants.*.attribute_values' => 'nullable|array',
                 'variants.*.attribute_values.*' => 'integer|exists:product_attribute_values,id',
+                'variants.*.image' => 'nullable|file|image|max:2048',
             ]);
         }
 
@@ -254,6 +255,10 @@ class ProductController extends Controller
                             return $path;
                         }, $varImagePaths);
 
+                        $varImagePaths = array_filter($varImagePaths, function ($path) {
+                            return $path !== null && trim($path) !== '';
+                        });
+
                         foreach ($varImagePaths as $varImgIndex => $img) {
                             ProductImage::create([
                                 'product_id' => $product->id,
@@ -412,6 +417,7 @@ class ProductController extends Controller
                 'variants.*.low_stock_threshold' => 'nullable|integer|min:0',
                 'variants.*.attribute_values' => 'nullable|array',
                 'variants.*.attribute_values.*' => 'integer|exists:product_attribute_values,id',
+                'variants.*.image' => 'nullable|file|image|max:2048',
             ]);
         }
 
@@ -677,6 +683,10 @@ class ProductController extends Controller
                                 }
                                 return $path;
                             }, $varImagePath);
+
+                            $varImagePath = array_filter($varImagePath, function ($path) {
+                                return $path !== null && trim($path) !== '';
+                            });
 
                             if (!empty($varImagePath)) {
                                 ProductImage::updateOrCreate(

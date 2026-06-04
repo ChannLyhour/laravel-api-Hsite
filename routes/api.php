@@ -18,6 +18,12 @@ use App\Http\Controllers\Api\v1\Owner\SettingController;
 use App\Http\Controllers\Api\v1\FoodItemController;
 use App\Http\Controllers\Api\v1\ShareController;
 use App\Http\Controllers\Api\v1\SocialMediaController;
+use App\Http\Controllers\Api\v1\Owner\BannerController;
+use App\Http\Controllers\Api\v1\VendorController;
+use App\Http\Controllers\Api\v1\Owner\CouponController;
+use App\Http\Controllers\Api\v1\Owner\FlashDealController;
+use App\Http\Controllers\Api\v1\Owner\FeaturedDealController;
+use App\Http\Controllers\Api\v1\Owner\ClearanceSaleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -98,6 +104,30 @@ Route::get('/get-share/{id}', [ShareController::class, 'load']);
 
 // Social Media Links (Public)
 Route::get('/social-media', [SocialMediaController::class, 'index']);
+
+// Banners (Public)
+Route::get('/banners', [BannerController::class, 'index']);
+
+// Vendors (Public)
+Route::get('/vendors', [VendorController::class, 'index']);
+Route::get('/vendors/{id}', [VendorController::class, 'show'])->whereNumber('id');
+
+// Coupons (Public)
+Route::get('/coupons', [CouponController::class, 'index']);
+Route::get('/coupons/validate', [CouponController::class, 'validateCode']);
+Route::get('/coupons/{id}', [CouponController::class, 'show'])->whereNumber('id');
+
+// Flash Deals (Public)
+Route::get('/flash-deals', [FlashDealController::class, 'index']);
+Route::get('/flash-deals/{id}', [FlashDealController::class, 'show'])->whereNumber('id');
+
+// Featured Deals (Public)
+Route::get('/featured-deals', [FeaturedDealController::class, 'index']);
+Route::get('/featured-deals/{id}', [FeaturedDealController::class, 'show'])->whereNumber('id');
+
+// Clearance Sales (Public)
+Route::get('/clearance-sales', [ClearanceSaleController::class, 'index']);
+Route::get('/clearance-sales/{id}', [ClearanceSaleController::class, 'show'])->whereNumber('id');
 
 // Temporary Food Items (Public)
 Route::get('/items', [FoodItemController::class, 'index']);
@@ -206,8 +236,55 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/social-media/{id}/toggle', [SocialMediaController::class, 'toggle']);
     Route::delete('/social-media/{id}', [SocialMediaController::class, 'destroy']);
 
+    // Banners Configuration
+    Route::get('/banners/mine', [BannerController::class, 'mine']);
+    Route::post('/banners', [BannerController::class, 'store']);
+    Route::put('/banners/{id}', [BannerController::class, 'update']);
+    Route::post('/banners/{id}', [BannerController::class, 'update']); // Support multipart/form-data updates via POST
+    Route::put('/banners/{id}/toggle', [BannerController::class, 'toggle']);
+    Route::delete('/banners/{id}', [BannerController::class, 'destroy']);
+
     // Temporary Food Items Configuration
     Route::post('/items', [FoodItemController::class, 'store']);
     Route::put('/items/{item_id}', [FoodItemController::class, 'update'])->whereNumber('item_id');
     Route::delete('/items/{item_id}', [FoodItemController::class, 'destroy'])->whereNumber('item_id');
+
+    // Coupons Configuration
+    Route::get('/coupons/mine', [CouponController::class, 'mine']);
+    Route::post('/coupons', [CouponController::class, 'store']);
+    Route::put('/coupons/{id}', [CouponController::class, 'update'])->whereNumber('id');
+    Route::post('/coupons/{id}', [CouponController::class, 'update'])->whereNumber('id');
+    Route::put('/coupons/{id}/toggle', [CouponController::class, 'toggle'])->whereNumber('id');
+    Route::delete('/coupons/{id}', [CouponController::class, 'destroy'])->whereNumber('id');
+
+    // Flash Deals Configuration
+    Route::get('/owner/flash-deals/mine', [FlashDealController::class, 'mine']);
+    Route::post('/owner/flash-deals', [FlashDealController::class, 'store']);
+    Route::put('/owner/flash-deals/{id}', [FlashDealController::class, 'update'])->whereNumber('id');
+    Route::post('/owner/flash-deals/{id}', [FlashDealController::class, 'update'])->whereNumber('id');
+    Route::put('/owner/flash-deals/{id}/toggle', [FlashDealController::class, 'toggle'])->whereNumber('id');
+    Route::delete('/owner/flash-deals/{id}', [FlashDealController::class, 'destroy'])->whereNumber('id');
+    Route::post('/owner/flash-deals/{id}/products', [FlashDealController::class, 'addProducts'])->whereNumber('id');
+    Route::delete('/owner/flash-deals/{id}/products/{product_id}', [FlashDealController::class, 'removeProduct'])->whereNumber('id')->whereNumber('product_id');
+
+    // Featured Deals Configuration
+    Route::get('/owner/featured-deals/mine', [FeaturedDealController::class, 'mine']);
+    Route::post('/owner/featured-deals', [FeaturedDealController::class, 'store']);
+    Route::put('/owner/featured-deals/{id}', [FeaturedDealController::class, 'update'])->whereNumber('id');
+    Route::post('/owner/featured-deals/{id}', [FeaturedDealController::class, 'update'])->whereNumber('id');
+    Route::put('/owner/featured-deals/{id}/toggle', [FeaturedDealController::class, 'toggle'])->whereNumber('id');
+    Route::delete('/owner/featured-deals/{id}', [FeaturedDealController::class, 'destroy'])->whereNumber('id');
+    Route::post('/owner/featured-deals/{id}/products', [FeaturedDealController::class, 'addProducts'])->whereNumber('id');
+    Route::delete('/owner/featured-deals/{id}/products/{product_id}', [FeaturedDealController::class, 'removeProduct'])->whereNumber('id')->whereNumber('product_id');
+
+    // Clearance Sales Configuration
+    Route::get('/owner/clearance-sales/mine', [ClearanceSaleController::class, 'mine']);
+    Route::post('/owner/clearance-sales', [ClearanceSaleController::class, 'store']);
+    Route::put('/owner/clearance-sales/{id}', [ClearanceSaleController::class, 'update'])->whereNumber('id');
+    Route::post('/owner/clearance-sales/{id}', [ClearanceSaleController::class, 'update'])->whereNumber('id');
+    Route::put('/owner/clearance-sales/{id}/toggle', [ClearanceSaleController::class, 'toggle'])->whereNumber('id');
+    Route::delete('/owner/clearance-sales/{id}', [ClearanceSaleController::class, 'destroy'])->whereNumber('id');
+    Route::post('/owner/clearance-sales/{id}/products', [ClearanceSaleController::class, 'addProducts'])->whereNumber('id');
+    Route::put('/owner/clearance-sales/{id}/products/{product_id}', [ClearanceSaleController::class, 'updateProductPivot'])->whereNumber('id')->whereNumber('product_id');
+    Route::delete('/owner/clearance-sales/{id}/products/{product_id}', [ClearanceSaleController::class, 'removeProduct'])->whereNumber('id')->whereNumber('product_id');
 });
