@@ -104,7 +104,7 @@ class StoreController extends Controller
             'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
             'social_telegram', 'shipping_fee', 'free_shipping_threshold',
             'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
-            'payment_methods'
+            'payment_methods', 'guest_checkout'
         ];
 
         $data = $request->all();
@@ -122,6 +122,10 @@ class StoreController extends Controller
                 ['created_by' => $user->id, 'key' => $key],
                 ['value' => $val]
             );
+        }
+
+        if ($request->has('guest_checkout')) {
+            Store::where('created_by', $user->id)->update(['guest_checkout' => (bool)$request->guest_checkout]);
         }
 
         // Clear cached settings for owner
@@ -160,7 +164,7 @@ class StoreController extends Controller
             'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
             'social_telegram', 'shipping_fee', 'free_shipping_threshold',
             'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
-            'payment_methods'
+            'payment_methods', 'guest_checkout'
         ];
 
         $ownerId = $request->created_by;
@@ -179,6 +183,10 @@ class StoreController extends Controller
                 ['created_by' => $ownerId, 'key' => $key],
                 ['value' => $val]
             );
+        }
+
+        if ($request->has('guest_checkout')) {
+            Store::where('created_by', $ownerId)->update(['guest_checkout' => (bool)$request->guest_checkout]);
         }
 
         // Clear cached settings for owner
@@ -228,7 +236,7 @@ class StoreController extends Controller
             'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
             'social_telegram', 'shipping_fee', 'free_shipping_threshold',
             'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
-            'payment_methods'
+            'payment_methods', 'guest_checkout'
         ];
 
         $data = $request->all();
@@ -246,6 +254,10 @@ class StoreController extends Controller
                 ['created_by' => $ownerId, 'key' => $key],
                 ['value' => $val]
             );
+        }
+
+        if ($request->has('guest_checkout')) {
+            Store::where('created_by', $ownerId)->update(['guest_checkout' => (bool)$request->guest_checkout]);
         }
 
         // Clear cached settings for owner

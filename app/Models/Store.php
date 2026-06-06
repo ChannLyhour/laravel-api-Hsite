@@ -13,10 +13,12 @@ class Store extends Model
         'created_by',
         'key',
         'value',
+        'guest_checkout',
     ];
 
     protected $casts = [
         'value' => 'string',
+        'guest_checkout' => 'boolean',
     ];
 
     public function owner()

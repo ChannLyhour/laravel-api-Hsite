@@ -30,6 +30,7 @@ class OrderController extends Controller
             'customer_gender' => 'nullable|string|in:male,female',
             'customer_country' => 'nullable|string',
             'customer_phone' => 'nullable|string',
+            'customer_email' => 'nullable|email',
             'customer_address' => 'nullable|string',
             'notes' => 'nullable|string',
             'order_type' => 'nullable|string|in:delivery,pickup,shipping',
@@ -38,16 +39,28 @@ class OrderController extends Controller
         ]);
 
         $store = Store::findOrFail($request->store_id);
-        $user = $request->user();
+        
+        // Optional user detection for public route
+        $user = auth('sanctum')->user();
+
+        // 0. Guest Checkout Permission Check
+        if (!$user && !$store->guest_checkout) {
+            return response()->json(['detail' => 'Authentication required. This store does not allow guest checkout.'], 403);
+        }
 
         // 1. Resolve shipping info
         $customerName = $request->customer_name;
         $customerPhone = $request->customer_phone;
+        $customerEmail = $request->customer_email;
         $customerAddressStr = $request->customer_address;
         $customerCountry = $request->customer_country;
         $customerFirstName = $request->customer_first_name;
         $customerLastName = $request->customer_last_name;
         $shippingAddressId = $request->shipping_address_id;
+
+        if ($user && !$customerEmail) {
+            $customerEmail = $user->email;
+        }
 
         if ($shippingAddressId) {
             $shippingAddress = \App\Models\ShippingAddress::findOrFail($shippingAddressId);
@@ -71,7 +84,7 @@ class OrderController extends Controller
                     'last_name' => $customerLastName,
                     'gender' => $request->customer_gender,
                     'country' => $customerCountry,
-                    'email' => $user->email,
+                    'email' => $customerEmail,
                     'phone' => $customerPhone,
                     'address' => $customerAddressStr,
                     'created_by' => $user->id,
@@ -141,6 +154,7 @@ class OrderController extends Controller
             'payment_method' => $request->payment_method,
             'customer_name' => $customerName,
             'customer_phone' => $customerPhone,
+            'customer_email' => $customerEmail,
             'customer_address' => $customerAddressStr,
         ]);
 

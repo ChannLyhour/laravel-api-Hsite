@@ -135,6 +135,9 @@ Route::get('/clearance-sales/{id}', [ClearanceSaleController::class, 'show'])->w
 Route::get('/items', [FoodItemController::class, 'index']);
 Route::get('/items/{item_id}', [FoodItemController::class, 'show'])->whereNumber('item_id');
 
+// Order Placement (Public / Guest Checkout)
+Route::post('/orders', [OrderController::class, 'store']);
+
 
 
 // =========================================================================
@@ -307,7 +310,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Orders History
     Route::get('/orders/me', [OrderController::class, 'me']);
     Route::get('/orders/{order_id}', [OrderController::class, 'show'])->whereNumber('order_id');
-    Route::post('/orders', [OrderController::class, 'store']);
 
     // Shipping Addresses
     Route::get('/shipping-addresses', [ShippingAddressController::class, 'index']);
