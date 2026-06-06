@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
+        $middleware->alias([
+            'super-admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'owner' => \App\Http\Middleware\OwnerMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, \Illuminate\Http\Request $request) {

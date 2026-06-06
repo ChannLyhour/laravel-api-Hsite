@@ -30,6 +30,20 @@ class SettingController extends Controller
                     $dict[$item->key] = $item->value;
                 }
             }
+
+            // 3. Populate/override with user profile fields to ensure identity sync
+            $owner = \App\Models\User::find($ownerId);
+            if ($owner) {
+                $dict['first_name'] = $owner->first_name;
+                $dict['last_name'] = $owner->last_name;
+                $dict['gender'] = $owner->gender;
+                $dict['country'] = $owner->country;
+                $dict['name'] = $owner->name;
+                // Also provide email and phone if not already set by store keys
+                if (!isset($dict['store_email'])) $dict['store_email'] = $owner->email;
+                if (!isset($dict['store_phone'])) $dict['store_phone'] = $owner->phone;
+            }
+
             return $dict;
         });
 
@@ -61,16 +75,35 @@ class SettingController extends Controller
         }
 
         $storeKeys = [
-            'store_name', 'store_phone', 'store_email', 'store_address',
-            'tax_percentage', 'subscription_tier', 'custom_domain',
-            'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
-            'social_telegram', 'shipping_fee', 'free_shipping_threshold',
-            'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text'
+            'store_name',
+            'store_phone',
+            'store_email',
+            'store_address',
+            'tax_percentage',
+            'subscription_tier',
+            'custom_domain',
+            'logo_url',
+            'favicon_url',
+            'social_tiktok',
+            'social_facebook',
+            'social_telegram',
+            'shipping_fee',
+            'free_shipping_threshold',
+            'website_theme',
+            'currency',
+            'maintenance_mode',
+            'announcement_text',
+            'footer_text',
+            'first_name',
+            'last_name',
+            'gender',
+            'country',
+            'name'
         ];
 
         foreach ($settingsDict as $key => $value) {
             if ($key === 'owner_id') continue;
-            
+
             if (in_array($key, $storeKeys)) {
                 // Keep it in Store table
                 \App\Models\Store::updateOrCreate(
@@ -90,18 +123,33 @@ class SettingController extends Controller
             }
         }
 
+        // Sync with User model if identity fields are present
+        $owner = \App\Models\User::find($ownerId);
+        if ($owner) {
+            $userData = [];
+            if (isset($settingsDict['name'])) $userData['name'] = $settingsDict['name'];
+            if (isset($settingsDict['first_name'])) $userData['first_name'] = $settingsDict['first_name'];
+            if (isset($settingsDict['last_name'])) $userData['last_name'] = $settingsDict['last_name'];
+            if (isset($settingsDict['gender'])) $userData['gender'] = $settingsDict['gender'];
+            if (isset($settingsDict['country'])) $userData['country'] = $settingsDict['country'];
+
+            if (!empty($userData)) {
+                $owner->update($userData);
+            }
+        }
+
         // Clear the cache
         \Illuminate\Support\Facades\Cache::forget("settings_owner_{$ownerId}");
 
         // Return all settings
         $settings = Setting::where('created_by', $ownerId)->get();
         $updatedDict = [];
-        
+
         // Populate from Setting first
         foreach ($settings as $setting) {
             $updatedDict[$setting->key] = $setting->value;
         }
-        
+
         // Override/populate from Store last to ensure correct values are returned
         $storeSettings = \App\Models\Store::where('created_by', $ownerId)->get();
         foreach ($storeSettings as $item) {
@@ -112,7 +160,15 @@ class SettingController extends Controller
             }
         }
 
+        // Final override from User table to ensure identity sync in response
+        if ($owner) {
+            $updatedDict['first_name'] = $owner->first_name;
+            $updatedDict['last_name'] = $owner->last_name;
+            $updatedDict['gender'] = $owner->gender;
+            $updatedDict['country'] = $owner->country;
+            $updatedDict['name'] = $owner->name;
+        }
+
         return response()->json($updatedDict);
     }
 }
-
