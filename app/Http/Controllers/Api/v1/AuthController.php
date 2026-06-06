@@ -13,52 +13,74 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|in:male,female',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'role_id' => 'nullable|integer',
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
             'city' => 'nullable|string',
+            'country' => 'nullable|string',
             'state' => 'nullable|string',
             'image' => 'nullable|string',
             'created_by' => 'nullable|integer|exists:users,id',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id' => $request->role_id ?? 2,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'city' => $request->city,
-            'state' => $request->state ?? 'active',
-            'image' => $request->image,
-            'created_by' => $request->created_by,
-        ]);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            $displayName = $request->name ?: $request->first_name . ' ' . $request->last_name;
 
-        // If the user's role is a customer, create a corresponding Customer model entry
-        if ((int)$user->role_id === 2) {
-            \App\Models\Customer::create([
-                'user_id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'address' => $user->address,
-                'city' => $user->city,
-                'created_by' => $request->created_by ?? $user->created_by,
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = \App\Helpers\UploadHelper::uploadImage($request->file('image'), 'users');
+            } elseif ($request->has('image')) {
+                $imagePath = $request->image;
+            }
+
+            $user = User::create([
+                'name' => $displayName,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'gender' => $request->gender,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role_id' => $request->role_id ?? 2,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'city' => $request->city,
+                'country' => $request->country,
+                'state' => $request->state ?? 'active',
+                'image' => $imagePath,
+                'created_by' => $request->created_by,
             ]);
-        }
 
-        $token = $user->createToken('auth-token')->plainTextToken;
+            // If the user's role is a customer (default role_id=2), create a corresponding Customer model entry
+            if ((int)$user->role_id === 2) {
+                $user->customer()->create([
+                    'name' => $displayName,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'gender' => $user->gender,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
+                    'city' => $user->city,
+                    'country' => $user->country,
+                    'created_by' => $request->created_by ?? $user->created_by,
+                ]);
+            }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'User registered successfully',
-            'token' => $token,
-            'user' => $user
-        ], 201);
+            $token = $user->createToken('auth-token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User registered successfully',
+                'token' => $token,
+                'user' => $user->load('customer')
+            ], 201);
+        });
     }
 
     public function login(Request $request)

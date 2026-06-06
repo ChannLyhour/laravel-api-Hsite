@@ -17,7 +17,7 @@ class VendorController extends Controller
         $limit = $request->query('limit', 100);
 
         $vendors = User::where('role_id', 2)
-            ->select('id', 'name', 'email', 'phone', 'city', 'state', 'image')
+            ->select('id', 'name', 'first_name', 'last_name', 'gender', 'email', 'phone', 'city', 'country', 'state', 'image')
             ->skip($skip)
             ->take($limit)
             ->get();
@@ -31,7 +31,7 @@ class VendorController extends Controller
     public function show($id)
     {
         $vendor = User::where('role_id', 2)
-            ->select('id', 'name', 'email', 'phone', 'city', 'state', 'image')
+            ->select('id', 'name', 'first_name', 'last_name', 'gender', 'email', 'phone', 'city', 'country', 'state', 'image')
             ->findOrFail($id);
 
         return response()->json($vendor);

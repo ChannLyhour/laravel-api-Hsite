@@ -19,16 +19,37 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
+        'gender',
         'email',
         'password',
         'role_id',
         'phone',
         'address',
         'city',
+        'country',
         'state',
         'image',
         'created_by',
     ];
+
+    // Relationship to Customer
+    public function customer()
+    {
+        return $this->hasOne(Customer::class, 'user_id');
+    }
+
+    // Relationship to Shipping Addresses
+    public function shippingAddresses()
+    {
+        return $this->hasMany(ShippingAddress::class);
+    }
+
+    public function defaultShippingAddress()
+    {
+        return $this->hasOne(ShippingAddress::class)->where('set_as_default', true);
+    }
 
     /**
      * The attributes that should be hidden for serialization.

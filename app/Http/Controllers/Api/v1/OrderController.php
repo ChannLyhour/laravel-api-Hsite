@@ -23,7 +23,12 @@ class OrderController extends Controller
             'items.*.menu_item_id' => 'required_without:items.*.product_variant_id|nullable|integer|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
             'payment_method' => 'required|string',
-            'customer_name' => 'required|string',
+            'shipping_address_id' => 'nullable|integer|exists:shipping_addresses,id',
+            'customer_name' => 'required_without:shipping_address_id|nullable|string',
+            'customer_first_name' => 'nullable|string',
+            'customer_last_name' => 'nullable|string',
+            'customer_gender' => 'nullable|string|in:male,female',
+            'customer_country' => 'nullable|string',
             'customer_phone' => 'nullable|string',
             'customer_address' => 'nullable|string',
             'notes' => 'nullable|string',
@@ -35,17 +40,40 @@ class OrderController extends Controller
         $store = Store::findOrFail($request->store_id);
         $user = $request->user();
 
-        // 1. Resolve/create customer profile to satisfy DB
+        // 1. Resolve shipping info
+        $customerName = $request->customer_name;
+        $customerPhone = $request->customer_phone;
+        $customerAddressStr = $request->customer_address;
+        $customerCountry = $request->customer_country;
+        $customerFirstName = $request->customer_first_name;
+        $customerLastName = $request->customer_last_name;
+        $shippingAddressId = $request->shipping_address_id;
+
+        if ($shippingAddressId) {
+            $shippingAddress = \App\Models\ShippingAddress::findOrFail($shippingAddressId);
+            $customerFirstName = $shippingAddress->first_name;
+            $customerLastName = $shippingAddress->last_name;
+            $customerName = $customerFirstName . ' ' . $customerLastName;
+            $customerPhone = $shippingAddress->telephone;
+            $customerAddressStr = $shippingAddress->address . ', ' . $shippingAddress->city_province;
+            $customerCountry = $shippingAddress->country;
+        }
+
+        // 2. Resolve/create customer profile to satisfy DB
         $customer = null;
         if ($user) {
             $customer = Customer::where('user_id', $user->id)->first();
             if (! $customer) {
                 $customer = Customer::create([
                     'user_id' => $user->id,
-                    'name' => $request->customer_name,
+                    'name' => $customerName,
+                    'first_name' => $customerFirstName,
+                    'last_name' => $customerLastName,
+                    'gender' => $request->customer_gender,
+                    'country' => $customerCountry,
                     'email' => $user->email,
-                    'phone' => $request->customer_phone,
-                    'address' => $request->customer_address,
+                    'phone' => $customerPhone,
+                    'address' => $customerAddressStr,
                     'created_by' => $user->id,
                 ]);
             }
@@ -54,7 +82,7 @@ class OrderController extends Controller
         $subtotal = 0.00;
         $orderItems = [];
 
-        // 2. Process each item, verifying availability and snapshotting pricing
+        // 3. Process each item, verifying availability and snapshotting pricing
         foreach ($request->items as $itemData) {
             $variantId = $itemData['product_variant_id'] ?? $itemData['menu_item_id'];
             $variant = ProductVariant::with('product.translations')->findOrFail($variantId);
@@ -83,23 +111,24 @@ class OrderController extends Controller
             ]);
         }
 
-        // 3. Compute tax/VAT
+        // 4. Compute tax/VAT
         $taxPct = (float) ($store->tax_percentage ?? 0.0);
         $taxAmount = $subtotal * ($taxPct / 100.00);
         $totalAmount = $subtotal + $taxAmount;
 
-        // 4. Generate order number
+        // 5. Generate order number
         $orderNo = 'ORD-' . strtoupper(Str::random(6));
 
         $shippingFee = (float)$request->input('shipping_fee', 0.00);
         $discountAmount = (float)$request->input('discount_amount', 0.00);
         $finalTotal = $totalAmount + $shippingFee - $discountAmount;
 
-        // 5. Create order
+        // 6. Create order
         $order = Order::create([
             'order_no' => $orderNo,
             'order_type' => $request->input('order_type', \App\Enums\OrderType::Delivery->value),
             'user_id' => $user ? $user->id : null,
+            'shipping_address_id' => $shippingAddressId,
             'notes' => $request->notes,
             'status' => 'pending',
             'subtotal' => $subtotal,
@@ -110,9 +139,9 @@ class OrderController extends Controller
             'store_id' => $store->id,
             'payment_status' => 'Unpaid',
             'payment_method' => $request->payment_method,
-            'customer_name' => $request->customer_name,
-            'customer_phone' => $request->customer_phone,
-            'customer_address' => $request->customer_address,
+            'customer_name' => $customerName,
+            'customer_phone' => $customerPhone,
+            'customer_address' => $customerAddressStr,
         ]);
 
         $order->items()->saveMany($orderItems);

@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\v1\Owner\FlashDealController;
 use App\Http\Controllers\Api\v1\Owner\FeaturedDealController;
 use App\Http\Controllers\Api\v1\Owner\ClearanceSaleController;
 use App\Http\Controllers\Api\v1\LikeController;
+use App\Http\Controllers\Api\v1\ShippingAddressController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -292,4 +293,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/products/liked', [LikeController::class, 'getMyLikedProductIds']);
     Route::post('/products/{id}/like', [LikeController::class, 'toggleProductLike'])->whereNumber('id');
     Route::get('/products/{id}/like-status', [LikeController::class, 'getProductLikeStatus'])->whereNumber('id');
+
+    // Shipping Addresses
+    Route::get('/shipping-addresses', [ShippingAddressController::class, 'index']);
+    Route::post('/shipping-addresses', [ShippingAddressController::class, 'store']);
+    Route::get('/shipping-addresses/{id}', [ShippingAddressController::class, 'show'])->whereNumber('id');
+    Route::put('/shipping-addresses/{id}', [ShippingAddressController::class, 'update'])->whereNumber('id');
+    Route::delete('/shipping-addresses/{id}', [ShippingAddressController::class, 'destroy'])->whereNumber('id');
+    Route::put('/shipping-addresses/{id}/set-default', [ShippingAddressController::class, 'setDefault'])->whereNumber('id');
 });

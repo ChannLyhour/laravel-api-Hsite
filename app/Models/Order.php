@@ -14,6 +14,7 @@ class Order extends Model
         'order_no',
         'order_type',
         'user_id',
+        'shipping_address_id',
         'notes',
         'status',
         'subtotal',
@@ -42,6 +43,11 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function shippingAddress()
+    {
+        return $this->belongsTo(ShippingAddress::class);
     }
 
     public function store()

@@ -60,17 +60,28 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|in:male,female',
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'sometimes|required|string|min:6',
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
             'city' => 'nullable|string',
+            'country' => 'nullable|string',
             'state' => 'nullable|string',
-            'image' => 'nullable|string',
+            'image' => 'nullable',
             'role_id' => 'sometimes|nullable|integer',
         ]);
 
-        $data = $request->only(['name', 'email', 'phone', 'address', 'city', 'state', 'image']);
+        $data = $request->only(['name', 'first_name', 'last_name', 'gender', 'email', 'phone', 'address', 'city', 'country', 'state']);
+        
+        if ($request->hasFile('image')) {
+            $data['image'] = \App\Helpers\UploadHelper::updateImage($user->getRawOriginal('image'), $request->file('image'), 'users');
+        } elseif ($request->has('image')) {
+            $data['image'] = $request->image;
+        }
+
         if ($request->has('password')) {
             $data['password'] = Hash::make($request->password);
         }
@@ -79,6 +90,15 @@ class UserController extends Controller
         }
 
         $user->update($data);
+
+        // Sync with Customer if the user is a customer (role_id=2)
+        if ((int)$user->role_id === 2) {
+            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
+            if ($customer) {
+                $customer->update($request->only(['name', 'first_name', 'last_name', 'gender', 'email', 'phone', 'address', 'city', 'country']));
+            }
+        }
+
         return response()->json($user);
     }
 
