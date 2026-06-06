@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\v1\OrderController;
 use App\Http\Controllers\Api\v1\Owner\OrderController as OwnerOrderController;
 use App\Http\Controllers\Api\v1\Owner\StoreController;
 use App\Http\Controllers\Api\v1\Owner\CMSController;
-use App\Http\Controllers\Api\v1\Owner\SettingController;
+use App\Http\Controllers\Api\v1\Admin\SettingController;
 use App\Http\Controllers\Api\v1\FoodItemController;
 use App\Http\Controllers\Api\v1\ShareController;
 use App\Http\Controllers\Api\v1\SocialMediaController;
@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\v1\Owner\CouponController;
 use App\Http\Controllers\Api\v1\Owner\FlashDealController;
 use App\Http\Controllers\Api\v1\Owner\FeaturedDealController;
 use App\Http\Controllers\Api\v1\Owner\ClearanceSaleController;
+use App\Http\Controllers\Api\v1\LikeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -77,6 +78,7 @@ Route::get('/brands', [BrandController::class, 'index']);
 Route::get('/brands/{id}', [BrandController::class, 'show'])->whereNumber('id');
 
 // Products (Public)
+Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/top-selling', [ProductController::class, 'topSelling']);
 Route::get('/products/{id}', [ProductController::class, 'show'])->whereNumber('id');
 Route::get('/products/{id}/variants', [ProductVariantController::class, 'index'])->whereNumber('id');
@@ -161,8 +163,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/brands/{id}', [BrandController::class, 'update'])->whereNumber('id');
     Route::delete('/brands/{id}', [BrandController::class, 'destroy'])->whereNumber('id');
 
-    // Products Manager
-    Route::get('/products', [ProductController::class, 'index']);
+    // Products Manager (write operations only — GET /products is public above)
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update'])->whereNumber('id');
     Route::post('/products/{id}', [ProductController::class, 'update'])->whereNumber('id');
@@ -216,6 +217,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/stores/{store_id}', [StoreController::class, 'update'])->whereNumber('store_id');
     Route::post('/stores/upload-logo', [StoreController::class, 'uploadLogo']);
     Route::post('/stores/upload-favicon', [StoreController::class, 'uploadFavicon']);
+    Route::get('/stores/payment-gateways', [StoreController::class, 'getPaymentGateways']);
 
     // CMS Configuration (Pages & Posts)
     Route::post('/pages', [CMSController::class, 'createPage']);
@@ -226,8 +228,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/posts/{post_id}', [CMSController::class, 'updatePost'])->whereNumber('post_id');
     Route::delete('/posts/{post_id}', [CMSController::class, 'deletePost'])->whereNumber('post_id');
 
-    // System Settings Configuration
-    Route::put('/settings', [SettingController::class, 'updateSettings']);
 
     // Social Media Links Setup
     Route::get('/social-media/mine', [SocialMediaController::class, 'mine']);
@@ -287,4 +287,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/owner/clearance-sales/{id}/products', [ClearanceSaleController::class, 'addProducts'])->whereNumber('id');
     Route::put('/owner/clearance-sales/{id}/products/{product_id}', [ClearanceSaleController::class, 'updateProductPivot'])->whereNumber('id')->whereNumber('product_id');
     Route::delete('/owner/clearance-sales/{id}/products/{product_id}', [ClearanceSaleController::class, 'removeProduct'])->whereNumber('id')->whereNumber('product_id');
+
+    // Product Like functionality
+    Route::get('/products/liked', [LikeController::class, 'getMyLikedProductIds']);
+    Route::post('/products/{id}/like', [LikeController::class, 'toggleProductLike'])->whereNumber('id');
+    Route::get('/products/{id}/like-status', [LikeController::class, 'getProductLikeStatus'])->whereNumber('id');
 });

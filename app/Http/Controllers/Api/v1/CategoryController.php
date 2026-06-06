@@ -18,6 +18,7 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'boolean',
+            'is_menu' => 'nullable|boolean',
             'created_by' => 'nullable|integer|exists:users,id',
             'parent_id' => 'nullable|integer|exists:categories,id',
             'priority' => 'nullable|integer',
@@ -28,6 +29,7 @@ class CategoryController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'status' => $request->status ?? true,
+            'is_menu' => $request->is_menu ?? true,
             'created_by' => $request->created_by ?? $request->user()->id,
             'parent_id' => $request->parent_id ?? null,
             'priority' => $request->priority ?? 0,
@@ -99,12 +101,13 @@ class CategoryController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'boolean',
+            'is_menu' => 'boolean',
             'parent_id' => 'nullable|integer|exists:categories,id',
             'priority' => 'nullable|integer',
             'image' => 'nullable|string',
         ]);
 
-        $category->update($request->only(['name', 'description', 'status', 'parent_id', 'priority', 'image']));
+        $category->update($request->only(['name', 'description', 'status', 'is_menu', 'parent_id', 'priority', 'image']));
         $category->load('parent.parent');
         return response()->json($category);
     }

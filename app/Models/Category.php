@@ -13,6 +13,7 @@ class Category extends Model
         'name',
         'description',
         'status',
+        'is_menu',
         'created_by',
         'parent_id',
         'priority',
@@ -21,6 +22,7 @@ class Category extends Model
 
     protected $casts = [
         'status' => 'boolean',
+        'is_menu' => 'boolean',
         'priority' => 'integer',
     ];
 

@@ -27,7 +27,11 @@ class StoreController extends Controller
                 'created_by' => $ownerId,
             ];
             foreach ($items as $item) {
-                $dict[$item->key] = $item->value;
+                $value = $item->value;
+                if ($item->key === 'payment_methods') {
+                    $value = json_decode($value, true) ?: [];
+                }
+                $dict[$item->key] = $value;
             }
             $owner = \App\Models\User::find($ownerId);
             if ($owner) {
@@ -52,7 +56,11 @@ class StoreController extends Controller
             'created_by' => intval($ownerId),
         ];
         foreach ($storeSettings as $item) {
-            $dict[$item->key] = $item->value;
+            $value = $item->value;
+            if ($item->key === 'payment_methods') {
+                $value = json_decode($value, true) ?: [];
+            }
+            $dict[$item->key] = $value;
         }
         return response()->json($dict);
     }
@@ -74,7 +82,11 @@ class StoreController extends Controller
             'created_by' => $user->id,
         ];
         foreach ($storeSettings as $item) {
-            $dict[$item->key] = $item->value;
+            $value = $item->value;
+            if ($item->key === 'payment_methods') {
+                $value = json_decode($value, true) ?: [];
+            }
+            $dict[$item->key] = $value;
         }
         return response()->json($dict);
     }
@@ -86,14 +98,29 @@ class StoreController extends Controller
             return response()->json(['detail' => 'Access denied. Store owner only.'], 403);
         }
 
+        $storeKeys = [
+            'store_name', 'store_phone', 'store_email', 'store_address',
+            'tax_percentage', 'subscription_tier', 'custom_domain',
+            'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
+            'social_telegram', 'shipping_fee', 'free_shipping_threshold',
+            'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
+            'payment_methods'
+        ];
+
         $data = $request->all();
         foreach ($data as $key => $value) {
-            if (in_array($key, ['id', 'created_by', 'owner_id', 'owner', 'created_at', 'updated_at'])) {
+            if (!in_array($key, $storeKeys)) {
                 continue;
             }
+
+            $val = $value;
+            if ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
+                $val = json_encode($value);
+            }
+
             Store::updateOrCreate(
                 ['created_by' => $user->id, 'key' => $key],
-                ['value' => $value]
+                ['value' => $val]
             );
         }
 
@@ -107,7 +134,11 @@ class StoreController extends Controller
             'created_by' => $user->id,
         ];
         foreach ($storeSettings as $item) {
-            $dict[$item->key] = $item->value;
+            $value = $item->value;
+            if ($item->key === 'payment_methods') {
+                $value = json_decode($value, true) ?: [];
+            }
+            $dict[$item->key] = $value;
         }
         return response()->json($dict);
     }
@@ -123,15 +154,30 @@ class StoreController extends Controller
             'created_by' => 'required|integer|exists:users,id',
         ]);
 
+        $storeKeys = [
+            'store_name', 'store_phone', 'store_email', 'store_address',
+            'tax_percentage', 'subscription_tier', 'custom_domain',
+            'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
+            'social_telegram', 'shipping_fee', 'free_shipping_threshold',
+            'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
+            'payment_methods'
+        ];
+
         $ownerId = $request->created_by;
         $data = $request->all();
         foreach ($data as $key => $value) {
-            if (in_array($key, ['id', 'created_by', 'owner_id', 'owner', 'created_at', 'updated_at'])) {
+            if (!in_array($key, $storeKeys)) {
                 continue;
             }
+
+            $val = $value;
+            if ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
+                $val = json_encode($value);
+            }
+
             Store::updateOrCreate(
                 ['created_by' => $ownerId, 'key' => $key],
-                ['value' => $value]
+                ['value' => $val]
             );
         }
 
@@ -145,7 +191,11 @@ class StoreController extends Controller
             'created_by' => $ownerId,
         ];
         foreach ($storeSettings as $item) {
-            $dict[$item->key] = $item->value;
+            $value = $item->value;
+            if ($item->key === 'payment_methods') {
+                $value = json_decode($value, true) ?: [];
+            }
+            $dict[$item->key] = $value;
         }
         return response()->json($dict, 201);
     }
@@ -153,8 +203,12 @@ class StoreController extends Controller
     public function update(Request $request, $id)
     {
         $user = $request->user();
-        if ($user->role_id !== 1) {
-            return response()->json(['detail' => 'Access denied. Only administrators can perform this operation.'], 403);
+        if (! in_array($user->role_id, [1, 30003])) {
+            return response()->json(['detail' => 'Access denied.'], 403);
+        }
+
+        if ($user->role_id === 30003 && $user->id !== intval($id)) {
+            return response()->json(['detail' => 'Access denied. You can only update your own store profile.'], 403);
         }
 
         $ownerId = $id;
@@ -168,14 +222,29 @@ class StoreController extends Controller
             }
         }
 
+        $storeKeys = [
+            'store_name', 'store_phone', 'store_email', 'store_address',
+            'tax_percentage', 'subscription_tier', 'custom_domain',
+            'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
+            'social_telegram', 'shipping_fee', 'free_shipping_threshold',
+            'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
+            'payment_methods'
+        ];
+
         $data = $request->all();
         foreach ($data as $key => $value) {
-            if (in_array($key, ['id', 'created_by', 'owner_id', 'owner', 'created_at', 'updated_at'])) {
+            if (!in_array($key, $storeKeys)) {
                 continue;
             }
+
+            $val = $value;
+            if ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
+                $val = json_encode($value);
+            }
+
             Store::updateOrCreate(
                 ['created_by' => $ownerId, 'key' => $key],
-                ['value' => $value]
+                ['value' => $val]
             );
         }
 
@@ -189,7 +258,11 @@ class StoreController extends Controller
             'created_by' => $ownerId,
         ];
         foreach ($storeSettings as $item) {
-            $dict[$item->key] = $item->value;
+            $value = $item->value;
+            if ($item->key === 'payment_methods') {
+                $value = json_decode($value, true) ?: [];
+            }
+            $dict[$item->key] = $value;
         }
         return response()->json($dict);
     }
@@ -237,5 +310,102 @@ class StoreController extends Controller
 
         return response()->json(['detail' => 'No file provided.'], 400);
     }
+
+    public function getPaymentGateways()
+    {
+        $gateways = [
+            [
+                'id' => 'aba',
+                'name' => 'ABA PAY',
+                'description' => 'Scan to pay with ABA Mobile',
+                'logoColor' => 'bg-[#005d7e]',
+                'textColor' => 'text-white',
+                'logoText' => 'ABA',
+                'fields' => [
+                    ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
+                    ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
+                    ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text'],
+                ]
+            ],
+            [
+                'id' => 'card',
+                'name' => 'Credit/Debit Card',
+                'description' => 'Accept Visa, Mastercard, JCB, and UnionPay payments.',
+                'logoColor' => 'bg-slate-100 border border-slate-200',
+                'textColor' => 'text-slate-800',
+                'logoText' => '💳',
+                'fields' => [
+                    ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
+                    ['key' => 'secretKey', 'label' => 'Secret Key', 'type' => 'password'],
+                ]
+            ],
+            [
+                'id' => 'acleda',
+                'name' => 'ACLEDA PAY',
+                'description' => 'Pay securely with ACLEDA.',
+                'logoColor' => 'bg-[#0d3b66]',
+                'textColor' => 'text-amber-400',
+                'logoText' => 'ACLEDA',
+                'fields' => [
+                    ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
+                    ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
+                    ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text'],
+                ]
+            ],
+            [
+                'id' => 'wing',
+                'name' => 'Wing Bank',
+                'description' => 'Pay securely with WingPay',
+                'logoColor' => 'bg-[#84bd00]',
+                'textColor' => 'text-blue-900',
+                'logoText' => 'Wing',
+                'fields' => [
+                    ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
+                    ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
+                ]
+            ],
+            [
+                'id' => 'chipmong',
+                'name' => 'CHIP MONG BANK',
+                'description' => 'Tab to pay with CHIP MONG',
+                'logoColor' => 'bg-[#009b72]',
+                'textColor' => 'text-white',
+                'logoText' => 'CMB',
+                'fields' => [
+                    ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
+                    ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
+                ]
+            ],
+            [
+                'id' => 'transfer',
+                'name' => 'Bank Transfer',
+                'description' => 'ទូទាត់តាមគណនីធនាគារ',
+                'logoColor' => 'bg-slate-50 border border-slate-200',
+                'textColor' => 'text-slate-700',
+                'logoText' => '🏦',
+                'fields' => [
+                    ['key' => 'bankName', 'label' => 'Bank Name', 'type' => 'text'],
+                    ['key' => 'accountName', 'label' => 'Account Name', 'type' => 'text'],
+                    ['key' => 'accountNumber', 'label' => 'Account Number', 'type' => 'text'],
+                ]
+            ],
+            [
+                'id' => 'cod',
+                'name' => 'Cash on Delivery',
+                'description' => 'បង់ប្រាក់នៅពេលទទួលបានទំនិញ',
+                'logoColor' => 'bg-slate-50 border border-slate-200',
+                'textColor' => 'text-slate-700',
+                'logoText' => '💵',
+                'fields' => [
+                    ['key' => 'notes', 'label' => 'Delivery Policy / Instructions', 'type' => 'text'],
+                ]
+            ]
+        ];
+
+        return response()->json($gateways);
+    }
+
+
+    
 }
 

@@ -15,7 +15,9 @@ class Store extends Model
         'value',
     ];
 
-    protected $casts = [];
+    protected $casts = [
+        'value' => 'string',
+    ];
 
     public function owner()
     {
