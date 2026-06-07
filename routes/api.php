@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\v1\Owner\FeaturedDealController;
 use App\Http\Controllers\Api\v1\Owner\ClearanceSaleController;
 use App\Http\Controllers\Api\v1\LikeController;
 use App\Http\Controllers\Api\v1\ShippingAddressController;
+use App\Http\Controllers\Api\v1\CartController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -109,6 +110,7 @@ Route::get('/social-media', [SocialMediaController::class, 'index']);
 
 // Banners (Public)
 Route::get('/banners', [BannerController::class, 'index']);
+Route::get('/banners/{id}', [BannerController::class, 'show'])->whereNumber('id');
 
 // Vendors (Public)
 Route::get('/vendors', [VendorController::class, 'index']);
@@ -157,6 +159,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/users/{user_id}', [UserController::class, 'show'])->whereNumber('user_id');
         Route::put('/users/{user_id}', [UserController::class, 'update'])->whereNumber('user_id');
+        Route::post('/users/{user_id}', [UserController::class, 'update'])->whereNumber('user_id');
         Route::delete('/users/{user_id}', [UserController::class, 'destroy'])->whereNumber('user_id');
 
         // Global Customer Data
@@ -177,12 +180,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/categories/mine', [CategoryController::class, 'mine']);
         Route::post('/categories', [CategoryController::class, 'store']);
         Route::put('/categories/{category_id}', [CategoryController::class, 'update'])->whereNumber('category_id');
+        Route::post('/categories/{category_id}', [CategoryController::class, 'update'])->whereNumber('category_id');
         Route::delete('/categories/{category_id}', [CategoryController::class, 'destroy'])->whereNumber('category_id');
 
         // Brands Manager
         Route::get('/brands/mine', [BrandController::class, 'mine']);
         Route::post('/brands', [BrandController::class, 'store']);
+        Route::post('/brands/upload-logo', [BrandController::class, 'uploadLogo']);
         Route::put('/brands/{id}', [BrandController::class, 'update'])->whereNumber('id');
+        Route::post('/brands/{id}', [BrandController::class, 'update'])->whereNumber('id');
         Route::delete('/brands/{id}', [BrandController::class, 'destroy'])->whereNumber('id');
 
         // Products Manager
@@ -225,7 +231,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Stores Configuration
         Route::get('/stores/me', [StoreController::class, 'showMe']);
         Route::put('/stores/me', [StoreController::class, 'upsert']);
+        Route::post('/stores/me', [StoreController::class, 'upsert']);
         Route::put('/stores/{store_id}', [StoreController::class, 'update'])->whereNumber('store_id');
+        Route::post('/stores/{store_id}', [StoreController::class, 'update'])->whereNumber('store_id');
         Route::post('/stores/upload-logo', [StoreController::class, 'uploadLogo']);
         Route::post('/stores/upload-favicon', [StoreController::class, 'uploadFavicon']);
         Route::get('/stores/payment-gateways', [StoreController::class, 'getPaymentGateways']);
@@ -301,29 +309,39 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ---------------------------------------------------------------------
-    //   GENERAL PROTECTED ROUTES (All Authenticated Users)
+    //   CUSTOMER & ADMIN ROUTES (Role 2 or 1)
     // ---------------------------------------------------------------------
+    Route::middleware('customer')->group(function () {
+        // User Profile
+        Route::get('/users/me', [AuthController::class, 'me']);
+        Route::put('/users/me', [AuthController::class, 'update']);
+        Route::post('/users/me', [AuthController::class, 'update']);
 
-    // User Profile
-    Route::get('/users/me', [AuthController::class, 'me']);
+        // Orders History
+        Route::get('/orders/me', [OrderController::class, 'me']);
+        Route::get('/orders/{order_id}', [OrderController::class, 'show'])->whereNumber('order_id');
 
-    // Orders History
-    Route::get('/orders/me', [OrderController::class, 'me']);
-    Route::get('/orders/{order_id}', [OrderController::class, 'show'])->whereNumber('order_id');
+        // Shipping Addresses
+        Route::get('/shipping-addresses', [ShippingAddressController::class, 'index']);
+        Route::post('/shipping-addresses', [ShippingAddressController::class, 'store']);
+        Route::get('/shipping-addresses/{id}', [ShippingAddressController::class, 'show'])->whereNumber('id');
+        Route::put('/shipping-addresses/{id}', [ShippingAddressController::class, 'update'])->whereNumber('id');
+        Route::delete('/shipping-addresses/{id}', [ShippingAddressController::class, 'destroy'])->whereNumber('id');
+        Route::put('/shipping-addresses/{id}/set-default', [ShippingAddressController::class, 'setDefault'])->whereNumber('id');
 
-    // Shipping Addresses
-    Route::get('/shipping-addresses', [ShippingAddressController::class, 'index']);
-    Route::post('/shipping-addresses', [ShippingAddressController::class, 'store']);
-    Route::get('/shipping-addresses/{id}', [ShippingAddressController::class, 'show'])->whereNumber('id');
-    Route::put('/shipping-addresses/{id}', [ShippingAddressController::class, 'update'])->whereNumber('id');
-    Route::delete('/shipping-addresses/{id}', [ShippingAddressController::class, 'destroy'])->whereNumber('id');
-    Route::put('/shipping-addresses/{id}/set-default', [ShippingAddressController::class, 'setDefault'])->whereNumber('id');
+        // Product Ratings
+        Route::post('/products/{id}/ratings', [ProductRatingController::class, 'store'])->whereNumber('id');
 
-    // Product Ratings
-    Route::post('/products/{id}/ratings', [ProductRatingController::class, 'store'])->whereNumber('id');
+        // Product Like functionality
+        Route::get('/products/liked', [LikeController::class, 'getMyLikedProductIds']);
+        Route::post('/products/{id}/like', [LikeController::class, 'toggleProductLike'])->whereNumber('id');
+        Route::get('/products/{id}/like-status', [LikeController::class, 'getProductLikeStatus'])->whereNumber('id');
 
-    // Product Like functionality
-    Route::get('/products/liked', [LikeController::class, 'getMyLikedProductIds']);
-    Route::post('/products/{id}/like', [LikeController::class, 'toggleProductLike'])->whereNumber('id');
-    Route::get('/products/{id}/like-status', [LikeController::class, 'getProductLikeStatus'])->whereNumber('id');
+        // Shopping Cart
+        Route::get('/cart', [CartController::class, 'index']);
+        Route::post('/cart', [CartController::class, 'store']);
+        Route::put('/cart/{id}', [CartController::class, 'update'])->whereNumber('id');
+        Route::delete('/cart/clear', [CartController::class, 'clear']);
+        Route::delete('/cart/{id}', [CartController::class, 'destroy'])->whereNumber('id');
+    });
 });

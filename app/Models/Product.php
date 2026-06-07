@@ -88,6 +88,11 @@ class Product extends Model
         return $this->morphMany(Like::class, 'likeable');
     }
 
+    public function carts()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
     public function flashDeals()
     {
         return $this->belongsToMany(FlashDeal::class, 'flash_deal_product');
@@ -178,7 +183,8 @@ class Product extends Model
      */
     public function syncThumbnails()
     {
-        $rawImages = $this->images()
+        $rawImages = \Illuminate\Support\Facades\DB::table('product_images')
+            ->where('product_id', $this->id)
             ->orderByDesc('is_primary')
             ->orderBy('id')
             ->pluck('image')

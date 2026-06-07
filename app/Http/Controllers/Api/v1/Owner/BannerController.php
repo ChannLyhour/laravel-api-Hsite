@@ -30,7 +30,7 @@ class BannerController extends Controller
     public function mine(Request $request)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
+        if (! in_array($user->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);
         }
 
@@ -49,17 +49,27 @@ class BannerController extends Controller
     }
 
     /**
+     * Get a specific banner.
+     */
+    public function show($id)
+    {
+        $banner = Banner::findOrFail($id);
+        return response()->json($banner);
+    }
+
+    /**
      * Creates a new banner.
      */
     public function store(Request $request)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
+        if (! in_array($user->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);
         }
 
         $request->validate([
             'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
             'image' => 'required', // Can be file upload or base64/URL string
             'is_active' => 'boolean',
             'created_by' => 'nullable|integer|exists:users,id',
@@ -82,6 +92,7 @@ class BannerController extends Controller
 
         $banner = Banner::create([
             'title' => $request->title,
+            'description' => $request->description,
             'image' => $imagePath ?? 'default.png',
             'is_active' => $request->has('is_active') ? filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN) : true,
             'created_by' => $request->created_by ?? $user->id,
@@ -96,7 +107,7 @@ class BannerController extends Controller
     public function update(Request $request, $id)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
+        if (! in_array($user->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);
         }
 
@@ -109,17 +120,14 @@ class BannerController extends Controller
 
         $request->validate([
             'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
             'image' => 'nullable',
             'is_active' => 'nullable',
         ]);
 
         $imagePath = $banner->getRawOriginal('image');
         if ($request->hasFile('image')) {
-            // Delete old image file
-            if ($imagePath) {
-                UploadHelper::deleteImage($imagePath);
-            }
-            $imagePath = UploadHelper::uploadImage($request->file('image'), 'banners');
+            $imagePath = UploadHelper::updateImage($banner->image, $request->file('image'), 'banners');
         } elseif ($request->has('image') && is_string($request->image)) {
             $imagePath = $request->image;
         }
@@ -135,6 +143,9 @@ class BannerController extends Controller
         $updateData = [];
         if ($request->has('title')) {
             $updateData['title'] = $request->title;
+        }
+        if ($request->has('description')) {
+            $updateData['description'] = $request->description;
         }
         if ($imagePath !== null) {
             $updateData['image'] = $imagePath;
@@ -154,7 +165,7 @@ class BannerController extends Controller
     public function toggle(Request $request, $id)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
+        if (! in_array($user->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);
         }
 
@@ -177,7 +188,7 @@ class BannerController extends Controller
     public function destroy(Request $request, $id)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
+        if (! in_array($user->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);
         }
 

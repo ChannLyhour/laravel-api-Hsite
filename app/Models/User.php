@@ -51,6 +51,11 @@ class User extends Authenticatable
         return $this->hasOne(ShippingAddress::class)->where('set_as_default', true);
     }
 
+    public function carts()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

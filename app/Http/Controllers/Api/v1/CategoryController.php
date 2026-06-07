@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Helpers\UploadHelper;
 
 class CategoryController extends Controller
 {
@@ -22,8 +23,15 @@ class CategoryController extends Controller
             'created_by' => 'nullable|integer|exists:users,id',
             'parent_id' => 'nullable|integer|exists:categories,id',
             'priority' => 'nullable|integer',
-            'image' => 'nullable|string',
+            'image' => 'nullable',
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = UploadHelper::uploadImage($request->file('image'), 'categories');
+        } elseif ($request->has('image')) {
+            $imagePath = $request->image;
+        }
 
         $category = Category::create([
             'name' => $request->name,
@@ -33,7 +41,7 @@ class CategoryController extends Controller
             'created_by' => $request->created_by ?? $request->user()->id,
             'parent_id' => $request->parent_id ?? null,
             'priority' => $request->priority ?? 0,
-            'image' => $request->image ?? null,
+            'image' => $imagePath,
         ]);
 
         $category->load('parent.parent');
@@ -104,10 +112,26 @@ class CategoryController extends Controller
             'is_menu' => 'boolean',
             'parent_id' => 'nullable|integer|exists:categories,id',
             'priority' => 'nullable|integer',
-            'image' => 'nullable|string',
+            'image' => 'nullable',
         ]);
 
-        $category->update($request->only(['name', 'description', 'status', 'is_menu', 'parent_id', 'priority', 'image']));
+        $imagePath = $category->image;
+        if ($request->hasFile('image')) {
+            $imagePath = UploadHelper::updateImage($category->image, $request->file('image'), 'categories');
+        } elseif ($request->has('image')) {
+            $imagePath = $request->image;
+        }
+
+        $category->update([
+            'name' => $request->name ?? $category->name,
+            'description' => $request->has('description') ? $request->description : $category->description,
+            'status' => $request->has('status') ? $request->status : $category->status,
+            'is_menu' => $request->has('is_menu') ? $request->is_menu : $category->is_menu,
+            'parent_id' => $request->has('parent_id') ? $request->parent_id : $category->parent_id,
+            'priority' => $request->has('priority') ? $request->priority : $category->priority,
+            'image' => $imagePath,
+        ]);
+
         $category->load('parent.parent');
         return response()->json($category);
     }
@@ -119,6 +143,11 @@ class CategoryController extends Controller
         }
 
         $category = Category::findOrFail($id);
+
+        if ($category->image) {
+            UploadHelper::deleteImage($category->image);
+        }
+
         $category->delete();
 
         return response()->json(['detail' => 'Category deleted successfully.']);
