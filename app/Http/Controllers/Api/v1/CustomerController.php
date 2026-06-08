@@ -52,19 +52,19 @@ class CustomerController extends Controller
             $query->where('created_by', $user->id);
         }
 
-        $customers = $query->skip($skip)->take($limit)->get();
+        $customers = $query->with('user')->skip($skip)->take($limit)->get();
         return response()->json($customers);
     }
 
     public function show($id)
     {
-        $customer = Customer::findOrFail($id);
+        $customer = Customer::with('user')->findOrFail($id);
         return response()->json($customer);
     }
 
     public function update(Request $request, $id)
     {
-        $customer = Customer::findOrFail($id);
+        $customer = Customer::with('user')->findOrFail($id);
 
         $request->validate([
             'name' => 'sometimes|required|string|max:255',

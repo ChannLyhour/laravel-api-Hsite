@@ -12,13 +12,8 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 30003])) {
-            return response()->json(['detail' => 'Access denied. Store owner or admin only.'], 403);
-        }
-
-        $store = Store::where('created_by', $user->id)->first();
-        if (! $store && $user->role_id != 1) {
-            return response()->json(['detail' => 'You do not have a store profile configured yet.'], 404);
+        if (! in_array($user->role_id, [1, 2, 30003])) {
+            return response()->json(['detail' => 'Access denied.'], 403);
         }
 
         $skip = $request->query('skip', 0);
@@ -27,21 +22,54 @@ class OrderController extends Controller
         $paymentStatus = $request->query('payment_status');
         $orderType = $request->query('order_type');
         $search = $request->query('search');
+        $storeId = $request->query('store_id');
+        $userId = $request->query('user_id');
+        $ownerId = $request->query('owner_id') ?? $request->query('vendor_id') ?? $request->query('created_by');
 
-        $query = Order::query()->with('items');
+        $query = Order::query()->with(['items.productVariant.product', 'store']);
 
-        if ($user->role_id != 1) {
-            $query->where('store_id', $store->id);
-        } else {
-            $createdBy = $request->query('created_by');
-            if ($createdBy !== null) {
-                $ownerStore = Store::where('created_by', $createdBy)->first();
-                if ($ownerStore) {
-                    $query->where('store_id', $ownerStore->id);
+        if ($user->role_id == 30003) {
+            // Owner logic: ensure they only see their own stores
+            $myStoreIds = Store::where('created_by', $user->id)->pluck('id')->toArray();
+
+            if (empty($myStoreIds)) {
+                return response()->json(['detail' => 'You do not have a store profile configured yet.'], 404);
+            }
+
+            if ($storeId) {
+                // Use loose comparison or cast to handle string/int mismatch
+                if (in_array((int)$storeId, $myStoreIds)) {
+                    $query->where('store_id', $storeId);
                 } else {
-                    $query->where('store_id', -1);
+                    return response()->json(['detail' => 'You are not authorized to view orders for this store.'], 403);
+                }
+            } else {
+                $query->whereIn('store_id', $myStoreIds);
+            }
+        } elseif ($user->role_id == 2) {
+            // Customer logic: only see their own orders
+            $query->where('user_id', $user->id);
+            if ($storeId) {
+                $query->where('store_id', $storeId);
+            }
+        } else {
+            // Admin logic (role 1): can filter by store_id or owner_id or user_id or see all
+            if ($storeId) {
+                $query->where('store_id', $storeId);
+            }
+
+            if ($ownerId !== null) {
+                $ownerStoreIds = Store::where('created_by', $ownerId)->pluck('id')->toArray();
+                if (!empty($ownerStoreIds)) {
+                    $query->whereIn('store_id', $ownerStoreIds);
+                } else {
+                    $query->where('store_id', -1); // Force empty result if owner has no stores
                 }
             }
+        }
+
+        if ($userId && $user->role_id != 2) {
+            $query->where('user_id', $userId);
         }
 
         if ($status && strtolower($status) !== 'all') {
@@ -59,17 +87,27 @@ class OrderController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('order_no', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%");
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
             });
         }
 
-        $orders = $query->orderBy('created_at', 'desc')
+        $orders = $query->orderBy('id', 'desc')
             ->skip($skip)
             ->take($limit)
             ->get();
 
         return response()->json($orders);
+    }
+
+    public function mine(Request $request)
+    {
+        return $this->index($request);
+    }
+
+    public function storeOrders(Request $request)
+    {
+        return $this->index($request);
     }
 
     public function show(Request $request, $id)
@@ -79,7 +117,7 @@ class OrderController extends Controller
             return response()->json(['detail' => 'Access denied. Store owner or admin only.'], 403);
         }
 
-        $order = Order::with(['items', 'store'])->findOrFail($id);
+        $order = Order::with(['items.productVariant.product', 'store'])->findOrFail($id);
 
         // Authorization check
         $isAdmin = $user->role_id == 1;
@@ -113,11 +151,20 @@ class OrderController extends Controller
             return response()->json(['detail' => 'You are not authorized to manage orders for this store.'], 403);
         }
 
-        $validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+        $validStatuses = ['pending', 'processing', 'completed', 'cancelled', 'complete', 'canceled', 'confirmed'];
         $newStatus = strtolower(trim($request->status));
 
         if (! in_array($newStatus, $validStatuses)) {
             return response()->json(['detail' => "Invalid status '{$request->status}'. Allowed statuses: " . implode(', ', $validStatuses)], 400);
+        }
+
+        // Normalize to standard DB values expected by owner interface
+        if ($newStatus === 'complete' || $newStatus === 'completed') {
+            $newStatus = 'completed';
+        } elseif ($newStatus === 'canceled' || $newStatus === 'cancelled') {
+            $newStatus = 'cancelled';
+        } elseif ($newStatus === 'confirmed') {
+            $newStatus = 'confirmed';
         }
 
         $order->update(['status' => $newStatus]);
@@ -150,6 +197,15 @@ class OrderController extends Controller
 
         if (! in_array($newStatus, $validPaymentStatuses)) {
             return response()->json(['detail' => "Invalid payment status '{$request->payment_status}'. Allowed values: " . implode(', ', $validPaymentStatuses)], 400);
+        }
+
+        // Normalize to Capitalized to be consistent with database defaults and other controllers
+        if ($newStatus === 'paid') {
+            $newStatus = 'Paid';
+        } elseif ($newStatus === 'unpaid') {
+            $newStatus = 'Unpaid';
+        } elseif ($newStatus === 'refunded') {
+            $newStatus = 'Refunded';
         }
 
         $order->update(['payment_status' => $newStatus]);

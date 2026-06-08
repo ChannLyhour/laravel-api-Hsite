@@ -3,7 +3,33 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('admin.index');
+})->name('admin.dashboard');
+
+Route::get('/admin/manage', function () {
+    return view('admin.index');
+})->name('admin.manage');
+
+Route::get('/admin/stores', function () {
+    return view('admin.stores.index');
+})->name('admin.stores');
+
+Route::get('/admin/users', function () {
+    return view('admin.users.index');
+})->name('admin.users');
+
+Route::get('/admin/settings', function () {
+    return view('admin.settings.index');
+})->name('admin.settings');
+
+Route::get('/admin/{module}', function ($module) {
+    $validModules = ['orders', 'products', 'health'];
+    if (!in_array($module, $validModules)) abort(404);
+    return view('admin.manager', ['module' => $module]);
+})->name('admin.module');
+
+Route::get('/admin/login', function () {
+    return view('admin.auth.login');
 });
 
 // Static Asset Router & Premium Unsplash Fallback

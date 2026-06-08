@@ -23,6 +23,13 @@ class Customer extends Model
         'country',
         'created_by',
     ];
+
+    protected $appends = ['image'];
+
+    public function getImageAttribute()
+    {
+        return $this->user ? $this->user->image : null;
+    }
     
 
     public function user()

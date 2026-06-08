@@ -171,4 +171,48 @@ class SettingController extends Controller
 
         return response()->json($updatedDict);
     }
+
+    public function uploadLogo(Request $request)
+    {
+        $user = $request->user();
+        if ($user->role_id !== 1) {
+            return response()->json(['detail' => 'Access denied.'], 403);
+        }
+
+        $request->validate([
+            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('logo')) {
+            $path = \App\Helpers\UploadHelper::uploadImage($request->file('logo'), 'settings/logo');
+            return response()->json([
+                'url' => asset($path),
+                'path' => $path
+            ]);
+        }
+
+        return response()->json(['detail' => 'No file provided.'], 400);
+    }
+
+    public function uploadFavicon(Request $request)
+    {
+        $user = $request->user();
+        if ($user->role_id !== 1) {
+            return response()->json(['detail' => 'Access denied.'], 403);
+        }
+
+        $request->validate([
+            'favicon' => 'required|file|mimes:jpeg,png,jpg,gif,svg,ico,webp|max:1024',
+        ]);
+
+        if ($request->hasFile('favicon')) {
+            $path = \App\Helpers\UploadHelper::uploadImage($request->file('favicon'), 'settings/favicon');
+            return response()->json([
+                'url' => asset($path),
+                'path' => $path
+            ]);
+        }
+
+        return response()->json(['detail' => 'No file provided.'], 400);
+    }
 }

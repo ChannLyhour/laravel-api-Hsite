@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\Admin\UserController;
+use App\Http\Controllers\Api\v1\Admin\SettingController;
+use App\Http\Controllers\Api\v1\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Api\v1\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\v1\CategoryController;
 use App\Http\Controllers\Api\v1\BrandController;
 use App\Http\Controllers\Api\v1\Owner\ProductController;
@@ -14,7 +17,6 @@ use App\Http\Controllers\Api\v1\OrderController;
 use App\Http\Controllers\Api\v1\Owner\OrderController as OwnerOrderController;
 use App\Http\Controllers\Api\v1\Owner\StoreController;
 use App\Http\Controllers\Api\v1\Owner\CMSController;
-use App\Http\Controllers\Api\v1\Admin\SettingController;
 use App\Http\Controllers\Api\v1\FoodItemController;
 use App\Http\Controllers\Api\v1\ShareController;
 use App\Http\Controllers\Api\v1\SocialMediaController;
@@ -147,13 +149,21 @@ Route::post('/orders', [OrderController::class, 'store']);
 // =========================================================================
 Route::middleware('auth:sanctum')->group(function () {
 
+    // Global Order Retrieval (Unified for Admin, Owner, Customer)
+    Route::get('/orders', [OwnerOrderController::class, 'index']);
+
     // ---------------------------------------------------------------------
     //   SUPER ADMIN ONLY ROUTES (Role 1)
     // ---------------------------------------------------------------------
     Route::middleware('super-admin')->group(function () {
 
+        // Global Dashboard Stats
+        Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
+
         // Global System Settings Management
         Route::put('/settings', [SettingController::class, 'updateSettings']);
+        Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo']);
+        Route::post('/settings/upload-favicon', [SettingController::class, 'uploadFavicon']);
 
         // Global Users Management
         Route::get('/users', [UserController::class, 'index']);
@@ -161,6 +171,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/users/{user_id}', [UserController::class, 'update'])->whereNumber('user_id');
         Route::post('/users/{user_id}', [UserController::class, 'update'])->whereNumber('user_id');
         Route::delete('/users/{user_id}', [UserController::class, 'destroy'])->whereNumber('user_id');
+
+        // Global Order Oversight
+        Route::get('/admin/orders', [AdminOrderController::class, 'index']);
+        Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->whereNumber('id');
+        Route::put('/admin/orders/{id}/status', [AdminOrderController::class, 'updateStatus'])->whereNumber('id');
 
         // Global Customer Data
         Route::get('/customers', [CustomerController::class, 'index']);
@@ -220,10 +235,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/customers/{customer_id}', [CustomerController::class, 'destroy'])->whereNumber('customer_id');
 
         // Store Orders Manager
-        Route::get('/orders/store/me', [OrderController::class, 'storeOrders']);
-        Route::put('/orders/{order_id}/status', [OrderController::class, 'updateStatus'])->whereNumber('order_id');
-        Route::put('/orders/{order_id}/payment-status', [OrderController::class, 'updatePaymentStatus'])->whereNumber('order_id');
+        Route::get('/orders/store/me', [OwnerOrderController::class, 'storeOrders']);
+        Route::get('/orders/all', [OwnerOrderController::class, 'storeOrders']);
+        Route::get('/orders/store', [OwnerOrderController::class, 'storeOrders']);
+        Route::put('/orders/{order_id}/status', [OwnerOrderController::class, 'updateStatus'])->whereNumber('order_id');
+        Route::put('/orders/{order_id}/payment-status', [OwnerOrderController::class, 'updatePaymentStatus'])->whereNumber('order_id');
         Route::get('/owner/orders', [OwnerOrderController::class, 'index']);
+        Route::get('/owner/orders/mine', [OwnerOrderController::class, 'mine']);
         Route::get('/owner/orders/{id}', [OwnerOrderController::class, 'show'])->whereNumber('id');
         Route::put('/owner/orders/{id}/status', [OwnerOrderController::class, 'updateStatus'])->whereNumber('id');
         Route::put('/owner/orders/{id}/payment-status', [OwnerOrderController::class, 'updatePaymentStatus'])->whereNumber('id');
@@ -306,6 +324,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/items/{item_id}', [FoodItemController::class, 'destroy'])->whereNumber('item_id');
 
         Route::get('/customers', [CustomerController::class, 'index']);
+
+
+        // Get orders
+        // Route::get('/orders', [OrderController::class, 'me']);
+        // Route::get('/orders/store', [OrderController::class, 'storeOrders']);
+        // Route::get('/owner/orders/mine', [OrderController::class, 'mine']);
     });
 
     // ---------------------------------------------------------------------
@@ -319,6 +343,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Orders History
         Route::get('/orders/me', [OrderController::class, 'me']);
+        Route::get('/orders/mine', [OrderController::class, 'mine']);
         Route::get('/orders/{order_id}', [OrderController::class, 'show'])->whereNumber('order_id');
 
         // Shipping Addresses

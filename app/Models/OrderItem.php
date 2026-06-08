@@ -39,10 +39,20 @@ class OrderItem extends Model
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
-    protected $appends = ['menu_item_id'];
+    protected $appends = ['menu_item_id', 'image'];
 
     public function getMenuItemIdAttribute()
     {
         return $this->product_variant_id;
+    }
+
+    public function getImageAttribute()
+    {
+        if ($this->relationLoaded('productVariant') && $this->productVariant) {
+            if ($this->productVariant->relationLoaded('product') && $this->productVariant->product) {
+                return $this->productVariant->product->display_image;
+            }
+        }
+        return url('default.png');
     }
 }
