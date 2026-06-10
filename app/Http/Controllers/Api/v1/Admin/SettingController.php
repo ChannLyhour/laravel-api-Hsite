@@ -98,7 +98,11 @@ class SettingController extends Controller
             'last_name',
             'gender',
             'country',
-            'name'
+            'name',
+            'pusher_app_id',
+            'pusher_app_key',
+            'pusher_app_secret',
+            'pusher_app_cluster'
         ];
 
         foreach ($settingsDict as $key => $value) {

@@ -104,7 +104,8 @@ class StoreController extends Controller
             'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
             'social_telegram', 'shipping_fee', 'free_shipping_threshold',
             'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
-            'payment_methods', 'guest_checkout'
+            'payment_methods', 'guest_checkout',
+            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster'
         ];
 
         $data = $request->all();
@@ -164,7 +165,8 @@ class StoreController extends Controller
             'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
             'social_telegram', 'shipping_fee', 'free_shipping_threshold',
             'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
-            'payment_methods', 'guest_checkout'
+            'payment_methods', 'guest_checkout',
+            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster'
         ];
 
         $ownerId = $request->created_by;
@@ -236,7 +238,8 @@ class StoreController extends Controller
             'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
             'social_telegram', 'shipping_fee', 'free_shipping_threshold',
             'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
-            'payment_methods', 'guest_checkout'
+            'payment_methods', 'guest_checkout',
+            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster'
         ];
 
         $data = $request->all();

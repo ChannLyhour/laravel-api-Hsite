@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Events\UserStatusUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -98,6 +99,11 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
+        // Mark user as online and broadcast status
+        $user->update(['is_online' => true, 'last_seen_at' => now()]);
+        $user->refresh();
+        UserStatusUpdated::broadcastForUser($user);
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer'
@@ -123,6 +129,11 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
+
+        // Mark user as online and broadcast status
+        $user->update(['is_online' => true, 'last_seen_at' => now()]);
+        $user->refresh();
+        UserStatusUpdated::broadcastForUser($user);
 
         return response()->json([
             'access_token' => $token,
@@ -150,6 +161,11 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
+        // Mark user as online and broadcast status
+        $user->update(['is_online' => true, 'last_seen_at' => now()]);
+        $user->refresh();
+        UserStatusUpdated::broadcastForUser($user);
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer'
@@ -176,11 +192,65 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
+        // Mark user as online and broadcast status
+        $user->update(['is_online' => true, 'last_seen_at' => now()]);
+        $user->refresh();
+        UserStatusUpdated::broadcastForUser($user);
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer'
         ]);
     }
+
+    /**
+     * Heartbeat — keep user marked online & refresh last_seen_at.
+     * Called by frontend every 60 seconds while the tab is open.
+     * POST /api/users/heartbeat
+     */
+    public function heartbeat(Request $request)
+    {
+        $user = $request->user();
+        $user->update([
+            'is_online'    => true,
+            'last_seen_at' => now(),
+        ]);
+        $user->refresh();
+        UserStatusUpdated::broadcastForUser($user);
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Mark user offline immediately (called on tab close via navigator.sendBeacon).
+     * POST /api/users/offline
+     */
+    public function markOffline(Request $request)
+    {
+        $user = $request->user();
+        $user->update([
+            'is_online'    => false,
+            'last_seen_at' => now(),
+        ]);
+        $user->refresh();
+        UserStatusUpdated::broadcastForUser($user);
+        return response()->json(['ok' => true]);
+    }
+
+
+    /**
+     * Logout — revoke token and mark user offline.
+     * POST /api/logout
+     */
+    public function logout(Request $request)
+    {
+        $user = $request->user();
+        $user->update(['is_online' => false, 'last_seen_at' => now()]);
+        $user->refresh();
+        UserStatusUpdated::broadcastForUser($user);
+        $user->currentAccessToken()->delete();
+        return response()->json(['message' => 'Logged out successfully']);
+    }
+
 
     public function me(Request $request)
     {

@@ -30,7 +30,12 @@ use App\Http\Controllers\Api\v1\Owner\ClearanceSaleController;
 use App\Http\Controllers\Api\v1\LikeController;
 use App\Http\Controllers\Api\v1\ShippingAddressController;
 use App\Http\Controllers\Api\v1\CartController;
+use App\Http\Controllers\Api\v1\ChatController;
+use App\Http\Controllers\Api\v1\BroadcastAuthController;
 use Illuminate\Support\Facades\Route;
+
+// Load broadcast channel definitions (Broadcast::channel(...) calls)
+require __DIR__ . '/../routes/channels.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -154,8 +159,26 @@ Route::post('/orders', [OrderController::class, 'store']);
 // =========================================================================
 Route::middleware('auth:sanctum')->group(function () {
 
+    // Pusher Channel Authorization — credentials loaded from stores table (NOT from .env)
+    Route::post('/broadcasting/auth', [BroadcastAuthController::class, 'authenticate']);
+
+    // Online Presence
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/users/heartbeat', [AuthController::class, 'heartbeat']);
+    Route::post('/users/offline', [AuthController::class, 'markOffline']);
+
     // Global Order Retrieval (Unified for Admin, Owner, Customer)
     Route::get('/orders', [OwnerOrderController::class, 'index']);
+
+    Route::prefix('chat')->group(function () {
+        Route::get('/conversations', [ChatController::class, 'getConversations']);
+        Route::post('/conversations', [ChatController::class, 'startConversation']);
+        Route::get('/conversations/{id}/messages', [ChatController::class, 'getMessages']);
+        Route::post('/conversations/{id}/messages', [ChatController::class, 'sendMessage']);
+        Route::post('/upload', [ChatController::class, 'uploadMedia']);
+        Route::delete('/messages/{id}', [ChatController::class, 'deleteMessage']);
+        Route::post('/messages/{id}/pin', [ChatController::class, 'togglePinMessage']);
+    });
 
     // ---------------------------------------------------------------------
     //   SUPER ADMIN ONLY ROUTES (Role 1)

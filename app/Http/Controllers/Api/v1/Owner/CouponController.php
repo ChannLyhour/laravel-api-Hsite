@@ -93,13 +93,13 @@ class CouponController extends Controller
             return response()->json(['detail' => 'Invalid or inactive coupon code.'], 404);
         }
 
-        $now = now();
+        $today = now()->toDateString();
 
-        if ($coupon->start_date->gt($now)) {
+        if ($coupon->start_date->toDateString() > $today) {
             return response()->json(['detail' => 'Coupon is not yet active.'], 422);
         }
 
-        if ($coupon->expire_date->lt($now)) {
+        if ($coupon->expire_date->toDateString() < $today) {
             return response()->json(['detail' => 'Coupon has expired.'], 422);
         }
 
@@ -111,26 +111,25 @@ class CouponController extends Controller
             $user = $request->user() ?? auth('sanctum')->user();
             $phone = $request->query('phone');
 
-            $query = \App\Models\Order::where('coupon_code', $coupon->code)
-                ->where('status', '!=', 'canceled');
+            if ($user || $phone) {
+                $query = \App\Models\Order::where('coupon_code', $coupon->code)
+                    ->where('status', '!=', 'canceled');
 
-            if ($user) {
-                $query->where(function ($q) use ($user, $phone) {
-                    $q->where('user_id', $user->id);
-                    if ($phone) {
-                        $q->orWhere('customer_phone', $phone);
-                    }
-                });
-            } else if ($phone) {
-                $query->where('customer_phone', $phone);
-            } else {
-                // If guest and no phone provided yet, we let it pass validateCode
-                // and defer full same-user check to order creation or when phone is filled in.
-            }
+                if ($user) {
+                    $query->where(function ($q) use ($user, $phone) {
+                        $q->where('user_id', $user->id);
+                        if ($phone) {
+                            $q->orWhere('customer_phone', $phone);
+                        }
+                    });
+                } else {
+                    $query->where('customer_phone', $phone);
+                }
 
-            $usedCount = $query->count();
-            if ($usedCount >= $coupon->limit_same_user) {
-                return response()->json(['detail' => 'You have reached the usage limit for this coupon.'], 422);
+                $usedCount = $query->count();
+                if ($usedCount >= $coupon->limit_same_user) {
+                    return response()->json(['detail' => 'You have reached the usage limit for this coupon.'], 422);
+                }
             }
         }
 

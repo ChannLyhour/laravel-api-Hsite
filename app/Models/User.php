@@ -32,6 +32,8 @@ class User extends Authenticatable
         'state',
         'image',
         'created_by',
+        'is_online',
+        'last_seen_at',
     ];
 
     // Relationship to Customer
@@ -76,7 +78,41 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_online' => 'boolean',
+            'last_seen_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get is_online status with inactivity timeout.
+     */
+    public function getIsOnlineAttribute($value)
+    {
+        if (!$value) {
+            return false;
+        }
+        if (!$this->last_seen_at) {
+            return false;
+        }
+        // If last seen is older than 3 minutes, consider offline
+        return $this->last_seen_at->gt(now()->subMinutes(3));
+    }
+
+    /**
+     * Conversations this user is participating in.
+     */
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'participants')
+            ->withPivot(['role', 'joined_at', 'last_read_message_id']);
+    }
+
+    /**
+     * Messages sent by this user.
+     */
+    public function messages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
     }
 
     public function role()

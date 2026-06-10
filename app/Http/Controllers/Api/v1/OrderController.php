@@ -40,11 +40,11 @@ class OrderController extends Controller
                         throw new \Exception('Invalid or inactive coupon code.');
                     }
 
-                    $now = now();
-                    if ($coupon->start_date->gt($now)) {
+                    $today = now()->toDateString();
+                    if ($coupon->start_date->toDateString() > $today) {
                         throw new \Exception('Coupon is not yet active.');
                     }
-                    if ($coupon->expire_date->lt($now)) {
+                    if ($coupon->expire_date->toDateString() < $today) {
                         throw new \Exception('Coupon has expired.');
                     }
 
