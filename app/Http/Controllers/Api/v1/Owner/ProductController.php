@@ -46,6 +46,7 @@ class ProductController extends Controller
                 'has_options' => 'nullable|boolean',
                 'product_type' => 'nullable|string|max:50',
                 'brand_id' => 'nullable|integer|exists:brands,id',
+                'product_badge_id' => 'nullable|integer|exists:product_badges,id',
                 'unit' => 'nullable|string|max:50',
                 'search_tags' => 'nullable|string',
                 'min_order_qty' => 'nullable|integer|min:1',
@@ -186,6 +187,7 @@ class ProductController extends Controller
                     'has_options' => $request->has_options ?? false,
                     'product_type' => $request->product_type ?? 'physical',
                     'brand_id' => $request->brand_id ?? null,
+                    'product_badge_id' => $request->product_badge_id ?? null,
                     'unit' => $request->unit ?? 'pc',
                     'search_tags' => $request->search_tags ?? null,
                     'min_order_qty' => $request->min_order_qty ?? 1,
@@ -319,7 +321,7 @@ class ProductController extends Controller
                 }
             }
 
-            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand']);
+            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge']);
             return response()->json($product, 201);
         });
     }
@@ -330,7 +332,7 @@ class ProductController extends Controller
         $limit = $request->query('limit', 100);
 
         $user = $request->user();
-        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand']);
+        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge']);
 
         if ($user && $user->role_id != 1) {
             $query->where('created_by', $user->id);
@@ -355,7 +357,7 @@ class ProductController extends Controller
         $limit = $request->query('limit', 3);
         $createdBy = $request->query('created_by');
 
-        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand']);
+        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge']);
         if ($createdBy !== null) {
             $query->where('created_by', $createdBy);
         }
@@ -366,7 +368,7 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $product = Product::with(['translations', 'variants.attributeValues.attribute', 'images', 'brand'])->findOrFail($id);
+        $product = Product::with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge'])->findOrFail($id);
         return response()->json($product);
     }
 
@@ -398,6 +400,7 @@ class ProductController extends Controller
                 'has_options' => 'nullable|boolean',
                 'product_type' => 'nullable|string|max:50',
                 'brand_id' => 'nullable|integer|exists:brands,id',
+                'product_badge_id' => 'nullable|integer|exists:product_badges,id',
                 'unit' => 'nullable|string|max:50',
                 'search_tags' => 'nullable|string',
                 'min_order_qty' => 'nullable|integer|min:1',
@@ -586,6 +589,7 @@ class ProductController extends Controller
                     'has_options' => $request->has('has_options') ? $request->has_options : $product->has_options,
                     'product_type' => $request->product_type ?? $product->product_type,
                     'brand_id' => $request->has('brand_id') ? $request->brand_id : $product->brand_id,
+                    'product_badge_id' => $request->has('product_badge_id') ? $request->product_badge_id : $product->product_badge_id,
                     'unit' => $request->unit ?? $product->unit,
                     'search_tags' => $request->has('search_tags') ? $request->search_tags : $product->search_tags,
                     'min_order_qty' => $request->min_order_qty ?? $product->min_order_qty,
@@ -772,7 +776,7 @@ class ProductController extends Controller
             }
 
             $product->syncThumbnails();
-            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand']);
+            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge']);
             return response()->json($product);
         });
     }

@@ -11,7 +11,7 @@ class UploadHelper
 {
     /**
      * Upload an image to the public/uploads directory.
-     * Images are resized to max 800 px wide and saved as WebP at 80% quality
+     * Images are resized to max 1000 px wide and saved as WebP at 100% quality
      * using Intervention Image. Falls back to a direct file move if processing fails.
      *
      * @param UploadedFile $file The uploaded file object.
@@ -43,15 +43,14 @@ class UploadHelper
                 File::makeDirectory($destinationPath, 0755, true, true);
             }
 
-            // Use Intervention Image v4: scale down to max 800 px wide, save as WebP 80%
+            // Use Intervention Image v4: scale down to max 1000 px wide, save as WebP 100%
             // In v4: read() → decode(), toWebp() removed — quality passed to save() directly
             $filename = date('dmy_His') . '_' . Str::random(10) . '.webp';
             Image::decode($file->getRealPath())
-                ->scaleDown(width: 800)
-                ->save($destinationPath . '/' . $filename, quality: 80);
+                ->scaleDown(width: 1000)
+                ->save($destinationPath . '/' . $filename, quality: 100);
 
             return 'uploads/' . $folder . '/' . $filename;
-
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning("Intervention Image failed, using direct file move: " . $e->getMessage());
 

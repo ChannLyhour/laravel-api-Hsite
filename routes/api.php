@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\v1\Admin\DashboardController as AdminDashboardContr
 use App\Http\Controllers\Api\v1\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\v1\CategoryController;
 use App\Http\Controllers\Api\v1\BrandController;
+use App\Http\Controllers\Api\v1\ProductBadgeController;
 use App\Http\Controllers\Api\v1\Owner\ProductController;
 use App\Http\Controllers\Api\v1\Owner\ProductAttributeController;
 use App\Http\Controllers\Api\v1\Owner\ProductVariantController;
@@ -80,6 +81,10 @@ Route::get('/categories/{category_id}', [CategoryController::class, 'show'])->wh
 // Brands (Public)
 Route::get('/brands', [BrandController::class, 'index']);
 Route::get('/brands/{id}', [BrandController::class, 'show'])->whereNumber('id');
+
+// Product Badges (Public)
+Route::get('/product-badges', [ProductBadgeController::class, 'index']);
+Route::get('/product-badges/{id}', [ProductBadgeController::class, 'show'])->whereNumber('id');
 
 // Products (Public)
 Route::get('/products', [ProductController::class, 'index']);
@@ -205,6 +210,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/brands/{id}', [BrandController::class, 'update'])->whereNumber('id');
         Route::post('/brands/{id}', [BrandController::class, 'update'])->whereNumber('id');
         Route::delete('/brands/{id}', [BrandController::class, 'destroy'])->whereNumber('id');
+
+        // Product Badges Manager
+        Route::get('/product-badges/mine', [ProductBadgeController::class, 'mine']);
+        Route::post('/product-badges', [ProductBadgeController::class, 'store']);
+        Route::put('/product-badges/{id}', [ProductBadgeController::class, 'update'])->whereNumber('id');
+        Route::post('/product-badges/{id}', [ProductBadgeController::class, 'update'])->whereNumber('id');
+        Route::delete('/product-badges/{id}', [ProductBadgeController::class, 'destroy'])->whereNumber('id');
 
         // Products Manager
         Route::post('/products', [ProductController::class, 'store']);

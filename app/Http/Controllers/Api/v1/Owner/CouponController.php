@@ -103,6 +103,19 @@ class CouponController extends Controller
             return response()->json(['detail' => 'Coupon has expired.'], 422);
         }
 
+        if ($coupon->limit_same_user) {
+            $user = $request->user() ?? auth('sanctum')->user();
+            if ($user) {
+                $usedCount = \App\Models\Order::where('user_id', $user->id)
+                    ->where('coupon_code', $coupon->code)
+                    ->where('status', '!=', 'canceled')
+                    ->count();
+                if ($usedCount >= $coupon->limit_same_user) {
+                    return response()->json(['detail' => 'You have reached the usage limit for this coupon.'], 422);
+                }
+            }
+        }
+
         return response()->json($coupon);
     }
 

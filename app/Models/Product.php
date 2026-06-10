@@ -19,6 +19,7 @@ class Product extends Model
         'has_options',
         'product_type',
         'brand_id',
+        'product_badge_id',
         'unit',
         'search_tags',
         'min_order_qty',
@@ -34,6 +35,7 @@ class Product extends Model
         'multiply_qty_shipping' => 'boolean',
         'min_order_qty' => 'integer',
         'brand_id' => 'integer',
+        'product_badge_id' => 'integer',
         'discount_amount' => 'decimal:2',
         'shipping_cost' => 'decimal:2',
         'products_thumbnail' => 'array',
@@ -56,6 +58,11 @@ class Product extends Model
     public function brand()
     {
         return $this->belongsTo(Brand::class);
+    }
+
+    public function badge()
+    {
+        return $this->belongsTo(ProductBadge::class, 'product_badge_id');
     }
 
     public function creator()

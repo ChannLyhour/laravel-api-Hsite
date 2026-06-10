@@ -47,11 +47,19 @@ class OrderController extends Controller
                     'tax' => $request->tax ?? 0,
                     'shipping_fee' => $request->shipping_fee ?? 0,
                     'discount_amount' => $request->discount_amount ?? 0,
+                    'coupon_code' => $request->coupon_code,
                     'total_amount' => $request->total_amount,
                     'payment_status' => 'Unpaid',
                     'payment_method' => $request->payment_method ?? 'cod',
                     'store_id' => $request->store_id,
                 ]);
+
+                if ($request->coupon_code) {
+                    $coupon = \App\Models\Coupon::where('code', strtoupper($request->coupon_code))->first();
+                    if ($coupon) {
+                        $coupon->increment('total_used');
+                    }
+                }
 
                 foreach ($request->items as $item) {
                     // Smart fallback for frontend sending different keys
