@@ -31,6 +31,57 @@ class OrderController extends Controller
                 $user = $request->user() ?? auth('sanctum')->user();
                 $userId = $user ? $user->id : ($request->user_id ?? null);
 
+                if ($request->coupon_code) {
+                    $coupon = \App\Models\Coupon::where('code', strtoupper($request->coupon_code))
+                        ->where('is_active', true)
+                        ->first();
+
+                    if (!$coupon) {
+                        throw new \Exception('Invalid or inactive coupon code.');
+                    }
+
+                    $now = now();
+                    if ($coupon->start_date->gt($now)) {
+                        throw new \Exception('Coupon is not yet active.');
+                    }
+                    if ($coupon->expire_date->lt($now)) {
+                        throw new \Exception('Coupon has expired.');
+                    }
+
+                    $subtotalVal = $request->subtotal ?? $request->total_amount;
+                    if ($coupon->minimum_purchase && $subtotalVal < $coupon->minimum_purchase) {
+                        throw new \Exception('Minimum purchase of $' . number_format($coupon->minimum_purchase, 2) . ' is required.');
+                    }
+
+                    if ($coupon->limit_total && $coupon->total_used >= $coupon->limit_total) {
+                        throw new \Exception('This coupon has reached its total usage limit.');
+                    }
+
+                    if ($coupon->limit_same_user) {
+                        $phone = $request->customer_phone;
+                        $query = \App\Models\Order::where('coupon_code', $coupon->code)
+                            ->where('status', '!=', 'canceled');
+
+                        if ($userId) {
+                            $query->where(function ($q) use ($userId, $phone) {
+                                $q->where('user_id', $userId);
+                                if ($phone) {
+                                    $q->orWhere('customer_phone', $phone);
+                                }
+                            });
+                        } else if ($phone) {
+                            $query->where('customer_phone', $phone);
+                        }
+
+                        $usedCount = $query->count();
+                        if ($usedCount >= $coupon->limit_same_user) {
+                            throw new \Exception('You have reached the usage limit for this coupon.');
+                        }
+                    }
+
+                    $coupon->increment('total_used');
+                }
+
                 $order = Order::create([
                     'order_no' => 'ORD-' . strtoupper(Str::random(8)),
                     'order_type' => $request->order_type ?? 'delivery',
@@ -53,13 +104,6 @@ class OrderController extends Controller
                     'payment_method' => $request->payment_method ?? 'cod',
                     'store_id' => $request->store_id,
                 ]);
-
-                if ($request->coupon_code) {
-                    $coupon = \App\Models\Coupon::where('code', strtoupper($request->coupon_code))->first();
-                    if ($coupon) {
-                        $coupon->increment('total_used');
-                    }
-                }
 
                 foreach ($request->items as $item) {
                     // Smart fallback for frontend sending different keys

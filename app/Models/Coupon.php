@@ -16,6 +16,7 @@ class Coupon extends Model
         'discount_amount',
         'minimum_purchase',
         'limit_same_user',
+        'limit_total',
         'total_used',
         'start_date',
         'expire_date',
@@ -26,8 +27,8 @@ class Coupon extends Model
     protected function casts(): array
     {
         return [
-            'start_date'       => 'date',
-            'expire_date'      => 'date',
+            'start_date'       => 'datetime',
+            'expire_date'      => 'datetime',
             'is_active'        => 'boolean',
             'discount_amount'  => 'float',
             'minimum_purchase' => 'float',
