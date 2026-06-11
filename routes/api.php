@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\v1\ShippingAddressController;
 use App\Http\Controllers\Api\v1\CartController;
 use App\Http\Controllers\Api\v1\ChatController;
 use App\Http\Controllers\Api\v1\BroadcastAuthController;
+use App\Http\Controllers\Api\v1\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 // Load broadcast channel definitions (Broadcast::channel(...) calls)
@@ -75,6 +76,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/customer/login', [AuthController::class, 'loginCustomer']);
 Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
 Route::post('/owner/login', [AuthController::class, 'loginOwner']);
+Route::post('/social-login', [AuthController::class, 'socialLogin']);
 
 // Users (Public)
 Route::get('/users/admins', [UserController::class, 'admins']);
@@ -151,6 +153,11 @@ Route::get('/items/{item_id}', [FoodItemController::class, 'show'])->whereNumber
 
 // Order Placement (Public / Guest Checkout)
 Route::post('/orders', [OrderController::class, 'store']);
+Route::delete('/orders/{order_id}', [OrderController::class, 'destroy'])->whereNumber('order_id');
+
+// ABA PayWay integration routes
+Route::post('/payments/generate-qr', [PaymentController::class, 'generateQr']);
+Route::post('/payments/check-transaction', [PaymentController::class, 'checkTransaction']);
 
 
 
@@ -178,6 +185,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/upload', [ChatController::class, 'uploadMedia']);
         Route::delete('/messages/{id}', [ChatController::class, 'deleteMessage']);
         Route::post('/messages/{id}/pin', [ChatController::class, 'togglePinMessage']);
+        Route::post('/messages/{id}/react', [ChatController::class, 'toggleReaction']);
+        Route::get('/user-status', [ChatController::class, 'getUserStatus']); // DB poll for online presence
     });
 
     // ---------------------------------------------------------------------

@@ -13,6 +13,7 @@ class Message extends Model
         'body',
         'media_url',
         'is_pinned',
+        'reply_to_message_id',
     ];
 
     protected $casts = [
@@ -33,5 +34,21 @@ class Message extends Model
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    /**
+     * The parent message being replied to.
+     */
+    public function replyTo()
+    {
+        return $this->belongsTo(Message::class, 'reply_to_message_id');
+    }
+
+    /**
+     * Reactions associated with this message.
+     */
+    public function reactions()
+    {
+        return $this->hasMany(MessageReaction::class);
     }
 }

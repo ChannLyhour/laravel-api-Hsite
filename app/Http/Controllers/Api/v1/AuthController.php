@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Events\UserStatusUpdated;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -215,8 +216,6 @@ class AuthController extends Controller
             'is_online'    => true,
             'last_seen_at' => now(),
         ]);
-        $user->refresh();
-        UserStatusUpdated::broadcastForUser($user);
         return response()->json(['ok' => true]);
     }
 
@@ -231,8 +230,6 @@ class AuthController extends Controller
             'is_online'    => false,
             'last_seen_at' => now(),
         ]);
-        $user->refresh();
-        UserStatusUpdated::broadcastForUser($user);
         return response()->json(['ok' => true]);
     }
 
@@ -245,8 +242,6 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $user->update(['is_online' => false, 'last_seen_at' => now()]);
-        $user->refresh();
-        UserStatusUpdated::broadcastForUser($user);
         $user->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully']);
     }
@@ -303,5 +298,89 @@ class AuthController extends Controller
             'message' => 'Profile updated successfully',
             'user' => $user
         ]);
+    }
+
+    public function socialLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email|max:255',
+            'name' => 'required|string|max:255',
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'image' => 'nullable|string',
+            'created_by' => 'nullable|integer|exists:users,id',
+        ]);
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user) {
+                // Determine first/last name
+                $firstName = $request->first_name;
+                $lastName = $request->last_name;
+                if (empty($firstName) && empty($lastName)) {
+                    $parts = explode(' ', $request->name, 2);
+                    $firstName = $parts[0] ?? $request->name;
+                    $lastName = $parts[1] ?? '';
+                }
+
+                $user = User::create([
+                    'name' => $request->name,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $request->email,
+                    'password' => Hash::make(\Illuminate\Support\Str::random(16)),
+                    'role_id' => 2, // Customer
+                    'state' => 'active',
+                    'image' => $request->image,
+                    'created_by' => $request->created_by,
+                ]);
+
+                // Create customer record
+                $user->customer()->create([
+                    'name' => $request->name,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $request->email,
+                    'created_by' => $request->created_by,
+                ]);
+            } else {
+                // If user exists, check if they need a customer record
+                if ((int)$user->role_id === 2 && !$user->customer) {
+                    $firstName = $request->first_name ?: $user->first_name;
+                    $lastName = $request->last_name ?: $user->last_name;
+                    if (empty($firstName) && empty($lastName)) {
+                        $parts = explode(' ', $request->name ?: $user->name, 2);
+                        $firstName = $parts[0] ?? $user->name;
+                        $lastName = $parts[1] ?? '';
+                    }
+
+                    $user->customer()->create([
+                        'name' => $request->name ?: $user->name,
+                        'first_name' => $firstName,
+                        'last_name' => $lastName,
+                        'email' => $request->email ?: $user->email,
+                        'created_by' => $request->created_by ?? $user->created_by,
+                    ]);
+                }
+            }
+
+            $token = $user->createToken('auth-token')->plainTextToken;
+
+            // Mark user as online and broadcast status
+            $user->update(['is_online' => true, 'last_seen_at' => now()]);
+            $user->refresh();
+
+            if (class_exists(\App\Events\UserStatusUpdated::class)) {
+                \App\Events\UserStatusUpdated::broadcastForUser($user);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logged in successfully via social login',
+                'token' => $token,
+                'user' => $user->load('customer')
+            ], 200);
+        });
     }
 }

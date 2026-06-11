@@ -74,6 +74,18 @@ class MessageSent implements ShouldBroadcastNow
                 'body' => $this->message->body,
                 'media_url' => $this->message->media_url ? (str_starts_with($this->message->media_url, 'http') ? $this->message->media_url : asset($this->message->media_url)) : null,
                 'is_pinned' => (bool)$this->message->is_pinned,
+                'reply_to_message_id' => $this->message->reply_to_message_id,
+                'reply_to_message' => $this->message->replyTo ? [
+                    'id' => $this->message->replyTo->id,
+                    'body' => $this->message->replyTo->body,
+                    'message_type' => $this->message->replyTo->message_type,
+                    'media_url' => $this->message->replyTo->media_url ? (str_starts_with($this->message->replyTo->media_url, 'http') ? $this->message->replyTo->media_url : asset($this->message->replyTo->media_url)) : null,
+                    'sender' => $this->message->replyTo->sender ? [
+                        'id' => $this->message->replyTo->sender->id,
+                        'name' => $this->message->replyTo->sender->name,
+                    ] : null,
+                ] : null,
+                'reactions' => [],
                 'created_at' => $this->message->created_at->toIso8601String(),
             ]
         ];

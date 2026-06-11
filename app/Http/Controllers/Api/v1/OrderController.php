@@ -83,7 +83,7 @@ class OrderController extends Controller
                 }
 
                 $order = Order::create([
-                    'order_no' => 'ORD-' . strtoupper(Str::random(8)),
+                    'order_no' =>strtoupper(Str::random(8)),
                     'order_type' => $request->order_type ?? 'delivery',
                     'user_id' => $userId,
                     'created_by' => $userId,
@@ -232,5 +232,40 @@ class OrderController extends Controller
         }
 
         return response()->json($query->orderBy('created_at', 'desc')->get());
+    }
+
+    /**
+     * Delete/cancel order if checkout was abandoned or payment failed.
+     */
+    public function destroy($id)
+    {
+        try {
+            return DB::transaction(function () use ($id) {
+                $order = Order::findOrFail($id);
+                
+                // Revert coupon usage if applied
+                if ($order->coupon_code) {
+                    $coupon = \App\Models\Coupon::where('code', strtoupper($order->coupon_code))->first();
+                    if ($coupon && $coupon->total_used > 0) {
+                        $coupon->decrement('total_used');
+                    }
+                }
+                
+                // Delete items
+                $order->items()->delete();
+                // Delete order (soft delete)
+                $order->delete();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order deleted successfully'
+                ]);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete order: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -105,7 +105,9 @@ class StoreController extends Controller
             'social_telegram', 'shipping_fee', 'free_shipping_threshold',
             'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
             'payment_methods', 'guest_checkout',
-            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster'
+            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
+            'google_client_id', 'google_client_secret', 'google_enabled',
+            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled'
         ];
 
         $data = $request->all();
@@ -166,7 +168,9 @@ class StoreController extends Controller
             'social_telegram', 'shipping_fee', 'free_shipping_threshold',
             'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
             'payment_methods', 'guest_checkout',
-            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster'
+            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
+            'google_client_id', 'google_client_secret', 'google_enabled',
+            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled'
         ];
 
         $ownerId = $request->created_by;
@@ -239,7 +243,9 @@ class StoreController extends Controller
             'social_telegram', 'shipping_fee', 'free_shipping_threshold',
             'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
             'payment_methods', 'guest_checkout',
-            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster'
+            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
+            'google_client_id', 'google_client_secret', 'google_enabled',
+            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled'
         ];
 
         $data = $request->all();
@@ -340,6 +346,35 @@ class StoreController extends Controller
                     ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
                     ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
                     ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text'],
+                    ['key' => 'rsaPublicKey', 'label' => 'RSA Public Key', 'type' => 'textarea', 'required' => false],
+                    ['key' => 'rsaPrivateKey', 'label' => 'RSA Private Key', 'type' => 'textarea', 'required' => false],
+                ],
+                'defaultValues' => [
+                    'merchantId' => 'ec475602',
+                    'apiKey' => '2ac355df26562e1070295884ea9f4fc4bd479902',
+                    'apiUrl' => 'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase',
+                    'rsaPublicKey' => "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC04A+Peko6pMoosLiX0bnnG+c+\nbo2SIOuY3+gxPhRD/kMfrvEqpr6Np45Sbe5Sjmxjr+8Rlz71VUQ5wOZdczJePoJB\n+QcHOuxYzlmOz3RJrCD5bBt7ccGdytZ9WGnCjgsnX1OfwBlN1Qx+/i2kiOa5nLyM\n1Wz+FYr5de7WaSg8WwIDAQAB\n-----END PUBLIC KEY-----",
+                    'rsaPrivateKey' => "-----BEGIN RSA PRIVATE KEY-----\nMIICXQIBAAKBgQCg/jQmM2fhtq/zTKhXTx6OKIaTZr3jXX+1L7Sczcqy45LB7Q9R\nK6QAf+gbAIbyG7UMzexkZaIqp4WYfQXxOnQLMj0x17s4uTThsX1kMhuCkz/wnMbR\nESCOgqFL95BPaAC5CmfEecc+/t2T+8R5BPtC6ULFM9dt8EgMXAOeKeIHyQIDAQAB\nAoGABjCDwYC6MpS3Gsnkkne/n1xKQT5C2GwSsfz3qwwj6gEDFkrWiwq8G0tPmYMp\njQMY8Lk1iI4aQBzQ73IGEZZLWgdgCaBTSMh/soY8Jffj8OT9rLGrgzZ29+d+TTl0\nCTIofiBL6oZfDfhIupn5JbcZa0Ulti1d8jPKRlQR6apTQwECQQD7g8M+5x8Wzqqe\nvx4WxtVDQMSJJ/BvtLpE2GL8ZRtWVG3m19iFeUBxt2YVZUFWiOtQ1HydSIdnR3Sd\nKMX6UdcBAkEAo90u5/xjHW3YfP04pzibFO7vYo6yTVop3uSC2ERsegzjdl0mvX6q\nU585jQnDb5eHe0XTVLhSZnW3Mc5jEJg4yQJBAMwVfIY8D9P32iZ5ubaNnFq34UHR\nsJ1TrplSY++dMvN4Cr13g2+6lXowcJsH0F6hNyAdawhM4+H/7zXe8dZONgECQD+U\nsf+XoYmotoiA5HuV7i6oK0Btp+d1patztQVfP0v4NkYWDNMYE9TQgk8kS62/+PSu\n+jn0LxzMbiGoOC4XMmkCQQCzU+0VGeNjOJ2pj2trvRIu71h/FPSCyxAK77APgn5U\nwqAYc1N/niuBfOdVpUeovKGBcjGXgkslG/Mym+xAdoX2\n-----END RSA PRIVATE KEY-----"
+                ]
+            ],
+            [
+                'id' => 'bakong',
+                'name' => 'Bakong KHQR',
+                'description' => 'Scan to pay with Bakong App or any KHQR supported bank',
+                'logoColor' => 'bg-[#b30006]',
+                'textColor' => 'text-white',
+                'logoText' => 'Bakong',
+                'fields' => [
+                    ['key' => 'bakongAccountId', 'label' => 'Bakong Account ID', 'type' => 'text'],
+                    ['key' => 'merchantName', 'label' => 'Merchant Name', 'type' => 'text'],
+                    ['key' => 'merchantCity', 'label' => 'Merchant City', 'type' => 'text'],
+                    ['key' => 'apiKey', 'label' => 'API Key / Token', 'type' => 'password', 'required' => false],
+                    ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text', 'required' => false],
+                ],
+                'defaultValues' => [
+                    'bakongAccountId' => 'chann_lyhour@chbl',
+                    'merchantName' => 'Lyhour Dev',
+                    'merchantCity' => 'Phnom Penh',
                 ]
             ],
             [

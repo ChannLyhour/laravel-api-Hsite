@@ -102,7 +102,13 @@ class SettingController extends Controller
             'pusher_app_id',
             'pusher_app_key',
             'pusher_app_secret',
-            'pusher_app_cluster'
+            'pusher_app_cluster',
+            'google_client_id',
+            'google_client_secret',
+            'google_enabled',
+            'facebook_app_id',
+            'facebook_app_secret',
+            'facebook_enabled'
         ];
 
         foreach ($settingsDict as $key => $value) {
