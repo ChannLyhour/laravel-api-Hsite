@@ -18,8 +18,8 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'customer_name' => 'required|string',
-            'customer_phone' => 'required|string',
+            'customer_name' => 'nullable|string',
+            'customer_phone' => 'nullable|string',
             'items' => 'required|array',
             'store_id' => 'required|exists:stores,id',
             'total_amount' => 'required|numeric',

@@ -123,7 +123,8 @@ class StoreController extends Controller
             'payment_methods', 'guest_checkout',
             'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
             'google_client_id', 'google_client_secret', 'google_enabled',
-            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled'
+            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled',
+            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code'
         ];
 
         $data = $request->all();
@@ -187,7 +188,8 @@ class StoreController extends Controller
             'payment_methods', 'guest_checkout',
             'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
             'google_client_id', 'google_client_secret', 'google_enabled',
-            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled'
+            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled',
+            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code'
         ];
 
         $ownerId = $request->created_by;
@@ -263,7 +265,8 @@ class StoreController extends Controller
             'payment_methods', 'guest_checkout',
             'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
             'google_client_id', 'google_client_secret', 'google_enabled',
-            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled'
+            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled',
+            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code'
         ];
 
         $data = $request->all();
