@@ -25,6 +25,7 @@ class StoreController extends Controller
                 'id' => $ownerId,
                 'owner_id' => $ownerId,
                 'created_by' => $ownerId,
+                'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($ownerId)),
             ];
             foreach ($items as $item) {
                 $value = $item->value;
@@ -48,12 +49,26 @@ class StoreController extends Controller
     {
         $storeSettings = Store::where('created_by', $ownerId)->get();
         if ($storeSettings->isEmpty()) {
-            return response()->json(['detail' => "Store not found for owner user with ID {$ownerId}"], 404);
+            $user = \App\Models\User::find($ownerId);
+            $storeName = $user ? $user->name : "Store #{$ownerId}";
+            return response()->json([
+                'id' => intval($ownerId),
+                'owner_id' => intval($ownerId),
+                'created_by' => intval($ownerId),
+                'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($ownerId)),
+                'store_name' => $storeName,
+                'store_email' => $user ? $user->email : '',
+                'store_phone' => '',
+                'store_address' => '',
+                'guest_checkout' => true,
+                'payment_methods' => [],
+            ]);
         }
         $dict = [
             'id' => intval($ownerId),
             'owner_id' => intval($ownerId),
             'created_by' => intval($ownerId),
+            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($ownerId)),
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
@@ -80,6 +95,7 @@ class StoreController extends Controller
             'id' => $user->id,
             'owner_id' => $user->id,
             'created_by' => $user->id,
+            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode($user->id),
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
@@ -139,6 +155,7 @@ class StoreController extends Controller
             'id' => $user->id,
             'owner_id' => $user->id,
             'created_by' => $user->id,
+            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode($user->id),
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
@@ -203,6 +220,7 @@ class StoreController extends Controller
             'id' => $ownerId,
             'owner_id' => $ownerId,
             'created_by' => $ownerId,
+            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode($ownerId),
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
@@ -277,6 +295,7 @@ class StoreController extends Controller
             'id' => $ownerId,
             'owner_id' => $ownerId,
             'created_by' => $ownerId,
+            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode($ownerId),
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;

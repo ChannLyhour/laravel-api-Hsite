@@ -31,11 +31,29 @@ class Store extends Model
         return $this->hasMany(Order::class);
     }
 
+    private static $originalPusherConfig = null;
+
     /**
      * Dynamically configure the Pusher connection credentials for a given conversation.
      */
     public static function configurePusherForConversation($conversationId)
     {
+        // Capture original configuration at the very first call to keep it as default
+        if (self::$originalPusherConfig === null) {
+            self::$originalPusherConfig = config('broadcasting.connections.pusher');
+        } else {
+            // Restore original configuration before proceeding
+            config(['broadcasting.connections.pusher' => self::$originalPusherConfig]);
+        }
+
+        try {
+            /** @var \Illuminate\Broadcasting\BroadcastManager $manager */
+            $manager = app(\Illuminate\Contracts\Broadcasting\Factory::class);
+            $manager->purge('pusher');
+        } catch (\Throwable $e) {
+            // Silently ignore
+        }
+
         $conversation = \App\Models\Conversation::find($conversationId);
         if (!$conversation) {
             return;

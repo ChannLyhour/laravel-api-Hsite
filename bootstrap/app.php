@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
+        $middleware->api(append: [
+            \App\Http\Middleware\DecodeHashids::class,
+        ]);
         $middleware->alias([
             'super-admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
             'owner' => \App\Http\Middleware\OwnerMiddleware::class,

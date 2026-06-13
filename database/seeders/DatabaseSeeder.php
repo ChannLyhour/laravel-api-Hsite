@@ -322,6 +322,9 @@ class DatabaseSeeder extends Seeder
             $product->syncThumbnails();
         }
 
+        // Seed templates
+        $this->call(TemplateSeeder::class);
+
         // Re-enable foreign key constraints
         Schema::enableForeignKeyConstraints();
     }

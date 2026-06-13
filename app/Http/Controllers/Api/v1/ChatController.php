@@ -62,30 +62,10 @@ class ChatController extends Controller
             }
             $unreadCount = $unreadQuery->count();
 
-            // Retrieve Pusher configuration from store settings table
-            $pusherKey = null;
-            $pusherCluster = null;
-            $ownerIdForConfig = null;
-            if ($conversation->store_id) {
-                $storeRow = Store::find($conversation->store_id);
-                if ($storeRow) {
-                    $ownerIdForConfig = $storeRow->created_by;
-                }
-            }
-            if (!$ownerIdForConfig) {
-                $ownerParticipant = $conversation->participants->first(function ($p) {
-                    return in_array((int)($p->user->role_id ?? 0), [1, 30003]);
-                });
-                if ($ownerParticipant) {
-                    $ownerIdForConfig = $ownerParticipant->user_id;
-                } else {
-                    $ownerIdForConfig = $otherParticipant->id;
-                }
-            }
-            if ($ownerIdForConfig) {
-                $pusherKey = Store::where('created_by', $ownerIdForConfig)->where('key', 'pusher_app_key')->value('value');
-                $pusherCluster = Store::where('created_by', $ownerIdForConfig)->where('key', 'pusher_app_cluster')->value('value');
-            }
+            // Retrieve Pusher configuration from store settings dynamically
+            Store::configurePusherForConversation($conversation->id);
+            $pusherKey = config('broadcasting.connections.pusher.key');
+            $pusherCluster = config('broadcasting.connections.pusher.options.cluster');
 
             $formatted[] = [
                 'id' => $conversation->id,
@@ -113,8 +93,8 @@ class ChatController extends Controller
                     'created_at' => $lastMsg->created_at->toIso8601String(),
                 ] : null,
                 'unread_count' => $unreadCount,
-                'pusher_key' => $pusherKey ?: env('PUSHER_APP_KEY'),
-                'pusher_cluster' => $pusherCluster ?: env('PUSHER_APP_CLUSTER'),
+                'pusher_key' => $pusherKey ?: config('broadcasting.connections.pusher.key'),
+                'pusher_cluster' => $pusherCluster ?: config('broadcasting.connections.pusher.options.cluster'),
             ];
         }
 
@@ -194,8 +174,9 @@ class ChatController extends Controller
             ]);
         }
 
-        $pusherKey = Store::where('created_by', $ownerId)->where('key', 'pusher_app_key')->value('value');
-        $pusherCluster = Store::where('created_by', $ownerId)->where('key', 'pusher_app_cluster')->value('value');
+        Store::configurePusherForConversation($conversation->id);
+        $pusherKey = config('broadcasting.connections.pusher.key');
+        $pusherCluster = config('broadcasting.connections.pusher.options.cluster');
 
         return response()->json([
             'id' => $conversation->id,
@@ -203,8 +184,8 @@ class ChatController extends Controller
             'is_group' => $conversation->is_group,
             'created_by' => $conversation->created_by,
             'created_at' => $conversation->created_at->toIso8601String(),
-            'pusher_key' => $pusherKey ?: env('PUSHER_APP_KEY'),
-            'pusher_cluster' => $pusherCluster ?: env('PUSHER_APP_CLUSTER'),
+            'pusher_key' => $pusherKey ?: config('broadcasting.connections.pusher.key'),
+            'pusher_cluster' => $pusherCluster ?: config('broadcasting.connections.pusher.options.cluster'),
         ]);
     }
 

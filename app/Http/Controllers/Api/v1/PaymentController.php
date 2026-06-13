@@ -245,8 +245,9 @@ class PaymentController extends Controller
                 $requestChain = $requestChain->withoutVerifying();
             }
 
-            // MOCK MODE FALLBACK: If merchantId is the sandbox fallback 'ec454848', bypass real API call
-            if ($merchantId === 'ec454848' && $request->input('real') !== 'true' && $request->input('real') !== 1 && $request->input('real') !== '1') {
+            // MOCK MODE FALLBACK: If merchantId is sandbox prefix 'ec', bypass real API call
+            $isSandbox = str_contains($apiUrl, 'sandbox') || str_starts_with($merchantId, 'ec');
+            if ($isSandbox && $request->input('real') !== 'true' && $request->input('real') !== 1 && $request->input('real') !== '1') {
                 $mockResData = [
                     'status' => 0,
                     'description' => 'Success',
@@ -421,11 +422,9 @@ class PaymentController extends Controller
                 $requestChain = $requestChain->withoutVerifying();
             }
 
-            // MOCK MODE FALLBACK: If merchantId is the sandbox fallback 'ec454848', or sandbox mode when confirming
-            $isSandbox = str_contains($apiUrl, 'sandbox');
-            $wantsConfirm = $request->input('confirm') === true || $request->input('confirm') === 'true' || $request->input('confirm') == 1;
-
-            if (($merchantId === 'ec454848' || ($isSandbox && $wantsConfirm)) && $request->input('real') !== 'true' && $request->input('real') !== 1 && $request->input('real') !== '1') {
+            // MOCK MODE FALLBACK: If merchantId is sandbox prefix 'ec' or url contains sandbox
+            $isSandbox = str_contains($apiUrl, 'sandbox') || str_starts_with($merchantId, 'ec');
+            if ($isSandbox && $request->input('real') !== 'true' && $request->input('real') !== 1 && $request->input('real') !== '1') {
                 $mockResData = [
                     'status' => 0,
                     'description' => 'Success',

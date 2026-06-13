@@ -1,58 +1,27 @@
 <?php
-require 'vendor/autoload.php';
-$app = require_once 'bootstrap/app.php';
-$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
-use App\Models\User;
-use App\Models\Product;
-use App\Models\ProductVariant;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Api\v1\ChatController;
+use Illuminate\Http\Request;
 
-$user = User::where('role_id', 30003)->first();
-if (!$user) {
-    echo "No admin user found\n";
-    exit;
-}
+require __DIR__ . '/vendor/autoload.php';
+$app = require_once __DIR__ . '/bootstrap/app.php';
 
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$kernel->bootstrap();
+
+$request = Request::create('/chat/conversations', 'GET');
+$app->instance('request', $request);
+
+$user = App\Models\User::find(4);
+$request->setUserResolver(fn() => $user);
+
+$controller = app(ChatController::class);
 try {
-    DB::beginTransaction();
-
-    // Try creating product and variants with attribute sync
-    $product = Product::create([
-        'category_id' => null,
-        'sku' => 'PROD-TEST-' . rand(100, 999),
-        'barcode' => null,
-        'status' => 'active',
-        'created_by' => $user->id,
-    ]);
-
-    $variant = ProductVariant::create([
-        'product_id' => $product->id,
-        'variant_sku' => $product->sku . '-GLO',
-        'region_code' => 'GLO',
-        'currency_code' => 'USD',
-        'purchase_price' => 0.00,
-        'retail_price' => 10.00,
-        'stock_qty' => 100,
-        'created_by' => $user->id,
-    ]);
-
-    // Let's see if we can sync attribute values
-    $variant->attributeValues()->sync([1, 2]);
-
-    echo "Create and Sync succeeded!\n";
-
-    // Try updating
-    $variant->update([
-        'retail_price' => 12.00
-    ]);
-    $variant->attributeValues()->sync([1]); // update attributes
-
-    echo "Update and Sync succeeded!\n";
-
-    DB::rollBack();
-} catch (\Exception $e) {
-    DB::rollBack();
-    echo "Error occurred: " . $e->getMessage() . "\n";
+    $res = $controller->getConversations($request);
+    echo "Chat controller response status: " . $res->getStatusCode() . "\n";
+    echo "Content: " . substr($res->getContent(), 0, 500) . "\n";
+} catch (\Throwable $e) {
+    echo "Exception thrown: " . $e->getMessage() . "\n";
     echo $e->getTraceAsString() . "\n";
 }

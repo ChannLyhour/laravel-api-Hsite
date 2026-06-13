@@ -23,9 +23,9 @@ class UploadHelper
         $destinationPath = public_path('uploads/' . $folder);
 
         // Check if we are running in a read-only environment like Vercel
-        $isVercel = env('APP_ENV') === 'production'
+        $isVercel = config('app.env') === 'production'
             || !is_writable(public_path())
-            || str_contains(env('APP_URL', ''), 'vercel.app');
+            || str_contains(config('app.url', ''), 'vercel.app');
 
         if ($isVercel) {
             try {

@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\v1\CartController;
 use App\Http\Controllers\Api\v1\ChatController;
 use App\Http\Controllers\Api\v1\BroadcastAuthController;
 use App\Http\Controllers\Api\v1\PaymentController;
+use App\Http\Controllers\Api\v1\TemplateController;
 use Illuminate\Support\Facades\Route;
 
 // Load broadcast channel definitions (Broadcast::channel(...) calls)
@@ -159,12 +160,20 @@ Route::delete('/orders/{order_id}', [OrderController::class, 'destroy'])->whereN
 Route::post('/payments/generate-qr', [PaymentController::class, 'generateQr']);
 Route::post('/payments/check-transaction', [PaymentController::class, 'checkTransaction']);
 
-
+// Paid Templates Routes (Public)
+Route::get('/templates', [TemplateController::class, 'index']);
+Route::get('/templates/{tpl_code}', [TemplateController::class, 'show']);
+Route::get('/templates/download/{token}', [TemplateController::class, 'download']);
 
 // =========================================================================
 //   PROTECTED API ROUTES (Sanctum)
 // =========================================================================
 Route::middleware('auth:sanctum')->group(function () {
+
+    // Template ownership and token management (Owner/User)
+    Route::get('/templates/{tpl_code}/owned', [TemplateController::class, 'checkOwned']);
+    Route::post('/templates/{tpl_code}/purchase', [TemplateController::class, 'purchase']);
+    Route::post('/templates/{tpl_code}/token', [TemplateController::class, 'generateToken']);
 
     // Pusher Channel Authorization — credentials loaded from stores table (NOT from .env)
     Route::post('/broadcasting/auth', [BroadcastAuthController::class, 'authenticate']);
