@@ -59,7 +59,7 @@ class OrderController extends Controller
 
                     if ($coupon->limit_same_user) {
                         $phone = $request->customer_phone;
-                        $query = \App\Models\Order::where('coupon_code', $coupon->code)
+                        $query = Order::where('coupon_code', $coupon->code)
                             ->where('status', '!=', 'canceled');
 
                         if ($userId) {

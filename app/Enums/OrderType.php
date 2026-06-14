@@ -7,4 +7,5 @@ enum OrderType: string
     case Delivery = 'delivery';
     case Pickup = 'pickup';
     case Shipping = 'shipping';
+    case WalkIn = 'walk_in';
 }

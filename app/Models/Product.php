@@ -85,6 +85,11 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
+    public function addons()
+    {
+        return $this->hasMany(ProductAddon::class);
+    }
+
     public function ratings()
     {
         return $this->hasMany(ProductRating::class);

@@ -119,6 +119,18 @@ class UploadHelper
             $imagePath = ltrim(substr($imagePath, strlen($baseUrl)), '/');
         }
 
+        // Avoid deleting file if it is still referenced by other products (e.g. duplicated products)
+        try {
+            if (class_exists(\App\Models\ProductImage::class)) {
+                $count = \App\Models\ProductImage::where('image', $imagePath)->count();
+                if ($count > 1) {
+                    return true;
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore error and proceed
+        }
+
         $fullPath = public_path($imagePath);
 
         try {

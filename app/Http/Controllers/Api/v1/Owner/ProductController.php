@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\ProductImage;
 use App\Models\ProductAttribute;
 use App\Models\ProductAttributeValue;
+use App\Models\ProductAddon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -35,6 +36,11 @@ class ProductController extends Controller
                 'status' => 'required|in:available,unavailable,active,draft,archived',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'created_by' => 'nullable|integer|exists:users,id',
+                
+                // Addons
+                'addons' => 'nullable|array',
+                'addons.*.addon_name' => 'required|string|max:255',
+                'addons.*.additional_price' => 'required|numeric|min:0',
             ]);
         } else {
             $request->validate([
@@ -75,6 +81,11 @@ class ProductController extends Controller
                 'variants.*.attribute_values' => 'nullable|array',
                 'variants.*.attribute_values.*' => 'integer|exists:product_attribute_values,id',
                 'variants.*.image' => 'nullable|file|image|max:2048',
+                
+                // Addons
+                'addons' => 'nullable|array',
+                'addons.*.addon_name' => 'required|string|max:255',
+                'addons.*.additional_price' => 'required|numeric|min:0',
             ]);
         }
 
@@ -321,7 +332,17 @@ class ProductController extends Controller
                 }
             }
 
-            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge']);
+            if ($request->has('addons') && is_array($request->addons)) {
+                foreach ($request->addons as $addon) {
+                    ProductAddon::create([
+                        'product_id' => $product->id,
+                        'addon_name' => $addon['addon_name'],
+                        'additional_price' => $addon['additional_price'] ?? 0.00,
+                    ]);
+                }
+            }
+
+            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
             return response()->json($product, 201);
         });
     }
@@ -332,7 +353,7 @@ class ProductController extends Controller
         $limit = $request->query('limit', 100);
 
         $user = $request->user();
-        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge']);
+        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
 
         if ($user && $user->role_id != 1) {
             $query->where('created_by', $user->id);
@@ -357,7 +378,7 @@ class ProductController extends Controller
         $limit = $request->query('limit', 3);
         $createdBy = $request->query('created_by');
 
-        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge']);
+        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
         if ($createdBy !== null) {
             $query->where('created_by', $createdBy);
         }
@@ -368,7 +389,7 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $product = Product::with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge'])->findOrFail($id);
+        $product = Product::with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons'])->findOrFail($id);
         return response()->json($product);
     }
 
@@ -390,6 +411,12 @@ class ProductController extends Controller
                 'image_url' => 'nullable',
                 'status' => 'sometimes|required|in:available,unavailable,active,draft,archived',
                 'category_id' => 'nullable|integer|exists:categories,id',
+                
+                // Addons
+                'addons' => 'sometimes|array',
+                'addons.*.id' => 'nullable|integer|exists:product_addons,id',
+                'addons.*.addon_name' => 'required|string|max:255',
+                'addons.*.additional_price' => 'required|numeric|min:0',
             ]);
         } else {
             $request->validate([
@@ -421,6 +448,11 @@ class ProductController extends Controller
                 'variants.*.attribute_values' => 'nullable|array',
                 'variants.*.attribute_values.*' => 'integer|exists:product_attribute_values,id',
                 'variants.*.image' => 'nullable|file|image|max:2048',
+
+                'addons' => 'sometimes|array',
+                'addons.*.id' => 'nullable|integer|exists:product_addons,id',
+                'addons.*.addon_name' => 'required|string|max:255',
+                'addons.*.additional_price' => 'required|numeric|min:0',
             ]);
         }
 
@@ -775,8 +807,34 @@ class ProductController extends Controller
                 }
             }
 
+            if ($request->has('addons') || $request->input('clear_addons') == 1) {
+                $keepAddonIds = [];
+                if (is_array($request->addons)) {
+                    foreach ($request->addons as $addon) {
+                        if (isset($addon['id'])) {
+                            $addonModel = ProductAddon::where('product_id', $product->id)->find($addon['id']);
+                            if ($addonModel) {
+                                $addonModel->update([
+                                    'addon_name' => $addon['addon_name'],
+                                    'additional_price' => $addon['additional_price'],
+                                ]);
+                                $keepAddonIds[] = $addonModel->id;
+                            }
+                        } else {
+                            $addonModel = ProductAddon::create([
+                                'product_id' => $product->id,
+                                'addon_name' => $addon['addon_name'],
+                                'additional_price' => $addon['additional_price'],
+                            ]);
+                            $keepAddonIds[] = $addonModel->id;
+                        }
+                    }
+                }
+                $product->addons()->whereNotIn('id', $keepAddonIds)->delete();
+            }
+
             $product->syncThumbnails();
-            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge']);
+            $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
             return response()->json($product);
         });
     }

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\v1\Owner\ProductController;
 use App\Http\Controllers\Api\v1\Owner\ProductAttributeController;
 use App\Http\Controllers\Api\v1\Owner\ProductVariantController;
 use App\Http\Controllers\Api\v1\Owner\ProductImageController;
+use App\Http\Controllers\Api\v1\Owner\ProductAddonController;
 use App\Http\Controllers\Api\v1\ProductRatingController;
 use App\Http\Controllers\Api\v1\CustomerController;
 use App\Http\Controllers\Api\v1\OrderController;
@@ -280,6 +281,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/products/{id}/images', [ProductImageController::class, 'store'])->whereNumber('id');
         Route::put('/products/images/{id}', [ProductImageController::class, 'update'])->whereNumber('id');
         Route::delete('/products/images/{id}', [ProductImageController::class, 'destroy'])->whereNumber('id');
+
+        // Product Addons Manager
+        Route::get('/products/{id}/addons', [ProductAddonController::class, 'index'])->whereNumber('id');
+        Route::post('/products/{id}/addons', [ProductAddonController::class, 'store'])->whereNumber('id');
+        Route::put('/products/addons/{id}', [ProductAddonController::class, 'update'])->whereNumber('id');
+        Route::delete('/products/addons/{id}', [ProductAddonController::class, 'destroy'])->whereNumber('id');
 
         // Store Customer Management
         Route::get('/customers/{customer_id}', [CustomerController::class, 'show'])->whereNumber('customer_id');
