@@ -7,8 +7,10 @@ use App\Models\Order;
 use App\Models\Store;
 use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Helpers\CustomKHQR;
 
 class PaymentController extends Controller
 {
@@ -29,8 +31,8 @@ class PaymentController extends Controller
 
             // Handle Bakong Payment Method
             if ($order->payment_method === 'bakong') {
-                $bakongAccountId = 'chann_lyhour@chbl';
-                $bakongMerchantName = 'Lyhour Dev';
+                $bakongAccountId = 'lyhour_chann@bkrt';
+                $bakongMerchantName = 'Lyhour Chann';
                 $bakongMerchantCity = 'Phnom Penh';
 
                 $paymentMethodsRow = Store::where('created_by', $ownerId)
@@ -54,47 +56,89 @@ class PaymentController extends Controller
                     }
                 }
 
-                $tran_id = 'TXN-' . $order->id . '-' . time();
+                $tran_id = 'TXN' . $order->id . '' . time();
+                $bakongAccountId = strtolower(trim($bakongAccountId));
 
-                // Format TLV helpers
-                $subtag00 = $this->formatTLV('00', 'bakong');
-                $subtag01 = $this->formatTLV('01', $bakongAccountId);
-                
-                $subtag02 = '';
-                if ($order->store && $order->store->created_by) {
-                    $subtag02 = $this->formatTLV('02', (string)$order->store->created_by);
+                if (empty($bakongAccountId)) {
+                    $bakongAccountId = 'lyhour_chann@bkrt';
                 }
-                
-                $merchantAccountInfo = $subtag00 . $subtag01 . $subtag02;
-                
-                $isIndividual = str_contains($bakongAccountId, '@');
-                $accountTag = $isIndividual ? '29' : '30';
-                
-                $payload = '';
-                $payload .= $this->formatTLV('00', '01');
-                $payload .= $this->formatTLV('01', '12'); // dynamic QR
-                $payload .= $this->formatTLV($accountTag, $merchantAccountInfo);
-                $payload .= $this->formatTLV('52', '5999');
-                
-                $currencyCode = $currency === 'KHR' ? '116' : '840';
-                $payload .= $this->formatTLV('53', $currencyCode);
-                
-                $amountVal = $currency === 'KHR'
-                    ? (string)round($order->total_amount)
-                    : number_format((float)$order->total_amount, 2, '.', '');
-                $payload .= $this->formatTLV('54', $amountVal);
-                
-                $payload .= $this->formatTLV('58', 'KH');
-                $payload .= $this->formatTLV('59', substr($bakongMerchantName, 0, 25));
-                $payload .= $this->formatTLV('60', substr($bakongMerchantCity, 0, 15));
-                
-                $billNo = 'ORD-' . $order->id;
-                $subtag62_01 = $this->formatTLV('01', $billNo);
-                $payload .= $this->formatTLV('62', $subtag62_01);
-                
-                $payload .= '6304';
-                $crc = $this->calculateCRC16($payload);
-                $qrString = $payload . $crc;
+
+                // Use the official Bakong KHQR SDK
+                $currencyCode = ($currency === 'KHR') ? 116 : 840;
+                $amountVal = (float)$order->total_amount;
+                $isIndividual = (strpos($bakongAccountId, '@') !== false) && !str_contains($bakongAccountId, '@retail') && !str_contains($bakongAccountId, '@merchant');
+                if ($isIndividual) {
+                    $amountVal = 0;
+                }
+                $billNo = 'ORD' . $order->id;
+
+                $qrString = CustomKHQR::generate(
+                    $bakongAccountId,
+                    $bakongMerchantName ?: 'Merchant',
+                    $bakongMerchantCity ?: 'Phnom Penh',
+                    $amountVal,
+                    $currencyCode,
+                    $billNo
+                );
+                $md5 = md5($qrString);
+
+                Log::info('[Bakong Checkout] Generated QR', [
+                    'order_id' => $order->id,
+                    'bakong_account_id' => $bakongAccountId,
+                    'amount' => $order->total_amount,
+                    'currency' => $currency,
+                    'qr_string' => $qrString
+                ]);
+
+                // Fetch Bakong API config for Deeplink
+                $bakongApiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMDFkZTkxZjVlZjJmNDNkOSJ9LCJpYXQiOjE3ODE1ODA5MDMsImV4cCI6MTc4OTM1NjkwM30.AeUiWG-mS__GNL20QFGwVsX6PLifCIQUvXcbIUCWBHg';
+                $bakongApiUrl = 'https://api-bakong.nbc.gov.kh';
+                if ($paymentMethodsRow) {
+                    $methods = json_decode($paymentMethodsRow->value, true) ?: [];
+                    if (isset($methods['bakong'])) {
+                        $bakongConfig = $methods['bakong'];
+                        $bakongValues = $bakongConfig['values'] ?? [];
+                        $bakongApiKey = $bakongValues['apiKey'] ?? '';
+                        $bakongApiUrl = rtrim(!empty($bakongValues['apiUrl']) ? $bakongValues['apiUrl'] : 'https://api-bakong.nbc.gov.kh', '/');
+                    }
+                }
+
+                $deeplink = 'https://bakong.nbc.org.kh/download';
+                if (!empty($bakongApiKey)) {
+                    try {
+                        $bakongApiUrl = rtrim($bakongApiUrl, '/');
+                        $httpClient = \Illuminate\Support\Facades\Http::withHeaders([
+                            'Content-Type' => 'application/json',
+                            'Accept' => 'application/json',
+                        ])->withToken($bakongApiKey);
+
+                        if (!app()->isProduction() || !empty($bakongConfig['sandbox']) || str_contains($bakongApiUrl, 'sandbox') || str_contains($bakongApiUrl, 'local')) {
+                            $httpClient = $httpClient->withoutVerifying();
+                        }
+
+                        $response = $httpClient->post($bakongApiUrl . '/v1/generate_deeplink_by_qr', [
+                            'qr' => $qrString,
+                            'appDeepLinkCallback' => $request->getSchemeAndHttpHost(),
+                            'appName' => $bakongMerchantName ?: 'Merchant',
+                            'appIconUrl' => 'https://bakong.nbc.gov.kh/assets/img/bakong-logo.png'
+                        ]);
+
+                        Log::info('[Bakong Deeplink Checkout] Response received', [
+                            'order_id' => $order->id,
+                            'status' => $response->status(),
+                            'body' => $response->json()
+                        ]);
+
+                        if ($response->successful()) {
+                            $resData = $response->json();
+                            if (isset($resData['data']['shortLink'])) {
+                                $deeplink = $resData['data']['shortLink'];
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('[Bakong Deeplink Checkout] Failed: ' . $e->getMessage());
+                    }
+                }
 
                 PaymentTransaction::create([
                     'order_id' => $order->id,
@@ -102,14 +146,26 @@ class PaymentController extends Controller
                     'payment_method' => 'bakong',
                     'amount' => $order->total_amount,
                     'status' => 'pending',
-                    'raw_response' => json_encode(['qr_string' => $qrString]),
+                    'raw_response' => json_encode([
+                        'qr_string' => $qrString,
+                        'deeplink' => $deeplink,
+                        'md5' => md5($qrString)
+                    ]),
                 ]);
+
+                // Generate QR Image in SVG format (Universal compatibility)
+                $qrImage = QrCode::format('svg')
+                    ->size(300)
+                    ->margin(2)
+                    ->generate($qrString);
+                
+                $base64Qr = 'data:image/svg+xml;base64,' . base64_encode($qrImage);
 
                 return response()->json([
                     'success' => true,
                     'qrString' => $qrString,
-                    'qrImage' => '',
-                    'abapay_deeplink' => 'https://bakong.nbc.org.kh/download',
+                    'qrImage' => $base64Qr,
+                    'abapay_deeplink' => $deeplink,
                     'transaction_id' => $tran_id,
                 ]);
             }
@@ -144,12 +200,16 @@ class PaymentController extends Controller
                     $rawUrl = $abaValues['apiUrl'] ?? $abaConfig['apiUrl'] ?? null;
                     if (!empty($rawUrl)) {
                         $url = trim($rawUrl);
-                        if (!str_contains($url, '/payments/generate-qr') && !str_contains($url, '/payments/purchase')) {
-                            $url = rtrim($url, '/') . '/api/payment-gateway/v1/payments/generate-qr';
+                        if (str_contains($url, 'link.payway.com.kh')) {
+                            $apiUrl = $url;
                         } else {
-                            $url = str_replace('/payments/purchase', '/payments/generate-qr', $url);
+                            if (!str_contains($url, '/payments/generate-qr') && !str_contains($url, '/payments/purchase')) {
+                                $url = rtrim($url, '/') . '/api/payment-gateway/v1/payments/generate-qr';
+                            } else {
+                                $url = str_replace('/payments/purchase', '/payments/generate-qr', $url);
+                            }
+                            $apiUrl = $url;
                         }
-                        $apiUrl = $url;
                     }
                 }
             }
@@ -237,23 +297,65 @@ class PaymentController extends Controller
             Log::info('[PayWay] Sending QR Generate request to: ' . $apiUrl, $postFields);
 
             // Connect server-to-server (bypass SSL verification on local/sandbox to avoid cURL cert issues)
-            $requestChain = Http::withHeaders([
+            $httpClient = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ]);
-            if (app()->environment('local') || str_contains($apiUrl, 'sandbox')) {
-                $requestChain = $requestChain->withoutVerifying();
+            if (!app()->isProduction() || str_contains($apiUrl, 'sandbox')) {
+                $httpClient = $httpClient->withoutVerifying();
             }
 
-            // MOCK MODE FALLBACK: If merchantId is sandbox prefix 'ec', bypass real API call
-            $isSandbox = str_contains($apiUrl, 'sandbox') || str_starts_with($merchantId, 'ec');
+            // MOCK MODE FALLBACK / PAYWAY LINK: If merchantId is sandbox prefix 'ec', url contains sandbox, or it is a direct PayWay Link
+            $isPaywayLink = str_contains($apiUrl, 'link.payway.com.kh');
+            $isSandbox = str_contains($apiUrl, 'sandbox') || str_starts_with($merchantId, 'ec') || $isPaywayLink;
             if ($isSandbox && $request->input('real') !== 'true' && $request->input('real') !== 1 && $request->input('real') !== '1') {
+                $qrStringVal = 'mock_khqr_string_for_testing_' . $tran_id;
+
+                if ($isPaywayLink) {
+                    // Generate a real scan-compatible KHQR for direct transfers
+                    $bakongAccountId = '1785273@aba';
+                    $bakongMerchantName = 'CHANN LYHOUR';
+                    $bakongMerchantCity = 'Phnom Penh';
+                    if ($paymentMethodsRow) {
+                        $methods = json_decode($paymentMethodsRow->value, true) ?: [];
+                        if (isset($methods['bakong'])) {
+                            $bakongValues = $methods['bakong']['values'] ?? [];
+                            if (!empty($bakongValues['bakongAccountId'])) {
+                                $bakongAccountId = $bakongValues['bakongAccountId'];
+                            }
+                            if (!empty($bakongValues['merchantName'])) {
+                                $bakongMerchantName = $bakongValues['merchantName'];
+                            }
+                            if (!empty($bakongValues['merchantCity'])) {
+                                $bakongMerchantCity = $bakongValues['merchantCity'];
+                            }
+                        }
+                    }
+                    $bakongAccountId = strtolower(trim($bakongAccountId));
+                    $currencyCode = ($currency === 'KHR') ? 116 : 840;
+                    $amountVal = (float)$order->total_amount;
+                    $isIndividual = (strpos($bakongAccountId, '@') !== false) && !str_contains($bakongAccountId, '@retail') && !str_contains($bakongAccountId, '@merchant');
+                    if ($isIndividual) {
+                        $amountVal = 0;
+                    }
+                    $billNo = 'ORD' . $order->id;
+
+                    $qrStringVal = CustomKHQR::generate(
+                        $bakongAccountId,
+                        $bakongMerchantName ?: 'Merchant',
+                        $bakongMerchantCity ?: 'Phnom Penh',
+                        $amountVal,
+                        $currencyCode,
+                        $billNo
+                    );
+                }
+
                 $mockResData = [
                     'status' => 0,
                     'description' => 'Success',
-                    'qrString' => 'mock_khqr_string_for_testing_' . $tran_id,
-                    'qrImage' => 'iVBORw0KGgoAAAANSUhEUgAAAJYAAACWAQMAAAAGz+OhAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABNUlEQVRIid2VQa6EIBBEm7hgyRG8CV6MRBMvNt6EI7hkYeypAsc/fztDL/4n0cAzsUJT1Yj8lzGp6hHDmv0pM+bFgEU8KcqARTgwN2FB9wTxrKekUbMZo3iZ9LBls5ZpT5aMB6VnuHVZ0xd7r/M3TMKq/odVb1xM3/3yDXMs3eP2Wh0X+zU+ZG6fWZ8h4//L6LfdgFUL4DXia5LiLBh1EckkVdeI6Uqbze3MMbNg0MXBr6ob/byZMFigOGxMJCytnN0ZE88NZt3wAZU0YJFVq70Y+chNtzdjJKG7wGZ4XcHpzOoyhmqzgeIGDJGELpaFF4sNaz2MvRg+uLzWm9W+64gnmqHqdmft/likhrNEMyZBs+ce/cOM8VrkHi0ZfSDTPmjrYa2mnRmDw3Bqc999X3Zlf308AcW4PkVW/y6nAAAAAElFTkSuQmCC',
-                    'abapay_deeplink' => 'http://localhost:3000/mock-payway-deeplink',
+                    'qrString' => $qrStringVal,
+                    'qrImage' => '', // Generated below
+                    'abapay_deeplink' => $isPaywayLink ? $apiUrl : 'http://localhost:3000/mock-payway-deeplink',
                 ];
 
                 PaymentTransaction::create([
@@ -265,16 +367,30 @@ class PaymentController extends Controller
                     'raw_response' => json_encode($mockResData),
                 ]);
 
+                // Generate QR Image in SVG format (Universal compatibility)
+                $qrImage = QrCode::format('svg')
+                    ->size(300)
+                    ->margin(2)
+                    ->generate($mockResData['qrString']);
+                
+                $base64Qr = 'data:image/svg+xml;base64,' . base64_encode($qrImage);
+
                 return response()->json([
                     'success' => true,
                     'qrString' => $mockResData['qrString'],
-                    'qrImage' => $mockResData['qrImage'],
+                    'qrImage' => $base64Qr,
                     'abapay_deeplink' => $mockResData['abapay_deeplink'],
                     'transaction_id' => $tran_id,
                 ]);
             }
 
-            $response = $requestChain->post($apiUrl, $postFields);
+            $response = $httpClient->post($apiUrl, $postFields);
+
+            Log::info('[PayWay] QR Generate Response', [
+                'order_id' => $order->id,
+                'status' => $response->status(),
+                'response' => $response->json()
+            ]);
 
             if ($response->failed()) {
                 return response()->json([
@@ -337,10 +453,88 @@ class PaymentController extends Controller
             $order = $txn->order;
             $ownerId = $order->store_id;
 
-            // Handle Bakong verification (Mock sandbox check)
+            // Handle Bakong verification
             if ($txn->payment_method === 'bakong') {
                 $wantsConfirm = $request->input('confirm') === true || $request->input('confirm') === 'true' || $request->input('confirm') == 1;
                 
+                // Extract QR string to get MD5 hash
+                $rawResponse = json_decode($txn->raw_response, true) ?: [];
+                $qrString = $rawResponse['qr_string'] ?? '';
+                $md5 = md5($qrString);
+
+                // Fetch Bakong API keys from store settings
+                $apiKey = '';
+                $apiUrl = 'https://api-bakong.nbc.gov.kh';
+
+                $paymentMethodsRow = Store::where('created_by', $ownerId)
+                    ->where('key', 'payment_methods')
+                    ->first();
+
+                if ($paymentMethodsRow) {
+                    $methods = json_decode($paymentMethodsRow->value, true) ?: [];
+                    if (isset($methods['bakong'])) {
+                        $bakongConfig = $methods['bakong'];
+                        $bakongValues = $bakongConfig['values'] ?? [];
+                        if (!empty($bakongValues['apiKey'])) {
+                            $apiKey = $bakongValues['apiKey'];
+                        }
+                        if (!empty($bakongValues['apiUrl'])) {
+                            $apiUrl = rtrim($bakongValues['apiUrl'], '/');
+                        }
+                    }
+                }
+
+                // 1. If we have a token, attempt a real API check
+                if ($apiKey || $md5) {
+                    try {
+                        $apiKey = $apiKey ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMDFkZTkxZjVlZjJmNDNkOSJ9LCJpYXQiOjE3ODE1ODA5MDMsImV4cCI6MTc4OTM1NjkwM30.AeUiWG-mS__GNL20QFGwVsX6PLifCIQUvXcbIUCWBHg';
+                        $apiUrl = rtrim($apiUrl ?: 'https://api-bakong.nbc.gov.kh', '/');
+                        $httpClient = Http::withHeaders([
+                            'Content-Type' => 'application/json',
+                            'Accept' => 'application/json',
+                        ])->withToken($apiKey);
+
+                        if (!app()->isProduction() || !empty($bakongConfig['sandbox']) || str_contains($apiUrl, 'sandbox') || str_contains($apiUrl, 'local')) {
+                            $httpClient = $httpClient->withoutVerifying();
+                        }
+
+                        $response = $httpClient->post($apiUrl . '/v1/check_transaction_by_md5', [
+                            'md5' => $md5
+                        ]);
+
+                        Log::info('[Bakong Check Transaction] Response received', [
+                            'order_id' => $order->id,
+                            'status' => $response->status(),
+                            'body' => $response->json()
+                        ]);
+
+                        if ($response->successful()) {
+                            $resData = $response->json();
+                            $code = isset($resData['status']['code']) ? (int)$resData['status']['code'] : (isset($resData['responseCode']) ? (int)$resData['responseCode'] : -1);
+                            $dataField = $resData['data'] ?? [];
+                            $statusVal = $dataField['status'] ?? '';
+
+                            if ($code === 0 && (strtolower($statusVal) === 'success' || $statusVal === 'SUCCESS')) {
+                                $txn->update([
+                                    'status' => 'success',
+                                    'raw_response' => json_encode($resData),
+                                ]);
+                                $order->update(['payment_status' => 'Paid']);
+
+                                return response()->json([
+                                    'success' => true,
+                                    'payment_status' => 'Paid',
+                                    'message' => 'Bakong payment completed successfully!',
+                                    'raw' => $resData,
+                                ]);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('[Bakong checkTransaction] Real API call exception: ' . $e->getMessage());
+                    }
+                }
+
+                // 2. Fallback to mock confirmation if requested
                 if ($wantsConfirm) {
                     $txn->update(['status' => 'success']);
                     $order->update(['payment_status' => 'Paid']);
@@ -414,16 +608,16 @@ class PaymentController extends Controller
             Log::info('[PayWay] Checking transaction: ' . $apiUrl, $postFields);
 
             // Connect server-to-server (bypass SSL verification on local/sandbox to avoid cURL cert issues)
-            $requestChain = Http::withHeaders([
+            $httpClient = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ]);
-            if (app()->environment('local') || str_contains($apiUrl, 'sandbox')) {
-                $requestChain = $requestChain->withoutVerifying();
+            if (!app()->isProduction() || str_contains($apiUrl, 'sandbox')) {
+                $httpClient = $httpClient->withoutVerifying();
             }
 
-            // MOCK MODE FALLBACK: If merchantId is sandbox prefix 'ec' or url contains sandbox
-            $isSandbox = str_contains($apiUrl, 'sandbox') || str_starts_with($merchantId, 'ec');
+            // MOCK MODE FALLBACK: If merchantId is sandbox prefix 'ec', url contains sandbox, or is custom PayWay link
+            $isSandbox = str_contains($apiUrl, 'sandbox') || str_starts_with($merchantId, 'ec') || str_contains($apiUrl, 'link.payway.com.kh');
             if ($isSandbox && $request->input('real') !== 'true' && $request->input('real') !== 1 && $request->input('real') !== '1') {
                 $mockResData = [
                     'status' => 0,
@@ -460,7 +654,7 @@ class PaymentController extends Controller
                 ]);
             }
 
-            $response = $requestChain->post($apiUrl, $postFields);
+            $response = $httpClient->post($apiUrl, $postFields);
 
             if ($response->failed()) {
                 return response()->json([
@@ -536,10 +730,36 @@ class PaymentController extends Controller
     }
 
     /**
+     * Safely truncate a UTF-8 string to a maximum number of bytes.
+     */
+    private function truncateUtf8($string, $maxBytes)
+    {
+        $string = $this->sanitizeKhqrString($string);
+        if (strlen($string) <= $maxBytes) {
+            return $string;
+        }
+        return mb_strcut($string, 0, $maxBytes, 'UTF-8');
+    }
+
+    /**
+     * Sanitize strings for KHQR (remove special characters and non-ASCII for better compatibility).
+     */
+    private function sanitizeKhqrString($string)
+    {
+        // Remove special characters that might break EMVCo
+        $string = str_replace(['"', "'", '&', '<', '>', '@', '#', '$', '%', '*', '^', '(', ')', '+', '=', '[', ']', '{', '}', '|', '\\', ';', ':', ',', '?', '/'], '', $string);
+        // Replace multiple spaces with single space
+        $string = preg_replace('/\s+/', ' ', $string);
+        // Trim whitespace
+        return trim($string);
+    }
+
+    /**
      * Format tag, length, value into EMVCo format.
      */
     private function formatTLV($tag, $value)
     {
+        $value = (string)$value;
         $len = str_pad(strlen($value), 2, '0', STR_PAD_LEFT);
         return $tag . $len . $value;
     }

@@ -387,16 +387,17 @@ class StoreController extends Controller
                 'textColor' => 'text-white',
                 'logoText' => 'Bakong',
                 'fields' => [
-                    ['key' => 'bakongAccountId', 'label' => 'Bakong Account ID', 'type' => 'text'],
-                    ['key' => 'merchantName', 'label' => 'Merchant Name', 'type' => 'text'],
+                    ['key' => 'bakongAccountId', 'label' => 'Your Production Bakong Account ID', 'type' => 'text'],
+                    ['key' => 'merchantName', 'label' => 'Merchant ID / Username', 'type' => 'text'],
                     ['key' => 'merchantCity', 'label' => 'Merchant City', 'type' => 'text'],
-                    ['key' => 'apiKey', 'label' => 'API Key / Token', 'type' => 'password', 'required' => false],
+                    ['key' => 'apiKey', 'label' => 'API Token / Secret Key', 'type' => 'password', 'required' => false],
                     ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text', 'required' => false],
                 ],
                 'defaultValues' => [
-                    'bakongAccountId' => 'chann_lyhour@chbl',
-                    'merchantName' => 'Lyhour Dev',
-                    'merchantCity' => 'Phnom Penh',
+                    'bakongAccountId' => '',
+                    'merchantName' => '',
+                    'merchantCity' => '',
+                    'apiKey' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMDFkZTkxZjVlZjJmNDNkOSJ9LCJpYXQiOjE3ODE1ODA5MDMsImV4cCI6MTc4OTM1NjkwM30.AeUiWG-mS__GNL20QFGwVsX6PLifCIQUvXcbIUCWBHg',
                 ]
             ],
             [

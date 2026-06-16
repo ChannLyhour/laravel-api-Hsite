@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\v1\Owner\ProductAttributeController;
 use App\Http\Controllers\Api\v1\Owner\ProductVariantController;
 use App\Http\Controllers\Api\v1\Owner\ProductImageController;
 use App\Http\Controllers\Api\v1\Owner\ProductAddonController;
+use App\Http\Controllers\Api\v1\Owner\KhqrBakongController;
 use App\Http\Controllers\Api\v1\ProductRatingController;
 use App\Http\Controllers\Api\v1\CustomerController;
 use App\Http\Controllers\Api\v1\OrderController;
@@ -384,6 +385,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/items/{item_id}', [FoodItemController::class, 'destroy'])->whereNumber('item_id');
 
         Route::get('/customers', [CustomerController::class, 'index']);
+
+        // Owner Bakong KHQR generator
+        Route::post('/owner/khqr-bakong/generate', [KhqrBakongController::class, 'generateQr']);
+        Route::post('/owner/khqr-bakong/check', [KhqrBakongController::class, 'checkTransaction']);
 
 
         // Get orders
