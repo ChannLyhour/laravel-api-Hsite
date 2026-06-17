@@ -166,6 +166,7 @@ Route::post('/payments/check-transaction', [PaymentController::class, 'checkTran
 Route::get('/templates', [TemplateController::class, 'index']);
 Route::get('/templates/{tpl_code}', [TemplateController::class, 'show']);
 Route::get('/templates/download/{token}', [TemplateController::class, 'download']);
+Route::get('/chat/messages/{id}/media', [ChatController::class, 'getMedia'])->whereNumber('id');
 
 // =========================================================================
 //   PROTECTED API ROUTES (Sanctum)

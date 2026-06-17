@@ -72,14 +72,14 @@ class MessageSent implements ShouldBroadcastNow
                 'sender_id' => $this->message->sender_id,
                 'message_type' => $this->message->message_type,
                 'body' => $this->message->body,
-                'media_url' => $this->message->media_url ? ((str_starts_with($this->message->media_url, 'http') || str_starts_with($this->message->media_url, 'data:')) ? $this->message->media_url : asset($this->message->media_url)) : null,
+                'media_url' => $this->message->media_url ? (str_starts_with($this->message->media_url, 'data:') ? url('/api/chat/messages/' . $this->message->id . '/media') : (str_starts_with($this->message->media_url, 'http') ? $this->message->media_url : asset($this->message->media_url))) : null,
                 'is_pinned' => (bool)$this->message->is_pinned,
                 'reply_to_message_id' => $this->message->reply_to_message_id,
                 'reply_to_message' => $this->message->replyTo ? [
                     'id' => $this->message->replyTo->id,
                     'body' => $this->message->replyTo->body,
                     'message_type' => $this->message->replyTo->message_type,
-                    'media_url' => $this->message->replyTo->media_url ? ((str_starts_with($this->message->replyTo->media_url, 'http') || str_starts_with($this->message->replyTo->media_url, 'data:')) ? $this->message->replyTo->media_url : asset($this->message->replyTo->media_url)) : null,
+                    'media_url' => $this->message->replyTo->media_url ? (str_starts_with($this->message->replyTo->media_url, 'data:') ? url('/api/chat/messages/' . $this->message->replyTo->id . '/media') : (str_starts_with($this->message->replyTo->media_url, 'http') ? $this->message->replyTo->media_url : asset($this->message->replyTo->media_url))) : null,
                     'sender' => $this->message->replyTo->sender ? [
                         'id' => $this->message->replyTo->sender->id,
                         'name' => $this->message->replyTo->sender->name,

@@ -87,7 +87,7 @@ class ChatController extends Controller
                     'id' => $lastMsg->id,
                     'body' => $lastMsg->body,
                     'message_type' => $lastMsg->message_type,
-                    'media_url' => $lastMsg->media_url,
+                    'media_url' => $lastMsg->media_url ? (str_starts_with($lastMsg->media_url, 'data:') ? url('/api/chat/messages/' . $lastMsg->id . '/media') : (str_starts_with($lastMsg->media_url, 'http') ? $lastMsg->media_url : asset($lastMsg->media_url))) : null,
                     'is_pinned' => (bool)$lastMsg->is_pinned,
                     'sender_id' => $lastMsg->sender_id,
                     'created_at' => $lastMsg->created_at->toIso8601String(),
@@ -237,14 +237,14 @@ class ChatController extends Controller
                 'sender_id' => $msg->sender_id,
                 'message_type' => $msg->message_type,
                 'body' => $msg->body,
-                'media_url' => $msg->media_url ? ((str_starts_with($msg->media_url, 'http') || str_starts_with($msg->media_url, 'data:')) ? $msg->media_url : asset($msg->media_url)) : null,
+                'media_url' => $msg->media_url ? (str_starts_with($msg->media_url, 'data:') ? url('/api/chat/messages/' . $msg->id . '/media') : (str_starts_with($msg->media_url, 'http') ? $msg->media_url : asset($msg->media_url))) : null,
                 'is_pinned' => (bool)$msg->is_pinned,
                 'reply_to_message_id' => $msg->reply_to_message_id,
                 'reply_to_message' => $msg->replyTo ? [
                     'id' => $msg->replyTo->id,
                     'body' => $msg->replyTo->body,
                     'message_type' => $msg->replyTo->message_type,
-                    'media_url' => $msg->replyTo->media_url ? ((str_starts_with($msg->replyTo->media_url, 'http') || str_starts_with($msg->replyTo->media_url, 'data:')) ? $msg->replyTo->media_url : asset($msg->replyTo->media_url)) : null,
+                    'media_url' => $msg->replyTo->media_url ? (str_starts_with($msg->replyTo->media_url, 'data:') ? url('/api/chat/messages/' . $msg->replyTo->id . '/media') : (str_starts_with($msg->replyTo->media_url, 'http') ? $msg->replyTo->media_url : asset($msg->replyTo->media_url))) : null,
                     'sender' => $msg->replyTo->sender ? [
                         'id' => $msg->replyTo->sender->id,
                         'name' => $msg->replyTo->sender->name,
@@ -325,14 +325,14 @@ class ChatController extends Controller
             'sender_id' => $message->sender_id,
             'message_type' => $message->message_type,
             'body' => $message->body,
-            'media_url' => $message->media_url ? ((str_starts_with($message->media_url, 'http') || str_starts_with($message->media_url, 'data:')) ? $message->media_url : asset($message->media_url)) : null,
+            'media_url' => $message->media_url ? (str_starts_with($message->media_url, 'data:') ? url('/api/chat/messages/' . $message->id . '/media') : (str_starts_with($message->media_url, 'http') ? $message->media_url : asset($message->media_url))) : null,
             'is_pinned' => (bool)$message->is_pinned,
             'reply_to_message_id' => $message->reply_to_message_id,
             'reply_to_message' => $message->replyTo ? [
                 'id' => $message->replyTo->id,
                 'body' => $message->replyTo->body,
                 'message_type' => $message->replyTo->message_type,
-                'media_url' => $message->replyTo->media_url ? ((str_starts_with($message->replyTo->media_url, 'http') || str_starts_with($message->replyTo->media_url, 'data:')) ? $message->replyTo->media_url : asset($message->replyTo->media_url)) : null,
+                'media_url' => $message->replyTo->media_url ? (str_starts_with($message->replyTo->media_url, 'data:') ? url('/api/chat/messages/' . $message->replyTo->id . '/media') : (str_starts_with($message->replyTo->media_url, 'http') ? $message->replyTo->media_url : asset($message->replyTo->media_url))) : null,
                 'sender' => $message->replyTo->sender ? [
                     'id' => $message->replyTo->sender->id,
                     'name' => $message->replyTo->sender->name,
@@ -563,5 +563,51 @@ class ChatController extends Controller
             ]);
 
         return response()->json($users);
+    }
+
+    /**
+     * Serve base64 media attachments dynamically as a file response.
+     * GET /api/chat/messages/{id}/media
+     */
+    public function getMedia($id)
+    {
+        $message = Message::find($id);
+        if (!$message || !$message->media_url) {
+            abort(404, 'Media not found.');
+        }
+
+        $mediaUrl = $message->media_url;
+
+        // If it's a base64 Data URL, decode and serve it
+        if (str_starts_with($mediaUrl, 'data:')) {
+            try {
+                // Format: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+                $commaPos = strpos($mediaUrl, ',');
+                if ($commaPos === false) {
+                    abort(400, 'Invalid data URI.');
+                }
+
+                $header = substr($mediaUrl, 0, $commaPos);
+                $data = substr($mediaUrl, $commaPos + 1);
+                $decoded = base64_decode($data);
+
+                // Extract mime type (e.g., image/png or audio/webm)
+                $mimeType = 'application/octet-stream';
+                if (preg_match('/^data:([^;]+);base64$/', $header, $matches)) {
+                    $mimeType = $matches[1];
+                }
+
+                return response($decoded)
+                    ->header('Content-Type', $mimeType)
+                    ->header('Cache-Control', 'public, max-age=31536000') // Cache for 1 year
+                    ->header('Content-Length', strlen($decoded));
+            } catch (\Exception $e) {
+                abort(500, 'Failed to serve base64 media.');
+            }
+        }
+
+        // Otherwise, it's a path or external URL. Redirect to the asset URL
+        $url = str_starts_with($mediaUrl, 'http') ? $mediaUrl : asset($mediaUrl);
+        return redirect()->away($url);
     }
 }
