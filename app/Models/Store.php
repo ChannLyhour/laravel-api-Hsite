@@ -32,6 +32,7 @@ class Store extends Model
     }
 
     private static $originalPusherConfig = null;
+    private static $originalDefaultBroadcaster = null;
 
     /**
      * Dynamically configure the Pusher connection credentials for a given conversation.
@@ -41,9 +42,13 @@ class Store extends Model
         // Capture original configuration at the very first call to keep it as default
         if (self::$originalPusherConfig === null) {
             self::$originalPusherConfig = config('broadcasting.connections.pusher');
+            self::$originalDefaultBroadcaster = config('broadcasting.default');
         } else {
             // Restore original configuration before proceeding
-            config(['broadcasting.connections.pusher' => self::$originalPusherConfig]);
+            config([
+                'broadcasting.connections.pusher' => self::$originalPusherConfig,
+                'broadcasting.default'            => self::$originalDefaultBroadcaster,
+            ]);
         }
 
         try {
@@ -103,6 +108,7 @@ class Store extends Model
 
         if ($appId && $key && $secret && $cluster) {
             config([
+                'broadcasting.default'                           => 'pusher',
                 'broadcasting.connections.pusher.app_id'         => $appId,
                 'broadcasting.connections.pusher.key'            => $key,
                 'broadcasting.connections.pusher.secret'         => $secret,
