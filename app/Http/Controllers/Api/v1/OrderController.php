@@ -224,11 +224,7 @@ class OrderController extends Controller
         $query = Order::with(['items', 'store']);
 
         if ((int)$user->role_id !== 1) {
-            $store = Store::where('created_by', $user->id)->first();
-            if (!$store) {
-                return response()->json([]);
-            }
-            $query->where('store_id', $store->id);
+            $query->where('store_id', $user->id);
         }
 
         return response()->json($query->orderBy('created_at', 'desc')->get());
@@ -251,14 +247,15 @@ class OrderController extends Controller
                     }
                 }
                 
-                // Delete items
-                $order->items()->delete();
-                // Delete order (soft delete)
-                $order->delete();
+                // Set status to canceled and payment status to Failed
+                $order->update([
+                    'status' => 'canceled',
+                    'payment_status' => 'Failed',
+                ]);
                 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Order deleted successfully'
+                    'message' => 'Order canceled successfully'
                 ]);
             });
         } catch (\Exception $e) {

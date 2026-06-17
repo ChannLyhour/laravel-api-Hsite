@@ -6,82 +6,121 @@ class CustomKHQR
 {
     public static function generate($bakongAccountId, $merchantName, $merchantCity, $amount, $currencyCode, $billNo)
     {
+        $acquiringBank = 'Bakong';
+        if (strpos($bakongAccountId, '@') !== false) {
+            $parts = explode('@', $bakongAccountId);
+            $domain = end($parts);
+            if (strtolower($domain) === 'wing') {
+                $acquiringBank = 'Wing Bank';
+            } elseif (strtolower($domain) === 'aba') {
+                $acquiringBank = 'ABA Bank';
+            } elseif (strtolower($domain) === 'acleda') {
+                $acquiringBank = 'ACLEDA Bank';
+            }
+        }
+
         $isIndividual = (strpos($bakongAccountId, '@') !== false) && !str_contains($bakongAccountId, '@retail') && !str_contains($bakongAccountId, '@merchant');
+
         if ($isIndividual) {
-            return self::generateTag29($bakongAccountId, $merchantName, $merchantCity, $amount, $currencyCode, $billNo);
+            $individualInfo = new \Piseth\BakongKhqr\Models\IndividualInfo(
+                $bakongAccountId,
+                $merchantName ?: 'Merchant',
+                $merchantCity ?: 'Phnom Penh',
+                $acquiringBank,
+                null, // accountInformation
+                (int)$currencyCode,
+                (float)$amount,
+                $billNo
+            );
+            $res = \Piseth\BakongKhqr\BakongKHQR::generateIndividual($individualInfo);
+            return $res->data['qr'];
+        } else {
+            $merchantID = '123456';
+            if (strpos($bakongAccountId, '@') !== false) {
+                $parts = explode('@', $bakongAccountId);
+                $merchantID = $parts[0];
+            }
+            $merchantInfo = new \Piseth\BakongKhqr\Models\MerchantInfo(
+                $bakongAccountId,
+                $merchantName ?: 'Merchant',
+                $merchantCity ?: 'Phnom Penh',
+                $merchantID,
+                $acquiringBank,
+                null, // accountInformation
+                (int)$currencyCode,
+                (float)$amount,
+                $billNo
+            );
+            $res = \Piseth\BakongKhqr\BakongKHQR::generateMerchant($merchantInfo);
+            return $res->data['qr'];
         }
-        return self::generateTag30($bakongAccountId, $merchantName, $merchantCity, $amount, $currencyCode, $billNo);
     }
 
-    public static function generateTag29($bakongAccountId, $merchantName, $merchantCity, $amount, $currencyCode, $billNo)
+    /**
+     * Generate a WebP QR code image in Base64 data format.
+     */
+    public static function generateWebpQrBase64($qrString, $size = 300)
     {
-        $payload = '';
-        $payload .= self::formatTLV('00', '01'); // Payload Format Indicator
-        $poi = ($amount > 0) ? '12' : '11';
-        $payload .= self::formatTLV('01', $poi); // Point of Initiation Method: 11 for Static, 12 for Dynamic
-
-        // Tag 29: Individual Account Information
-        $subtag00 = self::formatTLV('00', $bakongAccountId);
-        $subtag02 = self::formatTLV('02', 'Bakong'); // Acquiring Bank Name
-        $individualAccountInfo = $subtag00 . $subtag02;
-        $payload .= self::formatTLV('29', $individualAccountInfo);
-
-        $payload .= self::formatTLV('52', '5999'); // MCC
-        $payload .= self::formatTLV('53', (string)$currencyCode); // Currency
-        
-        if ($amount > 0) {
-            $payload .= self::formatTLV('54', number_format($amount, 2, '.', '')); // Amount
+        try {
+            $level = \BaconQrCode\Common\ErrorCorrectionLevel::H();
+            $qrCode = \BaconQrCode\Encoder\Encoder::encode($qrString, $level);
+            $matrix = $qrCode->getMatrix();
+            
+            $width = $matrix->getWidth();
+            $height = $matrix->getHeight();
+            
+            // Calculate pixel scaling to hit requested size closely while maintaining grid alignment
+            $margin = 4; // EMVCo quiet zone modules
+            $totalModules = $width + ($margin * 2);
+            $pixelSize = max(1, (int)round($size / $totalModules));
+            
+            $imgWidth = $totalModules * $pixelSize;
+            $imgHeight = $totalModules * $pixelSize;
+            
+            $img = imagecreatetruecolor($imgWidth, $imgHeight);
+            $white = imagecolorallocate($img, 255, 255, 255);
+            $black = imagecolorallocate($img, 0, 0, 0);
+            
+            // Fill background with white
+            imagefilledrectangle($img, 0, 0, $imgWidth - 1, $imgHeight - 1, $white);
+            
+            for ($y = 0; $y < $height; $y++) {
+                for ($x = 0; $x < $width; $x++) {
+                    if ($matrix->get($x, $y) === 1 || $matrix->get($x, $y) === true) {
+                        $x1 = ($x + $margin) * $pixelSize;
+                        $y1 = ($y + $margin) * $pixelSize;
+                        $x2 = $x1 + $pixelSize - 1;
+                        $y2 = $y1 + $pixelSize - 1;
+                        imagefilledrectangle($img, $x1, $y1, $x2, $y2, $black);
+                    }
+                }
+            }
+            
+            ob_start();
+            imagewebp($img, null, 85); // 85% WebP quality
+            $webpData = ob_get_clean();
+            
+            if (function_exists('imagedestroy')) {
+                @imagedestroy($img);
+            }
+            
+            return 'data:image/webp;base64,' . base64_encode($webpData);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('WebP QR generation failed: ' . $e->getMessage());
+            return '';
         }
-        
-        $payload .= self::formatTLV('58', 'KH'); // Country Code
-        $payload .= self::formatTLV('59', $merchantName); // Merchant Name
-        $payload .= self::formatTLV('60', $merchantCity); // Merchant City
-
-        // Tag 62: Additional Data Field
-        $subtagBillNo = self::formatTLV('01', $billNo);
-        $payload .= self::formatTLV('62', $subtagBillNo);
-
-        $payload .= '6304'; // CRC tag and length
-        
-        $crc = self::calculateCRC16($payload);
-        return $payload . $crc;
     }
 
-    public static function generateTag30($bakongAccountId, $merchantName, $merchantCity, $amount, $currencyCode, $billNo)
+    private static function sanitizeString($string, $default = 'Merchant')
     {
-        $payload = '';
-        $payload .= self::formatTLV('00', '01'); // Payload Format Indicator
-        $poi = ($amount > 0) ? '12' : '11';
-        $payload .= self::formatTLV('01', $poi); // Point of Initiation Method: 11 for Static, 12 for Dynamic
-
-        // Tag 30: Merchant Account Information
-        $subtag00 = self::formatTLV('00', 'A000000762000101');
-        $subtag01 = self::formatTLV('01', $bakongAccountId);
-        $subtag02 = self::formatTLV('02', 'Bakong'); // Acquiring Bank is mandatory
-        $merchantAccountInfo = $subtag00 . $subtag01 . $subtag02;
-        $payload .= self::formatTLV('30', $merchantAccountInfo);
-
-        $payload .= self::formatTLV('52', '5999'); // MCC
-        $payload .= self::formatTLV('53', (string)$currencyCode); // Currency
-        
-        if ($amount > 0) {
-            $payload .= self::formatTLV('54', number_format($amount, 2, '.', '')); // Amount
-        }
-        
-        $payload .= self::formatTLV('58', 'KH'); // Country Code
-        $payload .= self::formatTLV('59', $merchantName); // Merchant Name
-        $payload .= self::formatTLV('60', $merchantCity); // Merchant City
-
-        // Tag 62: Additional Data Field
-        $subtagBillNo = self::formatTLV('01', $billNo);
-        $payload .= self::formatTLV('62', $subtagBillNo);
-
-        // Tag 99: Timestamp (optional, omit to prevent format errors from weird timestamps)
-        
-        $payload .= '6304'; // CRC tag and length
-        
-        $crc = self::calculateCRC16($payload);
-        return $payload . $crc;
+        // Transliterate or remove non-ASCII characters to guarantee Latin characters for EMVCo compatibility
+        $string = preg_replace('/[^\x20-\x7E]/', '', $string);
+        // Remove special characters that might break EMVCo
+        $string = str_replace(['"', "'", '&', '<', '>', '@', '#', '$', '%', '*', '^', '(', ')', '+', '=', '[', ']', '{', '}', '|', '\\', ';', ':', ',', '?', '/'], '', $string);
+        // Replace multiple spaces with single space
+        $string = preg_replace('/\s+/', ' ', $string);
+        $string = trim($string);
+        return empty($string) ? $default : $string;
     }
 
     private static function formatTLV($tag, $value)

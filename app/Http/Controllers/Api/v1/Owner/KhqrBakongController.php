@@ -20,22 +20,24 @@ class KhqrBakongController extends Controller
     public function generateQr(Request $request)
     {
         $user = $request->user();
+        if ($user->role_id !== 30003) {
+            return response()->json(['detail' => 'Access denied. Store owner only.'], 403);
+        }
 
         // Defaults
-        $bakongAccountId = 'lyhour_chann@bkrt';
-        $bakongMerchantName = 'Lyhour Chann';
-        $bakongMerchantCity = 'Phnom Penh';
+        $bakongAccountId = '';
+        $bakongMerchantName = '';
+        $bakongMerchantCity = '';
 
         // Load store payment configuration
         $storeId = $request->input('store_id');
-        $query = Store::query();
-        if ($storeId) {
-            $query->where('created_by', $storeId);
-        } else {
-            $query->where('created_by', $user->id);
+        if ($storeId && (int)$storeId !== $user->id) {
+            return response()->json(['detail' => 'You are not authorized to access this store.'], 403);
         }
 
-        $paymentMethodsRow = $query->where('key', 'payment_methods')->first();
+        $paymentMethodsRow = Store::where('created_by', $user->id)
+            ->where('key', 'payment_methods')
+            ->first();
 
         if ($paymentMethodsRow) {
             $methods = json_decode($paymentMethodsRow->value, true) ?: [];
@@ -66,9 +68,14 @@ class KhqrBakongController extends Controller
         }
 
         $bakongAccountId = trim($bakongAccountId);
+        $bakongMerchantName = trim($bakongMerchantName);
+        $bakongMerchantCity = trim($bakongMerchantCity);
 
-        if (empty($bakongAccountId)) {
-            $bakongAccountId = 'lyhour_chann@bkrt';
+        if (empty($bakongAccountId) || empty($bakongMerchantName) || empty($bakongMerchantCity)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bakong KHQR payment is not configured yet for this store profile.'
+            ], 400);
         }
 
         // Normalize Bakong ID (usually lowercase)
@@ -81,15 +88,12 @@ class KhqrBakongController extends Controller
         if ($request->filled('order_id')) {
             $order = Order::findOrFail($request->input('order_id'));
 
-            // Check authorization: if user role is not admin (1), order's store must be owned by user
-            if ($user->role_id !== 1) {
-                $myStoreIds = Store::where('created_by', $user->id)->pluck('id')->toArray();
-                if (!in_array($order->store_id, $myStoreIds)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Unauthorized order access.'
-                    ], 403);
-                }
+            // Check authorization: order's store must be owned by user
+            if ((int)$order->store_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized order access.'
+                ], 403);
             }
 
             $amount = $order->total_amount;
@@ -111,9 +115,11 @@ class KhqrBakongController extends Controller
             // Use the official Bakong KHQR SDK
             $currencyCode = ($currency === 'KHR') ? 116 : 840;
             $amountVal = (float)$amount;
+
+            // For Individual P2P Bakong accounts, generate static QR codes (amount = 0.0)
             $isIndividual = (strpos($bakongAccountId, '@') !== false) && !str_contains($bakongAccountId, '@retail') && !str_contains($bakongAccountId, '@merchant');
             if ($isIndividual) {
-                $amountVal = 0;
+                $amountVal = 0.0;
             }
 
             $qrString = CustomKHQR::generate(
@@ -137,16 +143,13 @@ class KhqrBakongController extends Controller
             ]);
 
             // Fetch API config to attempt real Deeplink generation
-            $apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMDFkZTkxZjVlZjJmNDNkOSJ9LCJpYXQiOjE3ODE1ODA5MDMsImV4cCI6MTc4OTM1NjkwM30.AeUiWG-mS__GNL20QFGwVsX6PLifCIQUvXcbIUCWBHg';
-            $apiUrl = 'https://api-bakong.nbc.gov.kh';
-            $storeId = $request->input('store_id');
-            $query = Store::query();
-            if ($storeId) {
-                $query->where('created_by', $storeId);
-            } else {
-                $query->where('created_by', $user->id);
-            }
-            $paymentMethodsRow = $query->where('key', 'payment_methods')->first();
+            $apiKey = '';
+            $apiUrl = '';
+            $isSandbox = true;
+            
+            $paymentMethodsRow = Store::where('created_by', $user->id)
+                ->where('key', 'payment_methods')
+                ->first();
             if ($paymentMethodsRow) {
                 $methods = json_decode($paymentMethodsRow->value, true) ?: [];
                 if (isset($methods['bakong'])) {
@@ -158,20 +161,31 @@ class KhqrBakongController extends Controller
                     if (!empty($bakongValues['apiUrl'])) {
                         $apiUrl = rtrim($bakongValues['apiUrl'], '/');
                     }
+                    $isSandbox = !empty($bakongConfig['sandbox']);
                 }
+            }
+
+            $apiKey = $apiKey ?: config('bakong.api_token');
+            $apiUrl = rtrim($apiUrl ?: config('bakong.api_url'), '/');
+
+            // Force override API URL based on Sandbox mode for NBC testing
+            if ($isSandbox && $apiUrl === 'https://api-bakong.nbc.gov.kh') {
+                $apiUrl = 'https://sit-api-bakong.nbc.gov.kh';
+            } elseif (!$isSandbox && $apiUrl === 'https://sit-api-bakong.nbc.gov.kh') {
+                $apiUrl = 'https://api-bakong.nbc.gov.kh';
             }
 
             $deeplink = 'https://bakong.nbc.org.kh/download';
             if (!empty($apiKey)) {
                 try {
                     $apiUrl = rtrim($apiUrl, '/');
-                    $httpClient = \Illuminate\Support\Facades\Http::withHeaders([
+                    $httpClient = Http::withHeaders([
                         'Content-Type' => 'application/json',
                         'Accept' => 'application/json',
                     ])->withToken($apiKey);
 
                     // Always bypass SSL on non-production to resolve cURL error 60
-                    if (!app()->isProduction() || !empty($bakongConfig['sandbox']) || str_contains($apiUrl, 'sandbox') || str_contains($apiUrl, 'local')) {
+                    if (!app()->isProduction() || $isSandbox || str_contains($apiUrl, 'sandbox') || str_contains($apiUrl, 'local')) {
                         $httpClient = $httpClient->withoutVerifying();
                     }
 
@@ -216,13 +230,8 @@ class KhqrBakongController extends Controller
                 );
             }
 
-            // Generate QR Image in SVG format (Universal compatibility)
-            $qrImage = QrCode::format('svg')
-                ->size(300)
-                ->margin(2)
-                ->generate($qrString);
-            
-            $base64Qr = 'data:image/svg+xml;base64,' . base64_encode($qrImage);
+            // Generate QR Image in WebP format (Base64 data:image/webp)
+            $base64Qr = CustomKHQR::generateWebpQrBase64($qrString, 300);
 
             return response()->json([
                 'success' => true,
@@ -258,6 +267,9 @@ class KhqrBakongController extends Controller
         ]);
 
         $user = $request->user();
+        if ($user->role_id !== 30003) {
+            return response()->json(['detail' => 'Access denied. Store owner only.'], 403);
+        }
 
         // 1. Resolve MD5 hash
         $md5 = $request->input('md5');
@@ -278,17 +290,18 @@ class KhqrBakongController extends Controller
         }
 
         // 2. Fetch API token
-        $apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMDFkZTkxZjVlZjJmNDNkOSJ9LCJpYXQiOjE3ODE1ODA5MDMsImV4cCI6MTc4OTM1NjkwM30.AeUiWG-mS__GNL20QFGwVsX6PLifCIQUvXcbIUCWBHg';
-        $apiUrl = 'https://api-bakong.nbc.gov.kh';
+        $apiKey = '';
+        $apiUrl = '';
+        $isSandbox = true;
 
         $storeId = $request->input('store_id');
-        $query = Store::query();
-        if ($storeId) {
-            $query->where('created_by', $storeId);
-        } else {
-            $query->where('created_by', $user->id);
+        if ($storeId && (int)$storeId !== $user->id) {
+            return response()->json(['detail' => 'You are not authorized to access this store.'], 403);
         }
-        $paymentMethodsRow = $query->where('key', 'payment_methods')->first();
+
+        $paymentMethodsRow = Store::where('created_by', $user->id)
+            ->where('key', 'payment_methods')
+            ->first();
 
         if ($paymentMethodsRow) {
             $methods = json_decode($paymentMethodsRow->value, true) ?: [];
@@ -301,13 +314,86 @@ class KhqrBakongController extends Controller
                 if (!empty($bakongValues['apiUrl'])) {
                     $apiUrl = rtrim($bakongValues['apiUrl'], '/');
                 }
+                $isSandbox = !empty($bakongConfig['sandbox']);
             }
         }
 
-        // 3. Make the API Call to Bakong
+        $apiKey = $apiKey ?: config('bakong.api_token');
+        $apiUrl = rtrim($apiUrl ?: config('bakong.api_url'), '/');
+
+        // Force override API URL based on Sandbox mode for NBC testing
+        if ($isSandbox && $apiUrl === 'https://api-bakong.nbc.gov.kh') {
+            $apiUrl = 'https://sit-api-bakong.nbc.gov.kh';
+        } elseif (!$isSandbox && $apiUrl === 'https://sit-api-bakong.nbc.gov.kh') {
+            $apiUrl = 'https://api-bakong.nbc.gov.kh';
+        }
+
+        // 3. Handle Sandbox / Mock Confirmation or missing credentials
+        $wantsConfirm = $request->input('confirm') === true || $request->input('confirm') === 'true' || $request->input('confirm') == 1;
+
+        // Facilitate mock testing for local environment without active token
+        if (env('APP_ENV') === 'local' && (empty($apiKey) || $apiKey === 'your_bakong_token_here' || $md5 === 'mock_success' || $request->transaction_id === 'mock_success')) {
+            if ($request->filled('transaction_id')) {
+                $txn = \App\Models\PaymentTransaction::where('transaction_id', $request->input('transaction_id'))->first();
+                if ($txn) {
+                    $txn->update(['status' => 'success']);
+                    if ($txn->order) {
+                        $txn->order->update(['payment_status' => 'Paid']);
+                    }
+                }
+            }
+            return response()->json([
+                'success' => true,
+                'payment_status' => 'Paid',
+                'message' => 'Bakong payment completed successfully (Local Mock)!',
+                'raw' => [
+                    'status' => ['code' => 0, 'errorCode' => null, 'message' => null],
+                    'data' => [
+                        'hash' => $md5,
+                        'status' => 'SUCCESS'
+                    ]
+                ]
+            ]);
+        }
+
+        if ($isSandbox || empty($apiKey) || empty($apiUrl)) {
+            if ($wantsConfirm) {
+                if ($request->filled('transaction_id')) {
+                    $txn = \App\Models\PaymentTransaction::where('transaction_id', $request->input('transaction_id'))->first();
+                    if ($txn) {
+                        $txn->update(['status' => 'success']);
+                        if ($txn->order) {
+                            $txn->order->update(['payment_status' => 'Paid']);
+                        }
+                    }
+                }
+                return response()->json([
+                    'success' => true,
+                    'payment_status' => 'Paid',
+                    'message' => 'Bakong payment completed successfully (Mock Mode)!',
+                ]);
+            }
+
+            if (empty($apiKey) || empty($apiUrl)) {
+                return response()->json([
+                    'success' => true,
+                    'payment_status' => 'Unpaid',
+                    'message' => 'Bakong payment is still pending (Sandbox Mode / Config not set).',
+                ]);
+            }
+        }
+
+        // 4. Make the API Call to Bakong
+        if (empty($apiKey) || empty($apiUrl)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bakong API credentials are not configured yet for this store profile.'
+            ], 400);
+        }
+
         try {
             $apiUrlToCheck = $apiUrl . '/v1/check_transaction_by_md5';
-            $httpClient = \Illuminate\Support\Facades\Http::withHeaders([
+            $httpClient = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->withToken($apiKey);

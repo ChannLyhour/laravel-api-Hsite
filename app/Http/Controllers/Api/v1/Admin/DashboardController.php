@@ -46,9 +46,7 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($item) {
                 $storeName = DB::table('stores')
-                    ->where('created_by', function($query) use ($item) {
-                        $query->select('created_by')->from('stores')->where('id', $item->store_id);
-                    })
+                    ->where('created_by', $item->store_id)
                     ->where('key', 'store_name')
                     ->value('value');
                 

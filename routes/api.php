@@ -387,14 +387,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/customers', [CustomerController::class, 'index']);
 
         // Owner Bakong KHQR generator
-        Route::post('/owner/khqr-bakong/generate', [KhqrBakongController::class, 'generateQr']);
+        Route::post('/owner/khqr-bakong/generate',[KhqrBakongController::class, 'generateQr']);
         Route::post('/owner/khqr-bakong/check', [KhqrBakongController::class, 'checkTransaction']);
-
-
-        // Get orders
-        // Route::get('/orders', [OrderController::class, 'me']);
-        // Route::get('/orders/store', [OrderController::class, 'storeOrders']);
-        // Route::get('/owner/orders/mine', [OrderController::class, 'mine']);
     });
 
     // ---------------------------------------------------------------------

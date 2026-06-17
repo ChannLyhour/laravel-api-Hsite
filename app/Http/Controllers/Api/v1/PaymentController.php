@@ -20,17 +20,48 @@ class PaymentController extends Controller
     public function generateQr(Request $request)
     {
         $request->validate([
-            'order_id' => 'required|exists:orders,id',
+            'order_id' => 'nullable|exists:orders,id',
+            'store_id' => 'nullable|integer',
+            'amount' => 'nullable|numeric',
             'currency' => 'string|in:USD,KHR',
+            'customer_name' => 'nullable|string',
+            'customer_email' => 'nullable|string',
+            'customer_phone' => 'nullable|string',
+            'items' => 'nullable|array',
+            'payment_method' => 'nullable|string',
+            'bill_no' => 'nullable|string',
         ]);
 
         try {
-            $order = Order::findOrFail($request->order_id);
             $currency = $request->input('currency', 'USD');
-            $ownerId = $order->store_id;
+            
+            if ($request->filled('order_id')) {
+                $order = Order::findOrFail($request->order_id);
+                $ownerId = $order->store_id;
+                $amount = $order->total_amount;
+                $customerName = $order->customer_name;
+                $customerEmail = $order->customer_email;
+                $customerPhone = $order->customer_phone;
+                $paymentMethod = $order->payment_method;
+                $orderId = $order->id;
+                $items = $order->items;
+            } else {
+                $request->validate([
+                    'store_id' => 'required|integer',
+                    'amount' => 'required|numeric',
+                ]);
+                $ownerId = $request->input('store_id');
+                $amount = $request->input('amount');
+                $customerName = $request->input('customer_name', 'Guest User');
+                $customerEmail = $request->input('customer_email', 'customer@example.com');
+                $customerPhone = $request->input('customer_phone', '012345678');
+                $paymentMethod = $request->input('payment_method', 'aba');
+                $orderId = null;
+                $items = $request->input('items', []);
+            }
 
             // Handle Bakong Payment Method
-            if ($order->payment_method === 'bakong') {
+            if ($paymentMethod === 'bakong') {
                 $bakongAccountId = 'lyhour_chann@bkrt';
                 $bakongMerchantName = 'Lyhour Chann';
                 $bakongMerchantCity = 'Phnom Penh';
@@ -56,7 +87,10 @@ class PaymentController extends Controller
                     }
                 }
 
-                $tran_id = 'TXN' . $order->id . '' . time();
+                $tran_id = 'TXN' . ($orderId ?: 'VIRTUAL') . '' . time();
+                if ($orderId === null && $request->filled('bill_no')) {
+                    $tran_id = $request->input('bill_no');
+                }
                 $bakongAccountId = strtolower(trim($bakongAccountId));
 
                 if (empty($bakongAccountId)) {
@@ -65,12 +99,15 @@ class PaymentController extends Controller
 
                 // Use the official Bakong KHQR SDK
                 $currencyCode = ($currency === 'KHR') ? 116 : 840;
-                $amountVal = (float)$order->total_amount;
+                $amountVal = (float)$amount;
+
+                // For Individual P2P Bakong accounts, generate static QR codes (amount = 0.0)
                 $isIndividual = (strpos($bakongAccountId, '@') !== false) && !str_contains($bakongAccountId, '@retail') && !str_contains($bakongAccountId, '@merchant');
                 if ($isIndividual) {
-                    $amountVal = 0;
+                    $amountVal = 0.0;
                 }
-                $billNo = 'ORD' . $order->id;
+
+                $billNo = $orderId ? ('ORD' . $orderId) : $tran_id;
 
                 $qrString = CustomKHQR::generate(
                     $bakongAccountId,
@@ -83,9 +120,9 @@ class PaymentController extends Controller
                 $md5 = md5($qrString);
 
                 Log::info('[Bakong Checkout] Generated QR', [
-                    'order_id' => $order->id,
+                    'order_id' => $orderId,
                     'bakong_account_id' => $bakongAccountId,
-                    'amount' => $order->total_amount,
+                    'amount' => $amount,
                     'currency' => $currency,
                     'qr_string' => $qrString
                 ]);
@@ -107,7 +144,7 @@ class PaymentController extends Controller
                 if (!empty($bakongApiKey)) {
                     try {
                         $bakongApiUrl = rtrim($bakongApiUrl, '/');
-                        $httpClient = \Illuminate\Support\Facades\Http::withHeaders([
+                        $httpClient = Http::withHeaders([
                             'Content-Type' => 'application/json',
                             'Accept' => 'application/json',
                         ])->withToken($bakongApiKey);
@@ -124,7 +161,7 @@ class PaymentController extends Controller
                         ]);
 
                         Log::info('[Bakong Deeplink Checkout] Response received', [
-                            'order_id' => $order->id,
+                            'order_id' => $orderId,
                             'status' => $response->status(),
                             'body' => $response->json()
                         ]);
@@ -140,26 +177,23 @@ class PaymentController extends Controller
                     }
                 }
 
-                PaymentTransaction::create([
-                    'order_id' => $order->id,
-                    'transaction_id' => $tran_id,
-                    'payment_method' => 'bakong',
-                    'amount' => $order->total_amount,
-                    'status' => 'pending',
-                    'raw_response' => json_encode([
-                        'qr_string' => $qrString,
-                        'deeplink' => $deeplink,
-                        'md5' => md5($qrString)
-                    ]),
-                ]);
+                if ($orderId) {
+                    PaymentTransaction::create([
+                        'order_id' => $orderId,
+                        'transaction_id' => $tran_id,
+                        'payment_method' => 'bakong',
+                        'amount' => $amount,
+                        'status' => 'pending',
+                        'raw_response' => json_encode([
+                            'qr_string' => $qrString,
+                            'deeplink' => $deeplink,
+                            'md5' => $md5
+                        ]),
+                    ]);
+                }
 
-                // Generate QR Image in SVG format (Universal compatibility)
-                $qrImage = QrCode::format('svg')
-                    ->size(300)
-                    ->margin(2)
-                    ->generate($qrString);
-                
-                $base64Qr = 'data:image/svg+xml;base64,' . base64_encode($qrImage);
+                // Generate QR Image in WebP format (Base64 data:image/webp)
+                $base64Qr = CustomKHQR::generateWebpQrBase64($qrString, 300);
 
                 return response()->json([
                     'success' => true,
@@ -216,33 +250,46 @@ class PaymentController extends Controller
 
             // Generate payload details
             $req_time = date('YmdHis');
-            $tran_id = 'TXN-' . $order->id . '-' . time();
-            $amount = $currency === 'KHR'
-                ? (string)round($order->total_amount)
-                : number_format((float)$order->total_amount, 2, '.', '');
+            $tran_id = 'TXN-' . ($orderId ?: 'VIRTUAL') . '-' . time();
+            if ($orderId === null && $request->filled('bill_no')) {
+                $tran_id = $request->input('bill_no');
+            }
+            $amountFormatted = $currency === 'KHR'
+                ? (string)round($amount)
+                : number_format((float)$amount, 2, '.', '');
             $purchase_type = 'purchase';
             $payment_option = 'abapay_khqr';
 
-            $names = explode(' ', trim($order->customer_name ?: 'Guest User'));
+            $names = explode(' ', trim($customerName ?: 'Guest User'));
             $first_name = $names[0];
             $last_name = isset($names[1]) ? implode(' ', array_slice($names, 1)) : 'User';
 
-            $email = $order->customer_email ?: 'customer@example.com';
-            $phone = $order->customer_phone ?: '012345678';
+            $email = $customerEmail ?: 'customer@example.com';
+            $phone = $customerPhone ?: '012345678';
 
             $itemsList = [];
-            foreach ($order->items as $item) {
-                $itemsList[] = [
-                    'name' => $item->name ?: ($item->productVariant->product->name ?? 'Product'),
-                    'quantity' => (int)$item->quantity,
-                    'price' => (float)number_format((float)$item->price, 2, '.', ''),
-                ];
+            if ($orderId) {
+                foreach ($items as $item) {
+                    $itemsList[] = [
+                        'name' => $item->name ?: ($item->productVariant->product->name ?? 'Product'),
+                        'quantity' => (int)$item->quantity,
+                        'price' => (float)number_format((float)$item->price, 2, '.', ''),
+                    ];
+                }
+            } else {
+                foreach ($items as $item) {
+                    $itemsList[] = [
+                        'name' => $item['name'] ?? 'Product',
+                        'quantity' => (int)($item['quantity'] ?? 1),
+                        'price' => (float)number_format((float)($item['price'] ?? 0), 2, '.', ''),
+                    ];
+                }
             }
             if (empty($itemsList)) {
                 $itemsList[] = [
                     'name' => 'Order Item',
                     'quantity' => 1,
-                    'price' => (float)$amount,
+                    'price' => (float)$amountFormatted,
                 ];
             }
             $itemsBase64 = base64_encode(json_encode($itemsList));
@@ -254,7 +301,7 @@ class PaymentController extends Controller
             $hashStr = $req_time 
                 . $merchantId 
                 . $tran_id 
-                . $amount 
+                . $amountFormatted 
                 . $itemsBase64 
                 . $first_name 
                 . $last_name 
@@ -279,7 +326,7 @@ class PaymentController extends Controller
                 'last_name' => $last_name,
                 'email' => $email,
                 'phone' => $phone,
-                'amount' => $amount,
+                'amount' => $amountFormatted,
                 'purchase_type' => $purchase_type,
                 'payment_option' => $payment_option,
                 'items' => $itemsBase64,
@@ -333,12 +380,8 @@ class PaymentController extends Controller
                     }
                     $bakongAccountId = strtolower(trim($bakongAccountId));
                     $currencyCode = ($currency === 'KHR') ? 116 : 840;
-                    $amountVal = (float)$order->total_amount;
-                    $isIndividual = (strpos($bakongAccountId, '@') !== false) && !str_contains($bakongAccountId, '@retail') && !str_contains($bakongAccountId, '@merchant');
-                    if ($isIndividual) {
-                        $amountVal = 0;
-                    }
-                    $billNo = 'ORD' . $order->id;
+                    $amountVal = (float)$amount;
+                    $billNo = $orderId ? ('ORD' . $orderId) : $tran_id;
 
                     $qrStringVal = CustomKHQR::generate(
                         $bakongAccountId,
@@ -358,22 +401,19 @@ class PaymentController extends Controller
                     'abapay_deeplink' => $isPaywayLink ? $apiUrl : 'http://localhost:3000/mock-payway-deeplink',
                 ];
 
-                PaymentTransaction::create([
-                    'order_id' => $order->id,
-                    'transaction_id' => $tran_id,
-                    'payment_method' => 'aba_pay',
-                    'amount' => $order->total_amount,
-                    'status' => 'pending',
-                    'raw_response' => json_encode($mockResData),
-                ]);
+                if ($orderId) {
+                    PaymentTransaction::create([
+                        'order_id' => $orderId,
+                        'transaction_id' => $tran_id,
+                        'payment_method' => 'aba_pay',
+                        'amount' => $amount,
+                        'status' => 'pending',
+                        'raw_response' => json_encode($mockResData),
+                    ]);
+                }
 
-                // Generate QR Image in SVG format (Universal compatibility)
-                $qrImage = QrCode::format('svg')
-                    ->size(300)
-                    ->margin(2)
-                    ->generate($mockResData['qrString']);
-                
-                $base64Qr = 'data:image/svg+xml;base64,' . base64_encode($qrImage);
+                // Generate QR Image in WebP format (Base64 data:image/webp)
+                $base64Qr = CustomKHQR::generateWebpQrBase64($mockResData['qrString'], 300);
 
                 return response()->json([
                     'success' => true,
@@ -387,7 +427,7 @@ class PaymentController extends Controller
             $response = $httpClient->post($apiUrl, $postFields);
 
             Log::info('[PayWay] QR Generate Response', [
-                'order_id' => $order->id,
+                'order_id' => $orderId,
                 'status' => $response->status(),
                 'response' => $response->json()
             ]);
@@ -405,15 +445,17 @@ class PaymentController extends Controller
             // Check if PayWay returned status 0 (Success)
             $statusCode = isset($resData['status']['code']) ? (int)$resData['status']['code'] : (isset($resData['status']) ? (int)$resData['status'] : -1);
             if ($statusCode === 0) {
-                // Record the pending transaction log
-                PaymentTransaction::create([
-                    'order_id' => $order->id,
-                    'transaction_id' => $tran_id,
-                    'payment_method' => 'aba_pay',
-                    'amount' => $order->total_amount,
-                    'status' => 'pending',
-                    'raw_response' => json_encode($resData),
-                ]);
+                if ($orderId) {
+                    // Record the pending transaction log
+                    PaymentTransaction::create([
+                        'order_id' => $orderId,
+                        'transaction_id' => $tran_id,
+                        'payment_method' => 'aba_pay',
+                        'amount' => $amount,
+                        'status' => 'pending',
+                        'raw_response' => json_encode($resData),
+                    ]);
+                }
 
                 return response()->json([
                     'success' => true,
@@ -446,25 +488,39 @@ class PaymentController extends Controller
     {
         $request->validate([
             'transaction_id' => 'required|string',
+            'store_id' => 'nullable|integer',
+            'payment_method' => 'nullable|string',
+            'md5' => 'nullable|string',
         ]);
 
         try {
-            $txn = PaymentTransaction::where('transaction_id', $request->transaction_id)->firstOrFail();
-            $order = $txn->order;
-            $ownerId = $order->store_id;
+            $txn = PaymentTransaction::where('transaction_id', $request->transaction_id)->first();
+            $order = null;
 
-            // Handle Bakong verification
-            if ($txn->payment_method === 'bakong') {
-                $wantsConfirm = $request->input('confirm') === true || $request->input('confirm') === 'true' || $request->input('confirm') == 1;
-                
-                // Extract QR string to get MD5 hash
+            if ($txn) {
+                $order = $txn->order;
+                $ownerId = $order ? $order->store_id : 1;
+                $paymentMethod = $txn->payment_method;
                 $rawResponse = json_decode($txn->raw_response, true) ?: [];
                 $qrString = $rawResponse['qr_string'] ?? '';
                 $md5 = md5($qrString);
+            } else {
+                $ownerId = $request->input('store_id') ?: ($request->user() ? $request->user()->id : 1);
+                $paymentMethod = $request->input('payment_method', 'aba');
+                $md5 = $request->input('md5');
+                if (empty($md5)) {
+                    $md5 = md5('mock_khqr_string_for_testing_' . $request->transaction_id);
+                }
+            }
 
+            // Handle Bakong verification
+            if ($paymentMethod === 'bakong') {
+                $wantsConfirm = $request->input('confirm') === true || $request->input('confirm') === 'true' || $request->input('confirm') == 1;
+                
                 // Fetch Bakong API keys from store settings
                 $apiKey = '';
-                $apiUrl = 'https://api-bakong.nbc.gov.kh';
+                $apiUrl = '';
+                $isSandbox = true;
 
                 $paymentMethodsRow = Store::where('created_by', $ownerId)
                     ->where('key', 'payment_methods')
@@ -481,20 +537,57 @@ class PaymentController extends Controller
                         if (!empty($bakongValues['apiUrl'])) {
                             $apiUrl = rtrim($bakongValues['apiUrl'], '/');
                         }
+                        $isSandbox = !empty($bakongConfig['sandbox']);
                     }
+                }
+
+                $apiKey = $apiKey ?: config('bakong.api_token');
+                $apiUrl = rtrim($apiUrl ?: config('bakong.api_url'), '/');
+
+                // Force override API URL based on Sandbox mode for NBC testing
+                if ($isSandbox && $apiUrl === 'https://api-bakong.nbc.gov.kh') {
+                    $apiUrl = 'https://sit-api-bakong.nbc.gov.kh';
+                } elseif (!$isSandbox && $apiUrl === 'https://sit-api-bakong.nbc.gov.kh') {
+                    $apiUrl = 'https://api-bakong.nbc.gov.kh';
+                }
+
+                // Facilitate mock testing for local environment without active token
+                if (env('APP_ENV') === 'local' && (empty($apiKey) || $apiKey === 'your_bakong_token_here' || $md5 === 'mock_success' || $request->transaction_id === 'mock_success')) {
+                    $mockResData = [
+                        'status' => ['code' => 0, 'errorCode' => null, 'message' => null],
+                        'data' => [
+                            'hash' => $md5,
+                            'amount' => $txn ? (float)$txn->amount : 0.0,
+                            'status' => 'SUCCESS'
+                        ]
+                    ];
+                    if ($txn) {
+                        $txn->update([
+                            'status' => 'success',
+                            'raw_response' => json_encode($mockResData),
+                        ]);
+                        if ($order) {
+                            $order->update(['payment_status' => 'Paid']);
+                        }
+                    }
+
+                    return response()->json([
+                        'success' => true,
+                        'payment_status' => 'Paid',
+                        'message' => 'Bakong payment completed successfully (Local Mock)!',
+                        'raw' => $mockResData,
+                    ]);
                 }
 
                 // 1. If we have a token, attempt a real API check
                 if ($apiKey || $md5) {
                     try {
-                        $apiKey = $apiKey ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMDFkZTkxZjVlZjJmNDNkOSJ9LCJpYXQiOjE3ODE1ODA5MDMsImV4cCI6MTc4OTM1NjkwM30.AeUiWG-mS__GNL20QFGwVsX6PLifCIQUvXcbIUCWBHg';
-                        $apiUrl = rtrim($apiUrl ?: 'https://api-bakong.nbc.gov.kh', '/');
                         $httpClient = Http::withHeaders([
                             'Content-Type' => 'application/json',
                             'Accept' => 'application/json',
                         ])->withToken($apiKey);
 
-                        if (!app()->isProduction() || !empty($bakongConfig['sandbox']) || str_contains($apiUrl, 'sandbox') || str_contains($apiUrl, 'local')) {
+                        if (!app()->isProduction() || $isSandbox || str_contains($apiUrl, 'sandbox') || str_contains($apiUrl, 'local')) {
                             $httpClient = $httpClient->withoutVerifying();
                         }
 
@@ -503,7 +596,7 @@ class PaymentController extends Controller
                         ]);
 
                         Log::info('[Bakong Check Transaction] Response received', [
-                            'order_id' => $order->id,
+                            'transaction_id' => $request->transaction_id,
                             'status' => $response->status(),
                             'body' => $response->json()
                         ]);
@@ -515,11 +608,15 @@ class PaymentController extends Controller
                             $statusVal = $dataField['status'] ?? '';
 
                             if ($code === 0 && (strtolower($statusVal) === 'success' || $statusVal === 'SUCCESS')) {
-                                $txn->update([
-                                    'status' => 'success',
-                                    'raw_response' => json_encode($resData),
-                                ]);
-                                $order->update(['payment_status' => 'Paid']);
+                                if ($txn) {
+                                    $txn->update([
+                                        'status' => 'success',
+                                        'raw_response' => json_encode($resData),
+                                    ]);
+                                    if ($order) {
+                                        $order->update(['payment_status' => 'Paid']);
+                                    }
+                                }
 
                                 return response()->json([
                                     'success' => true,
@@ -536,8 +633,12 @@ class PaymentController extends Controller
 
                 // 2. Fallback to mock confirmation if requested
                 if ($wantsConfirm) {
-                    $txn->update(['status' => 'success']);
-                    $order->update(['payment_status' => 'Paid']);
+                    if ($txn) {
+                        $txn->update(['status' => 'success']);
+                        if ($order) {
+                            $order->update(['payment_status' => 'Paid']);
+                        }
+                    }
                     
                     return response()->json([
                         'success' => true,
@@ -597,12 +698,12 @@ class PaymentController extends Controller
             $postFields = [
                 'req_time' => $req_time,
                 'merchant_id' => $merchantId,
-                'tran_id' => $txn->transaction_id,
+                'tran_id' => $request->transaction_id,
             ];
 
             // Correct PayWay check-transaction hash sequence:
             // req_time + merchant_id + tran_id
-            $hashStr = $req_time . $merchantId . $txn->transaction_id;
+            $hashStr = $req_time . $merchantId . $request->transaction_id;
             $postFields['hash'] = base64_encode(hash_hmac('sha512', $hashStr, $apiKey, true));
 
             Log::info('[PayWay] Checking transaction: ' . $apiUrl, $postFields);
@@ -622,20 +723,24 @@ class PaymentController extends Controller
                 $mockResData = [
                     'status' => 0,
                     'description' => 'Success',
-                    'amount' => $txn->amount,
-                    'tran_id' => $txn->transaction_id,
+                    'amount' => $txn ? $txn->amount : $request->input('amount', 0),
+                    'tran_id' => $request->transaction_id,
                 ];
 
                 // Only complete payment if user clicked "Confirm Sandbox Payment" (confirm parameter is true)
                 if ($request->input('confirm') === true || $request->input('confirm') === 'true' || $request->input('confirm') == 1) {
-                    $txn->update([
-                        'status' => 'success',
-                        'raw_response' => json_encode($mockResData),
-                    ]);
+                    if ($txn) {
+                        $txn->update([
+                            'status' => 'success',
+                            'raw_response' => json_encode($mockResData),
+                        ]);
 
-                    $order->update([
-                        'payment_status' => 'Paid',
-                    ]);
+                        if ($order) {
+                            $order->update([
+                                'payment_status' => 'Paid',
+                            ]);
+                        }
+                    }
 
                     return response()->json([
                         'success' => true,
@@ -670,14 +775,18 @@ class PaymentController extends Controller
                 $statusVal = (int)$resData['status'];
                 if ($statusVal === 0) {
                     // Paid
-                    $txn->update([
-                        'status' => 'success',
-                        'raw_response' => json_encode($resData),
-                    ]);
+                    if ($txn) {
+                        $txn->update([
+                            'status' => 'success',
+                            'raw_response' => json_encode($resData),
+                        ]);
 
-                    $order->update([
-                        'payment_status' => 'Paid',
-                    ]);
+                        if ($order) {
+                            $order->update([
+                                'payment_status' => 'Paid',
+                            ]);
+                        }
+                    }
 
                     return response()->json([
                         'success' => true,
@@ -700,10 +809,12 @@ class PaymentController extends Controller
                     ]);
                 } else {
                     // Failed
-                    $txn->update([
-                        'status' => 'failed',
-                        'raw_response' => json_encode($resData),
-                    ]);
+                    if ($txn) {
+                        $txn->update([
+                            'status' => 'failed',
+                            'raw_response' => json_encode($resData),
+                        ]);
+                    }
                     
                     return response()->json([
                         'success' => true,
