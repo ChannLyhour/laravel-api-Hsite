@@ -237,14 +237,14 @@ class ChatController extends Controller
                 'sender_id' => $msg->sender_id,
                 'message_type' => $msg->message_type,
                 'body' => $msg->body,
-                'media_url' => $msg->media_url ? (str_starts_with($msg->media_url, 'http') ? $msg->media_url : asset($msg->media_url)) : null,
+                'media_url' => $msg->media_url ? ((str_starts_with($msg->media_url, 'http') || str_starts_with($msg->media_url, 'data:')) ? $msg->media_url : asset($msg->media_url)) : null,
                 'is_pinned' => (bool)$msg->is_pinned,
                 'reply_to_message_id' => $msg->reply_to_message_id,
                 'reply_to_message' => $msg->replyTo ? [
                     'id' => $msg->replyTo->id,
                     'body' => $msg->replyTo->body,
                     'message_type' => $msg->replyTo->message_type,
-                    'media_url' => $msg->replyTo->media_url ? (str_starts_with($msg->replyTo->media_url, 'http') ? $msg->replyTo->media_url : asset($msg->replyTo->media_url)) : null,
+                    'media_url' => $msg->replyTo->media_url ? ((str_starts_with($msg->replyTo->media_url, 'http') || str_starts_with($msg->replyTo->media_url, 'data:')) ? $msg->replyTo->media_url : asset($msg->replyTo->media_url)) : null,
                     'sender' => $msg->replyTo->sender ? [
                         'id' => $msg->replyTo->sender->id,
                         'name' => $msg->replyTo->sender->name,
@@ -325,14 +325,14 @@ class ChatController extends Controller
             'sender_id' => $message->sender_id,
             'message_type' => $message->message_type,
             'body' => $message->body,
-            'media_url' => $message->media_url ? (str_starts_with($message->media_url, 'http') ? $message->media_url : asset($message->media_url)) : null,
+            'media_url' => $message->media_url ? ((str_starts_with($message->media_url, 'http') || str_starts_with($message->media_url, 'data:')) ? $message->media_url : asset($message->media_url)) : null,
             'is_pinned' => (bool)$message->is_pinned,
             'reply_to_message_id' => $message->reply_to_message_id,
             'reply_to_message' => $message->replyTo ? [
                 'id' => $message->replyTo->id,
                 'body' => $message->replyTo->body,
                 'message_type' => $message->replyTo->message_type,
-                'media_url' => $message->replyTo->media_url ? (str_starts_with($message->replyTo->media_url, 'http') ? $message->replyTo->media_url : asset($message->replyTo->media_url)) : null,
+                'media_url' => $message->replyTo->media_url ? ((str_starts_with($message->replyTo->media_url, 'http') || str_starts_with($message->replyTo->media_url, 'data:')) ? $message->replyTo->media_url : asset($message->replyTo->media_url)) : null,
                 'sender' => $message->replyTo->sender ? [
                     'id' => $message->replyTo->sender->id,
                     'name' => $message->replyTo->sender->name,
@@ -361,24 +361,40 @@ class ChatController extends Controller
             $ext = strtolower($file->getClientOriginalExtension());
             $isAudio = str_starts_with($mimeType, 'audio/') || in_array($ext, ['mp3', 'wav', 'ogg', 'webm', 'm4a', 'aac', 'flac']);
 
-            if ($isAudio) {
-                $destinationPath = public_path('uploads/chats');
-                if (!\Illuminate\Support\Facades\File::isDirectory($destinationPath)) {
-                    \Illuminate\Support\Facades\File::makeDirectory($destinationPath, 0755, true, true);
-                }
+            $isVercel = config('app.env') === 'production'
+                || !is_writable(public_path())
+                || str_contains(config('app.url', ''), 'vercel.app');
 
-                if (empty($ext)) {
-                    $ext = str_contains($mimeType, 'webm') ? 'webm' : 'wav';
+            if ($isAudio) {
+                if ($isVercel) {
+                    try {
+                        $fileData = file_get_contents($file->getRealPath());
+                        $base64 = base64_encode($fileData);
+                        $path = 'data:' . $mimeType . ';base64,' . $base64;
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("Failed to convert uploaded audio to Base64: " . $e->getMessage());
+                        return response()->json(['detail' => 'Failed to process audio file.'], 500);
+                    }
+                } else {
+                    $destinationPath = public_path('uploads/chats');
+                    if (!\Illuminate\Support\Facades\File::isDirectory($destinationPath)) {
+                        \Illuminate\Support\Facades\File::makeDirectory($destinationPath, 0755, true, true);
+                    }
+
+                    if (empty($ext)) {
+                        $ext = str_contains($mimeType, 'webm') ? 'webm' : 'wav';
+                    }
+                    $filename = date('dmy_His') . '_' . \Illuminate\Support\Str::random(10) . '.' . $ext;
+                    $file->move($destinationPath, $filename);
+                    $path = 'uploads/chats/' . $filename;
                 }
-                $filename = date('dmy_His') . '_' . \Illuminate\Support\Str::random(10) . '.' . $ext;
-                $file->move($destinationPath, $filename);
-                $path = 'uploads/chats/' . $filename;
             } else {
                 $path = UploadHelper::uploadImage($file, 'chats');
             }
 
+            $url = (str_starts_with($path, 'http') || str_starts_with($path, 'data:')) ? $path : asset($path);
             return response()->json([
-                'url' => asset($path),
+                'url' => $url,
                 'path' => $path
             ]);
         }
