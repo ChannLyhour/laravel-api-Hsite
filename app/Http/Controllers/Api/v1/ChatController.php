@@ -350,7 +350,7 @@ class ChatController extends Controller
     public function uploadMedia(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:jpeg,png,jpg,gif,svg,webp,mp3,wav,ogg,webm,m4a,aac,flac|max:10240',
+            'file' => 'required|file|mimes:jpeg,png,jpg,gif,svg,webp,heic,heif,mp3,wav,ogg,webm,m4a,aac,flac,mp4,mov|max:10240',
         ]);
 
         if ($request->hasFile('file')) {
