@@ -164,6 +164,35 @@ class UploadHelper
         // Upload the new image
         return self::uploadImage($newFile, $folder);
     }
+
+    /**
+     * Clean and normalize an image path by stripping the base URL and "uploads/" prefix.
+     *
+     * @param string|null $path
+     * @return string|null
+     */
+    public static function normalizePath(?string $path): ?string
+    {
+        if (!$path) {
+            return $path;
+        }
+
+        // Strip app URL base
+        $appUrl = rtrim(url('/'), '/');
+        if (str_starts_with($path, $appUrl)) {
+            $path = substr($path, strlen($appUrl));
+        }
+
+        // Clean leading slashes
+        $path = ltrim($path, '/');
+
+        // Strip "uploads/" prefix
+        if (str_starts_with($path, 'uploads/')) {
+            $path = substr($path, strlen('uploads/'));
+        }
+
+        return $path;
+    }
 }
 
 if (! function_exists('getImagePath')) {

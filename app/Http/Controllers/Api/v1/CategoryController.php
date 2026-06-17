@@ -33,6 +33,8 @@ class CategoryController extends Controller
             $imagePath = $request->image;
         }
 
+        $imagePath = UploadHelper::normalizePath($imagePath);
+
         $category = Category::create([
             'name' => $request->name,
             'description' => $request->description,
@@ -115,12 +117,14 @@ class CategoryController extends Controller
             'image' => 'nullable',
         ]);
 
-        $imagePath = $category->image;
+        $imagePath = $category->getRawOriginal('image');
         if ($request->hasFile('image')) {
-            $imagePath = UploadHelper::updateImage($category->image, $request->file('image'), 'categories');
+            $imagePath = UploadHelper::updateImage($category->getRawOriginal('image'), $request->file('image'), 'categories');
         } elseif ($request->has('image')) {
             $imagePath = $request->image;
         }
+
+        $imagePath = UploadHelper::normalizePath($imagePath);
 
         $category->update([
             'name' => $request->name ?? $category->name,
