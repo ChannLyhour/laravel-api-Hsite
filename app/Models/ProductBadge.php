@@ -15,11 +15,13 @@ class ProductBadge extends Model
         'text_color',
         'background_color',
         'status',
+        'priority',
         'created_by',
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'priority' => 'integer',
     ];
 
     public function products()

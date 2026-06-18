@@ -21,7 +21,7 @@ class ProductBadgeController extends Controller
             $query->where('created_by', $createdBy);
         }
 
-        $badges = $query->skip($skip)->take($limit)->get();
+        $badges = $query->orderBy('priority', 'desc')->orderBy('id', 'desc')->skip($skip)->take($limit)->get();
         return response()->json($badges);
     }
 
@@ -46,7 +46,7 @@ class ProductBadgeController extends Controller
             }
         }
 
-        $badges = $query->skip($skip)->take($limit)->get();
+        $badges = $query->orderBy('priority', 'desc')->orderBy('id', 'desc')->skip($skip)->take($limit)->get();
         return response()->json($badges);
     }
 
@@ -68,6 +68,7 @@ class ProductBadgeController extends Controller
             'text_color' => 'nullable|string|max:255',
             'background_color' => 'nullable|string|max:255',
             'status' => 'boolean',
+            'priority' => 'nullable|integer',
             'created_by' => 'nullable|integer|exists:users,id',
         ]);
 
@@ -87,6 +88,7 @@ class ProductBadgeController extends Controller
             'text_color' => $request->text_color,
             'background_color' => $request->background_color,
             'status' => $request->status ?? true,
+            'priority' => $request->priority ?? 0,
             'created_by' => $request->created_by ?? $request->user()->id,
         ]);
 
@@ -107,6 +109,7 @@ class ProductBadgeController extends Controller
             'text_color' => 'nullable|string|max:255',
             'background_color' => 'nullable|string|max:255',
             'status' => 'boolean',
+            'priority' => 'nullable|integer',
         ]);
 
         $badge->update([
@@ -115,6 +118,7 @@ class ProductBadgeController extends Controller
             'text_color' => $request->has('text_color') ? $request->text_color : $badge->text_color,
             'background_color' => $request->has('background_color') ? $request->background_color : $badge->background_color,
             'status' => $request->has('status') ? $request->status : $badge->status,
+            'priority' => $request->has('priority') ? $request->priority : $badge->priority,
         ]);
 
         return response()->json($badge);

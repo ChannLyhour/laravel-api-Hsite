@@ -23,6 +23,7 @@ class ClearanceSaleController extends Controller
                 $query->wherePivot('is_active', true)
                     ->with(['translations', 'variants']);
             }])
+            ->orderBy('priority', 'desc')
             ->orderBy('id', 'desc')
             ->skip($skip)
             ->take($limit)
@@ -50,9 +51,13 @@ class ClearanceSaleController extends Controller
 
         if ($user->role_id != 1) {
             $query->where('created_by', $user->id);
+        } else {
+            if ($request->filled('created_by')) {
+                $query->where('created_by', $request->query('created_by'));
+            }
         }
 
-        $deals = $query->orderBy('id', 'desc')->skip($skip)->take($limit)->get();
+        $deals = $query->orderBy('priority', 'desc')->orderBy('id', 'desc')->skip($skip)->take($limit)->get();
 
         return response()->json($deals);
     }
@@ -94,6 +99,7 @@ class ClearanceSaleController extends Controller
             'meta_title'           => 'nullable|string|max:255',
             'meta_description'     => 'nullable|string',
             'meta_image'           => 'nullable',
+            'priority'             => 'nullable|integer',
         ]);
 
         $metaImagePath = null;
@@ -126,6 +132,7 @@ class ClearanceSaleController extends Controller
             'meta_description'     => $data['meta_description'] ?? null,
             'meta_image'           => $metaImagePath,
             'created_by'           => $user->id,
+            'priority'             => $request->filled('priority') ? intval($request->priority) : 0,
         ]);
 
         if ($request->has('products')) {
@@ -189,6 +196,7 @@ class ClearanceSaleController extends Controller
             'meta_title'           => 'nullable|string|max:255',
             'meta_description'     => 'nullable|string',
             'meta_image'           => 'nullable',
+            'priority'             => 'nullable|integer',
         ]);
 
         $metaImagePath = $deal->getRawOriginal('meta_image');
@@ -250,6 +258,9 @@ class ClearanceSaleController extends Controller
         }
         if ($request->has('meta_image')) {
             $updateData['meta_image'] = $metaImagePath;
+        }
+        if ($request->has('priority')) {
+            $updateData['priority'] = intval($request->priority);
         }
 
         $deal->update($updateData);

@@ -83,6 +83,8 @@ class BrandController extends Controller
             $logoPath = $request->logo;
         }
 
+        $logoPath = UploadHelper::normalizePath($logoPath);
+
         $brand = Brand::create([
             'name' => $request->name,
             'logo' => $logoPath,
@@ -117,6 +119,8 @@ class BrandController extends Controller
         } elseif ($request->has('logo')) {
             $logoPath = $request->logo;
         }
+
+        $logoPath = UploadHelper::normalizePath($logoPath);
 
         $brand->update([
             'name' => $request->name ?? $brand->name,

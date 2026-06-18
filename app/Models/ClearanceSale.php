@@ -25,6 +25,7 @@ class ClearanceSale extends Model
         'meta_description',
         'meta_image',
         'created_by',
+        'priority',
     ];
 
     protected $casts = [
@@ -43,8 +44,9 @@ class ClearanceSale extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'clearance_sale_product')
-            ->withPivot('discount_amount', 'discount_type', 'is_active')
-            ->withTimestamps();
+            ->withPivot('id', 'discount_amount', 'discount_type', 'is_active')
+            ->withTimestamps()
+            ->orderByPivot('id', 'asc');
     }
 
     public function creator()

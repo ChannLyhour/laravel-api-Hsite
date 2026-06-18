@@ -134,7 +134,9 @@ class StoreController extends Controller
             }
 
             $val = $value;
-            if ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
+            if (in_array($key, ['logo_url', 'favicon_url'])) {
+                $val = UploadHelper::normalizePath($value);
+            } elseif ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
                 $val = json_encode($value);
             }
 
@@ -200,7 +202,9 @@ class StoreController extends Controller
             }
 
             $val = $value;
-            if ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
+            if (in_array($key, ['logo_url', 'favicon_url'])) {
+                $val = UploadHelper::normalizePath($value);
+            } elseif ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
                 $val = json_encode($value);
             }
 
@@ -276,7 +280,9 @@ class StoreController extends Controller
             }
 
             $val = $value;
-            if ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
+            if (in_array($key, ['logo_url', 'favicon_url'])) {
+                $val = UploadHelper::normalizePath($value);
+            } elseif ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
                 $val = json_encode($value);
             }
 

@@ -19,6 +19,7 @@ class FlashDeal extends Model
         'meta_image',
         'is_published',
         'created_by',
+        'priority',
     ];
 
     protected $casts = [
@@ -34,7 +35,10 @@ class FlashDeal extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'flash_deal_product');
+        return $this->belongsToMany(Product::class, 'flash_deal_product')
+            ->withPivot('id')
+            ->withTimestamps()
+            ->orderByPivot('id', 'asc');
     }
 
     public function creator()
