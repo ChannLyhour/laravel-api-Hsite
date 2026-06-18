@@ -64,11 +64,13 @@ return [
                         ? env('MYSQL_ATTR_SSL_CA')
                         : (file_exists(base_path('ca.pem'))
                             ? base_path('ca.pem')
-                            : (file_exists('/etc/ssl/certs/ca-certificates.crt')
-                                ? '/etc/ssl/certs/ca-certificates.crt'
-                                : (file_exists('/etc/pki/tls/certs/ca-bundle.crt')
-                                    ? '/etc/pki/tls/certs/ca-bundle.crt'
-                                    : null))),
+                            : (file_exists(base_path('ca.pem.tidb'))
+                                ? base_path('ca.pem.tidb')
+                                : (file_exists('/etc/ssl/certs/ca-certificates.crt')
+                                    ? '/etc/ssl/certs/ca-certificates.crt'
+                                    : (file_exists('/etc/pki/tls/certs/ca-bundle.crt')
+                                        ? '/etc/pki/tls/certs/ca-bundle.crt'
+                                        : null)))),
                 PDO::ATTR_PERSISTENT => true,
             ]) : [],
         ],
