@@ -618,6 +618,7 @@ class ProductController extends Controller
                     $primaryImage = $product->images()->where('is_primary', true)->first();
                     if (!empty($imagePath)) {
                         if ($primaryImage) {
+                            UploadHelper::deleteImage($primaryImage->getRawOriginal('image'));
                             $primaryImage->update(['image' => $imagePath[0]]);
                         } else {
                             ProductImage::create([
@@ -783,6 +784,9 @@ class ProductController extends Controller
 
                 if ($hasNewImage) {
                     if (!empty($imagePath)) {
+                        // Find the current primary image before resetting flags
+                        $primaryImage = ProductImage::where('product_id', $product->id)->where('is_primary', true)->first();
+
                         // Reset all other images of this product to non-primary
                         ProductImage::where('product_id', $product->id)->update(['is_primary' => false]);
   
@@ -790,17 +794,24 @@ class ProductController extends Controller
                         $existingImage = ProductImage::where('product_id', $product->id)
                             ->where('image', $imagePath[0])
                             ->first();
-
+ 
                         if ($existingImage) {
                             $existingImage->update([
                                 'is_primary' => true,
                                 'sort_order' => 1,
                             ]);
                         } else {
-                            $primaryImage = ProductImage::where('product_id', $product->id)->where('is_primary', true)->first();
                             if ($primaryImage) {
-                                $primaryImage->update(['image' => $imagePath[0]]);
+                                // Delete old file from disk to avoid storage leak
+                                UploadHelper::deleteImage($primaryImage->getRawOriginal('image'));
+                                // Update existing primary image record with the new path
+                                $primaryImage->update([
+                                    'image' => $imagePath[0],
+                                    'is_primary' => true,
+                                    'sort_order' => 1,
+                                ]);
                             } else {
+                                // Create new primary image record
                                 ProductImage::create([
                                     'product_id' => $product->id,
                                     'image' => $imagePath[0],
