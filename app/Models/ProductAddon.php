@@ -16,11 +16,17 @@ class ProductAddon extends Model
         'product_id',
         'addon_name',
         'additional_price',
+        'discount',
+        'discount_type',
+        'image',
+        'is_default',
     ];
 
     protected $casts = [
         'additional_price' => 'decimal:2',
+        'discount' => 'decimal:2',
         'product_id' => 'integer',
+        'is_default' => 'boolean',
     ];
 
     public function product()

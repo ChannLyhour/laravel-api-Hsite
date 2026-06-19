@@ -376,6 +376,7 @@ class StoreController extends Controller
                     ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text'],
                     ['key' => 'rsaPublicKey', 'label' => 'RSA Public Key', 'type' => 'textarea', 'required' => false],
                     ['key' => 'rsaPrivateKey', 'label' => 'RSA Private Key', 'type' => 'textarea', 'required' => false],
+                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ],
                 'defaultValues' => [
                     'merchantId' => 'ec475602',
@@ -398,14 +399,13 @@ class StoreController extends Controller
                     ['key' => 'merchantCity', 'label' => 'Merchant City', 'type' => 'text'],
                     ['key' => 'apiKey', 'label' => 'API Token / Secret Key', 'type' => 'password', 'required' => false],
                     ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text', 'required' => false],
+                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ],
                 'defaultValues' => [
                     'bakongAccountId' => '',
                     'merchantName' => '',
                     'merchantCity' => '',
                     'apiKey' => '',
-
-                    // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMDFkZTkxZjVlZjJmNDNkOSJ9LCJpYXQiOjE3ODE1ODA5MDMsImV4cCI6MTc4OTM1NjkwM30.AeUiWG-mS__GNL20QFGwVsX6PLifCIQUvXcbIUCWBHg
                 ]
             ],
             [
@@ -418,6 +418,7 @@ class StoreController extends Controller
                 'fields' => [
                     ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
                     ['key' => 'secretKey', 'label' => 'Secret Key', 'type' => 'password'],
+                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ]
             ],
             [
@@ -431,6 +432,7 @@ class StoreController extends Controller
                     ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
                     ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
                     ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text'],
+                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ]
             ],
             [
@@ -443,6 +445,7 @@ class StoreController extends Controller
                 'fields' => [
                     ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
                     ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
+                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ]
             ],
             [
@@ -455,6 +458,7 @@ class StoreController extends Controller
                 'fields' => [
                     ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
                     ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
+                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ]
             ],
             [
@@ -468,6 +472,7 @@ class StoreController extends Controller
                     ['key' => 'bankName', 'label' => 'Bank Name', 'type' => 'text'],
                     ['key' => 'accountName', 'label' => 'Account Name', 'type' => 'text'],
                     ['key' => 'accountNumber', 'label' => 'Account Number', 'type' => 'text'],
+                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ]
             ],
             [
@@ -479,6 +484,7 @@ class StoreController extends Controller
                 'logoText' => '💵',
                 'fields' => [
                     ['key' => 'notes', 'label' => 'Delivery Policy / Instructions', 'type' => 'text'],
+                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ]
             ]
         ];

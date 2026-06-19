@@ -41,6 +41,10 @@ class ProductController extends Controller
                 'addons' => 'nullable|array',
                 'addons.*.addon_name' => 'required|string|max:255',
                 'addons.*.additional_price' => 'required|numeric|min:0',
+                'addons.*.discount' => 'nullable|numeric|min:0',
+                'addons.*.discount_type' => 'nullable|string|in:flat,percent',
+                'addons.*.image' => 'nullable',
+                'addons.*.is_default' => 'nullable',
             ]);
         } else {
             $request->validate([
@@ -86,6 +90,10 @@ class ProductController extends Controller
                 'addons' => 'nullable|array',
                 'addons.*.addon_name' => 'required|string|max:255',
                 'addons.*.additional_price' => 'required|numeric|min:0',
+                'addons.*.discount' => 'nullable|numeric|min:0',
+                'addons.*.discount_type' => 'nullable|string|in:flat,percent',
+                'addons.*.image' => 'nullable',
+                'addons.*.is_default' => 'nullable',
             ]);
         }
 
@@ -333,15 +341,24 @@ class ProductController extends Controller
             }
 
             if ($request->has('addons') && is_array($request->addons)) {
-                foreach ($request->addons as $addon) {
+                foreach ($request->addons as $index => $addon) {
+                    $addonImagePath = $addon['image'] ?? null;
+                    if ($request->hasFile("addons.{$index}.image")) {
+                        $addonFile = $request->file("addons.{$index}.image");
+                        $addonImagePath = UploadHelper::uploadImage($addonFile, 'products');
+                    }
                     ProductAddon::create([
                         'product_id' => $product->id,
                         'addon_name' => $addon['addon_name'],
                         'additional_price' => $addon['additional_price'] ?? 0.00,
+                        'discount' => $addon['discount'] ?? 0.00,
+                        'discount_type' => $addon['discount_type'] ?? 'flat',
+                        'image' => $addonImagePath,
+                        'is_default' => filter_var($addon['is_default'] ?? false, FILTER_VALIDATE_BOOLEAN),
                     ]);
                 }
-            }
-
+            } 
+            
             $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
             return response()->json($product, 201);
         });
@@ -417,6 +434,10 @@ class ProductController extends Controller
                 'addons.*.id' => 'nullable|integer|exists:product_addons,id',
                 'addons.*.addon_name' => 'required|string|max:255',
                 'addons.*.additional_price' => 'required|numeric|min:0',
+                'addons.*.discount' => 'nullable|numeric|min:0',
+                'addons.*.discount_type' => 'nullable|string|in:flat,percent',
+                'addons.*.image' => 'nullable',
+                'addons.*.is_default' => 'nullable',
             ]);
         } else {
             $request->validate([
@@ -453,6 +474,10 @@ class ProductController extends Controller
                 'addons.*.id' => 'nullable|integer|exists:product_addons,id',
                 'addons.*.addon_name' => 'required|string|max:255',
                 'addons.*.additional_price' => 'required|numeric|min:0',
+                'addons.*.discount' => 'nullable|numeric|min:0',
+                'addons.*.discount_type' => 'nullable|string|in:flat,percent',
+                'addons.*.image' => 'nullable',
+                'addons.*.is_default' => 'nullable',
             ]);
         }
 
@@ -810,13 +835,28 @@ class ProductController extends Controller
             if ($request->has('addons') || $request->input('clear_addons') == 1) {
                 $keepAddonIds = [];
                 if (is_array($request->addons)) {
-                    foreach ($request->addons as $addon) {
+                    foreach ($request->addons as $index => $addon) {
+                        $addonImagePath = $addon['image'] ?? null;
+                        if ($request->hasFile("addons.{$index}.image")) {
+                            $addonFile = $request->file("addons.{$index}.image");
+                            if (isset($addon['id'])) {
+                                $existingModel = ProductAddon::where('product_id', $product->id)->find($addon['id']);
+                                if ($existingModel && $existingModel->image) {
+                                    UploadHelper::deleteImage($existingModel->getRawOriginal('image'));
+                                }
+                            }
+                            $addonImagePath = UploadHelper::uploadImage($addonFile, 'products');
+                        }
                         if (isset($addon['id'])) {
                             $addonModel = ProductAddon::where('product_id', $product->id)->find($addon['id']);
                             if ($addonModel) {
                                 $addonModel->update([
                                     'addon_name' => $addon['addon_name'],
                                     'additional_price' => $addon['additional_price'],
+                                    'discount' => $addon['discount'] ?? 0.00,
+                                    'discount_type' => $addon['discount_type'] ?? 'flat',
+                                    'image' => $addonImagePath,
+                                    'is_default' => filter_var($addon['is_default'] ?? false, FILTER_VALIDATE_BOOLEAN),
                                 ]);
                                 $keepAddonIds[] = $addonModel->id;
                             }
@@ -825,12 +865,22 @@ class ProductController extends Controller
                                 'product_id' => $product->id,
                                 'addon_name' => $addon['addon_name'],
                                 'additional_price' => $addon['additional_price'],
+                                'discount' => $addon['discount'] ?? 0.00,
+                                'discount_type' => $addon['discount_type'] ?? 'flat',
+                                'image' => $addonImagePath,
+                                'is_default' => filter_var($addon['is_default'] ?? false, FILTER_VALIDATE_BOOLEAN),
                             ]);
                             $keepAddonIds[] = $addonModel->id;
                         }
                     }
                 }
-                $product->addons()->whereNotIn('id', $keepAddonIds)->delete();
+                $toDelete = $product->addons()->whereNotIn('id', $keepAddonIds)->get();
+                foreach ($toDelete as $delAddon) {
+                    if ($delAddon->image) {
+                        UploadHelper::deleteImage($delAddon->getRawOriginal('image'));
+                    }
+                    $delAddon->delete();
+                }
             }
 
             $product->syncThumbnails();

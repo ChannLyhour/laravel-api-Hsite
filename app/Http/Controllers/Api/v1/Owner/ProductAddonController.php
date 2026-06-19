@@ -28,12 +28,16 @@ class ProductAddonController extends Controller
         $request->validate([
             'addon_name' => 'required|string|max:255',
             'additional_price' => 'required|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
+            'discount_type' => 'nullable|string|in:flat,percent',
         ]);
 
         $addon = ProductAddon::create([
             'product_id' => $product->id,
             'addon_name' => $request->addon_name,
             'additional_price' => $request->additional_price,
+            'discount' => $request->discount ?? 0.00,
+            'discount_type' => $request->discount_type ?? 'flat',
         ]);
 
         return response()->json($addon, 201);
@@ -50,11 +54,15 @@ class ProductAddonController extends Controller
         $request->validate([
             'addon_name' => 'sometimes|required|string|max:255',
             'additional_price' => 'sometimes|required|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
+            'discount_type' => 'nullable|string|in:flat,percent',
         ]);
 
         $addon->update($request->only([
             'addon_name',
             'additional_price',
+            'discount',
+            'discount_type',
         ]));
 
         return response()->json($addon);

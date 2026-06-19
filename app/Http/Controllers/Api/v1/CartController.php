@@ -16,7 +16,7 @@ class CartController extends Controller
     {
         $user = $request->user();
         $cartItems = Cart::where('user_id', $user->id)
-            ->with(['product', 'variant', 'owner'])
+            ->with(['product', 'product.addons', 'variant', 'owner'])
             ->get();
 
         return response()->json($cartItems);
