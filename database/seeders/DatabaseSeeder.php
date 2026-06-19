@@ -316,12 +316,6 @@ class DatabaseSeeder extends Seeder
         }
         DB::table('banners')->insert($banners);
 
-        // Synchronize thumbnails
-        $products = \App\Models\Product::all();
-        foreach ($products as $product) {
-            $product->syncThumbnails();
-        }
-
         // Seed templates
         $this->call(TemplateSeeder::class);
 

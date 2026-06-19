@@ -26,20 +26,6 @@ class ProductImage extends Model
         'sort_order' => 'integer',
     ];
 
-    protected static function booted()
-    {
-        static::saved(function ($image) {
-            if ($image->product) {
-                $image->product->syncThumbnails();
-            }
-        });
-        static::deleted(function ($image) {
-            if ($image->product) {
-                $image->product->syncThumbnails();
-            }
-        });
-    }
-
     public function product()
     {
         return $this->belongsTo(Product::class);

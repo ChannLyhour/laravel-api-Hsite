@@ -66,9 +66,6 @@ class ProductImageController extends Controller
             ]);
         }
 
-        // Sync thumbnails for product
-        $product->syncThumbnails();
-
         return response()->json(count($productImages) === 1 ? $productImages[0] : $productImages, 201);
     }
 
@@ -97,10 +94,6 @@ class ProductImageController extends Controller
         }
 
         $image->save();
-
-        if ($image->product) {
-            $image->product->syncThumbnails();
-        }
 
         return response()->json($image);
     }

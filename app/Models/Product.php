@@ -15,6 +15,7 @@ class Product extends Model
         'sku',
         'barcode',
         'status',
+        'is_special',
         'created_by',
         'has_options',
         'product_type',
@@ -27,18 +28,17 @@ class Product extends Model
         'discount_type',
         'shipping_cost',
         'multiply_qty_shipping',
-        'products_thumbnail',
     ];
 
     protected $casts = [
         'has_options' => 'boolean',
+        'is_special' => 'boolean',
         'multiply_qty_shipping' => 'boolean',
         'min_order_qty' => 'integer',
         'brand_id' => 'integer',
         'product_badge_id' => 'integer',
         'discount_amount' => 'decimal:2',
         'shipping_cost' => 'decimal:2',
-        'products_thumbnail' => 'array',
     ];
 
     protected $appends = [
@@ -149,26 +149,18 @@ class Product extends Model
         return $translation ? $translation->slug : null;
     }
 
-    /**
-     * Get the primary display image path or fallback.
-     */
     public function getDisplayImageAttribute()
     {
-        if ($this->products_thumbnail && count($this->products_thumbnail) > 0) {
-            $value = $this->products_thumbnail[0];
-            if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://') || str_starts_with($value, 'data:')) {
-                return $value;
-            }
-            return asset($value);
-        }
-
         $primaryImage = $this->images->where('is_primary', true)->first() ?? $this->images->first();
         if ($primaryImage) {
             $img = $primaryImage->image;
-            if (is_array($img)) {
-                return $img[0] ?? asset('default.png');
+            $value = is_array($img) ? ($img[0] ?? null) : $img;
+            if ($value) {
+                if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://') || str_starts_with($value, 'data:')) {
+                    return $value;
+                }
+                return asset($value);
             }
-            return $img;
         }
         return asset('default.png');
     }
@@ -188,36 +180,5 @@ class Product extends Model
     public function getImageAttribute()
     {
         return $this->getDisplayImageAttribute();
-    }
-
-    /**
-     * Synchronize the products_thumbnail JSON column based on associated images.
-     */
-    public function syncThumbnails()
-    {
-        $rawImages = \Illuminate\Support\Facades\DB::table('product_images')
-            ->where('product_id', $this->id)
-            ->orderByDesc('is_primary')
-            ->orderBy('id')
-            ->pluck('image')
-            ->toArray();
-
-        $paths = [];
-        foreach ($rawImages as $imgGroup) {
-            if (is_array($imgGroup)) {
-                $paths = array_merge($paths, $imgGroup);
-            } elseif (is_string($imgGroup)) {
-                $decoded = json_decode($imgGroup, true);
-                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    $paths = array_merge($paths, $decoded);
-                } elseif ($imgGroup !== '') {
-                    $paths[] = $imgGroup;
-                }
-            }
-        }
-
-        $this->updateQuietly([
-            'products_thumbnail' => $paths
-        ]);
     }
 }

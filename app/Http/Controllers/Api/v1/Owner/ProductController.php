@@ -24,6 +24,7 @@ class ProductController extends Controller
         }
 
         // Detect if payload is legacy format or new structured format
+        \Log::info('Product store payload: ' . json_encode($request->except(['image', 'images', 'imageFile'])));
         $isLegacy = ! $request->has('translations') && ! $request->has('variants');
 
         if ($isLegacy) {
@@ -34,6 +35,7 @@ class ProductController extends Controller
                 'image' => 'nullable',
                 'image_url' => 'nullable',
                 'status' => 'required|in:available,unavailable,active,draft,archived',
+                'is_special' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'created_by' => 'nullable|integer|exists:users,id',
                 
@@ -51,6 +53,7 @@ class ProductController extends Controller
                 'sku' => 'required|string|max:100|unique:products,sku',
                 'barcode' => 'nullable|string|max:50',
                 'status' => 'required|in:active,draft,archived',
+                'is_special' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'created_by' => 'nullable|integer|exists:users,id',
                 'has_options' => 'nullable|boolean',
@@ -159,6 +162,7 @@ class ProductController extends Controller
                     'sku' => $sku,
                     'barcode' => null,
                     'status' => $status,
+                    'is_special' => filter_var($request->is_special ?? false, FILTER_VALIDATE_BOOLEAN),
                     'created_by' => $userId,
                 ]);
 
@@ -202,6 +206,7 @@ class ProductController extends Controller
                     'sku' => $request->sku,
                     'barcode' => $request->barcode,
                     'status' => $request->status,
+                    'is_special' => filter_var($request->is_special ?? false, FILTER_VALIDATE_BOOLEAN),
                     'created_by' => $userId,
                     'has_options' => $request->has_options ?? false,
                     'product_type' => $request->product_type ?? 'physical',
@@ -417,6 +422,7 @@ class ProductController extends Controller
         }
 
         $product = Product::findOrFail($id);
+        \Log::info('Product update payload for ID ' . $id . ': ' . json_encode($request->except(['image', 'images', 'imageFile'])));
         $isLegacy = ! $request->has('translations') && ! $request->has('variants');
 
         if ($isLegacy) {
@@ -427,6 +433,7 @@ class ProductController extends Controller
                 'image' => 'nullable',
                 'image_url' => 'nullable',
                 'status' => 'sometimes|required|in:available,unavailable,active,draft,archived',
+                'is_special' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 
                 // Addons
@@ -444,6 +451,7 @@ class ProductController extends Controller
                 'sku' => 'sometimes|required|string|max:100|unique:products,sku,' . $product->id,
                 'barcode' => 'nullable|string|max:50',
                 'status' => 'sometimes|required|in:active,draft,archived',
+                'is_special' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'has_options' => 'nullable|boolean',
                 'product_type' => 'nullable|string|max:50',
@@ -575,6 +583,7 @@ class ProductController extends Controller
                 $product->update([
                     'category_id' => $request->has('category_id') ? $request->category_id : $product->category_id,
                     'status' => $status,
+                    'is_special' => $request->has('is_special') ? filter_var($request->is_special, FILTER_VALIDATE_BOOLEAN) : $product->is_special,
                 ]);
 
                 // Update English Translation
@@ -642,6 +651,7 @@ class ProductController extends Controller
                     'sku' => $request->sku ?? $product->sku,
                     'barcode' => $request->has('barcode') ? $request->barcode : $product->barcode,
                     'status' => $request->status ?? $product->status,
+                    'is_special' => $request->has('is_special') ? filter_var($request->is_special, FILTER_VALIDATE_BOOLEAN) : $product->is_special,
                     'category_id' => $request->has('category_id') ? $request->category_id : $product->category_id,
                     'has_options' => $request->has('has_options') ? $request->has_options : $product->has_options,
                     'product_type' => $request->product_type ?? $product->product_type,
@@ -883,7 +893,6 @@ class ProductController extends Controller
                 }
             }
 
-            $product->syncThumbnails();
             $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
             return response()->json($product);
         });
