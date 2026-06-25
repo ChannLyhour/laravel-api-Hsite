@@ -22,15 +22,15 @@ Route::get('/admin/settings', function () {
     return view('admin.settings.index');
 })->name('admin.settings');
 
+Route::get('/admin/login', function () {
+    return view('admin.auth.login');
+});
+
 Route::get('/admin/{module}', function ($module) {
     $validModules = ['orders', 'products', 'health'];
     if (!in_array($module, $validModules)) abort(404);
     return view('admin.manager', ['module' => $module]);
 })->name('admin.module');
-
-Route::get('/admin/login', function () {
-    return view('admin.auth.login');
-});
 
 // Static Asset Router & Premium Unsplash Fallback
 Route::get('/static/{path}', function ($path) {
