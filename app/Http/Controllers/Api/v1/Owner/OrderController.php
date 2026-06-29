@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function index(Request $request)
+    public function index (Request $request)
     {
         $user = $request->user();
         if ($user->role_id !== 30003) {
@@ -38,7 +38,7 @@ class OrderController extends Controller
         }
 
         if ($storeId) {
-            if ((int)$storeId === $user->id) {
+            if ((int) $storeId === $user->id) {
                 $query->where('store_id', $user->id);
             } else {
                 return response()->json(['detail' => 'You are not authorized to view orders for this store.'], 403);
@@ -90,15 +90,7 @@ class OrderController extends Controller
         }
 
         if ($status && strtolower($status) !== 'all') {
-            $statusVal = strtolower(trim($status));
-            if ($statusVal === 'confirm' || $statusVal === 'confirmed') {
-                $statusVal = 'confirmed';
-            } elseif ($statusVal === 'complete' || $statusVal === 'completed') {
-                $statusVal = 'completed';
-            } elseif ($statusVal === 'canceled' || $statusVal === 'cancelled') {
-                $statusVal = 'cancelled';
-            }
-            $query->where('status', $statusVal);
+            $query->where('status', strtolower(trim($status)));
         }
 
         if ($paymentStatus && strtolower($paymentStatus) !== 'all') {
@@ -125,17 +117,17 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 
-    public function mine(Request $request)
+    public function mine (Request $request)
     {
         return $this->index($request);
     }
 
-    public function storeOrders(Request $request)
+    public function storeOrders (Request $request)
     {
         return $this->index($request);
     }
 
-    public function show(Request $request, $id)
+    public function show (Request $request, $id)
     {
         $user = $request->user();
         if ($user->role_id !== 30003) {
@@ -145,7 +137,7 @@ class OrderController extends Controller
         $order = Order::with(['items.productVariant.product', 'store'])->findOrFail($id);
 
         // Authorization check
-        $isOwner = (int)$order->store_id === $user->id;
+        $isOwner = (int) $order->store_id === $user->id;
 
         if (!$isOwner) {
             return response()->json(['detail' => "You are not authorized to view this order."], 403);
@@ -154,7 +146,7 @@ class OrderController extends Controller
         return response()->json($order);
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus (Request $request, $id)
     {
         $request->validate([
             'status' => 'required|string',
@@ -168,7 +160,7 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         // Authorization check
-        $isOwner = (int)$order->store_id === $user->id;
+        $isOwner = (int) $order->store_id === $user->id;
 
         if (!$isOwner) {
             return response()->json(['detail' => 'You are not authorized to manage orders for this store.'], 403);
@@ -177,7 +169,7 @@ class OrderController extends Controller
         $validStatuses = ['pending', 'processing', 'completed', 'cancelled', 'complete', 'canceled', 'confirmed'];
         $newStatus = strtolower(trim($request->status));
 
-        if (! in_array($newStatus, $validStatuses)) {
+        if (!in_array($newStatus, $validStatuses)) {
             return response()->json(['detail' => "Invalid status '{$request->status}'. Allowed statuses: " . implode(', ', $validStatuses)], 400);
         }
 
@@ -194,7 +186,7 @@ class OrderController extends Controller
         return response()->json($order);
     }
 
-    public function updatePaymentStatus(Request $request, $id)
+    public function updatePaymentStatus (Request $request, $id)
     {
         $request->validate([
             'payment_status' => 'required|string',
@@ -208,7 +200,7 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         // Authorization check
-        $isOwner = (int)$order->store_id === $user->id;
+        $isOwner = (int) $order->store_id === $user->id;
 
         if (!$isOwner) {
             return response()->json(['detail' => 'You are not authorized to manage orders for this store.'], 403);
@@ -217,7 +209,7 @@ class OrderController extends Controller
         $validPaymentStatuses = ['paid', 'unpaid', 'refunded'];
         $newStatus = strtolower(trim($request->payment_status));
 
-        if (! in_array($newStatus, $validPaymentStatuses)) {
+        if (!in_array($newStatus, $validPaymentStatuses)) {
             return response()->json(['detail' => "Invalid payment status '{$request->payment_status}'. Allowed values: " . implode(', ', $validPaymentStatuses)], 400);
         }
 
