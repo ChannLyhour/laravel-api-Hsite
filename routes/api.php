@@ -81,6 +81,9 @@ Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
 Route::post('/owner/login', [AuthController::class, 'loginOwner']);
 Route::post('/social-login', [AuthController::class, 'socialLogin']);
 
+// Telegram Bot Webhook
+Route::post('/telegram/webhook', [\App\Http\Controllers\Api\v1\TelegramWebhookController::class, 'handle']);
+
 // Users (Public)
 Route::get('/users/admins', [UserController::class, 'admins']);
 

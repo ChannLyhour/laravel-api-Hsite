@@ -124,7 +124,8 @@ class StoreController extends Controller
             'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
             'google_client_id', 'google_client_secret', 'google_enabled',
             'facebook_app_id', 'facebook_app_secret', 'facebook_enabled',
-            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code'
+            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code',
+            'telegram_bot_token', 'telegram_chat_id', 'telegram_enabled'
         ];
 
         $data = $request->all();
@@ -152,6 +153,11 @@ class StoreController extends Controller
 
         // Clear cached settings for owner
         \Illuminate\Support\Facades\Cache::forget("settings_owner_{$user->id}");
+
+        // Auto-register Telegram webhook if bot token is provided
+        if ($request->has('telegram_bot_token') && $request->telegram_bot_token) {
+            \App\Helpers\TelegramHelper::registerWebhook($request->telegram_bot_token, $request->getSchemeAndHttpHost());
+        }
 
         $storeSettings = Store::where('created_by', $user->id)->get();
         $dict = [
@@ -191,7 +197,8 @@ class StoreController extends Controller
             'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
             'google_client_id', 'google_client_secret', 'google_enabled',
             'facebook_app_id', 'facebook_app_secret', 'facebook_enabled',
-            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code'
+            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code',
+            'telegram_bot_token', 'telegram_chat_id', 'telegram_enabled'
         ];
 
         $ownerId = $request->created_by;
@@ -270,7 +277,8 @@ class StoreController extends Controller
             'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
             'google_client_id', 'google_client_secret', 'google_enabled',
             'facebook_app_id', 'facebook_app_secret', 'facebook_enabled',
-            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code'
+            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code',
+            'telegram_bot_token', 'telegram_chat_id', 'telegram_enabled'
         ];
 
         $data = $request->all();
@@ -298,6 +306,11 @@ class StoreController extends Controller
 
         // Clear cached settings for owner
         \Illuminate\Support\Facades\Cache::forget("settings_owner_{$ownerId}");
+
+        // Auto-register Telegram webhook if bot token is provided
+        if ($request->has('telegram_bot_token') && $request->telegram_bot_token) {
+            \App\Helpers\TelegramHelper::registerWebhook($request->telegram_bot_token, $request->getSchemeAndHttpHost());
+        }
 
         $storeSettings = Store::where('created_by', $ownerId)->get();
         $dict = [

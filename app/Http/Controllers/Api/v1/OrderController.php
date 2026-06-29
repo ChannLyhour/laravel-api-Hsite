@@ -146,6 +146,13 @@ class OrderController extends Controller
                     ]);
                 }
 
+                // Send Telegram notification to the store owner
+                try {
+                    \App\Helpers\TelegramHelper::sendOrderNotification($order);
+                } catch (\Exception $ex) {
+                    \Illuminate\Support\Facades\Log::warning("Telegram order notification failed: " . $ex->getMessage());
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Order created successfully',

@@ -1,0 +1,166 @@
+<?php
+
+namespace App\Http\Controllers\Api\v1;
+
+use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\Store;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+class TelegramWebhookController extends Controller
+{
+    /**
+     * Handle incoming Telegram webhook updates (Callback Queries).
+     */
+    public function handle(Request $request)
+    {
+        $update = $request->all();
+        $token = $request->query('token') ?? $request->token;
+
+        // Check if update is a callback query (button click)
+        if (isset($update['callback_query'])) {
+            return $this->handleCallbackQuery($update['callback_query'], $token);
+        }
+
+        return response()->json(['status' => 'ignored']);
+    }
+
+    /**
+     * Process inline keyboard button click callback.
+     */
+    private function handleCallbackQuery(array $callbackQuery, $tokenFromUrl = null)
+    {
+        $callbackId = $callbackQuery['id'];
+        $data = $callbackQuery['data'] ?? ''; // e.g. "confirm_90151" or "cancel_90151"
+        $chatId = $callbackQuery['message']['chat']['id'] ?? null;
+        $messageId = $callbackQuery['message']['message_id'] ?? null;
+        $originalText = $callbackQuery['message']['text'] ?? '';
+
+        Log::info("Telegram webhook button clicked: data={$data}, chat={$chatId}");
+
+        // Parse action and order ID
+        $parts = explode('_', $data);
+        if (count($parts) < 2) {
+            return response()->json(['status' => 'invalid_data']);
+        }
+
+        $action = $parts[0]; // "confirm" or "cancel"
+        $orderId = $parts[1];
+
+        // Find the order
+        $order = Order::with('items')->find($orderId);
+
+        // Resolve token
+        $botToken = $tokenFromUrl;
+        if (!$botToken && $order) {
+            $botToken = Store::where('created_by', $order->store_id)
+                ->where('key', 'telegram_bot_token')
+                ->value('value');
+        }
+
+        if (!$botToken) {
+            return response()->json(['status' => 'token_not_found']);
+        }
+
+        if (!$order) {
+            $this->answerCallbackQuery($botToken, $callbackId, "❌ Order not found.", true);
+            return response()->json(['status' => 'order_not_found']);
+        }
+
+        // Handle Status Update
+        if ($action === 'confirm') {
+            if ($order->status === 'confirm' || $order->status === 'confirmed') {
+                $this->answerCallbackQuery($botToken, $callbackId, "ℹ️ Order is already confirmed.");
+                return response()->json(['status' => 'already_confirmed']);
+            }
+
+            $order->update(['status' => 'confirm']); // Standard frontend confirm status
+            $statusAlert = "✅ Order #{$order->order_no} Confirmed!";
+            $badge = "\n\n🟢 <b>Status: Confirmed by Owner</b>";
+        } elseif ($action === 'cancel') {
+            if ($order->status === 'canceled' || $order->status === 'cancelled') {
+                $this->answerCallbackQuery($botToken, $callbackId, "ℹ️ Order is already canceled.");
+                return response()->json(['status' => 'already_canceled']);
+            }
+
+            $order->update(['status' => 'canceled']);
+            $statusAlert = "❌ Order #{$order->order_no} Canceled.";
+            $badge = "\n\n🔴 <b>Status: Canceled by Owner</b>";
+        } else {
+            return response()->json(['status' => 'unknown_action']);
+        }
+
+        // 1. Answer Telegram's callback to show alert/banner at the top of the app
+        $this->answerCallbackQuery($botToken, $callbackId, $statusAlert);
+
+        // 2. Edit the Telegram message to append status and remove buttons
+        if ($chatId && $messageId) {
+            // Remove the direct management link lines or modify them as needed
+            // Telegram webhook message editing requires matching original HTML formatting
+            $newText = $originalText . $badge;
+            $this->editMessageText($botToken, $chatId, $messageId, $newText);
+        }
+
+        // Trigger data update event for any active dashboard browsers
+        try {
+            // Optional: Dispatch Pusher notification or event to update dashboard UI live
+        } catch (\Exception $e) {
+            Log::warning("Live broadcast update failed: " . $e->getMessage());
+        }
+
+        return response()->json(['status' => 'success']);
+    }
+
+    /**
+     * Answer callback query to dismiss loading state on button.
+     */
+    private function answerCallbackQuery($botToken, $callbackQueryId, $text, $showAlert = false)
+    {
+        try {
+            $url = "https://api.telegram.org/bot{$botToken}/answerCallbackQuery";
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                'callback_query_id' => $callbackQueryId,
+                'text' => $text,
+                'show_alert' => $showAlert
+            ]));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_exec($ch);
+            curl_close($ch);
+        } catch (\Exception $e) {
+            Log::warning("Telegram answerCallbackQuery failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Edit Telegram message text and remove the inline keyboard.
+     */
+    private function editMessageText($botToken, $chatId, $messageId, $text)
+    {
+        try {
+            $url = "https://api.telegram.org/bot{$botToken}/editMessageText";
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'parse_mode' => 'HTML',
+                'reply_markup' => json_encode(['inline_keyboard' => []]) // Removes all buttons
+            ]));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_exec($ch);
+            curl_close($ch);
+        } catch (\Exception $e) {
+            Log::warning("Telegram editMessageText failed: " . $e->getMessage());
+        }
+    }
+}
