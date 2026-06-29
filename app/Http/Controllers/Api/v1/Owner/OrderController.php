@@ -90,7 +90,15 @@ class OrderController extends Controller
         }
 
         if ($status && strtolower($status) !== 'all') {
-            $query->where('status', strtolower(trim($status)));
+            $statusVal = strtolower(trim($status));
+            if ($statusVal === 'confirm' || $statusVal === 'confirmed') {
+                $statusVal = 'confirmed';
+            } elseif ($statusVal === 'complete' || $statusVal === 'completed') {
+                $statusVal = 'completed';
+            } elseif ($statusVal === 'canceled' || $statusVal === 'cancelled') {
+                $statusVal = 'cancelled';
+            }
+            $query->where('status', $statusVal);
         }
 
         if ($paymentStatus && strtolower($paymentStatus) !== 'all') {
