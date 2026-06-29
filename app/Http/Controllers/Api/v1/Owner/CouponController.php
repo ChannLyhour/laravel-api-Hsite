@@ -103,6 +103,31 @@ class CouponController extends Controller
             return response()->json(['detail' => 'Coupon has expired.'], 422);
         }
 
+        if ($coupon->coupon_type === 'first_order') {
+            $user = $request->user() ?? auth('sanctum')->user();
+            $phone = $request->query('phone');
+
+            if ($user || $phone) {
+                $query = \App\Models\Order::whereNotIn('status', ['canceled', 'cancelled']);
+
+                if ($user) {
+                    $query->where(function ($q) use ($user, $phone) {
+                        $q->where('user_id', $user->id);
+                        if ($phone) {
+                            $q->orWhere('customer_phone', $phone);
+                        }
+                    });
+                } else {
+                    $query->where('customer_phone', $phone);
+                }
+
+                $hasOrders = $query->exists();
+                if ($hasOrders) {
+                    return response()->json(['detail' => 'This coupon is only valid for your first order.'], 422);
+                }
+            }
+        }
+
         if ($coupon->limit_total && $coupon->total_used >= $coupon->limit_total) {
             return response()->json(['detail' => 'This coupon has reached its total usage limit.'], 422);
         }

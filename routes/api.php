@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\v1\Owner\CouponController;
 use App\Http\Controllers\Api\v1\Owner\FlashDealController;
 use App\Http\Controllers\Api\v1\Owner\FeaturedDealController;
 use App\Http\Controllers\Api\v1\Owner\ClearanceSaleController;
+use App\Http\Controllers\Api\v1\Owner\DeliveryMethodController;
 use App\Http\Controllers\Api\v1\LikeController;
 use App\Http\Controllers\Api\v1\ShippingAddressController;
 use App\Http\Controllers\Api\v1\CartController;
@@ -131,6 +132,10 @@ Route::get('/social-media', [SocialMediaController::class, 'index']);
 // Banners (Public)
 Route::get('/banners', [BannerController::class, 'index']);
 Route::get('/banners/{id}', [BannerController::class, 'show'])->whereNumber('id');
+
+// Delivery Methods (Public)
+Route::get('/delivery-methods', [DeliveryMethodController::class, 'index']);
+Route::get('/delivery-methods/{id}', [DeliveryMethodController::class, 'show'])->whereNumber('id');
 
 // Vendors (Public)
 Route::get('/vendors', [VendorController::class, 'index']);
@@ -382,6 +387,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/owner/clearance-sales/{id}/products', [ClearanceSaleController::class, 'addProducts'])->whereNumber('id');
         Route::put('/owner/clearance-sales/{id}/products/{product_id}', [ClearanceSaleController::class, 'updateProductPivot'])->whereNumber('id')->whereNumber('product_id');
         Route::delete('/owner/clearance-sales/{id}/products/{product_id}', [ClearanceSaleController::class, 'removeProduct'])->whereNumber('id')->whereNumber('product_id');
+
+        // Delivery Methods Configuration
+        Route::get('/owner/delivery-methods/mine', [DeliveryMethodController::class, 'mine']);
+        Route::post('/owner/delivery-methods', [DeliveryMethodController::class, 'store']);
+        Route::put('/owner/delivery-methods/{id}', [DeliveryMethodController::class, 'update'])->whereNumber('id');
+        Route::post('/owner/delivery-methods/{id}', [DeliveryMethodController::class, 'update'])->whereNumber('id');
+        Route::put('/owner/delivery-methods/{id}/toggle', [DeliveryMethodController::class, 'toggle'])->whereNumber('id');
+        Route::delete('/owner/delivery-methods/{id}', [DeliveryMethodController::class, 'destroy'])->whereNumber('id');
 
         // Temporary Food Items Configuration
         Route::post('/items', [FoodItemController::class, 'store']);
