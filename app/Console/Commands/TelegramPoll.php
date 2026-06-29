@@ -124,18 +124,18 @@ class TelegramPoll extends Command
                 return;
             }
 
-            $order->update(['status' => 'confirm']);
+            $order->update(['status' => 'confirmed']);
             $statusAlert = "✅ Order #{$order->order_no} Confirmed!";
-            $badge = "\n\n🟢 <b>Status: Confirmed by Owner</b>";
+            $badge = "🟢 <b>Status: Confirmed by Owner</b>";
         } elseif ($action === 'cancel') {
             if ($order->status === 'canceled' || $order->status === 'cancelled') {
                 $this->answerCallbackQuery($botToken, $callbackId, "ℹ️ Order is already canceled.");
                 return;
             }
 
-            $order->update(['status' => 'canceled']);
+            $order->update(['status' => 'cancelled']);
             $statusAlert = "❌ Order #{$order->order_no} Canceled.";
-            $badge = "\n\n🔴 <b>Status: Canceled by Owner</b>";
+            $badge = "🔴 <b>Status: Canceled by Owner</b>";
         } else {
             return;
         }
@@ -145,7 +145,7 @@ class TelegramPoll extends Command
 
         // 2. Edit Telegram message to update status and remove action buttons
         if ($chatId && $messageId) {
-            $newText = $originalText . $badge;
+            $newText = \App\Helpers\TelegramHelper::formatOrderMessage($order, $badge);
             $this->editMessageText($botToken, $chatId, $messageId, $newText);
         }
     }

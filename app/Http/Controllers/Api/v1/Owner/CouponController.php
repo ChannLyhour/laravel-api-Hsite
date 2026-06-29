@@ -113,7 +113,7 @@ class CouponController extends Controller
 
             if ($user || $phone) {
                 $query = \App\Models\Order::where('coupon_code', $coupon->code)
-                    ->where('status', '!=', 'canceled');
+                    ->whereNotIn('status', ['canceled', 'cancelled']);
 
                 if ($user) {
                     $query->where(function ($q) use ($user, $phone) {

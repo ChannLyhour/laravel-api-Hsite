@@ -75,18 +75,18 @@ class TelegramWebhookController extends Controller
                 return response()->json(['status' => 'already_confirmed']);
             }
 
-            $order->update(['status' => 'confirm']); // Standard frontend confirm status
+            $order->update(['status' => 'confirmed']); // Standard backend confirm status
             $statusAlert = "✅ Order #{$order->order_no} Confirmed!";
-            $badge = "\n\n🟢 <b>Status: Confirmed by Owner</b>";
+            $badge = "🟢 <b>Status: Confirmed by Owner</b>";
         } elseif ($action === 'cancel') {
             if ($order->status === 'canceled' || $order->status === 'cancelled') {
                 $this->answerCallbackQuery($botToken, $callbackId, "ℹ️ Order is already canceled.");
                 return response()->json(['status' => 'already_canceled']);
             }
 
-            $order->update(['status' => 'canceled']);
+            $order->update(['status' => 'cancelled']); // Standard backend cancel status
             $statusAlert = "❌ Order #{$order->order_no} Canceled.";
-            $badge = "\n\n🔴 <b>Status: Canceled by Owner</b>";
+            $badge = "🔴 <b>Status: Canceled by Owner</b>";
         } else {
             return response()->json(['status' => 'unknown_action']);
         }
@@ -96,9 +96,7 @@ class TelegramWebhookController extends Controller
 
         // 2. Edit the Telegram message to append status and remove buttons
         if ($chatId && $messageId) {
-            // Remove the direct management link lines or modify them as needed
-            // Telegram webhook message editing requires matching original HTML formatting
-            $newText = $originalText . $badge;
+            $newText = \App\Helpers\TelegramHelper::formatOrderMessage($order, $badge);
             $this->editMessageText($botToken, $chatId, $messageId, $newText);
         }
 

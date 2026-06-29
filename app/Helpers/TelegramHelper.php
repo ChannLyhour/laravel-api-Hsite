@@ -42,49 +42,7 @@ class TelegramHelper
                 return;
             }
 
-            // Format items list
-            $itemLines = [];
-            $order->loadMissing('items');
-            foreach ($order->items as $index => $item) {
-                $sub = floatval($item->price) * intval($item->quantity);
-                $itemLines[] = "  " . ($index + 1) . ". " . $item->name . " x" . $item->quantity . " — $" . number_format($sub, 2);
-            }
-            $itemsText = implode("\n", $itemLines);
-
-            $paymentMethod = $order->payment_method === 'cod' ? 'Cash on Delivery' : $order->payment_method;
-            $paymentIcon = $order->payment_status === 'Paid' ? '✅' : '⏳';
-
-            $messageLines = [
-                "🛒 <b>New Order Received!</b>",
-                "",
-                "📋 <b>Order:</b> #" . ($order->order_no ?? $order->id),
-                "👤 <b>Customer:</b> " . ($order->customer_name ?? 'Walk-in'),
-            ];
-
-            if ($order->customer_phone) {
-                $messageLines[] = "📞 <b>Phone:</b> " . $order->customer_phone;
-            }
-            if ($order->customer_email) {
-                $messageLines[] = "📧 <b>Email:</b> " . $order->customer_email;
-            }
-
-            $messageLines[] = "";
-            $messageLines[] = "🍽 <b>Items:</b>";
-            $messageLines[] = $itemsText;
-            $messageLines[] = "";
-            $messageLines[] = "💰 <b>Total:</b> $" . number_format(floatval($order->total_amount), 2);
-            $messageLines[] = "💳 <b>Payment:</b> " . $paymentMethod . " " . $paymentIcon . " " . ($order->payment_status ?? 'Unpaid');
-
-            if ($order->customer_address && $order->customer_address !== 'POS Walk-in') {
-                $messageLines[] = "📍 <b>Address:</b> " . $order->customer_address;
-            } else {
-                $messageLines[] = "📍 <b>Type:</b> Walk-in / POS";
-            }
-
-            $messageLines[] = "";
-            $messageLines[] = "⏰ " . ($order->created_at ? $order->created_at->format('M d, Y, h:i A') : now()->format('M d, Y, h:i A'));
-
-            $message = implode("\n", $messageLines);
+            $message = self::formatOrderMessage($order);
 
             // Construct Inline Keyboard Markup with Confirm and Cancel Buttons
             $replyMarkup = json_encode([
@@ -107,6 +65,90 @@ class TelegramHelper
             Log::error("Telegram sendOrderNotification failed: " . $e->getMessage());
         }
     }
+
+    /**
+     * Format the HTML order message for Telegram notifications.
+     *
+     * @param \App\Models\Order $order
+     * @param string|null $statusBadge
+     * @return string
+     */
+    public static function formatOrderMessage($order, $statusBadge = null)
+    {
+        // Format items list
+        $itemLines = [];
+        $order->loadMissing('items');
+        foreach ($order->items as $index => $item) {
+            $sub = floatval($item->price) * intval($item->quantity);
+            $itemName = htmlspecialchars($item->name, ENT_QUOTES, 'UTF-8');
+            $itemLines[] = "  " . ($index + 1) . ". " . $itemName . " x" . $item->quantity . " — $" . number_format($sub, 2);
+        }
+        $itemsText = implode("\n", $itemLines);
+
+        $paymentMethod = $order->payment_method === 'cod' ? 'Cash on Delivery' : $order->payment_method;
+        $paymentIcon = $order->payment_status === 'Paid' ? '✅' : '⏳';
+        $paymentStatus = $order->payment_status ?? 'Unpaid';
+
+        $customerName = htmlspecialchars($order->customer_name ?? 'Walk-in', ENT_QUOTES, 'UTF-8');
+        $customerPhone = htmlspecialchars($order->customer_phone, ENT_QUOTES, 'UTF-8');
+        $customerEmail = htmlspecialchars($order->customer_email, ENT_QUOTES, 'UTF-8');
+        $customerAddress = htmlspecialchars($order->customer_address, ENT_QUOTES, 'UTF-8');
+
+        $messageLines = [
+            "🛒 <b>New Order Received!</b>",
+            "",
+            "📋 <b>Order:</b> #" . ($order->order_no ?? $order->id),
+            "👤 <b>Customer:</b> " . $customerName,
+        ];
+
+        if ($order->customer_phone) {
+            $messageLines[] = "📞 <b>Phone:</b> " . $customerPhone;
+        }
+        if ($order->customer_email) {
+            $messageLines[] = "📧 <b>Email:</b> " . $customerEmail;
+        }
+
+        $messageLines[] = "";
+        $messageLines[] = "🍽 <b>Items:</b>";
+        $messageLines[] = $itemsText;
+        $messageLines[] = "";
+        $messageLines[] = "💰 <b>Total:</b> $" . number_format(floatval($order->total_amount), 2);
+        $messageLines[] = "💳 <b>Payment:</b> " . $paymentMethod . " " . $paymentIcon . " " . $paymentStatus;
+
+        if ($order->customer_address && $order->customer_address !== 'POS Walk-in') {
+            $messageLines[] = "📍 <b>Address:</b> " . $customerAddress;
+        } else {
+            $messageLines[] = "📍 <b>Type:</b> Walk-in / POS";
+        }
+
+        // Add direct owner dashboard link if we can resolve the store owner
+        $storeId = $order->store_id;
+        if ($storeId) {
+            $owner = \App\Models\User::find($storeId);
+            if ($owner) {
+                $ownerHashId = $owner->hashid ?? \Vinkla\Hashids\Facades\Hashids::encode($storeId);
+                $storeNameSetting = Store::where('created_by', $storeId)->where('key', 'store_name')->value('value');
+                $storeSlug = $storeNameSetting ? preg_replace('/[^a-zA-Z0-9]/', '', $storeNameSetting) : 'store';
+                $customDomain = Store::where('created_by', $storeId)->where('key', 'custom_domain')->value('value');
+                $baseUrl = $customDomain ? "https://" . $customDomain : "http://lvh.me:5173";
+                $dashboardUrl = $baseUrl . "/owner?store=" . urlencode($storeSlug) . "&id=" . urlencode($ownerHashId) . "&tab=orders&order_id=" . urlencode($order->id);
+                
+                $messageLines[] = "";
+                $messageLines[] = "🔗 <a href=\"" . $dashboardUrl . "\"><b>Manage Order in Dashboard</b></a>";
+            }
+        }
+
+        if ($statusBadge) {
+            $messageLines[] = "";
+            $messageLines[] = $statusBadge;
+        }
+
+        $messageLines[] = "";
+        $messageLines[] = "⏰ " . ($order->created_at ? $order->created_at->format('M d, Y, h:i A') : now()->format('M d, Y, h:i A'));
+
+        return implode("\n", $messageLines);
+    }
+
 
     /**
      * Send raw message via Telegram HTTP API.

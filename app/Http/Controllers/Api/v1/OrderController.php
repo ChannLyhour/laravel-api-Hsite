@@ -60,7 +60,7 @@ class OrderController extends Controller
                     if ($coupon->limit_same_user) {
                         $phone = $request->customer_phone;
                         $query = Order::where('coupon_code', $coupon->code)
-                            ->where('status', '!=', 'canceled');
+                            ->whereNotIn('status', ['canceled', 'cancelled']);
 
                         if ($userId) {
                             $query->where(function ($q) use ($userId, $phone) {
