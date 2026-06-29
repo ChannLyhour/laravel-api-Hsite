@@ -24,6 +24,9 @@ class OrderController extends Controller
         $search = $request->query('search');
         $storeId = $request->query('store_id');
         $userId = $request->query('user_id');
+        $customerId = $request->query('customer_id');
+        $customerEmail = $request->query('customer_email');
+        $customerPhone = $request->query('customer_phone');
 
         $query = Order::query()->with(['items.productVariant.product', 'store']);
 
@@ -46,6 +49,44 @@ class OrderController extends Controller
 
         if ($userId) {
             $query->where('user_id', $userId);
+        }
+
+        if ($customerId) {
+            $customerRecord = \App\Models\Customer::find($customerId);
+            if ($customerRecord) {
+                $query->where(function ($q) use ($customerRecord) {
+                    $hasCondition = false;
+                    if ($customerRecord->user_id) {
+                        $q->where('user_id', $customerRecord->user_id);
+                        $hasCondition = true;
+                    }
+                    if ($customerRecord->email) {
+                        if ($hasCondition) {
+                            $q->orWhere('customer_email', $customerRecord->email);
+                        } else {
+                            $q->where('customer_email', $customerRecord->email);
+                            $hasCondition = true;
+                        }
+                    }
+                    if ($customerRecord->phone) {
+                        if ($hasCondition) {
+                            $q->orWhere('customer_phone', $customerRecord->phone);
+                        } else {
+                            $q->where('customer_phone', $customerRecord->phone);
+                        }
+                    }
+                });
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        if ($customerEmail) {
+            $query->where('customer_email', $customerEmail);
+        }
+
+        if ($customerPhone) {
+            $query->where('customer_phone', $customerPhone);
         }
 
         if ($status && strtolower($status) !== 'all') {
