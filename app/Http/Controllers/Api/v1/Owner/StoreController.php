@@ -47,15 +47,25 @@ class StoreController extends Controller
 
     public function showByOwner ($ownerId)
     {
-        $storeSettings = Store::where('created_by', $ownerId)->get();
+        $realOwnerId = $ownerId;
+        if (!is_numeric($realOwnerId)) {
+            $decoded = \Vinkla\Hashids\Facades\Hashids::decode($ownerId);
+            $realOwnerId = !empty($decoded) ? $decoded[0] : null;
+        }
+
+        if ($realOwnerId == 1) {
+            return response()->json(['message' => 'Store not found.'], 404);
+        }
+
+        $storeSettings = Store::where('created_by', $realOwnerId)->get();
         if ($storeSettings->isEmpty()) {
-            $user = \App\Models\User::find($ownerId);
-            $storeName = $user ? $user->name : "Store #{$ownerId}";
+            $user = \App\Models\User::find($realOwnerId);
+            $storeName = $user ? $user->name : "Store #{$realOwnerId}";
             return response()->json([
-                'id' => intval($ownerId),
-                'owner_id' => intval($ownerId),
-                'created_by' => intval($ownerId),
-                'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($ownerId)),
+                'id' => intval($realOwnerId),
+                'owner_id' => intval($realOwnerId),
+                'created_by' => intval($realOwnerId),
+                'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($realOwnerId)),
                 'store_name' => $storeName,
                 'store_email' => $user ? $user->email : '',
                 'store_phone' => '',
@@ -65,10 +75,10 @@ class StoreController extends Controller
             ]);
         }
         $dict = [
-            'id' => intval($ownerId),
-            'owner_id' => intval($ownerId),
-            'created_by' => intval($ownerId),
-            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($ownerId)),
+            'id' => intval($realOwnerId),
+            'owner_id' => intval($realOwnerId),
+            'created_by' => intval($realOwnerId),
+            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($realOwnerId)),
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
@@ -700,7 +710,8 @@ class StoreController extends Controller
             }
         }
 
-        if (!$ownerId) {
+        // Block public access to Super Admin (Owner ID 1)
+        if (!$ownerId || $ownerId == 1) {
             return response()->json(['found' => false, 'message' => 'No store found for this domain.'], 404);
         }
 
