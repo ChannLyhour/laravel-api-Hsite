@@ -637,16 +637,55 @@ class StoreController extends Controller
             return response()->json(['message' => 'Missing "domain" query parameter.'], 400);
         }
 
-        $storeDomain = \App\Models\StoreDomain::where('domain', $domain)->first();
+        // Clean protocol prefix if present
+        $domain = str_replace(['http://', 'https://'], '', $domain);
+
+        // Support path-based domain resolution (e.g. 127.0.0.1:8000/our20s or vhsite.vercel.app/our20s)
+        $domainPathSlug = null;
+        if (str_contains($domain, '/')) {
+            $parts = explode('/', $domain);
+            $domain = $parts[0]; // Host part
+            $domainPathSlug = $parts[1]; // Path slug
+        }
+
+        $storeDomain = null;
         $ownerId = null;
         $domainType = 'subdomain';
         $isVerified = true;
 
-        if ($storeDomain) {
-            $ownerId = $storeDomain->owner_id;
-            $domainType = $storeDomain->type;
-            $isVerified = $storeDomain->is_verified;
+        if ($domainPathSlug) {
+            // Path-based storefront matching
+            $storeSetting = Store::where(function ($query) use ($domainPathSlug) {
+                $query->where(function ($q) use ($domainPathSlug) {
+                    $q->where('key', 'custom_domain')
+                      ->where(function ($sq) use ($domainPathSlug) {
+                          $sq->where('value', $domainPathSlug)
+                            ->orWhere('value', $domainPathSlug . '.lvh.me')
+                            ->orWhereRaw("REPLACE(value, ':3000', '') = ?", [$domainPathSlug])
+                            ->orWhereRaw("REPLACE(value, ':8000', '') = ?", [$domainPathSlug]);
+                      });
+                })->orWhere(function ($q) use ($domainPathSlug) {
+                    $q->where('key', 'store_name')
+                      ->whereRaw("LOWER(REPLACE(value, ' ', '_')) = ?", [$domainPathSlug]);
+                });
+            })->first();
+
+            if ($storeSetting) {
+                $ownerId = $storeSetting->created_by;
+                $domainType = 'path';
+                $isVerified = true;
+            }
         } else {
+            // Check direct custom domain table
+            $storeDomain = \App\Models\StoreDomain::where('domain', $domain)->first();
+            if ($storeDomain) {
+                $ownerId = $storeDomain->owner_id;
+                $domainType = $storeDomain->type;
+                $isVerified = $storeDomain->is_verified;
+            }
+        }
+
+        if (!$ownerId) {
             $domainWithoutPort = $domain;
             if (str_contains($domainWithoutPort, ':')) {
                 $domainWithoutPort = explode(':', $domainWithoutPort)[0];
