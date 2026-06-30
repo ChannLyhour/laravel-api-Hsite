@@ -95,6 +95,14 @@ Route::get('/uploads/{path}', function ($path) {
     abort(404);
 })->where('path', '.*');
 
+// Owner Portal Routing (Serves the React SPA)
+Route::get('/owner', function () {
+    return view('app');
+});
+Route::get('/owner/{any}', function () {
+    return view('app');
+})->where('any', '.*');
+
 // React SPA storefront routing fallback (serves the React app for all frontend routes)
 Route::get('/', function () {
     return view('app');
