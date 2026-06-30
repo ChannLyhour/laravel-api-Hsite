@@ -22,6 +22,10 @@ Route::get('/admin/settings', function () {
     return view('admin.settings.index');
 })->name('admin.settings');
 
+Route::get('/admin', function () {
+    return redirect('/admin/login');
+});
+
 Route::get('/admin/login', function () {
     return view('admin.auth.login');
 });
