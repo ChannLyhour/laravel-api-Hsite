@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Platform Domain
+    |--------------------------------------------------------------------------
+    |
+    | The base domain used for auto-generating store subdomains.
+    | e.g., if set to "biteflow.com", store subdomains become "shopA.biteflow.com".
+    |
+    */
+
+    'platform_domain' => env('PLATFORM_DOMAIN', 'yourplatform.com'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

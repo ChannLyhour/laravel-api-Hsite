@@ -506,6 +506,190 @@ class StoreController extends Controller
     }
 
 
-    
-}
+    // ─── Domain Management ──────────────────────────────────────────────────────
 
+    /**
+     * Public: Resolve a domain to a store owner.
+     * GET /api/store/resolve-domain?domain=shopA.yourplatform.com
+     */
+    public function resolveDomain(Request $request)
+    {
+        $domain = strtolower(trim($request->query('domain', '')));
+
+        if (!$domain) {
+            return response()->json(['message' => 'Missing "domain" query parameter.'], 400);
+        }
+
+        $storeDomain = \App\Models\StoreDomain::where('domain', $domain)->first();
+        $ownerId = null;
+        $domainType = 'subdomain';
+        $isVerified = true;
+
+        if ($storeDomain) {
+            $ownerId = $storeDomain->owner_id;
+            $domainType = $storeDomain->type;
+            $isVerified = $storeDomain->is_verified;
+        } else {
+            $domainWithoutPort = $domain;
+            if (str_contains($domainWithoutPort, ':')) {
+                $domainWithoutPort = explode(':', $domainWithoutPort)[0];
+            }
+            // Fallback: check in key-value store (stores table) for custom_domain
+            $storeSetting = Store::where('key', 'custom_domain')
+                ->where(function($q) use ($domain, $domainWithoutPort) {
+                    $q->where('value', $domain)
+                      ->orWhere('value', $domainWithoutPort)
+                      ->orWhereRaw("REPLACE(value, ':3000', '') = ?", [$domainWithoutPort]);
+                })
+                ->first();
+            if ($storeSetting) {
+                $ownerId = $storeSetting->created_by;
+                $domainType = 'custom';
+                $isVerified = true;
+            }
+        }
+
+        if (!$ownerId) {
+            return response()->json(['found' => false, 'message' => 'No store found for this domain.'], 404);
+        }
+
+        $settings = Store::where('created_by', $ownerId)->get()->pluck('value', 'key');
+
+        return response()->json([
+            'found'          => true,
+            'owner_id'       => $ownerId,
+            'hashid'         => \Vinkla\Hashids\Facades\Hashids::encode($ownerId),
+            'store_name'     => $settings->get('store_name'),
+            'website_theme'  => $settings->get('website_theme', 'fashion_website'),
+            'logo_url'       => $settings->get('logo_url'),
+            'favicon_url'    => $settings->get('favicon_url'),
+            'currency'       => $settings->get('currency', 'USD'),
+            'store_email'    => $settings->get('store_email'),
+            'store_phone'    => $settings->get('store_phone'),
+            'store_address'  => $settings->get('store_address'),
+            'domain_type'    => $domainType,
+            'is_verified'    => $isVerified,
+        ]);
+    }
+
+    /**
+     * List all domains for the logged-in owner.
+     * GET /api/owner/stores/domains  [auth]
+     */
+    public function listDomains(Request $request)
+    {
+        $user = $request->user();
+        if (!in_array($user->role_id, [1, 2, 30003])) {
+            return response()->json(['detail' => 'Unauthorized.'], 403);
+        }
+
+        $ownerId = ($user->role_id == 1 && $request->filled('owner_id'))
+            ? $request->query('owner_id')
+            : $user->id;
+
+        $domains = \App\Models\StoreDomain::forOwner($ownerId);
+
+        return response()->json($domains);
+    }
+
+    /**
+     * Register a new domain for the logged-in owner.
+     * POST /api/owner/stores/domains  [auth]
+     */
+    public function addDomain(Request $request)
+    {
+        $user = $request->user();
+        if (!in_array($user->role_id, [1, 2, 30003])) {
+            return response()->json(['detail' => 'Unauthorized.'], 403);
+        }
+
+        $data = $request->validate([
+            'domain' => 'required|string|max:255|unique:store_domains,domain',
+            'type'   => 'nullable|string|in:subdomain,custom',
+        ]);
+
+        $ownerId = ($user->role_id == 1 && $request->filled('owner_id'))
+            ? $request->input('owner_id')
+            : $user->id;
+
+        $domain = \App\Models\StoreDomain::create([
+            'owner_id'    => $ownerId,
+            'domain'      => strtolower(trim($data['domain'])),
+            'type'        => $data['type'] ?? 'subdomain',
+            'is_verified' => ($data['type'] ?? 'subdomain') === 'subdomain', // Subdomains are auto-verified
+            'is_primary'  => !\App\Models\StoreDomain::where('owner_id', $ownerId)->exists(),
+        ]);
+
+        return response()->json($domain, 201);
+    }
+
+    /**
+     * Remove a domain belonging to the logged-in owner.
+     * DELETE /api/owner/stores/domains/{id}  [auth]
+     */
+    public function removeDomain(Request $request, $id)
+    {
+        $user = $request->user();
+        if (!in_array($user->role_id, [1, 2, 30003])) {
+            return response()->json(['detail' => 'Unauthorized.'], 403);
+        }
+
+        $domain = \App\Models\StoreDomain::findOrFail($id);
+
+        // Non-admin owners can only delete their own domains
+        if ($user->role_id != 1 && $domain->owner_id != $user->id) {
+            return response()->json(['detail' => 'You can only remove your own domains.'], 403);
+        }
+
+        $domain->delete();
+
+        return response()->json(['detail' => 'Domain removed successfully.']);
+    }
+
+    /**
+     * Quick-set a subdomain slug for the logged-in owner.
+     * POST /api/owner/stores/subdomain  [auth]
+     *
+     * Body: { "slug": "my-shop" }
+     * Result: Creates domain "my-shop.yourplatform.com" (platform domain from config)
+     */
+    public function setSubdomain(Request $request)
+    {
+        $user = $request->user();
+        if (!in_array($user->role_id, [1, 2, 30003])) {
+            return response()->json(['detail' => 'Unauthorized.'], 403);
+        }
+
+        $data = $request->validate([
+            'slug' => 'required|string|max:63|regex:/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/',
+        ]);
+
+        $platformDomain = config('app.platform_domain', 'yourplatform.com');
+        $fullDomain = strtolower($data['slug']) . '.' . $platformDomain;
+
+        $ownerId = ($user->role_id == 1 && $request->filled('owner_id'))
+            ? $request->input('owner_id')
+            : $user->id;
+
+        // Check if this subdomain is already taken by another owner
+        $existing = \App\Models\StoreDomain::where('domain', $fullDomain)->first();
+        if ($existing && $existing->owner_id != $ownerId) {
+            return response()->json(['detail' => 'This subdomain is already taken.'], 409);
+        }
+
+        // Upsert: update if owner already has a subdomain, otherwise create
+        $domain = \App\Models\StoreDomain::updateOrCreate(
+            ['owner_id' => $ownerId, 'type' => 'subdomain'],
+            [
+                'domain'      => $fullDomain,
+                'is_verified' => true,
+                'is_primary'  => !\App\Models\StoreDomain::where('owner_id', $ownerId)
+                    ->where('type', 'custom')
+                    ->where('is_primary', true)
+                    ->exists(),
+            ]
+        );
+
+        return response()->json($domain);
+    }
+}

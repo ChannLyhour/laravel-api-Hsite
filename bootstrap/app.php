@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'super-admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
             'owner' => \App\Http\Middleware\OwnerMiddleware::class,
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
+            'identify-store' => \App\Http\Middleware\IdentifyStore::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

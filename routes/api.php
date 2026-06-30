@@ -85,96 +85,100 @@ Route::post('/social-login', [AuthController::class, 'socialLogin']);
 // Telegram Bot Webhook
 Route::post('/telegram/webhook', [\App\Http\Controllers\Api\v1\TelegramWebhookController::class, 'handle']);
 
-// Users (Public)
-Route::get('/users/admins', [UserController::class, 'admins']);
+Route::get('/store/resolve-domain', [StoreController::class, 'resolveDomain']);
 
-// Categories (Public)
-Route::get('/categories', [CategoryController::class, 'index']);
-Route::get('/categories/{category_id}', [CategoryController::class, 'show'])->whereNumber('category_id');
+Route::middleware(['identify-store'])->group(function () {
+    // Users (Public)
+    Route::get('/users/admins', [UserController::class, 'admins']);
 
-// Brands (Public)
-Route::get('/brands', [BrandController::class, 'index']);
-Route::get('/brands/{id}', [BrandController::class, 'show'])->whereNumber('id');
+    // Categories (Public)
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/categories/{category_id}', [CategoryController::class, 'show'])->whereNumber('category_id');
 
-// Product Badges (Public)
-Route::get('/product-badges', [ProductBadgeController::class, 'index']);
-Route::get('/product-badges/{id}', [ProductBadgeController::class, 'show'])->whereNumber('id');
+    // Brands (Public)
+    Route::get('/brands', [BrandController::class, 'index']);
+    Route::get('/brands/{id}', [BrandController::class, 'show'])->whereNumber('id');
 
-// Products (Public)
-Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/top-selling', [ProductController::class, 'topSelling']);
-Route::get('/products/{id}', [ProductController::class, 'show'])->whereNumber('id');
-Route::get('/products/{id}/ratings', [ProductRatingController::class, 'index'])->whereNumber('id');
-Route::get('/attributes', [ProductAttributeController::class, 'index']);
+    // Product Badges (Public)
+    Route::get('/product-badges', [ProductBadgeController::class, 'index']);
+    Route::get('/product-badges/{id}', [ProductBadgeController::class, 'show'])->whereNumber('id');
 
-// Stores (Public)
-Route::get('/stores/owner/{owner_id}', [StoreController::class, 'showByOwner']);
+    // Products (Public)
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/products/top-selling', [ProductController::class, 'topSelling']);
+    Route::get('/products/{id}', [ProductController::class, 'show'])->whereNumber('id');
+    Route::get('/products/{id}/ratings', [ProductRatingController::class, 'index'])->whereNumber('id');
+    Route::get('/attributes', [ProductAttributeController::class, 'index']);
 
-// CMS - Pages & Posts (Public)
-Route::get('/pages', [CMSController::class, 'listPages']);
-Route::get('/pages/published', [CMSController::class, 'listPublishedPages']);
-Route::get('/pages/{identifier}', [CMSController::class, 'getPage']);
+    // Stores (Public)
+    Route::get('/stores/owner/{owner_id}', [StoreController::class, 'showByOwner']);
 
-Route::get('/posts', [CMSController::class, 'listPosts']);
-Route::get('/posts/published', [CMSController::class, 'listPublishedPosts']);
-Route::get('/posts/{identifier}', [CMSController::class, 'getPost']);
+    // CMS - Pages & Posts (Public)
+    Route::get('/pages', [CMSController::class, 'listPages']);
+    Route::get('/pages/published', [CMSController::class, 'listPublishedPages']);
+    Route::get('/pages/{identifier}', [CMSController::class, 'getPage']);
 
-// System Settings (Public)
-Route::get('/settings', [SettingController::class, 'getSettings']);
+    Route::get('/posts', [CMSController::class, 'listPosts']);
+    Route::get('/posts/published', [CMSController::class, 'listPublishedPosts']);
+    Route::get('/posts/{identifier}', [CMSController::class, 'getPost']);
 
-// Shared layout configurations (Public)
-Route::post('/save-share', [ShareController::class, 'save']);
-Route::get('/get-share/{id}', [ShareController::class, 'load']);
+    // System Settings (Public)
+    Route::get('/settings', [SettingController::class, 'getSettings']);
 
-// Social Media Links (Public)
-Route::get('/social-media', [SocialMediaController::class, 'index']);
+    // Shared layout configurations (Public)
+    Route::post('/save-share', [ShareController::class, 'save']);
+    Route::get('/get-share/{id}', [ShareController::class, 'load']);
 
-// Banners (Public)
-Route::get('/banners', [BannerController::class, 'index']);
-Route::get('/banners/{id}', [BannerController::class, 'show'])->whereNumber('id');
+    // Social Media Links (Public)
+    Route::get('/social-media', [SocialMediaController::class, 'index']);
 
-// Delivery Methods (Public)
-Route::get('/delivery-methods', [DeliveryMethodController::class, 'index']);
-Route::get('/delivery-methods/{id}', [DeliveryMethodController::class, 'show'])->whereNumber('id');
+    // Banners (Public)
+    Route::get('/banners', [BannerController::class, 'index']);
+    Route::get('/banners/{id}', [BannerController::class, 'show'])->whereNumber('id');
 
-// Vendors (Public)
-Route::get('/vendors', [VendorController::class, 'index']);
-Route::get('/vendors/{id}', [VendorController::class, 'show'])->whereNumber('id');
+    // Delivery Methods (Public)
+    Route::get('/delivery-methods', [DeliveryMethodController::class, 'index']);
+    Route::get('/delivery-methods/{id}', [DeliveryMethodController::class, 'show'])->whereNumber('id');
 
-// Coupons (Public)
-Route::get('/coupons', [CouponController::class, 'index']);
-Route::get('/coupons/validate', [CouponController::class, 'validateCode']);
-Route::get('/coupons/{id}', [CouponController::class, 'show'])->whereNumber('id');
+    // Vendors (Public)
+    Route::get('/vendors', [VendorController::class, 'index']);
+    Route::get('/vendors/{id}', [VendorController::class, 'show'])->whereNumber('id');
 
-// Flash Deals (Public)
-Route::get('/flash-deals', [FlashDealController::class, 'index']);
-Route::get('/flash-deals/{id}', [FlashDealController::class, 'show'])->whereNumber('id');
+    // Coupons (Public)
+    Route::get('/coupons', [CouponController::class, 'index']);
+    Route::get('/coupons/validate', [CouponController::class, 'validateCode']);
+    Route::get('/coupons/{id}', [CouponController::class, 'show'])->whereNumber('id');
 
-// Featured Deals (Public)
-Route::get('/featured-deals', [FeaturedDealController::class, 'index']);
-Route::get('/featured-deals/{id}', [FeaturedDealController::class, 'show'])->whereNumber('id');
+    // Flash Deals (Public)
+    Route::get('/flash-deals', [FlashDealController::class, 'index']);
+    Route::get('/flash-deals/{id}', [FlashDealController::class, 'show'])->whereNumber('id');
 
-// Clearance Sales (Public)
-Route::get('/clearance-sales', [ClearanceSaleController::class, 'index']);
-Route::get('/clearance-sales/{id}', [ClearanceSaleController::class, 'show'])->whereNumber('id');
+    // Featured Deals (Public)
+    Route::get('/featured-deals', [FeaturedDealController::class, 'index']);
+    Route::get('/featured-deals/{id}', [FeaturedDealController::class, 'show'])->whereNumber('id');
 
-// Temporary Food Items (Public)
-Route::get('/items', [FoodItemController::class, 'index']);
-Route::get('/items/{item_id}', [FoodItemController::class, 'show'])->whereNumber('item_id');
+    // Clearance Sales (Public)
+    Route::get('/clearance-sales', [ClearanceSaleController::class, 'index']);
+    Route::get('/clearance-sales/{id}', [ClearanceSaleController::class, 'show'])->whereNumber('id');
 
-// Order Placement (Public / Guest Checkout)
-Route::post('/orders', [OrderController::class, 'store']);
-Route::delete('/orders/{order_id}', [OrderController::class, 'destroy'])->whereNumber('order_id');
+    // Temporary Food Items (Public)
+    Route::get('/items', [FoodItemController::class, 'index']);
+    Route::get('/items/{item_id}', [FoodItemController::class, 'show'])->whereNumber('item_id');
 
-// ABA PayWay integration routes
-Route::post('/payments/generate-qr', [PaymentController::class, 'generateQr']);
-Route::post('/payments/check-transaction', [PaymentController::class, 'checkTransaction']);
+    // Order Placement (Public / Guest Checkout)
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::delete('/orders/{order_id}', [OrderController::class, 'destroy'])->whereNumber('order_id');
 
-// Paid Templates Routes (Public)
-Route::get('/templates', [TemplateController::class, 'index']);
-Route::get('/templates/{tpl_code}', [TemplateController::class, 'show']);
-Route::get('/templates/download/{token}', [TemplateController::class, 'download']);
-Route::get('/chat/messages/{id}/media', [ChatController::class, 'getMedia'])->whereNumber('id');
+    // ABA PayWay integration routes
+    Route::post('/payments/generate-qr', [PaymentController::class, 'generateQr']);
+    Route::post('/payments/check-transaction', [PaymentController::class, 'checkTransaction']);
+
+    // Paid Templates Routes (Public)
+    Route::get('/templates', [TemplateController::class, 'index']);
+    Route::get('/templates/{tpl_code}', [TemplateController::class, 'show']);
+    Route::get('/templates/download/{token}', [TemplateController::class, 'download']);
+    Route::get('/chat/messages/{id}/media', [ChatController::class, 'getMedia'])->whereNumber('id');
+});
 
 // =========================================================================
 //   PROTECTED API ROUTES (Sanctum)
@@ -325,6 +329,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/stores/upload-logo', [StoreController::class, 'uploadLogo']);
         Route::post('/stores/upload-favicon', [StoreController::class, 'uploadFavicon']);
         Route::get('/stores/payment-gateways', [StoreController::class, 'getPaymentGateways']);
+
+        // Store Domain Management
+        Route::get('/stores/domains', [StoreController::class, 'listDomains']);
+        Route::post('/stores/domains', [StoreController::class, 'addDomain']);
+        Route::delete('/stores/domains/{id}', [StoreController::class, 'removeDomain'])->whereNumber('id');
+        Route::post('/stores/subdomain', [StoreController::class, 'setSubdomain']);
 
         // CMS Configuration (Pages & Posts)
         Route::post('/pages', [CMSController::class, 'createPage']);

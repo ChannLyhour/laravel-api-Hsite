@@ -377,10 +377,11 @@ class ProductController extends Controller
         $user = $request->user();
         $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
 
+        $createdBy = $request->get('current_store_owner_id') ?? $request->query('created_by');
+
         if ($user && $user->role_id != 1) {
             $query->where('created_by', $user->id);
         } else {
-            $createdBy = $request->query('created_by');
             if ($createdBy !== null) {
                 $query->where('created_by', $createdBy);
             }
@@ -398,7 +399,7 @@ class ProductController extends Controller
     public function topSelling(Request $request)
     {
         $limit = $request->query('limit', 3);
-        $createdBy = $request->query('created_by');
+        $createdBy = $request->get('current_store_owner_id') ?? $request->query('created_by');
 
         $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
         if ($createdBy !== null) {

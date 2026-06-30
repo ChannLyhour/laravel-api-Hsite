@@ -13,7 +13,7 @@ class BrandController extends Controller
     {
         $skip = $request->query('skip', 0);
         $limit = $request->query('limit', 100);
-        $createdBy = $request->query('created_by');
+        $createdBy = $request->get('current_store_owner_id') ?? $request->query('created_by');
 
         $query = Brand::where('status', true)->withCount('products');
 
