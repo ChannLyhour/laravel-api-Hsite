@@ -630,10 +630,10 @@ class StoreController extends Controller
             }
             
             // Fallback 1.5: If still not found, check if the queried domain is a subdomain format (e.g., our20s.lvh.me)
-            // and the custom_domain setting is stored as just the prefix/slug (e.g. "our20s")
+            // and the custom_domain setting is stored as just the prefix/slug (e.g. "our20s") or with suffix.
             if (!$ownerId) {
                 $subdomainSlug = null;
-                $platforms = ['lvh.me', 'vhsite-storefront.vercel.app', 'vhsite.com', 'yourplatform.com', config('app.platform_domain')];
+                $platforms = ['lvh.me', 'store-frontend-v-hsite.vercel.app', 'vhsite-storefront.vercel.app', 'vhsite.com', 'yourplatform.com', config('app.platform_domain')];
                 foreach ($platforms as $plat) {
                     if ($plat && str_ends_with($domainWithoutPort, '.' . $plat)) {
                         $subdomainSlug = str_replace('.' . $plat, '', $domainWithoutPort);
@@ -642,7 +642,11 @@ class StoreController extends Controller
                 }
                 if ($subdomainSlug) {
                     $storeSetting = Store::where('key', 'custom_domain')
-                        ->where('value', $subdomainSlug)
+                        ->where(function($q) use ($subdomainSlug) {
+                            $q->where('value', $subdomainSlug)
+                              ->orWhere('value', $subdomainSlug . '.lvh.me')
+                              ->orWhere('value', $subdomainSlug . '.store-frontend-v-hsite.vercel.app');
+                        })
                         ->first();
                     if ($storeSetting) {
                         $ownerId = $storeSetting->created_by;
