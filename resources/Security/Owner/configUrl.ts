@@ -83,17 +83,22 @@ export function getStoreUrl(
             domain = `http://${domain}`;
           }
 
-          // Automatically append port :3000 for local development if not specified
-          const hasPort = domain.replace("://", "").includes(":");
           const isLocal =
             typeof window !== "undefined" &&
             (window.location.hostname === "localhost" ||
               window.location.hostname === "127.0.0.1" ||
               window.location.hostname.endsWith(".lvh.me"));
 
-          if (isLocal) {
-            if (domain.includes(".lvh.me") && !hasPort) {
-              domain = `${domain}:3000`;
+          if (isLocal && typeof window !== "undefined") {
+            try {
+              const currentPort = window.location.port;
+              if (currentPort) {
+                const urlObj = new URL(domain);
+                urlObj.port = currentPort;
+                domain = urlObj.toString().replace(/\/$/, "");
+              }
+            } catch (e) {
+              console.warn("Failed to parse custom domain URL", e);
             }
           } else {
             // In production, rewrite .lvh.me domains to path-based URL on Vercel
