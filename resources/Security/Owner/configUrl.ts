@@ -70,12 +70,15 @@ export function getStoreUrl(
               typeof window !== "undefined" &&
               (window.location.hostname === "localhost" ||
                 window.location.hostname === "127.0.0.1" ||
+                window.location.hostname.startsWith("192.168.") ||
+                window.location.hostname.startsWith("10.") ||
                 window.location.hostname.endsWith(".lvh.me"));
             if (isLocal) {
               domain = `${domain}.lvh.me`;
             } else {
               // Use pathname-based URL for free vercel.app hosting
-              domain = `vhsite.vercel.app/${domain}`;
+              const baseHost = typeof window !== "undefined" ? window.location.host : "vhsite.vercel.app";
+              domain = `${baseHost}/${domain}`;
             }
           }
 
@@ -87,6 +90,8 @@ export function getStoreUrl(
             typeof window !== "undefined" &&
             (window.location.hostname === "localhost" ||
               window.location.hostname === "127.0.0.1" ||
+              window.location.hostname.startsWith("192.168.") ||
+              window.location.hostname.startsWith("10.") ||
               window.location.hostname.endsWith(".lvh.me"));
 
           if (isLocal && typeof window !== "undefined") {
@@ -110,7 +115,8 @@ export function getStoreUrl(
               if (slug.includes(":")) {
                 slug = slug.split(":")[0];
               }
-              domain = `https://laravel-api-hsite.vercel.app/${slug}`;
+              const baseOrigin = typeof window !== "undefined" ? window.location.origin : "https://laravel-api-hsite.vercel.app";
+              domain = `${baseOrigin}/${slug}`;
             } else {
               if (domain.startsWith("http://")) {
                 domain = domain.replace("http://", "https://");

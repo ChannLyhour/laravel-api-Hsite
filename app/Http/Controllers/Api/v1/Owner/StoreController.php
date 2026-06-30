@@ -187,11 +187,11 @@ class StoreController extends Controller
             if ($domainVal) {
                 $type = 'custom';
                 $platformDomain = config('app.platform_domain', 'yourplatform.com');
-                
+
                 if (!str_contains($domainVal, '.') || str_ends_with($domainVal, '.' . $platformDomain) || str_ends_with($domainVal, '.lvh.me') || str_ends_with($domainVal, '.vercel.app')) {
                     $type = 'subdomain';
                 }
-                
+
                 $fullDomain = $domainVal;
                 if ($type === 'subdomain' && !str_contains($domainVal, '.')) {
                     $fullDomain = $domainVal . '.' . $platformDomain;
@@ -658,15 +658,15 @@ class StoreController extends Controller
             $storeSetting = Store::where(function ($query) use ($domainPathSlug) {
                 $query->where(function ($q) use ($domainPathSlug) {
                     $q->where('key', 'custom_domain')
-                      ->where(function ($sq) use ($domainPathSlug) {
-                          $sq->where('value', $domainPathSlug)
-                            ->orWhere('value', $domainPathSlug . '.lvh.me')
-                            ->orWhereRaw("REPLACE(value, ':3000', '') = ?", [$domainPathSlug])
-                            ->orWhereRaw("REPLACE(value, ':8000', '') = ?", [$domainPathSlug]);
-                      });
+                        ->where(function ($sq) use ($domainPathSlug) {
+                            $sq->where('value', $domainPathSlug)
+                                ->orWhere('value', $domainPathSlug . '.lvh.me')
+                                ->orWhereRaw("REPLACE(value, ':3000', '') = ?", [$domainPathSlug])
+                                ->orWhereRaw("REPLACE(value, ':8000', '') = ?", [$domainPathSlug]);
+                        });
                 })->orWhere(function ($q) use ($domainPathSlug) {
                     $q->where('key', 'store_name')
-                      ->whereRaw("LOWER(REPLACE(value, ' ', '_')) = ?", [$domainPathSlug]);
+                        ->whereRaw("LOWER(REPLACE(value, ' ', '_')) = ?", [$domainPathSlug]);
                 });
             })->first();
 
