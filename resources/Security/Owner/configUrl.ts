@@ -125,8 +125,7 @@ export function getStoreUrl(
 
   const slug = slugifyStoreName(storeName);
   if (!slug) return "/";
-  const idParam = ownerId ? `id=${ownerId}&` : "";
-  return `/?${idParam}store=${slug}`;
+  return `/${slug}`;
 }
 
 /**
@@ -138,8 +137,7 @@ export function getStoreMenuUrl(
 ): string {
   const slug = slugifyStoreName(storeName);
   if (!slug) return "/menu";
-  const idParam = ownerId ? `id=${ownerId}&` : "";
-  return `/menu?${idParam}store=${slug}`;
+  return `/${slug}/menu`;
 }
 
 /**
