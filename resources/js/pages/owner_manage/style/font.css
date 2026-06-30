@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Kontomruy+Pro:ital,wght@0,100..700;1,100..700&display=swap');
+
+.font-kuntomruy {
+  font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+/* ── Heading colors (Page & Section level) ────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--dashboard-h2-color, #1e293b);
+  transition: color 0.3s ease;
+}
+
+/* ── Content Card Container Customization ─────────────────────────────────── */
+.custom-card-container {
+  background-color: var(--dashboard-card-bg, #ffffff) !important;
+  border-color: var(--dashboard-card-border, #e2e8f0) !important;
+  color: var(--dashboard-card-text, #334155) !important;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure child borders and cells align to custom border colors */
+.custom-card-container td,
+.custom-card-container th,
+.custom-card-container div,
+.custom-card-container p,
+.custom-card-container span,
+.custom-card-container select,
+.custom-card-container option,
+.custom-card-container input,
+.custom-card-container table,
+.custom-card-container tr {
+  border-color: var(--dashboard-card-border, #e2e8f0) !important;
+}
+
+/* Ensure inputs, textareas, and selects blend with custom background themes */
+.custom-card-container select,
+.custom-card-container input,
+.custom-card-container textarea {
+  background-color: color-mix(in srgb, var(--dashboard-card-text, #334155) 4%, var(--dashboard-card-bg, #ffffff)) !important;
+  color: var(--dashboard-card-text, #334155) !important;
+}
+
+/* Automatically calculate Table Header bg using color-mix */
+.custom-card-container th {
+  background-color: color-mix(in srgb, var(--dashboard-card-text, #334155) 5%, var(--dashboard-card-bg, #ffffff)) !important;
+  color: color-mix(in srgb, var(--dashboard-card-text, #334155) 75%, transparent) !important;
+}
+
+/* Custom Card Container Headings override */
+.custom-card-container h1,
+.custom-card-container h2,
+.custom-card-container h3,
+.custom-card-container h4,
+.custom-card-container h5,
+.custom-card-container h6 {
+  color: var(--dashboard-card-text, #1e293b) !important;
+}
+
+/* Override Tailwind dark color classes inside Custom Card Container */
+.custom-card-container [class*="text-slate-900"],
+.custom-card-container [class*="text-slate-800"],
+.custom-card-container [class*="text-slate-700"],
+.custom-card-container [class*="text-slate-650"],
+.custom-card-container [class*="text-slate-600"] {
+  color: var(--dashboard-card-text, #334155) !important;
+}
+
+/* Override Tailwind muted color classes inside Custom Card Container */
+.custom-card-container [class*="text-slate-500"],
+.custom-card-container [class*="text-slate-450"],
+.custom-card-container [class*="text-slate-400"] {
+  color: color-mix(in srgb, var(--dashboard-card-text, #334155) 60%, transparent) !important;
+}
+
+/* Override Tailwind hover and select backgrounds inside custom card containers to blend */
+.custom-card-container [class*="hover:bg-slate-"],
+.custom-card-container [class*="hover:bg-indigo-50"],
+.custom-card-container [class*="hover:bg-stone-"],
+.custom-card-container [class*="hover:bg-gray-"],
+.custom-card-container [class*="hover:bg-white"] {
+  background-color: color-mix(in srgb, var(--dashboard-card-text, #334155) 8%, transparent) !important;
+}
+
+.custom-card-container [class*="bg-slate-50"],
+.custom-card-container [class*="bg-stone-50"],
+.custom-card-container [class*="bg-slate-100"] {
+  background-color: color-mix(in srgb, var(--dashboard-card-text, #334155) 4%, transparent) !important;
+}
+
+/* Sub-header background bar inside table cards */
+.custom-card-header-bar {
+  background: linear-gradient(to right, color-mix(in srgb, var(--dashboard-card-text, #334155) 5%, var(--dashboard-card-bg, #ffffff)), var(--dashboard-card-bg, #ffffff)) !important;
+  border-bottom-width: 1px !important;
+  border-bottom-style: solid !important;
+  border-color: var(--dashboard-card-border, #e2e8f0) !important;
+}
+
+/* ── Top Header Customization ────────────────────────────────────────────── */
+.custom-header-container {
+  background-color: var(--dashboard-header-bg, #ffffff) !important;
+  border-color: var(--dashboard-header-border, #e2e8f0) !important;
+  color: var(--dashboard-header-text, #334155) !important;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure breadcrumbs, icons, buttons inside header adjust color */
+.custom-header-container div,
+.custom-header-container p,
+.custom-header-container span,
+.custom-header-container nav,
+.custom-header-container button,
+.custom-header-container a,
+.custom-header-container input,
+.custom-header-container svg {
+  border-color: var(--dashboard-header-border, #e2e8f0) !important;
+}
+
+/* Header Text / Muted elements */
+.custom-header-container [class*="text-slate-900"],
+.custom-header-container [class*="text-slate-800"],
+.custom-header-container [class*="text-slate-700"],
+.custom-header-container [class*="text-slate-600"] {
+  color: var(--dashboard-header-text, #334155) !important;
+}
+
+.custom-header-container [class*="text-slate-500"],
+.custom-header-container [class*="text-slate-400"] {
+  color: color-mix(in srgb, var(--dashboard-header-text, #334155) 60%, transparent) !important;
+}
+
+/* Ensure child hover backgrounds inside the header blend nicely */
+.custom-header-container [class*="hover:bg-slate-"],
+.custom-header-container [class*="hover:bg-gray-"] {
+  background-color: color-mix(in srgb, var(--dashboard-header-text, #334155) 8%, transparent) !important;
+}

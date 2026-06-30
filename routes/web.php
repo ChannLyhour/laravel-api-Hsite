@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+Route::get('/admin/dashboard', function () {
     return view('admin.index');
 })->name('admin.dashboard');
 
@@ -28,7 +28,8 @@ Route::get('/admin/login', function () {
 
 Route::get('/admin/{module}', function ($module) {
     $validModules = ['orders', 'products', 'health'];
-    if (!in_array($module, $validModules)) abort(404);
+    if (!in_array($module, $validModules))
+        abort(404);
     return view('admin.manager', ['module' => $module]);
 })->name('admin.module');
 
@@ -89,3 +90,11 @@ Route::get('/uploads/{path}', function ($path) {
 
     abort(404);
 })->where('path', '.*');
+
+// React SPA storefront routing fallback (serves the React app for all frontend routes)
+Route::get('/', function () {
+    return view('app');
+});
+Route::get('/{any}', function () {
+    return view('app');
+})->where('any', '^(?!api|admin|uploads|static).*$');

@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./resources/js/*"],
+      "@Security/*": ["./resources/Security/*"]
+    },
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "strict": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "resources/js/**/*.ts",
+    "resources/js/**/*.tsx",
+    "resources/Security/**/*.ts"
+  ]
+}

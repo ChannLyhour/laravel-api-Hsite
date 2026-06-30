@@ -1,0 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand Typography */
+  --font-sans: 'Outfit', 'Kantumruy Pro', sans-serif;
+  --font-kontomruy: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif;
+
+  /* Brand Colors */
+  --color-primary: #ff6b35;
+  --color-primary-hover: #e0531f;
+  --color-accent: #ff6b35;
+
+  /* High-End Micro-Animations */
+  --animate-fade-in: fade-in 0.5s ease-out forwards;
+  --animate-slide-up: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-infinite-scroll-x: infinite-scroll-x 60s linear infinite;
+
+  @keyframes infinite-scroll-x {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  --animate-slide-in-right: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+/* ========================================================================= */
+/* ── PREMIUM BASE ELEMENTS & GLOBAL SCROLLING ───────────────────────────── */
+/* ========================================================================= */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #020617;
+  color: #cbd5e1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Premium custom scrollbar to match our brand styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 100px;
+  border: 2px solid #020617;
+  transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
+}
+
+/* Custom scrollbar utility for specific containers like tables */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ff6b35;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Additional Scrollbar Utilities */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* High-end custom text selection colors */
+::selection {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+/* ========================================================================= */
+/* ── CUSTOM COMPONENT UTILITIES ─────────────────────────────────────────── */
+/* ========================================================================= */
+
+/* Premium realistic product shadows */
+.food-shadow {
+  box-shadow: 0 12px 30px -10px rgba(15, 23, 42, 0.04),
+    0 4px 12px -5px rgba(15, 23, 42, 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.food-shadow:hover {
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08),
+    0 0 50px -5px rgba(255, 107, 53, 0.03);
+}
+
+/* Beautiful custom checkbox using the check-btn class */
+input[type="checkbox"].check-btn {
+  appearance: none;
+  background-color: #fff;
+  margin: 0;
+  font: inherit;
+  color: currentColor;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 0.375rem;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+input[type="checkbox"].check-btn::before {
+  content: "";
+  width: 0.65rem;
+  height: 0.65rem;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em #ff6b35;
+  transform-origin: center;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+input[type="checkbox"].check-btn:checked {
+  border-color: #ff6b35;
+  background-color: rgba(255, 107, 53, 0.05);
+}
+
+input[type="checkbox"].check-btn:checked::before {
+  transform: scale(1);
+}
+
+input[type="checkbox"].check-btn:focus-visible {
+  outline: 2px solid rgba(255, 107, 53, 0.3);
+  outline-offset: 2px;
+}
+
+/* Reusable premium utility button styles */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 10px;
+  background-color: #ff6b35;
+  color: white;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px -1px rgba(255, 107, 53, 0.1), 0 2px 4px -2px rgba(255, 107, 53, 0.1);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #e0531f;
+  box-shadow: 0 10px 15px -3px rgba(255, 107, 53, 0.2), 0 4px 6px -4px rgba(255, 107, 53, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ── Pin banner animations ───────────────────────────── */
+@keyframes pin-bounce {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(-25deg) scale(1.25); }
+  45%  { transform: rotate(18deg) scale(1.15); }
+  65%  { transform: rotate(-10deg) scale(1.05); }
+  80%  { transform: rotate(5deg) scale(1.02); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.animate-pin-bounce {
+  animation: pin-bounce 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes msg-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(255,107,53,0); background-color: transparent; }
+  30%  { box-shadow: 0 0 0 6px rgba(255,107,53,0.18); background-color: rgba(255,107,53,0.08); }
+  70%  { box-shadow: 0 0 0 3px rgba(255,107,53,0.08); background-color: rgba(255,107,53,0.04); }
+  100% { box-shadow: 0 0 0 0 rgba(255,107,53,0); background-color: transparent; }
+}
+
+.animate-msg-flash {
+  animation: msg-flash 1s ease-out forwards;
+  border-radius: 12px;
+}

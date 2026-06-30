@@ -32,7 +32,7 @@
             </div>
         </div>
         <nav class="flex-1 px-4 space-y-1">
-            <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 sidebar-link">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 sidebar-link">
                 <i class="fa-solid fa-grid-2"></i> Dashboard
             </a>
             <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium {{ $module == 'users' ? 'bg-indigo-600 text-white' : 'text-slate-400 sidebar-link' }}">

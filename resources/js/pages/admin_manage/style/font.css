@@ -1,0 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Kontomruy+Pro:ital,wght@0,100..700;1,100..700&display=swap');
+
+.font-kuntomruy {
+  font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', 'Inter', system-ui, -apple-system, sans-serif !important;
+}

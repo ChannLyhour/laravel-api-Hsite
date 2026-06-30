@@ -1,0 +1,510 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  FiUser, 
+  FiLoader, 
+  FiUploadCloud, 
+  FiTrash2, 
+  FiEye, 
+  FiEyeOff, 
+  FiSave, 
+  FiMapPin, 
+  FiMail, 
+  FiPhone,
+  FiLock
+} from 'react-icons/fi';
+import { toast } from '@/pages/owner_manage/utils/toast';
+import { authService } from '@/api/auth';
+import { resolveImageUrl } from '@/api/imageUtils';
+import '@/pages/owner_manage/style/font.css';
+
+interface ProfileOwnerTabProps {
+  profile: any;
+  onProfileUpdate: () => void;
+}
+
+export const ProfileOwnerTab: React.FC<ProfileOwnerTabProps> = ({ profile, onProfileUpdate }) => {
+  const [saving, setSaving] = useState(false);
+
+  // Profile Form States
+  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [gender, setGender] = useState('male');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [country, setCountry] = useState('');
+
+  // Password Update States
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Avatar/Image Upload States
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [avatarError, setAvatarError] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize fields on profile load
+  useEffect(() => {
+    if (profile?.user) {
+      const u = profile.user;
+      setName(u.name || '');
+      setFirstName(u.first_name || '');
+      setLastName(u.last_name || '');
+      setGender(u.gender || 'male');
+      setEmail(u.email || '');
+      setPhone(u.phone || '');
+      setAddress(u.address || '');
+      setCity(u.city || '');
+      setState(u.state || '');
+      setCountry(u.country || '');
+      setAvatarPreview(u.image_url ? resolveImageUrl(u.image_url) : '');
+      setAvatarError(false);
+    }
+  }, [profile]);
+
+  // Handle Avatar Change
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Avatar image size must be under 2MB.');
+      return;
+    }
+
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    setAvatarError(false);
+  };
+
+  // Handle Avatar Removal
+  const handleRemoveAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Revert Form Changes
+  const handleDiscardChanges = () => {
+    if (profile?.user) {
+      const u = profile.user;
+      setName(u.name || '');
+      setFirstName(u.first_name || '');
+      setLastName(u.last_name || '');
+      setGender(u.gender || 'male');
+      setEmail(u.email || '');
+      setPhone(u.phone || '');
+      setAddress(u.address || '');
+      setCity(u.city || '');
+      setState(u.state || '');
+      setCountry(u.country || '');
+      setAvatarFile(null);
+      setAvatarPreview(u.image_url ? resolveImageUrl(u.image_url) : '');
+      setPassword('');
+      setConfirmPassword('');
+      setAvatarError(false);
+      toast.success('Changes discarded. Form reset to server values.');
+    }
+  };
+
+  // Form Submit Action
+  const handleSaveChanges = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim()) {
+      toast.error('Store Name / Display Name is required.');
+      return;
+    }
+
+    if (!email.trim()) {
+      toast.error('Email is required.');
+      return;
+    }
+
+    // Password validations if filled
+    if (password) {
+      if (password.length < 6) {
+        toast.error('New password must be at least 6 characters long.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        toast.error('New password and confirm password fields must match.');
+        return;
+      }
+    }
+
+    setSaving(true);
+    const formData = new FormData();
+    formData.append('name', name.trim());
+    formData.append('first_name', firstName.trim());
+    formData.append('last_name', lastName.trim());
+    formData.append('gender', gender);
+    formData.append('email', email.trim());
+    formData.append('phone', phone.trim());
+    formData.append('address', address.trim());
+    formData.append('city', city.trim());
+    formData.append('state', state.trim());
+    formData.append('country', country.trim());
+
+    if (password) {
+      formData.append('password', password);
+    }
+
+    if (avatarFile) {
+      formData.append('image', avatarFile);
+    } else if (!avatarPreview) {
+      // If user cleared avatar, send empty string to indicate removal
+      formData.append('image', '');
+    }
+
+    try {
+      const res = await authService.updateProfile(formData);
+      if (res.success) {
+        toast.success(res.message || 'Owner profile updated successfully!');
+        // Reset password fields
+        setPassword('');
+        setConfirmPassword('');
+        setAvatarFile(null);
+        // Call callback to refresh state in parent layout
+        onProfileUpdate();
+      } else {
+        toast.error(res.message || 'Failed to update owner profile.');
+      }
+    } catch (err: any) {
+      console.error('Profile update error:', err);
+      const msg = err?.details?.message || err?.message || 'An error occurred while saving profile changes.';
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="border p-6 sm:p-8 rounded-[5px] shadow-xs space-y-8 animate-fade-in font-kuntomruy custom-card-container">
+      <div>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
+          <FiUser className="text-orange-500" />
+          <span>Owner Profile Management</span>
+        </h2>
+        <p className="text-slate-400 text-xs sm:text-sm mt-1">
+          Manage your personal details, contact coordinates, change your account password, and update your profile picture.
+        </p>
+      </div>
+
+      <form onSubmit={handleSaveChanges} className="space-y-8">
+        
+        {/* Section 1: Avatar Upload */}
+        <div className="border-b border-slate-100 pb-6 space-y-4">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Avatar Picture</h4>
+          <div className="flex items-start space-x-6">
+            
+            {/* Avatar Preview Container */}
+            <div className="w-24 h-24 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 relative group">
+              {avatarPreview && !avatarError ? (
+                <img
+                  src={avatarPreview}
+                  alt="Owner Avatar"
+                  className="w-full h-full object-cover"
+                  onError={() => setAvatarError(true)}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-slate-300">
+                  <FiUser className="w-10 h-10 stroke-[1.5]" />
+                </div>
+              )}
+              {saving && (
+                <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
+                  <FiLoader className="w-5 h-5 text-orange-500 animate-spin" />
+                </div>
+              )}
+            </div>
+
+            {/* Upload Buttons and Metadata */}
+            <div className="space-y-2 mt-2">
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-[5px] text-xs font-extrabold flex items-center space-x-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-98 cursor-pointer border-none"
+                  disabled={saving}
+                >
+                  <FiUploadCloud className="w-4 h-4" />
+                  <span>Choose Avatar</span>
+                </button>
+                {avatarPreview && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    className="p-2 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-[5px] border border-slate-200 hover:border-rose-100 transition-all cursor-pointer"
+                    title="Remove Avatar"
+                    disabled={saving}
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                PNG, JPG, WebP. Recommended: 300x300px square. Maximum file size: 2MB.
+              </p>
+            </div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarChange}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
+        </div>
+
+        {/* Section 2: General Profile Info */}
+        <div className="border-b border-slate-100 pb-6 space-y-4">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Personal Details</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            
+            {/* Display / Store Name */}
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block">Display Name / Company Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. John's Pizzeria"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+                required
+              />
+            </div>
+
+            {/* First Name */}
+            <div className="space-y-1.5">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block">First Name</label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First Name"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+              />
+            </div>
+
+            {/* Last Name */}
+            <div className="space-y-1.5">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block">Last Name</label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last Name"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+              />
+            </div>
+
+            {/* Gender Select */}
+            <div className="space-y-1.5">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block">Gender</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-[5px] text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 bg-white"
+              >
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+
+            {/* Email Address */}
+            <div className="space-y-1.5">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block flex items-center space-x-1">
+                <FiMail className="text-slate-400" />
+                <span>Authorized Email Contact</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="owner@domain.com"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Contact Details & Location */}
+        <div className="border-b border-slate-100 pb-6 space-y-4">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Contact & Location</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            
+            {/* Phone Number */}
+            <div className="space-y-1.5">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block flex items-center space-x-1">
+                <FiPhone className="text-slate-400" />
+                <span>Phone Number</span>
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+855 12 345 678"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+              />
+            </div>
+
+            {/* City */}
+            <div className="space-y-1.5">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block">City</label>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Phnom Penh"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+              />
+            </div>
+
+            {/* State / Region */}
+            <div className="space-y-1.5">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block">State / Province / Region</label>
+              <input
+                type="text"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                placeholder="Phnom Penh"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+              />
+            </div>
+
+            {/* Country */}
+            <div className="space-y-1.5">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block">Country</label>
+              <input
+                type="text"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                placeholder="Cambodia"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+              />
+            </div>
+
+            {/* Address */}
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="text-xs sm:text-sm font-bold text-slate-700 block flex items-center space-x-1">
+                <FiMapPin className="text-slate-400" />
+                <span>Physical Address</span>
+              </label>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="No. 123, St 456, Boeung Keng Kang"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Security (Password Modification) */}
+        <div className="pb-4 space-y-4">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Security Credentials</h4>
+          <div className="bg-slate-50 border border-slate-200/80 p-5 rounded-[5px] space-y-5">
+            <div className="flex items-start space-x-3 text-slate-500">
+              <FiLock className="w-5 h-5 mt-0.5 text-orange-500 shrink-0" />
+              <div className="text-xs leading-relaxed">
+                <strong className="text-slate-800 font-bold">Update Account Password</strong>
+                <p className="text-slate-400 mt-0.5">
+                  To keep your current password, simply leave both fields below blank. If you wish to change it, fill in both inputs.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-1">
+              
+              {/* New Password */}
+              <div className="space-y-1.5 relative">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 block">New Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Min. 6 characters"
+                    className="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer p-1"
+                  >
+                    {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-1.5 relative">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Confirm New Password</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat new password"
+                    className="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer p-1"
+                  >
+                    {showConfirmPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Actions */}
+        <div className="pt-6 border-t border-slate-100 flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={handleDiscardChanges}
+            className="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[5px] text-xs font-extrabold transition-all cursor-pointer border-none"
+            disabled={saving}
+          >
+            Discard Changes
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-[5px] text-xs font-extrabold shadow-xs active:scale-98 transition-all cursor-pointer flex items-center space-x-1.5 border-none"
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <FiLoader className="w-4 h-4 animate-spin" />
+                <span>Saving Profile...</span>
+              </>
+            ) : (
+              <>
+                <FiSave className="w-4 h-4" />
+                <span>Save Profile Updates</span>
+              </>
+            )}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  );
+};
