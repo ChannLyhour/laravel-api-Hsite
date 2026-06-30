@@ -110,7 +110,7 @@ export function getStoreUrl(
               if (slug.includes(":")) {
                 slug = slug.split(":")[0];
               }
-              domain = `https://vhsite.vercel.app/${slug}`;
+              domain = `https://laravel-api-hsite.vercel.app/${slug}`;
             } else {
               if (domain.startsWith("http://")) {
                 domain = domain.replace("http://", "https://");
