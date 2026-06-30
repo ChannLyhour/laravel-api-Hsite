@@ -155,35 +155,10 @@ function App() {
     localStorage.setItem('selected_owner_id', String(id));
   };
 
-  const [resolvedStores, setResolvedStores] = useState<Record<string, number | string> | null>(null);
 
-  // Fetch all admin/store owners once on mount to build the slug mapping
-  useEffect(() => {
-    const fetchAllStores = async () => {
-      try {
-        const adminUsers = await getAdminUsers();
-        const mapping: Record<string, number | string> = {};
-        await Promise.all(
-          adminUsers.map(async (user) => {
-            try {
-              const storeSettings = await storesService.getStoreByOwner(user.id);
-              const storeName = storeSettings?.store_name || user.name || `Store #${user.id}`;
-              const slug = storeName.replace(/\s+/g, '_');
-              mapping[slug.toLowerCase()] = storeSettings?.hashid || user.id;
-            } catch (err) {
-              const slug = (user.name || `Store #${user.id}`).replace(/\s+/g, '_');
-              mapping[slug.toLowerCase()] = user.id;
-            }
-          })
-        );
-        setResolvedStores(mapping);
-      } catch (err) {
-        console.error('Failed to load store/owner mapping:', err);
-        setResolvedStores({}); // Fallback to empty to avoid blocking the UI
-      }
-    };
-    fetchAllStores();
-  }, []);
+
+  const [resolvedStores, setResolvedStores] = useState<Record<string, { id: number | string; name: string }>>({});
+  const [isResolvingStore, setIsResolvingStore] = useState(false);
 
   // Synchronize path and store mapping updates to resolve the ownerUserId and storeName
   useEffect(() => {
@@ -241,30 +216,57 @@ function App() {
       return;
     }
 
-    // Priority 2: Clean URL Slug resolution
+    // Priority 2: Clean URL Slug resolution (On-demand lookup via resolveDomain)
     const storeRoute = parseStorePath(currentPath);
     if (storeRoute) {
-      if (resolvedStores === null) {
-        // Wait until resolvedStores mapping has finished loading
+      const slugLower = storeRoute.storeSlug.toLowerCase();
+      
+      // Check if store is already cached in memory
+      if (resolvedStores[slugLower]) {
+        const cached = resolvedStores[slugLower];
+        setOwnerUserIdState(cached.id);
+        setStoreNameState(cached.name);
+        setHasOwnerParam(true);
         return;
       }
 
-      const ownerId = (resolvedStores || {})[storeRoute.storeSlug.toLowerCase()];
-      
-      // Check if ownerId exists and is NOT the super admin (owner ID 1)
-      if (ownerId && String(ownerId) !== '1' && storeRoute.storeSlug.toLowerCase() !== 'super_admin') {
-        setOwnerUserIdState(ownerId);
-        setStoreNameState(deslugifyStoreName(storeRoute.storeSlug));
-        setHasOwnerParam(true);
-      } else {
-        // INVALID STORE SLUG - protect the route by redirecting to the main website home page
-        window.history.replaceState(null, '', '/');
-        setCurrentPath('/');
-        setHasOwnerParam(false);
-        setOwnerUserIdState(OWNER_USER_ID);
-      }
+      // If already fetching, wait
+      if (isResolvingStore) return;
+
+      const resolveStoreSlug = async () => {
+        try {
+          setIsResolvingStore(true);
+          const hostname = window.location.host;
+          // Query backend to resolve path-based store info
+          const res = await client.get<any>(`/store/resolve-domain?domain=${hostname}/${storeRoute.storeSlug}`);
+          if (res && res.found && res.hashid) {
+            setResolvedStores(prev => ({
+              ...prev,
+              [slugLower]: { id: res.hashid, name: res.store_name }
+            }));
+            setOwnerUserIdState(res.hashid);
+            setStoreNameState(res.store_name);
+            setHasOwnerParam(true);
+          } else {
+            // Store not found
+            window.history.replaceState(null, '', '/');
+            setCurrentPath('/');
+            setHasOwnerParam(false);
+            setOwnerUserIdState(OWNER_USER_ID);
+          }
+        } catch (err) {
+          console.warn('Failed to resolve store slug on-demand', err);
+          window.history.replaceState(null, '', '/');
+          setCurrentPath('/');
+          setHasOwnerParam(false);
+          setOwnerUserIdState(OWNER_USER_ID);
+        } finally {
+          setIsResolvingStore(false);
+        }
+      };
+      resolveStoreSlug();
     }
-  }, [currentPath, resolvedStores, adminProfile, ownerUserId, storeInfo]);
+  }, [currentPath, resolvedStores, isResolvingStore, adminProfile, ownerUserId, storeInfo]);
 
   // Sync state with browser back/forward buttons
   useEffect(() => {
@@ -883,7 +885,6 @@ function App() {
   }, [ownerUserId, storeName, storeInfo, currentPath]);
 
   const storeRouteInfo = parseStorePath(currentPath);
-  const isResolvingStore = storeRouteInfo && Object.keys(resolvedStores || {}).length === 0;
 
   if (isLoadingShared) {
     return (
