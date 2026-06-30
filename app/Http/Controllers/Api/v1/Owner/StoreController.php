@@ -54,7 +54,10 @@ class StoreController extends Controller
         }
 
         if ($realOwnerId == 1) {
-            return response()->json(['message' => 'Store not found.'], 404);
+            $authUser = request()->user('api') ?: auth()->user();
+            if (!$authUser || $authUser->id != 1) {
+                return response()->json(['message' => 'Store not found.'], 404);
+            }
         }
 
         $storeSettings = Store::where('created_by', $realOwnerId)->get();
