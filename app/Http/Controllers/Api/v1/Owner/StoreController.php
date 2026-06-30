@@ -174,6 +174,35 @@ class StoreController extends Controller
             );
         }
 
+        // Auto-sync domain setting with store_domains table
+        if ($request->has('custom_domain')) {
+            $domainVal = strtolower(trim($request->custom_domain));
+            if ($domainVal) {
+                $type = 'custom';
+                $platformDomain = config('app.platform_domain', 'yourplatform.com');
+                
+                if (!str_contains($domainVal, '.') || str_ends_with($domainVal, '.' . $platformDomain) || str_ends_with($domainVal, '.lvh.me') || str_ends_with($domainVal, '.vercel.app')) {
+                    $type = 'subdomain';
+                }
+                
+                $fullDomain = $domainVal;
+                if ($type === 'subdomain' && !str_contains($domainVal, '.')) {
+                    $fullDomain = $domainVal . '.' . $platformDomain;
+                }
+
+                \App\Models\StoreDomain::updateOrCreate(
+                    ['owner_id' => $user->id, 'type' => $type],
+                    [
+                        'domain' => $fullDomain,
+                        'is_verified' => true,
+                        'is_primary' => true
+                    ]
+                );
+            } else {
+                \App\Models\StoreDomain::where('owner_id', $user->id)->delete();
+            }
+        }
+
         if ($request->has('guest_checkout')) {
             Store::where('created_by', $user->id)->update(['guest_checkout' => (bool) $request->guest_checkout]);
         }
@@ -628,7 +657,7 @@ class StoreController extends Controller
                 $domainType = 'custom';
                 $isVerified = true;
             }
-            
+
             // Fallback 1.5: If still not found, check if the queried domain is a subdomain format (e.g., our20s.lvh.me)
             // and the custom_domain setting is stored as just the prefix/slug (e.g. "our20s") or with suffix.
             if (!$ownerId) {
@@ -642,10 +671,10 @@ class StoreController extends Controller
                 }
                 if ($subdomainSlug) {
                     $storeSetting = Store::where('key', 'custom_domain')
-                        ->where(function($q) use ($subdomainSlug) {
+                        ->where(function ($q) use ($subdomainSlug) {
                             $q->where('value', $subdomainSlug)
-                              ->orWhere('value', $subdomainSlug . '.lvh.me')
-                              ->orWhere('value', $subdomainSlug . '.store-frontend-v-hsite.vercel.app');
+                                ->orWhere('value', $subdomainSlug . '.lvh.me')
+                                ->orWhere('value', $subdomainSlug . '.store-frontend-v-hsite.vercel.app');
                         })
                         ->first();
                     if ($storeSetting) {
