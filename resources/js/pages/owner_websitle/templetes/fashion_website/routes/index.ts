@@ -8,10 +8,13 @@ export const FASHION_ROUTES = {
    * Generates the home/storefront URL.
    */
   getHome: (storeSlug: string, ownerUserId?: number | string): string => {
-    if (ownerUserId) {
-      return `/?id=${ownerUserId}&store=${storeSlug}`;
+    if (storeSlug) {
+      return `/${storeSlug}`;
     }
-    return `/${storeSlug}`;
+    if (ownerUserId) {
+      return `/?id=${ownerUserId}`;
+    }
+    return '/';
   },
 
   /**
@@ -22,15 +25,22 @@ export const FASHION_ROUTES = {
     storeSlug: string,
     options?: { hash?: string; search?: string; searchParam?: string }
   ): string => {
-    const base = `/shop?id=${ownerUserId || ''}&store=${storeSlug}`;
+    const base = storeSlug ? `/${storeSlug}/shop` : `/shop?id=${ownerUserId || ''}`;
     if (!options) return base;
 
     let url = base;
+    const prefix = url.includes('?') ? '&' : '?';
+
+    const paramsList: string[] = [];
     if (options.search) {
-      url += `&search=${encodeURIComponent(options.search)}`;
+      paramsList.push(`search=${encodeURIComponent(options.search)}`);
     }
     if (options.searchParam) {
-      url += options.searchParam; // e.g. custom query strings
+      paramsList.push(options.searchParam.replace(/^[?&]/, ''));
+    }
+
+    if (paramsList.length > 0) {
+      url += prefix + paramsList.join('&');
     }
     if (options.hash) {
       url += options.hash; // e.g. #subcategory_slug
@@ -42,28 +52,30 @@ export const FASHION_ROUTES = {
    * Generates the categories page URL.
    */
   getCategories: (ownerUserId: number | string | undefined, storeSlug: string): string => {
-    return `/categories?id=${ownerUserId || ''}&store=${storeSlug}`;
+    return storeSlug ? `/${storeSlug}/categories` : `/categories?id=${ownerUserId || ''}`;
   },
 
   /**
    * Generates the product detail page URL.
    */
   getProduct: (productId: number | string, ownerUserId: number | string | undefined, storeSlug: string): string => {
-    return `/product?id=${productId}&owner=${ownerUserId || ''}&store=${storeSlug}`;
+    return storeSlug 
+      ? `/${storeSlug}/product?id=${productId}`
+      : `/product?id=${productId}&owner=${ownerUserId || ''}`;
   },
 
   /**
    * Generates the wishlist URL.
    */
   getWishlist: (ownerUserId: number | string | undefined, storeSlug: string): string => {
-    return `/wishlist?id=${ownerUserId || ''}&store=${storeSlug}`;
+    return storeSlug ? `/${storeSlug}/wishlist` : `/wishlist?id=${ownerUserId || ''}`;
   },
 
   /**
    * Generates the checkout page URL.
    */
   getCheckout: (ownerUserId: number | string | undefined, storeSlug: string): string => {
-    return `/checkout?owner=${ownerUserId || ''}&store=${storeSlug}`;
+    return storeSlug ? `/${storeSlug}/checkout` : `/checkout?owner=${ownerUserId || ''}`;
   },
 
   /**
@@ -74,9 +86,10 @@ export const FASHION_ROUTES = {
     storeSlug: string,
     tab?: 'profile' | 'orders' | 'giftcard' | 'address' | 'chat'
   ): string => {
-    const base = `/profile?id=${ownerUserId || ''}&store=${storeSlug}`;
+    const base = storeSlug ? `/${storeSlug}/profile` : `/profile?id=${ownerUserId || ''}`;
     if (tab) {
-      return `${base}&tab=${tab}`;
+      const sep = base.includes('?') ? '&' : '?';
+      return `${base}${sep}tab=${tab}`;
     }
     return base;
   },
@@ -88,4 +101,3 @@ export const FASHION_ROUTES = {
     return '/owner';
   }
 };
-

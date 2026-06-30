@@ -1008,13 +1008,26 @@ function App() {
   const HomePage = isLocalShop ? HomePageLocal : HomePageOnline;
   const LoginPage = isLocalShop ? LoginPageLocal : LoginPageOnline;
 
+  // Support clean path storefront routing: e.g. /my_store/checkout -> /checkout
+  const storeRoute = parseStorePath(currentPath);
+  const storeSlug = storeRoute?.storeSlug || '';
+  const normalizedPath = (() => {
+    if (!storeSlug) return currentPath;
+    const prefix = `/${storeSlug}`;
+    if (currentPath === prefix) return '/';
+    if (currentPath.startsWith(prefix + '/')) {
+      return currentPath.substring(prefix.length);
+    }
+    return currentPath;
+  })();
+
   return (
     <>
       <HomePage
         token={token}
         settings={settings}
         storeInfo={storeInfo}
-        currentPath={currentPath}
+        currentPath={normalizedPath}
         onNavigate={navigate}
         onNavigateLogin={() => setShowLogin(true)}
         onLogout={handleLogoutClick}
