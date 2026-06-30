@@ -4,16 +4,20 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Customer;
 use App\Events\UserStatusUpdated;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        $storeId = $request->input('store_id') ?? $request->input('created_by');
+
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -29,9 +33,10 @@ class AuthController extends Controller
             'state' => 'nullable|string',
             'image' => 'nullable|string',
             'created_by' => 'nullable|integer|exists:users,id',
+            'store_id' => 'nullable|integer|exists:users,id',
         ]);
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $storeId) {
             $displayName = $request->name ?: $request->first_name . ' ' . $request->last_name;
 
             $imagePath = null;
@@ -59,8 +64,9 @@ class AuthController extends Controller
             ]);
 
             // If the user's role is a customer (default role_id=2), create a corresponding Customer model entry
-            if ((int)$user->role_id === 2) {
-                $user->customer()->create([
+            if ((int)$user->role_id === 2 && $storeId) {
+                $user->customers()->create([
+                    'store_id' => $storeId,
                     'name' => $displayName,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
@@ -70,7 +76,7 @@ class AuthController extends Controller
                     'address' => $user->address,
                     'city' => $user->city,
                     'country' => $user->country,
-                    'created_by' => $request->created_by ?? $user->created_by,
+                    'created_by' => $storeId,
                 ]);
             }
 
@@ -80,7 +86,7 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'User registered successfully',
                 'token' => $token,
-                'user' => $user->load('customer')
+                'user' => $user->load('customers')
             ], 201);
         });
     }
@@ -116,6 +122,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
+            'store_id' => 'nullable|integer',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -136,10 +143,20 @@ class AuthController extends Controller
         $user->refresh();
         UserStatusUpdated::broadcastForUser($user);
 
-        return response()->json([
+        // Load customer data scoped by store if store_id is provided
+        $response = [
             'access_token' => $token,
             'token_type' => 'bearer'
-        ]);
+        ];
+
+        if ($request->store_id) {
+            $customer = $user->customerForStore($request->store_id);
+            $response['customer'] = $customer;
+        } else {
+            $response['customers'] = $user->customers;
+        }
+
+        return response()->json($response);
     }
 
     public function loginAdmin(Request $request)
@@ -269,6 +286,7 @@ class AuthController extends Controller
             'country' => 'nullable|string',
             'state' => 'nullable|string',
             'image' => 'nullable',
+            'store_id' => 'nullable|integer',
         ]);
 
         $data = $request->only(['name', 'first_name', 'last_name', 'gender', 'email', 'phone', 'address', 'city', 'country', 'state']);
@@ -285,11 +303,19 @@ class AuthController extends Controller
 
         $user->update($data);
 
-        // Sync with Customer if the user is a customer (role_id=2)
+        // Sync with Customer records if the user is a customer (role_id=2)
         if ((int)$user->role_id === 2) {
-            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
-            if ($customer) {
-                $customer->update($request->only(['name', 'first_name', 'last_name', 'gender', 'email', 'phone', 'address', 'city', 'country']));
+            $customerData = $request->only(['name', 'first_name', 'last_name', 'gender', 'email', 'phone', 'address', 'city', 'country']);
+
+            if ($request->store_id) {
+                // Update only the specific store's customer record
+                $customer = $user->customerForStore($request->store_id);
+                if ($customer) {
+                    $customer->update($customerData);
+                }
+            } else {
+                // Update all customer records for this user
+                Customer::where('user_id', $user->id)->update($customerData);
             }
         }
 
@@ -309,9 +335,12 @@ class AuthController extends Controller
             'last_name' => 'nullable|string|max:255',
             'image' => 'nullable|string',
             'created_by' => 'nullable|integer|exists:users,id',
+            'store_id' => 'nullable|integer|exists:users,id',
         ]);
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+        $storeId = $request->input('store_id') ?? $request->input('created_by');
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $storeId) {
             $user = User::where('email', $request->email)->first();
 
             if (!$user) {
@@ -336,32 +365,39 @@ class AuthController extends Controller
                     'created_by' => $request->created_by,
                 ]);
 
-                // Create customer record
-                $user->customer()->create([
-                    'name' => $request->name,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'email' => $request->email,
-                    'created_by' => $request->created_by,
-                ]);
-            } else {
-                // If user exists, check if they need a customer record
-                if ((int)$user->role_id === 2 && !$user->customer) {
-                    $firstName = $request->first_name ?: $user->first_name;
-                    $lastName = $request->last_name ?: $user->last_name;
-                    if (empty($firstName) && empty($lastName)) {
-                        $parts = explode(' ', $request->name ?: $user->name, 2);
-                        $firstName = $parts[0] ?? $user->name;
-                        $lastName = $parts[1] ?? '';
-                    }
-
-                    $user->customer()->create([
-                        'name' => $request->name ?: $user->name,
+                // Create store-scoped customer record
+                if ($storeId) {
+                    $user->customers()->create([
+                        'store_id' => $storeId,
+                        'name' => $request->name,
                         'first_name' => $firstName,
                         'last_name' => $lastName,
-                        'email' => $request->email ?: $user->email,
-                        'created_by' => $request->created_by ?? $user->created_by,
+                        'email' => $request->email,
+                        'created_by' => $storeId,
                     ]);
+                }
+            } else {
+                // If user exists, check if they need a customer record for this store
+                if ((int)$user->role_id === 2 && $storeId) {
+                    $existingCustomer = $user->customerForStore($storeId);
+                    if (!$existingCustomer) {
+                        $firstName = $request->first_name ?: $user->first_name;
+                        $lastName = $request->last_name ?: $user->last_name;
+                        if (empty($firstName) && empty($lastName)) {
+                            $parts = explode(' ', $request->name ?: $user->name, 2);
+                            $firstName = $parts[0] ?? $user->name;
+                            $lastName = $parts[1] ?? '';
+                        }
+
+                        $user->customers()->create([
+                            'store_id' => $storeId,
+                            'name' => $request->name ?: $user->name,
+                            'first_name' => $firstName,
+                            'last_name' => $lastName,
+                            'email' => $request->email ?: $user->email,
+                            'created_by' => $storeId,
+                        ]);
+                    }
                 }
             }
 
@@ -375,12 +411,19 @@ class AuthController extends Controller
                 \App\Events\UserStatusUpdated::broadcastForUser($user);
             }
 
-            return response()->json([
+            $response = [
                 'success' => true,
                 'message' => 'Logged in successfully via social login',
                 'token' => $token,
-                'user' => $user->load('customer')
-            ], 200);
+                'user' => $user->load('customers'),
+            ];
+
+            // Include the specific store's customer if store_id was provided
+            if ($storeId) {
+                $response['customer'] = $user->customerForStore($storeId);
+            }
+
+            return response()->json($response, 200);
         });
     }
 }

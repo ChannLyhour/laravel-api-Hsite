@@ -36,10 +36,21 @@ class User extends Authenticatable
         'last_seen_at',
     ];
 
-    // Relationship to Customer
-    public function customer()
+    // Relationship to Customer (a user can be a customer in multiple stores)
+    public function customers()
     {
-        return $this->hasOne(Customer::class, 'user_id');
+        return $this->hasMany(Customer::class, 'user_id');
+    }
+
+    /**
+     * Get the customer record for a specific store.
+     *
+     * @param int $storeId The store owner's user_id
+     * @return \App\Models\Customer|null
+     */
+    public function customerForStore($storeId)
+    {
+        return $this->customers()->where('store_id', $storeId)->first();
     }
 
     // Relationship to Shipping Addresses

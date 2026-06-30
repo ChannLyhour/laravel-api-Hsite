@@ -26,6 +26,15 @@ class Store extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * Customers belonging to this store.
+     * Linked via the store owner's user_id (created_by) matching customers.store_id.
+     */
+    public function customers()
+    {
+        return Customer::where('store_id', $this->created_by);
+    }
+
     public function orders()
     {
         return $this->hasMany(Order::class);

@@ -30,6 +30,11 @@ class CouponController extends Controller
         if ($request->filled('coupon_type')) {
             $query->where('coupon_type', $request->query('coupon_type'));
         }
+        if ($request->filled('created_by')) {
+            $query->where('created_by', $request->query('created_by'));
+        } elseif ($request->filled('owner_id')) {
+            $query->where('created_by', $request->query('owner_id'));
+        }
 
         $coupons = $query->orderBy('id', 'desc')->skip($skip)->take($limit)->get();
 

@@ -12,6 +12,7 @@ class Customer extends Model
 
     protected $fillable = [
         'user_id',
+        'store_id',
         'name',
         'first_name',
         'last_name',
@@ -35,6 +36,15 @@ class Customer extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The store (owner) this customer belongs to.
+     * store_id references the store owner's user_id.
+     */
+    public function storeOwner()
+    {
+        return $this->belongsTo(User::class, 'store_id');
     }
 
     public function orders()

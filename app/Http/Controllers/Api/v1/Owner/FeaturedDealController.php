@@ -18,11 +18,18 @@ class FeaturedDealController extends Controller
         $skip = $request->query('skip', 0);
         $limit = $request->query('limit', 100);
 
-        $deals = FeaturedDeal::where('is_published', true)
+        $query = FeaturedDeal::where('is_published', true)
             ->with(['products' => function ($query) {
                 $query->with(['translations', 'variants']);
-            }])
-            ->orderBy('priority', 'desc')
+            }]);
+
+        if ($request->filled('created_by')) {
+            $query->where('created_by', $request->query('created_by'));
+        } elseif ($request->filled('owner_id')) {
+            $query->where('created_by', $request->query('owner_id'));
+        }
+
+        $deals = $query->orderBy('priority', 'desc')
             ->orderBy('id', 'desc')
             ->skip($skip)
             ->take($limit)

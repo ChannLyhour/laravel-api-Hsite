@@ -18,12 +18,19 @@ class ClearanceSaleController extends Controller
         $skip = $request->query('skip', 0);
         $limit = $request->query('limit', 100);
 
-        $deals = ClearanceSale::where('is_active', true)
+        $query = ClearanceSale::where('is_active', true)
             ->with(['products' => function ($query) {
                 $query->wherePivot('is_active', true)
                     ->with(['translations', 'variants']);
-            }])
-            ->orderBy('priority', 'desc')
+            }]);
+
+        if ($request->filled('created_by')) {
+            $query->where('created_by', $request->query('created_by'));
+        } elseif ($request->filled('owner_id')) {
+            $query->where('created_by', $request->query('owner_id'));
+        }
+
+        $deals = $query->orderBy('priority', 'desc')
             ->orderBy('id', 'desc')
             ->skip($skip)
             ->take($limit)
