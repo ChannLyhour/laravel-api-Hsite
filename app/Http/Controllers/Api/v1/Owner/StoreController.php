@@ -628,6 +628,29 @@ class StoreController extends Controller
                 $domainType = 'custom';
                 $isVerified = true;
             }
+            
+            // Fallback 1.5: If still not found, check if the queried domain is a subdomain format (e.g., our20s.lvh.me)
+            // and the custom_domain setting is stored as just the prefix/slug (e.g. "our20s")
+            if (!$ownerId) {
+                $subdomainSlug = null;
+                $platforms = ['lvh.me', 'vhsite-storefront.vercel.app', 'vhsite.com', 'yourplatform.com', config('app.platform_domain')];
+                foreach ($platforms as $plat) {
+                    if ($plat && str_ends_with($domainWithoutPort, '.' . $plat)) {
+                        $subdomainSlug = str_replace('.' . $plat, '', $domainWithoutPort);
+                        break;
+                    }
+                }
+                if ($subdomainSlug) {
+                    $storeSetting = Store::where('key', 'custom_domain')
+                        ->where('value', $subdomainSlug)
+                        ->first();
+                    if ($storeSetting) {
+                        $ownerId = $storeSetting->created_by;
+                        $domainType = 'subdomain';
+                        $isVerified = true;
+                    }
+                }
+            }
         }
 
         // Fallback 2: Check query params explicitly for local development / testing fallback
