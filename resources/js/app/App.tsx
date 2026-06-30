@@ -243,7 +243,12 @@ function App() {
 
     // Priority 2: Clean URL Slug resolution
     const storeRoute = parseStorePath(currentPath);
-    if (storeRoute && resolvedStores !== null) {
+    if (storeRoute) {
+      if (resolvedStores === null) {
+        // Wait until resolvedStores mapping has finished loading
+        return;
+      }
+
       const ownerId = (resolvedStores || {})[storeRoute.storeSlug.toLowerCase()];
       
       // Check if ownerId exists and is NOT the super admin (owner ID 1)
