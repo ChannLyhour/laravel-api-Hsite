@@ -9,7 +9,7 @@ use App\Helpers\UploadHelper;
 
 class StoreController extends Controller
 {
-    public function index(Request $request)
+    public function index (Request $request)
     {
         if ($request->user()->role_id !== 1) {
             return response()->json(['detail' => 'Only administrators are authorized to perform this operation.'], 403);
@@ -45,7 +45,7 @@ class StoreController extends Controller
         return response()->json($formatted);
     }
 
-    public function showByOwner($ownerId)
+    public function showByOwner ($ownerId)
     {
         $storeSettings = Store::where('created_by', $ownerId)->get();
         if ($storeSettings->isEmpty()) {
@@ -80,7 +80,7 @@ class StoreController extends Controller
         return response()->json($dict);
     }
 
-    public function showMe(Request $request)
+    public function showMe (Request $request)
     {
         $user = $request->user();
         if ($user->role_id !== 30003) {
@@ -107,7 +107,7 @@ class StoreController extends Controller
         return response()->json($dict);
     }
 
-    public function upsert(Request $request)
+    public function upsert (Request $request)
     {
         $user = $request->user();
         if ($user->role_id !== 30003) {
@@ -115,17 +115,44 @@ class StoreController extends Controller
         }
 
         $storeKeys = [
-            'store_name', 'store_phone', 'store_email', 'store_address',
-            'tax_percentage', 'subscription_tier', 'custom_domain',
-            'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
-            'social_telegram', 'shipping_fee', 'free_shipping_threshold',
-            'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
-            'payment_methods', 'guest_checkout',
-            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
-            'google_client_id', 'google_client_secret', 'google_enabled',
-            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled',
-            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code',
-            'telegram_bot_token', 'telegram_chat_id', 'telegram_enabled'
+            'store_name',
+            'store_phone',
+            'store_email',
+            'store_address',
+            'tax_percentage',
+            'subscription_tier',
+            'custom_domain',
+            'logo_url',
+            'favicon_url',
+            'social_tiktok',
+            'social_facebook',
+            'social_telegram',
+            'shipping_fee',
+            'free_shipping_threshold',
+            'website_theme',
+            'currency',
+            'maintenance_mode',
+            'announcement_text',
+            'footer_text',
+            'payment_methods',
+            'guest_checkout',
+            'pusher_app_id',
+            'pusher_app_key',
+            'pusher_app_secret',
+            'pusher_app_cluster',
+            'google_client_id',
+            'google_client_secret',
+            'google_enabled',
+            'facebook_app_id',
+            'facebook_app_secret',
+            'facebook_enabled',
+            'checkout_delivery_address',
+            'checkout_preferred_contact',
+            'checkout_note',
+            'checkout_claim_code',
+            'telegram_bot_token',
+            'telegram_chat_id',
+            'telegram_enabled'
         ];
 
         $data = $request->all();
@@ -148,7 +175,7 @@ class StoreController extends Controller
         }
 
         if ($request->has('guest_checkout')) {
-            Store::where('created_by', $user->id)->update(['guest_checkout' => (bool)$request->guest_checkout]);
+            Store::where('created_by', $user->id)->update(['guest_checkout' => (bool) $request->guest_checkout]);
         }
 
         // Clear cached settings for owner
@@ -176,7 +203,7 @@ class StoreController extends Controller
         return response()->json($dict);
     }
 
-    public function store(Request $request)
+    public function store (Request $request)
     {
         $user = $request->user();
         if ($user->role_id !== 1) {
@@ -188,17 +215,44 @@ class StoreController extends Controller
         ]);
 
         $storeKeys = [
-            'store_name', 'store_phone', 'store_email', 'store_address',
-            'tax_percentage', 'subscription_tier', 'custom_domain',
-            'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
-            'social_telegram', 'shipping_fee', 'free_shipping_threshold',
-            'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
-            'payment_methods', 'guest_checkout',
-            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
-            'google_client_id', 'google_client_secret', 'google_enabled',
-            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled',
-            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code',
-            'telegram_bot_token', 'telegram_chat_id', 'telegram_enabled'
+            'store_name',
+            'store_phone',
+            'store_email',
+            'store_address',
+            'tax_percentage',
+            'subscription_tier',
+            'custom_domain',
+            'logo_url',
+            'favicon_url',
+            'social_tiktok',
+            'social_facebook',
+            'social_telegram',
+            'shipping_fee',
+            'free_shipping_threshold',
+            'website_theme',
+            'currency',
+            'maintenance_mode',
+            'announcement_text',
+            'footer_text',
+            'payment_methods',
+            'guest_checkout',
+            'pusher_app_id',
+            'pusher_app_key',
+            'pusher_app_secret',
+            'pusher_app_cluster',
+            'google_client_id',
+            'google_client_secret',
+            'google_enabled',
+            'facebook_app_id',
+            'facebook_app_secret',
+            'facebook_enabled',
+            'checkout_delivery_address',
+            'checkout_preferred_contact',
+            'checkout_note',
+            'checkout_claim_code',
+            'telegram_bot_token',
+            'telegram_chat_id',
+            'telegram_enabled'
         ];
 
         $ownerId = $request->created_by;
@@ -222,7 +276,7 @@ class StoreController extends Controller
         }
 
         if ($request->has('guest_checkout')) {
-            Store::where('created_by', $ownerId)->update(['guest_checkout' => (bool)$request->guest_checkout]);
+            Store::where('created_by', $ownerId)->update(['guest_checkout' => (bool) $request->guest_checkout]);
         }
 
         // Clear cached settings for owner
@@ -245,10 +299,10 @@ class StoreController extends Controller
         return response()->json($dict, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update (Request $request, $id)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 30003])) {
+        if (!in_array($user->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Access denied.'], 403);
         }
 
@@ -268,17 +322,44 @@ class StoreController extends Controller
         }
 
         $storeKeys = [
-            'store_name', 'store_phone', 'store_email', 'store_address',
-            'tax_percentage', 'subscription_tier', 'custom_domain',
-            'logo_url', 'favicon_url', 'social_tiktok', 'social_facebook',
-            'social_telegram', 'shipping_fee', 'free_shipping_threshold',
-            'website_theme', 'currency', 'maintenance_mode', 'announcement_text', 'footer_text',
-            'payment_methods', 'guest_checkout',
-            'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster',
-            'google_client_id', 'google_client_secret', 'google_enabled',
-            'facebook_app_id', 'facebook_app_secret', 'facebook_enabled',
-            'checkout_delivery_address', 'checkout_preferred_contact', 'checkout_note', 'checkout_claim_code',
-            'telegram_bot_token', 'telegram_chat_id', 'telegram_enabled'
+            'store_name',
+            'store_phone',
+            'store_email',
+            'store_address',
+            'tax_percentage',
+            'subscription_tier',
+            'custom_domain',
+            'logo_url',
+            'favicon_url',
+            'social_tiktok',
+            'social_facebook',
+            'social_telegram',
+            'shipping_fee',
+            'free_shipping_threshold',
+            'website_theme',
+            'currency',
+            'maintenance_mode',
+            'announcement_text',
+            'footer_text',
+            'payment_methods',
+            'guest_checkout',
+            'pusher_app_id',
+            'pusher_app_key',
+            'pusher_app_secret',
+            'pusher_app_cluster',
+            'google_client_id',
+            'google_client_secret',
+            'google_enabled',
+            'facebook_app_id',
+            'facebook_app_secret',
+            'facebook_enabled',
+            'checkout_delivery_address',
+            'checkout_preferred_contact',
+            'checkout_note',
+            'checkout_claim_code',
+            'telegram_bot_token',
+            'telegram_chat_id',
+            'telegram_enabled'
         ];
 
         $data = $request->all();
@@ -301,7 +382,7 @@ class StoreController extends Controller
         }
 
         if ($request->has('guest_checkout')) {
-            Store::where('created_by', $ownerId)->update(['guest_checkout' => (bool)$request->guest_checkout]);
+            Store::where('created_by', $ownerId)->update(['guest_checkout' => (bool) $request->guest_checkout]);
         }
 
         // Clear cached settings for owner
@@ -329,10 +410,10 @@ class StoreController extends Controller
         return response()->json($dict);
     }
 
-    public function uploadLogo(Request $request)
+    public function uploadLogo (Request $request)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 30003])) {
+        if (!in_array($user->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Access denied.'], 403);
         }
 
@@ -351,10 +432,10 @@ class StoreController extends Controller
         return response()->json(['detail' => 'No file provided.'], 400);
     }
 
-    public function uploadFavicon(Request $request)
+    public function uploadFavicon (Request $request)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 30003])) {
+        if (!in_array($user->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Access denied.'], 403);
         }
 
@@ -373,7 +454,7 @@ class StoreController extends Controller
         return response()->json(['detail' => 'No file provided.'], 400);
     }
 
-    public function getPaymentGateways()
+    public function getPaymentGateways ()
     {
         $gateways = [
             [
@@ -512,7 +593,7 @@ class StoreController extends Controller
      * Public: Resolve a domain to a store owner.
      * GET /api/store/resolve-domain?domain=shopA.yourplatform.com
      */
-    public function resolveDomain(Request $request)
+    public function resolveDomain (Request $request)
     {
         $domain = strtolower(trim($request->query('domain', '')));
 
@@ -534,18 +615,32 @@ class StoreController extends Controller
             if (str_contains($domainWithoutPort, ':')) {
                 $domainWithoutPort = explode(':', $domainWithoutPort)[0];
             }
-            // Fallback: check in key-value store (stores table) for custom_domain
+            // Fallback 1: check in key-value store (stores table) for custom_domain
             $storeSetting = Store::where('key', 'custom_domain')
-                ->where(function($q) use ($domain, $domainWithoutPort) {
+                ->where(function ($q) use ($domain, $domainWithoutPort) {
                     $q->where('value', $domain)
-                      ->orWhere('value', $domainWithoutPort)
-                      ->orWhereRaw("REPLACE(value, ':3000', '') = ?", [$domainWithoutPort]);
+                        ->orWhere('value', $domainWithoutPort)
+                        ->orWhereRaw("REPLACE(value, ':3000', '') = ?", [$domainWithoutPort]);
                 })
                 ->first();
             if ($storeSetting) {
                 $ownerId = $storeSetting->created_by;
                 $domainType = 'custom';
                 $isVerified = true;
+            }
+        }
+
+        // Fallback 2: Check query params explicitly for local development / testing fallback
+        if (!$ownerId) {
+            if ($request->filled('owner_id')) {
+                $ownerId = $request->query('owner_id');
+            } elseif ($request->filled('store')) {
+                $storeSetting = Store::where('key', 'store_name')
+                    ->where('value', $request->query('store'))
+                    ->first();
+                if ($storeSetting) {
+                    $ownerId = $storeSetting->created_by;
+                }
             }
         }
 
@@ -556,19 +651,19 @@ class StoreController extends Controller
         $settings = Store::where('created_by', $ownerId)->get()->pluck('value', 'key');
 
         return response()->json([
-            'found'          => true,
-            'owner_id'       => $ownerId,
-            'hashid'         => \Vinkla\Hashids\Facades\Hashids::encode($ownerId),
-            'store_name'     => $settings->get('store_name'),
-            'website_theme'  => $settings->get('website_theme', 'fashion_website'),
-            'logo_url'       => $settings->get('logo_url'),
-            'favicon_url'    => $settings->get('favicon_url'),
-            'currency'       => $settings->get('currency', 'USD'),
-            'store_email'    => $settings->get('store_email'),
-            'store_phone'    => $settings->get('store_phone'),
-            'store_address'  => $settings->get('store_address'),
-            'domain_type'    => $domainType,
-            'is_verified'    => $isVerified,
+            'found' => true,
+            'owner_id' => $ownerId,
+            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode($ownerId),
+            'store_name' => $settings->get('store_name'),
+            'website_theme' => $settings->get('website_theme', 'fashion_website'),
+            'logo_url' => $settings->get('logo_url'),
+            'favicon_url' => $settings->get('favicon_url'),
+            'currency' => $settings->get('currency', 'USD'),
+            'store_email' => $settings->get('store_email'),
+            'store_phone' => $settings->get('store_phone'),
+            'store_address' => $settings->get('store_address'),
+            'domain_type' => $domainType,
+            'is_verified' => $isVerified,
         ]);
     }
 
@@ -576,7 +671,7 @@ class StoreController extends Controller
      * List all domains for the logged-in owner.
      * GET /api/owner/stores/domains  [auth]
      */
-    public function listDomains(Request $request)
+    public function listDomains (Request $request)
     {
         $user = $request->user();
         if (!in_array($user->role_id, [1, 2, 30003])) {
@@ -596,7 +691,7 @@ class StoreController extends Controller
      * Register a new domain for the logged-in owner.
      * POST /api/owner/stores/domains  [auth]
      */
-    public function addDomain(Request $request)
+    public function addDomain (Request $request)
     {
         $user = $request->user();
         if (!in_array($user->role_id, [1, 2, 30003])) {
@@ -605,7 +700,7 @@ class StoreController extends Controller
 
         $data = $request->validate([
             'domain' => 'required|string|max:255|unique:store_domains,domain',
-            'type'   => 'nullable|string|in:subdomain,custom',
+            'type' => 'nullable|string|in:subdomain,custom',
         ]);
 
         $ownerId = ($user->role_id == 1 && $request->filled('owner_id'))
@@ -613,11 +708,11 @@ class StoreController extends Controller
             : $user->id;
 
         $domain = \App\Models\StoreDomain::create([
-            'owner_id'    => $ownerId,
-            'domain'      => strtolower(trim($data['domain'])),
-            'type'        => $data['type'] ?? 'subdomain',
+            'owner_id' => $ownerId,
+            'domain' => strtolower(trim($data['domain'])),
+            'type' => $data['type'] ?? 'subdomain',
             'is_verified' => ($data['type'] ?? 'subdomain') === 'subdomain', // Subdomains are auto-verified
-            'is_primary'  => !\App\Models\StoreDomain::where('owner_id', $ownerId)->exists(),
+            'is_primary' => !\App\Models\StoreDomain::where('owner_id', $ownerId)->exists(),
         ]);
 
         return response()->json($domain, 201);
@@ -627,7 +722,7 @@ class StoreController extends Controller
      * Remove a domain belonging to the logged-in owner.
      * DELETE /api/owner/stores/domains/{id}  [auth]
      */
-    public function removeDomain(Request $request, $id)
+    public function removeDomain (Request $request, $id)
     {
         $user = $request->user();
         if (!in_array($user->role_id, [1, 2, 30003])) {
@@ -653,7 +748,7 @@ class StoreController extends Controller
      * Body: { "slug": "my-shop" }
      * Result: Creates domain "my-shop.yourplatform.com" (platform domain from config)
      */
-    public function setSubdomain(Request $request)
+    public function setSubdomain (Request $request)
     {
         $user = $request->user();
         if (!in_array($user->role_id, [1, 2, 30003])) {
@@ -681,9 +776,9 @@ class StoreController extends Controller
         $domain = \App\Models\StoreDomain::updateOrCreate(
             ['owner_id' => $ownerId, 'type' => 'subdomain'],
             [
-                'domain'      => $fullDomain,
+                'domain' => $fullDomain,
                 'is_verified' => true,
-                'is_primary'  => !\App\Models\StoreDomain::where('owner_id', $ownerId)
+                'is_primary' => !\App\Models\StoreDomain::where('owner_id', $ownerId)
                     ->where('type', 'custom')
                     ->where('is_primary', true)
                     ->exists(),
