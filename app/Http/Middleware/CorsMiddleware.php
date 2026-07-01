@@ -23,15 +23,9 @@ class CorsMiddleware
             'https://hourfood.vercel.app',
         ];
 
-        // Default CORS headers
-        $allowOrigin = '*';
-        $allowCredentials = false;
-
-        // If origin is allowed, use it specifically and allow credentials
-        if (in_array($origin, $allowedOrigins)) {
-            $allowOrigin = $origin;
-            $allowCredentials = true;
-        }
+        // Dynamic CORS headers for subdomains and custom domains
+        $allowOrigin = $origin ?: '*';
+        $allowCredentials = $origin ? true : false;
 
         $headers = [
             'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',

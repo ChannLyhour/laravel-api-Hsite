@@ -53,7 +53,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
           const userProfile = await authService.getCurrentUser(response.token);
           const userRole = userProfile.user.role?.toLowerCase() || '';
 
-          if (userRole === 'owner' || userRole === 'admin') {
+          if (userRole === 'owner') {
             setSuccessMessage('Access Granted! Redirecting to Management Console...');
             toast.success('Access Granted! Welcome back.');
             setTimeout(() => {
@@ -62,8 +62,8 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
           } else {
             // Remove token as role is insufficient
             localStorage.removeItem('admin_token');
-            setErrorMessage('Access Denied. Your account does not possess Management privileges.');
-            toast.error('Access Denied. Owners/Managers only.');
+            setErrorMessage('Access Denied. Your account does not possess Store Owner privileges.');
+            toast.error('Access Denied. Owners only.');
           }
         } catch (profileErr) {
           // Fallback if profile API isn't fully completed but token was returned

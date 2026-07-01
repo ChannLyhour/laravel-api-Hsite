@@ -162,6 +162,17 @@ class StoreController extends Controller
             'telegram_enabled'
         ];
 
+        if ($request->has('website_theme')) {
+            $currentTheme = Store::where('created_by', $user->id)->where('key', 'website_theme')->value('value');
+            if ($request->website_theme !== $currentTheme) {
+                \App\Models\StoreThemeHistory::create([
+                    'owner_id' => $user->id,
+                    'theme_id' => $request->website_theme,
+                    'changed_by' => $user->id,
+                ]);
+            }
+        }
+
         $data = $request->all();
         foreach ($data as $key => $value) {
             if (!in_array($key, $storeKeys)) {
@@ -292,6 +303,17 @@ class StoreController extends Controller
         ];
 
         $ownerId = $request->created_by;
+        if ($request->has('website_theme')) {
+            $currentTheme = Store::where('created_by', $ownerId)->where('key', 'website_theme')->value('value');
+            if ($request->website_theme !== $currentTheme) {
+                \App\Models\StoreThemeHistory::create([
+                    'owner_id' => $ownerId,
+                    'theme_id' => $request->website_theme,
+                    'changed_by' => $request->user()->id,
+                ]);
+            }
+        }
+
         $data = $request->all();
         foreach ($data as $key => $value) {
             if (!in_array($key, $storeKeys)) {
@@ -342,14 +364,24 @@ class StoreController extends Controller
             return response()->json(['detail' => 'Access denied.'], 403);
         }
 
-        if ($user->role_id === 30003 && $user->id !== intval($id)) {
+        $realOwnerId = $id;
+        if (!is_numeric($realOwnerId)) {
+            $decoded = \Vinkla\Hashids\Facades\Hashids::decode($id);
+            $realOwnerId = !empty($decoded) ? $decoded[0] : null;
+        }
+
+        if (!$realOwnerId) {
+            return response()->json(['detail' => 'Invalid store owner ID.'], 400);
+        }
+
+        if ($user->role_id === 30003 && $user->id !== intval($realOwnerId)) {
             return response()->json(['detail' => 'Access denied. You can only update your own store profile.'], 403);
         }
 
-        $ownerId = $id;
+        $ownerId = $realOwnerId;
         $storeSettingsExists = Store::where('created_by', $ownerId)->exists();
         if (!$storeSettingsExists) {
-            $single = Store::find($id);
+            $single = Store::find($realOwnerId);
             if ($single) {
                 $ownerId = $single->created_by;
             } else {

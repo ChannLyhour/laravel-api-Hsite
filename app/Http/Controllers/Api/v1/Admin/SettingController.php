@@ -12,17 +12,23 @@ class SettingController extends Controller
     {
         $ownerId = $request->query('owner_id', 1);
 
-        $settingsDict = \Illuminate\Support\Facades\Cache::remember("settings_owner_{$ownerId}", 3600, function () use ($ownerId) {
+        $realOwnerId = $ownerId;
+        if (!is_numeric($realOwnerId)) {
+            $decoded = \Vinkla\Hashids\Facades\Hashids::decode($ownerId);
+            $realOwnerId = !empty($decoded) ? $decoded[0] : 1;
+        }
+
+        $settingsDict = \Illuminate\Support\Facades\Cache::remember("settings_owner_{$realOwnerId}", 3600, function () use ($realOwnerId) {
             $dict = [];
 
             // 1. Fetch custom key-value settings from Setting table first
-            $settings = Setting::where('created_by', $ownerId)->get();
+            $settings = Setting::where('created_by', $realOwnerId)->get();
             foreach ($settings as $setting) {
                 $dict[$setting->key] = $setting->value;
             }
 
             // 2. Override/populate with primary settings from the stores table (so Store table is the source of truth)
-            $storeSettings = \App\Models\Store::where('created_by', $ownerId)->get();
+            $storeSettings = \App\Models\Store::where('created_by', $realOwnerId)->get();
             foreach ($storeSettings as $item) {
                 if ($item->key === 'tax_percentage') {
                     $dict[$item->key] = strval($item->value);
@@ -32,7 +38,7 @@ class SettingController extends Controller
             }
 
             // 3. Populate/override with user profile fields to ensure identity sync
-            $owner = \App\Models\User::find($ownerId);
+            $owner = \App\Models\User::find($realOwnerId);
             if ($owner) {
                 $dict['first_name'] = $owner->first_name;
                 $dict['last_name'] = $owner->last_name;
@@ -67,10 +73,14 @@ class SettingController extends Controller
         // If the user is an admin, check if owner_id is passed in request to update that owner's settings
         $ownerId = $user->id;
         if ($user->role_id === 1) {
-            if ($request->has('owner_id')) {
-                $ownerId = intval($request->input('owner_id'));
-            } elseif ($request->query('owner_id')) {
-                $ownerId = intval($request->query('owner_id'));
+            $reqOwnerId = $request->input('owner_id') ?: $request->query('owner_id');
+            if ($reqOwnerId) {
+                if (!is_numeric($reqOwnerId)) {
+                    $decoded = \Vinkla\Hashids\Facades\Hashids::decode($reqOwnerId);
+                    $ownerId = !empty($decoded) ? $decoded[0] : 1;
+                } else {
+                    $ownerId = intval($reqOwnerId);
+                }
             }
         }
 

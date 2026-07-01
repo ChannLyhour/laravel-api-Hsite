@@ -64,22 +64,9 @@ export function getStoreUrl(
         if (parsed.custom_domain && matchesOwner) {
           let domain = parsed.custom_domain.trim();
 
-          // If it is just a subdomain slug (e.g. "our20s" without dots), format it
+          // If it is a path slug (no dots), return it as a clean path
           if (!domain.includes(".")) {
-            const isLocal =
-              typeof window !== "undefined" &&
-              (window.location.hostname === "localhost" ||
-                window.location.hostname === "127.0.0.1" ||
-                window.location.hostname.startsWith("192.168.") ||
-                window.location.hostname.startsWith("10.") ||
-                window.location.hostname.endsWith(".lvh.me"));
-            if (isLocal) {
-              domain = `${domain}.lvh.me`;
-            } else {
-              // Use pathname-based URL for free vercel.app hosting
-              const baseHost = typeof window !== "undefined" ? window.location.host : "vhsite.vercel.app";
-              domain = `${baseHost}/${domain}`;
-            }
+            return `/${domain}`;
           }
 
           if (!domain.startsWith("http://") && !domain.startsWith("https://")) {

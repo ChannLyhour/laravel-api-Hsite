@@ -244,7 +244,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Global Store/Merchant Management
         Route::get('/stores', [StoreController::class, 'index']);
         Route::post('/stores', [StoreController::class, 'store']);
-        Route::put('/stores/{id}', [StoreController::class, 'update'])->whereNumber('id');
+        Route::put('/stores/{id}', [StoreController::class, 'update'])->where('id', '^(?!me$)[a-zA-Z0-9]+$');
     });
 
     // ---------------------------------------------------------------------
@@ -324,8 +324,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/stores/me', [StoreController::class, 'showMe']);
         Route::put('/stores/me', [StoreController::class, 'upsert']);
         Route::post('/stores/me', [StoreController::class, 'upsert']);
-        Route::put('/stores/{store_id}', [StoreController::class, 'update'])->whereNumber('store_id');
-        Route::post('/stores/{store_id}', [StoreController::class, 'update'])->whereNumber('store_id');
+        Route::put('/stores/{store_id}', [StoreController::class, 'update'])->where('store_id', '^(?!me$)[a-zA-Z0-9]+$');
+        Route::post('/stores/{store_id}', [StoreController::class, 'update'])->where('store_id', '^(?!me$)[a-zA-Z0-9]+$');
         Route::post('/stores/upload-logo', [StoreController::class, 'uploadLogo']);
         Route::post('/stores/upload-favicon', [StoreController::class, 'uploadFavicon']);
         Route::get('/stores/payment-gateways', [StoreController::class, 'getPaymentGateways']);

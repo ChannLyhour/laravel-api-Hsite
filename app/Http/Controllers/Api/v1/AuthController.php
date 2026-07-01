@@ -203,9 +203,9 @@ class AuthController extends Controller
             return response()->json(['detail' => 'Incorrect email or password'], 401);
         }
 
-        // Restrict to owner & admin (role_id in [1, 30003])
-        if (! in_array((int)$user->role_id, [1, 30003])) {
-            return response()->json(['detail' => 'Access denied. Only store owners and administrators are permitted to log in.'], 403);
+        // Restrict exclusively to store owners (role_id = 30003)
+        if ((int)$user->role_id !== 30003) {
+            return response()->json(['detail' => 'Access denied. Only store owners are permitted to log in.'], 403);
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;

@@ -110,3 +110,12 @@ Route::get('/', function () {
 Route::get('/{any}', function () {
     return view('app');
 })->where('any', '^(?!api|admin|uploads|static|build).*$');
+
+
+// Route Admin 
+
+
+// Route Owner 
+
+
+// Route Customers 

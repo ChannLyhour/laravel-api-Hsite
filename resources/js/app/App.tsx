@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { HomePage as HomePageLocal } from '@/pages/owner_websitle/templetes_menu/HomePage';
@@ -28,6 +29,34 @@ import { storeBrandingService } from '@/api/created_by/getFaviconById';
 import { storeTitleService } from '@/api/created_by/getTitleNameById';
 import { adminSettingApi } from '@/api/admin/setting';
 
+const getTenantDomain = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  const hostname = window.location.hostname;
+  
+  // Ignore standard local dev hosts without subdomains
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return null;
+  }
+  
+  // List of root platform domains
+  const platformDomains = [
+    'lvh.me',
+    'store-frontend-v-hsite.vercel.app',
+    'vhsite-storefront.vercel.app',
+    'vhsite.com',
+    'yourplatform.com',
+    'laravel-api-hsite.vercel.app'
+  ];
+  
+  // If the hostname matches one of these platform roots exactly, it's the main platform site
+  if (platformDomains.includes(hostname)) {
+    return null;
+  }
+  
+  // Otherwise, it's a tenant subdomain or custom domain (we return the full host including port if present)
+  return window.location.host;
+};
+
 function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [token, setToken] = useState<string | null>(() => {
@@ -39,18 +68,81 @@ function App() {
   const [masterAdminToken, setMasterAdminToken] = useState<string | null>(() => {
     return localStorage.getItem('master_admin_token');
   });
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const location = useLocation();
+  const routerNavigate = useNavigate();
+  const currentPath = location.pathname;
+  const getSettingsKey = (ownerId: number | string) => `store_settings_owner_${ownerId}`;
+
+  const [resolvedStores, setResolvedStores] = useState<Record<string, { id: number | string; name: string }>>(() => {
+    try {
+      const saved = localStorage.getItem('resolved_stores_cache');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('resolved_stores_cache', JSON.stringify(resolvedStores));
+  }, [resolvedStores]);
+
+  const getInitialOwnerId = (): number | string => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const isProductPage = window.location.pathname.startsWith('/product');
+      const urlOwnerId = params.get('owner') || (!isProductPage ? params.get('id') : null);
+      if (urlOwnerId) {
+        return isNaN(Number(urlOwnerId)) ? urlOwnerId : parseInt(urlOwnerId, 10);
+      }
+
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/owner')) {
+        const saved = localStorage.getItem('selected_owner_id');
+        if (saved) return isNaN(Number(saved)) ? saved : parseInt(saved, 10);
+      }
+
+      const storeRoute = parseStorePath(pathname);
+      if (storeRoute) {
+        const slugLower = storeRoute.storeSlug.toLowerCase();
+        const savedStores = localStorage.getItem('resolved_stores_cache');
+        if (savedStores) {
+          const parsed = JSON.parse(savedStores);
+          if (parsed[slugLower]) {
+            return parsed[slugLower].id;
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return OWNER_USER_ID;
+  };
+
   const [settings, setSettings] = useState<SettingResponse['settings'] | null>(() => {
     try {
-      const saved = localStorage.getItem('store_settings');
+      const initialOwnerId = getInitialOwnerId();
+      
+      // If it's a storefront path slug and we haven't resolved it yet, start as null
+      if (initialOwnerId === OWNER_USER_ID && parseStorePath(window.location.pathname) !== null) {
+        return null;
+      }
+
+      const saved = localStorage.getItem(getSettingsKey(initialOwnerId));
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
     }
   });
+
   const [storeInfo, setStoreInfo] = useState<StoreRow | null>(() => {
     try {
-      const saved = localStorage.getItem('store_settings');
+      const initialOwnerId = getInitialOwnerId();
+
+      if (initialOwnerId === OWNER_USER_ID && parseStorePath(window.location.pathname) !== null) {
+        return null;
+      }
+
+      const saved = localStorage.getItem(getSettingsKey(initialOwnerId));
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -125,17 +217,7 @@ function App() {
   });
 
   const [ownerUserId, setOwnerUserIdState] = useState<number | string>(() => {
-    const params = new URLSearchParams(window.location.search);
-    const isProductPage = window.location.pathname.startsWith('/product');
-    const urlOwnerId = params.get('owner') || (!isProductPage ? params.get('id') : null);
-    if (urlOwnerId) {
-      // A specific owner was requested via URL — use it and persist for the session
-      const parsedId = isNaN(Number(urlOwnerId)) ? urlOwnerId : parseInt(urlOwnerId, 10);
-      localStorage.setItem('selected_owner_id', String(parsedId));
-      return parsedId;
-    }
-    // No ?owner or ?id param in URL → this is the main website, always use the default owner
-    return OWNER_USER_ID;
+    return getInitialOwnerId();
   });
 
   // Store name read from ?store= URL param (used for owner-specific storefronts)
@@ -157,12 +239,16 @@ function App() {
 
 
 
-  const [resolvedStores, setResolvedStores] = useState<Record<string, { id: number | string; name: string }>>({});
-  const [isResolvingStore, setIsResolvingStore] = useState(false);
+  const [isResolvingStore, setIsResolvingStore] = useState(() => {
+    return getTenantDomain() !== null;
+  });
+  const hasRequestedTenantRef = useRef(false);
+  const hasRequestedSlugRef = useRef<Record<string, boolean>>({});
+  const isResolvingStoreRef = useRef(getTenantDomain() !== null);
 
   // Synchronize path and store mapping updates to resolve the ownerUserId and storeName
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const isProductPage = currentPath.startsWith('/product');
     const urlOwnerId = params.get('owner') || (!isProductPage ? params.get('id') : null);
 
@@ -182,7 +268,7 @@ function App() {
             params.set('store', storeInfo.store_name.replace(/\s+/g, '_'));
           }
           const newSearch = params.toString() ? `?${params.toString()}` : '';
-          window.history.replaceState(null, '', `/owner${newSearch}`);
+          routerNavigate(`/owner${newSearch}`, { replace: true });
         }
       }
       return;
@@ -195,8 +281,7 @@ function App() {
       // Block public access to Super Admin (Owner ID 1 or Super_Admin slug) only on public storefront
       const isOwnerPath = currentPath.startsWith('/owner') && currentPath !== '/owner/menu';
       if (!isOwnerPath && (String(parsedId) === '1' || String(params.get('store')).toLowerCase() === 'super_admin')) {
-        window.history.replaceState(null, '', '/');
-        setCurrentPath('/');
+        routerNavigate('/', { replace: true });
         setHasOwnerParam(false);
         setOwnerUserIdState(OWNER_USER_ID);
         return;
@@ -216,7 +301,54 @@ function App() {
       return;
     }
 
-    // Priority 2: Clean URL Slug resolution (On-demand lookup via resolveDomain)
+    // Priority 2: Subdomain / Custom Domain resolution (On-demand domain lookup)
+    const tenantDomain = getTenantDomain();
+    if (tenantDomain) {
+      const cacheKey = tenantDomain.toLowerCase();
+      if (resolvedStores[cacheKey]) {
+        const cached = resolvedStores[cacheKey];
+        setOwnerUserIdState(cached.id);
+        setStoreNameState(cached.name);
+        setHasOwnerParam(true);
+        setIsResolvingStore(false);
+        return;
+      }
+
+      if (hasRequestedTenantRef.current) return;
+      hasRequestedTenantRef.current = true;
+
+      const resolveTenantDomain = async () => {
+        try {
+          setIsResolvingStore(true);
+          isResolvingStoreRef.current = true;
+          const res = await client.get<any>(`/store/resolve-domain?domain=${tenantDomain}`);
+          if (res && res.found && res.owner_id) {
+            setResolvedStores(prev => ({
+              ...prev,
+              [cacheKey]: { id: res.owner_id, name: res.store_name }
+            }));
+            setOwnerUserIdState(res.owner_id);
+            setStoreNameState(res.store_name);
+            setHasOwnerParam(true);
+          } else {
+            // Tenant domain not resolved, fallback to path-based default
+            setHasOwnerParam(false);
+            setOwnerUserIdState(OWNER_USER_ID);
+          }
+        } catch (err) {
+          console.warn('Failed to resolve tenant domain', err);
+          setHasOwnerParam(false);
+          setOwnerUserIdState(OWNER_USER_ID);
+        } finally {
+          setIsResolvingStore(false);
+          isResolvingStoreRef.current = false;
+        }
+      };
+      resolveTenantDomain();
+      return;
+    }
+
+    // Priority 3: Clean URL Slug resolution (On-demand lookup via resolveDomain)
     const storeRoute = parseStorePath(currentPath);
     if (storeRoute) {
       const slugLower = storeRoute.storeSlug.toLowerCase();
@@ -227,15 +359,17 @@ function App() {
         setOwnerUserIdState(cached.id);
         setStoreNameState(cached.name);
         setHasOwnerParam(true);
+        setIsResolvingStore(false);
         return;
       }
 
-      // If already fetching, wait
-      if (isResolvingStore) return;
+      if (hasRequestedSlugRef.current[slugLower]) return;
+      hasRequestedSlugRef.current[slugLower] = true;
 
       const resolveStoreSlug = async () => {
         try {
           setIsResolvingStore(true);
+          isResolvingStoreRef.current = true;
           const hostname = window.location.host;
           // Query backend to resolve path-based store info
           const res = await client.get<any>(`/store/resolve-domain?domain=${hostname}/${storeRoute.storeSlug}`);
@@ -249,85 +383,84 @@ function App() {
             setHasOwnerParam(true);
           } else {
             // Store not found
-            window.history.replaceState(null, '', '/');
-            setCurrentPath('/');
+            routerNavigate('/', { replace: true });
             setHasOwnerParam(false);
             setOwnerUserIdState(OWNER_USER_ID);
           }
         } catch (err) {
           console.warn('Failed to resolve store slug on-demand', err);
-          window.history.replaceState(null, '', '/');
-          setCurrentPath('/');
+          routerNavigate('/', { replace: true });
           setHasOwnerParam(false);
           setOwnerUserIdState(OWNER_USER_ID);
         } finally {
           setIsResolvingStore(false);
+          isResolvingStoreRef.current = false;
         }
       };
       resolveStoreSlug();
     }
   }, [currentPath, resolvedStores, isResolvingStore, adminProfile, ownerUserId, storeInfo]);
 
-  // Sync state with browser back/forward buttons
+  // Sync owner/store state whenever the URL changes (React Router handles popstate internally)
   useEffect(() => {
-    const handlePopState = () => {
-      const newPath = window.location.pathname;
-      setCurrentPath(newPath);
-      const params = new URLSearchParams(window.location.search);
-      const isProductPage = newPath.startsWith('/product');
-      const urlOwnerId = params.get('owner') || (!isProductPage ? params.get('id') : null);
-      const urlStoreName = params.get('store');
+    const newPath = location.pathname;
+    const params = new URLSearchParams(location.search);
+    const isProductPage = newPath.startsWith('/product');
+    const urlOwnerId = params.get('owner') || (!isProductPage ? params.get('id') : null);
+    const urlStoreName = params.get('store');
 
-      // Check clean URL slug first
-      const storeRoute = parseStorePath(newPath);
-      if (storeRoute && resolvedStores !== null) {
-        const ownerId = (resolvedStores || {})[storeRoute.storeSlug.toLowerCase()];
-        if (ownerId) {
-          setOwnerUserIdState(ownerId);
-          setStoreNameState(deslugifyStoreName(storeRoute.storeSlug));
-          setHasOwnerParam(true);
-          return;
-        } else {
-            // Invalid slug on popstate
-            window.history.replaceState(null, '', '/');
-            setCurrentPath('/');
-            setHasOwnerParam(false);
-            setOwnerUserIdState(OWNER_USER_ID);
-            return;
-        }
-      }
-
-      // Owner access guard: if owner is logged in and navigated back to menu pages without ?owner= or ?id=
-      if (adminProfile && (newPath === '/menu' || newPath === '/owner/menu') && !urlOwnerId) {
-        const redirectUrl = getStoreMenuUrl(settings?.store_name || adminProfile?.name || 'Store', adminProfile.hashid || adminProfile.id);
-        window.history.replaceState(null, '', redirectUrl);
-        setCurrentPath('/menu');
-        setOwnerUserIdState(adminProfile.hashid || adminProfile.id);
-        setStoreNameState(settings?.store_name || adminProfile?.name || 'Store');
+    // Check clean URL slug first
+    const storeRoute = parseStorePath(newPath);
+    if (storeRoute && resolvedStores !== null) {
+      const slugLower = storeRoute.storeSlug.toLowerCase();
+      const ownerId = (resolvedStores || {})[slugLower];
+      if (ownerId) {
+        setOwnerUserIdState(ownerId.id);
+        setStoreNameState(ownerId.name || deslugifyStoreName(storeRoute.storeSlug));
         setHasOwnerParam(true);
         return;
+      } else {
+        // Only redirect if the slug was already requested and is NOT currently resolving
+        const wasRequested = hasRequestedSlugRef.current[slugLower];
+        if (wasRequested && !isResolvingStoreRef.current) {
+          // Invalid slug on navigation
+          routerNavigate('/', { replace: true });
+          setHasOwnerParam(false);
+          setOwnerUserIdState(OWNER_USER_ID);
+          return;
+        }
+        // Return early to prevent resetting state while resolving is in progress
+        return;
       }
+    }
 
-      if (urlOwnerId) {
-        const parsedId = isNaN(Number(urlOwnerId)) ? urlOwnerId : parseInt(urlOwnerId, 10);
-        setOwnerUserIdState(parsedId);
-        localStorage.setItem('selected_owner_id', String(parsedId));
-        setHasOwnerParam(true);
-      } else if (!isProductPage) {
-        // No ?owner or ?id in URL (e.g. back to /) → reset to default owner
-        setOwnerUserIdState(OWNER_USER_ID);
-        setHasOwnerParam(false);
-      }
+    // Owner access guard: if owner is logged in and navigated back to menu pages without ?owner= or ?id=
+    if (adminProfile && (newPath === '/menu' || newPath === '/owner/menu') && !urlOwnerId) {
+      const redirectUrl = getStoreMenuUrl(settings?.store_name || adminProfile?.name || 'Store', adminProfile.hashid || adminProfile.id);
+      routerNavigate(redirectUrl, { replace: true });
+      setOwnerUserIdState(adminProfile.hashid || adminProfile.id);
+      setStoreNameState(settings?.store_name || adminProfile?.name || 'Store');
+      setHasOwnerParam(true);
+      return;
+    }
 
-      if (urlStoreName) {
-        setStoreNameState(urlStoreName.replace(/_/g, ' '));
-      } else if (!isProductPage) {
-        setStoreNameState('');
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [adminProfile, settings, resolvedStores]);
+    if (urlOwnerId) {
+      const parsedId = isNaN(Number(urlOwnerId)) ? urlOwnerId : parseInt(urlOwnerId, 10);
+      setOwnerUserIdState(parsedId);
+      localStorage.setItem('selected_owner_id', String(parsedId));
+      setHasOwnerParam(true);
+    } else if (!isProductPage && getTenantDomain() === null && parseStorePath(currentPath) === null) {
+      // No ?owner or ?id in URL (e.g. back to /) → reset to default owner
+      setOwnerUserIdState(OWNER_USER_ID);
+      setHasOwnerParam(false);
+    }
+
+    if (urlStoreName) {
+      setStoreNameState(urlStoreName.replace(/_/g, ' '));
+    } else if (!isProductPage && getTenantDomain() === null && parseStorePath(currentPath) === null) {
+      setStoreNameState('');
+    }
+  }, [location, adminProfile, settings, resolvedStores]);
 
 
   // Initialize tokens from localStorage on mount
@@ -371,7 +504,7 @@ function App() {
           // Strictly allow only owner or admin role for /owner portal
           if (data.user.role === 'owner' || data.user.role === 'admin') {
             setAdminProfile({ id: data.user.id, hashid: data.user.hashid, name: data.user.name, role: data.user.role });
-            if (window.location.pathname.startsWith('/owner') && window.location.pathname !== '/owner/menu') {
+            if (location.pathname.startsWith('/owner') && location.pathname !== '/owner/menu') {
               setOwnerUserIdState(data.user.hashid || data.user.id);
             }
           } else {
@@ -458,8 +591,7 @@ function App() {
     // Owner access guard: if owner is logged in and tries to access static routing, redirect to storefront menu
     if (adminProfile && (currentPath === '/menu' || currentPath === '/owner/menu') && !hasOwnerParam) {
       const redirectUrl = getStoreMenuUrl(storeInfo?.store_name || adminProfile?.name || 'Store', adminProfile.hashid || adminProfile.id);
-      window.history.replaceState(null, '', redirectUrl);
-      setCurrentPath('/menu');
+      routerNavigate(redirectUrl, { replace: true });
       setOwnerUserIdState(adminProfile.hashid || adminProfile.id);
       setStoreNameState(storeInfo?.store_name || adminProfile?.name || 'Store');
       setHasOwnerParam(true);
@@ -473,7 +605,7 @@ function App() {
     if (!currentPath.startsWith('/owner') || currentPath === '/owner/menu') return;
     if (!adminToken || !adminProfile || !storeInfo?.store_name) return;
 
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const storeSlug = storeInfo.store_name.replace(/\s+/g, '_');
     const urlStore = params.get('store');
     const urlId = params.get('id') || params.get('owner');
@@ -491,43 +623,80 @@ function App() {
     if (needsUpdate || currentPath.includes('=')) {
       const newSearch = params.toString() ? `?${params.toString()}` : '';
       const finalUrl = `/owner${newSearch}`;
-      window.history.replaceState(null, '', finalUrl);
-      if (currentPath !== '/owner') {
-        setCurrentPath('/owner');
-      }
+      routerNavigate(finalUrl, { replace: true });
     }
   }, [adminToken, adminProfile, currentPath, storeInfo, ownerUserId]);
 
+  // Swap active settings when owner changes to prevent bleeding
+  const prevOwnerIdRef = useRef<number | string | null>(null);
+  useEffect(() => {
+    if (ownerUserId) {
+      const activeKey = 'store_settings';
+      const scopedKey = getSettingsKey(ownerUserId);
+
+      // 1. Save previous owner's settings if they exist in active storage
+      if (prevOwnerIdRef.current && prevOwnerIdRef.current !== ownerUserId) {
+        const prevActive = localStorage.getItem(activeKey);
+        if (prevActive) {
+          localStorage.setItem(getSettingsKey(prevOwnerIdRef.current), prevActive);
+        }
+      }
+
+      // 2. Load new owner's settings from scoped cache
+      const cached = localStorage.getItem(scopedKey);
+      if (cached) {
+        localStorage.setItem(activeKey, cached);
+        try {
+          const parsed = JSON.parse(cached);
+          setSettings(parsed);
+          setStoreInfo(parsed);
+        } catch (e) {
+          console.warn('Failed to parse cached scoped settings', e);
+        }
+      } else {
+        localStorage.removeItem(activeKey);
+        setSettings(null);
+        setStoreInfo(null);
+      }
+
+      window.dispatchEvent(new Event('settings_updated'));
+      prevOwnerIdRef.current = ownerUserId;
+    }
+  }, [ownerUserId]);
+
   // Fetch brand settings when selected owner changes
   useEffect(() => {
-    if (window.location.pathname.startsWith('/share/')) {
+    if (location.pathname.startsWith('/share/')) {
       return; // Skip standard settings fetch if we are in sharing view
     }
+    let active = true;
+
     const loadSettings = async () => {
       try {
         const data = await settingService.getSettings(ownerUserId);
+        if (!active) return;
         if (data && data.success) {
-          // If we have local settings, check if the store name has changed to decide on update
-          // This avoids flickering or overwriting NEW local data with STALE API data
           setSettings(data.settings);
 
-          const local = localStorage.getItem('store_settings');
+          const activeKey = 'store_settings';
+          const scopedKey = getSettingsKey(ownerUserId);
+          const local = localStorage.getItem(scopedKey);
+          let merged = data.settings;
           if (local) {
             const localParsed = JSON.parse(local);
-            // API data wins for all fields (each store has its own server-side values).
-            // Only preserve website_theme from local since it's managed client-side.
-            const merged = {
+            merged = {
               ...data.settings,
               website_theme: data.settings.website_theme || localParsed.website_theme,
             };
-            localStorage.setItem('store_settings', JSON.stringify(merged));
-          } else {
-            localStorage.setItem('store_settings', JSON.stringify(data.settings));
           }
+          localStorage.setItem(scopedKey, JSON.stringify(merged));
+          localStorage.setItem(activeKey, JSON.stringify(merged));
         }
       } catch (err) {
+        if (!active) return;
         console.warn('Failed to load system settings from backend database, checking local backup.', err);
-        const local = localStorage.getItem('store_settings');
+        const scopedKey = getSettingsKey(ownerUserId);
+        const local = localStorage.getItem(scopedKey);
         if (local) {
           try {
             setSettings(JSON.parse(local));
@@ -543,21 +712,26 @@ function App() {
     const loadStore = async () => {
       try {
         const data = await storesService.getStoreByOwner(ownerUserId);
+        if (!active) return;
         if (data) {
           setStoreInfo(data);
-          // Merge to local storage settings backup to preserve website_theme and other specific keys
-          const local = localStorage.getItem('store_settings');
+          const activeKey = 'store_settings';
+          const scopedKey = getSettingsKey(ownerUserId);
+          const local = localStorage.getItem(scopedKey);
           const localParsed = local ? JSON.parse(local) : {};
           const merged = {
             ...localParsed,
             ...data,
             website_theme: data.website_theme || localParsed.website_theme
           };
-          localStorage.setItem('store_settings', JSON.stringify(merged));
+          localStorage.setItem(scopedKey, JSON.stringify(merged));
+          localStorage.setItem(activeKey, JSON.stringify(merged));
         }
       } catch (err) {
+        if (!active) return;
         console.warn('Failed to load store profile from backend database, checking local backup.', err);
-        const local = localStorage.getItem('store_settings');
+        const scopedKey = getSettingsKey(ownerUserId);
+        const local = localStorage.getItem(scopedKey);
         if (local) {
           try {
             setStoreInfo(JSON.parse(local));
@@ -571,37 +745,64 @@ function App() {
 
     // Listen for setting changes dispatched from the Admin settings console
     const handleSettingsUpdate = () => {
-      const updated = localStorage.getItem('store_settings');
+      const activeKey = 'store_settings';
+      const scopedKey = getSettingsKey(ownerUserId);
+      const updated = localStorage.getItem(activeKey);
       if (updated) {
+        localStorage.setItem(scopedKey, updated);
         const parsed = JSON.parse(updated);
         setSettings(parsed);
         setStoreInfo((prev: any) => prev ? { ...prev, ...parsed } : parsed);
       }
     };
     window.addEventListener('settings_updated', handleSettingsUpdate);
-    return () => window.removeEventListener('settings_updated', handleSettingsUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener('settings_updated', handleSettingsUpdate);
+    };
   }, [ownerUserId]);
 
   // Sync URL to enforce clean pathname-based URLs (e.g. /OuR20s or /OuR20s/menu) instead of query params
   useEffect(() => {
     if (storeInfo?.store_name) {
-      const params = new URLSearchParams(window.location.search);
+      // Prevent stale redirects by verifying storeInfo belongs to the currently resolved owner ID
+      const storeOwnerId = storeInfo.hashid || storeInfo.owner_id || storeInfo.created_by;
+      if (String(storeOwnerId) !== String(ownerUserId)) {
+        return;
+      }
+
+      const tenantDomain = getTenantDomain();
+      
+      // If we are on a tenant subdomain/custom domain, the clean URL is just / or /menu (no path slug prefix)
+      if (tenantDomain) {
+        const isMenu = currentPath.includes('/menu');
+        const expectedPath = isMenu ? '/menu' : '/';
+        if (currentPath !== expectedPath || location.search) {
+          routerNavigate(expectedPath, { replace: true });
+          setStoreNameState(storeInfo.store_name);
+        }
+        return;
+      }
+
+      const params = new URLSearchParams(location.search);
       const storeRoute = parseStorePath(currentPath);
       const isOwnerPath = currentPath.startsWith('/owner') && currentPath !== '/owner/menu';
       const isCleanHomeOrMenu = currentPath === '/' || currentPath === '/menu' || !!storeRoute;
-      const isStorefront = (hasOwnerParam || currentPath === '/menu' || currentPath === '/owner/menu' || !!storeRoute) && !isOwnerPath && isCleanHomeOrMenu;
+      const isStorefront = (hasOwnerParam || currentPath === '/menu' || currentPath === '/owner/menu' || !!storeRoute) && !isOwnerPath && isCleanHomeOrMenu && String(ownerUserId) !== '1';
 
       if (isStorefront) {
-        const storeSlug = storeInfo.store_name.replace(/\s+/g, '_');
+        // Enforce using the custom domain slug if it's a path slug (no dots), otherwise fallback to store_name slug
+        let storeSlug = storeInfo.custom_domain?.trim();
+        if (!storeSlug || storeSlug.includes('.')) {
+          storeSlug = storeInfo.store_name.replace(/\s+/g, '_');
+        }
+        
         const isMenu = currentPath.includes('/menu') || (storeRoute && storeRoute.isMenu);
         const expectedPath = isMenu ? `/${storeSlug}/menu` : `/${storeSlug}`;
 
-        if (currentPath !== expectedPath || window.location.search) {
+        if (currentPath !== expectedPath || location.search) {
           // Replace query parameters with the clean pathname format
-          window.history.replaceState(null, '', expectedPath);
-          if (expectedPath !== currentPath) {
-            setCurrentPath(expectedPath);
-          }
+          routerNavigate(expectedPath, { replace: true });
           setStoreNameState(storeInfo.store_name);
         }
       }
@@ -647,8 +848,8 @@ function App() {
     updateFavicon();
   }, [settings, storeInfo, ownerUserId]);
 
-  // Programmatic single-page navigation helper
-  const navigate = (to: string) => {
+  // Programmatic single-page navigation helper (delegates to React Router)
+  const navigate = useCallback((to: string) => {
     const [pathAndQuery, hash] = to.split('#');
     const [path, query] = pathAndQuery.split('?');
 
@@ -660,8 +861,7 @@ function App() {
       if (!urlOwnerId) {
         const storeSlug = (settings?.store_name || adminProfile?.name || 'Store').replace(/\s+/g, '_');
         const redirectUrl = `/${storeSlug}/menu`; // Use clean URL!
-        window.history.pushState(null, '', redirectUrl);
-        setCurrentPath(`/${storeSlug}/menu`);
+        routerNavigate(redirectUrl);
         window.dispatchEvent(new CustomEvent('navigation_changed', { detail: { to: redirectUrl } }));
         setOwnerUserIdState(adminProfile.id);
         setStoreNameState(settings?.store_name || adminProfile?.name || 'Store');
@@ -672,9 +872,8 @@ function App() {
       }
     }
 
-    // Update browser URL history bar without triggering a reload
-    window.history.pushState(null, '', to);
-    setCurrentPath(path);
+    // Navigate via React Router (pushes to history stack)
+    routerNavigate(to);
     window.dispatchEvent(new CustomEvent('navigation_changed', { detail: { to } }));
 
     // Check clean URL slug first
@@ -683,8 +882,8 @@ function App() {
       if (Object.keys(resolvedStores || {}).length > 0) {
         const ownerId = (resolvedStores || {})[storeRoute.storeSlug.toLowerCase()];
         if (ownerId) {
-          setOwnerUserIdState(ownerId);
-          setStoreNameState(deslugifyStoreName(storeRoute.storeSlug));
+          setOwnerUserIdState(ownerId.id);
+          setStoreNameState(ownerId.name || deslugifyStoreName(storeRoute.storeSlug));
           setHasOwnerParam(true);
         }
       }
@@ -743,7 +942,7 @@ function App() {
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
+  }, [routerNavigate, adminProfile, settings, resolvedStores]);
 
   const handleLoginSuccess = (newToken: string) => {
     setToken(newToken);
@@ -813,7 +1012,7 @@ function App() {
 
   // Update document title based on current route context
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const isProductPage = currentPath.startsWith('/product');
     const hasOwner = params.has('owner') || (!isProductPage && params.has('id')) || !!parseStorePath(currentPath);
 
@@ -997,6 +1196,8 @@ function App() {
   const MAIN_WEBSITE_PATHS = ['/', '/about', '/restaurants', '/features', '/join', '/pricing', '/register-owner'];
   const isMainWebsitePath = MAIN_WEBSITE_PATHS.includes(currentPath);
 
+  console.log('App Render State: ' + JSON.stringify({ currentPath, hasOwnerParam, ownerUserId, isMainWebsitePath, settingsTheme: settings?.website_theme }));
+
   if (isMainWebsitePath && !hasOwnerParam) {
     return (
       <>
@@ -1010,7 +1211,7 @@ function App() {
   }
 
   // Dynamically select between local shop and online templates based on query param
-  const isLocalShop = new URLSearchParams(window.location.search).get('local') === 'true';
+  const isLocalShop = new URLSearchParams(location.search).get('local') === 'true';
   const HomePage = isLocalShop ? HomePageLocal : HomePageOnline;
   const LoginPage = isLocalShop ? LoginPageLocal : LoginPageOnline;
 

@@ -49,6 +49,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onOwnerChange,
   storeName = '',
 }) => {
+  console.log('HomePageOnline Render Props:', { settingsTheme: settings?.website_theme, storeInfoTheme: storeInfo?.website_theme, currentPath });
   const [profile, setProfile] = useState<UserResponse | null>(null);
   const [locale, setLocale] = useState<'en' | 'km'>(() => {
     if (typeof window !== 'undefined') {
@@ -215,11 +216,12 @@ export const HomePage: React.FC<HomePageProps> = ({
   // }
 
   // Intercept and render dynamic niche template builder storefronts
-  if (settings?.website_theme === 'cafe_shop') {
+  const theme = storeInfo?.website_theme || settings?.website_theme;
+  if (theme === 'cafe_shop') {
     return (
       <CafeShopPage
         ownerUserId={ownerUserId}
-        profile={profile}
+        profile={profile} 
         onNavigate={onNavigate}
         storeName={storeName || settings?.store_name}
         locale={locale}
@@ -227,7 +229,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       />
     );
   }
-  if (settings?.website_theme === 'electronic') {
+  if (theme === 'electronic') {
     return (
       <ElectronicPage
         ownerUserId={ownerUserId}
@@ -239,7 +241,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       />
     );
   }
-  if (settings?.website_theme === 'fashion' || settings?.website_theme === 'fashion_website') {
+  if (theme === 'fashion' || theme === 'fashion_website') {
     return (
       <FashionPage
         ownerUserId={ownerUserId}
