@@ -28,7 +28,6 @@ import { OverviewTab } from '../components/OverviewTab';
 import { CategoriesTab } from '../components/CategoriesTab';
 import { MenuItemsTab } from '../components/MenuItemsTab';
 import { OrdersTab } from '../components/OrdersTab';
-import { PagesTab } from '../components/PagesTab';
 import { PostsTab } from '../components/PostsTab';
 import { SettingsTab } from '../components/Store_Settings/Store_SettingsTab';
 import { AttributesTab } from '../components/AttributesTab';
@@ -71,7 +70,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-completed' | 'orders-cancelled' | 'pages' | 'posts' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
 
 interface NotificationItem {
   id: string;
@@ -105,7 +104,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (_) {}
+      } catch (_) { }
     }
     return [
       {
@@ -210,7 +209,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
     );
 
     // Perform navigation/action
-     if (n.action) {
+    if (n.action) {
       if (n.action.tab === 'menu-items') {
         localStorage.setItem('menu_items_view', 'list');
       }
@@ -323,7 +322,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
 
     if (orderIdParam) {
       setActiveTab('orders');
-      
+
       // Handle confirm/cancel status transitions directly from URL click
       if (actionParam === 'confirm') {
         ordersService.updateOrderStatus(orderIdParam, 'confirm')
@@ -400,14 +399,13 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                 // Play custom chime sound
                 import('@/pages/owner_manage/components/order/popupOrderRealTime').then(m => {
                   if (m.playNotificationChime) m.playNotificationChime();
-                }).catch(() => {});
+                }).catch(() => { });
 
                 // Alert notification with 10s duration
                 toast.custom((t) => (
                   <div
-                    className={`${
-                      t.visible ? 'animate-enter' : 'animate-leave'
-                    } max-w-sm w-full bg-white/95 backdrop-blur-md border border-blue-100 rounded-[5px] pointer-events-auto flex flex-col overflow-hidden font-sans transition-all duration-300 shadow-lg`}
+                    className={`${t.visible ? 'animate-enter' : 'animate-leave'
+                      } max-w-sm w-full bg-white/95 backdrop-blur-md border border-blue-100 rounded-[5px] pointer-events-auto flex flex-col overflow-hidden font-sans transition-all duration-300 shadow-lg`}
                   >
                     <div className="p-4 flex items-start gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 shrink-0">
@@ -507,12 +505,12 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlId = params.get('id') || params.get('owner');
-    
+
     authService.getCurrentUser()
       .then(data => {
         setProfile(data);
         const isAdmin = data?.user?.role === 'admin';
-        
+
         // Resolve active owner ID: URL param/localStorage overrides are strictly allowed only for platform admins
         let activeOwnerId: number | string | null = null;
         if (urlId && isAdmin) {
@@ -521,7 +519,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
           const saved = localStorage.getItem('selected_owner_id');
           if (saved) activeOwnerId = isNaN(Number(saved)) ? saved : parseInt(saved, 10);
         }
-        
+
         if (!activeOwnerId) {
           activeOwnerId = data?.user?.hashid || data?.user?.id;
         }
@@ -729,7 +727,6 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'orders-processing': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="processing" />;
       case 'orders-completed': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="complete" />;
       case 'orders-cancelled': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="canceled" />;
-      case 'pages': return <PagesTab ownerId={activeOwnerId} />;
       case 'posts': return <PostsTab ownerId={activeOwnerId} />;
       case 'theme': return <Storefront_ThemeTab ownerId={activeOwnerId} profile={profile} />;
       case 'customize-system': return <CustomizeSystemTab />;
@@ -996,9 +993,8 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
             <div className="relative" ref={notificationDropdownRef}>
               <button
                 onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                className={`w-9 h-9 flex items-center justify-center rounded-[10px] hover:bg-black/[0.04] text-inherit transition-all cursor-pointer border-none bg-transparent group relative ${
-                  isNotificationOpen ? 'bg-black/[0.06]' : ''
-                }`}
+                className={`w-9 h-9 flex items-center justify-center rounded-[10px] hover:bg-black/[0.04] text-inherit transition-all cursor-pointer border-none bg-transparent group relative ${isNotificationOpen ? 'bg-black/[0.06]' : ''
+                  }`}
               >
                 <FiBell className="w-[18px] h-[18px] transition-transform duration-300 group-hover:rotate-12" />
                 {notifications.filter((n) => !n.read).length > 0 && (
@@ -1056,9 +1052,8 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                         <div
                           key={n.id}
                           onClick={() => handleNotificationClick(n)}
-                          className={`flex items-start gap-3 p-3.5 hover:bg-black/[0.04] transition-colors cursor-pointer relative group ${
-                            !n.read ? 'bg-primary/[0.02]' : ''
-                          }`}
+                          className={`flex items-start gap-3 p-3.5 hover:bg-black/[0.04] transition-colors cursor-pointer relative group ${!n.read ? 'bg-primary/[0.02]' : ''
+                            }`}
                         >
                           {/* Type Indicator Icon */}
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${getIconStyles(n.type)}`}>
@@ -1157,7 +1152,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
             <div className="h-7 w-px bg-slate-100 hidden sm:block" />
 
             {/* Profile pill */}
-            <div 
+            <div
               onClick={() => setActiveTab('profile-owner')}
               className="flex items-center gap-2.5 cursor-pointer group"
             >

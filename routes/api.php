@@ -116,6 +116,10 @@ Route::middleware(['identify-store'])->group(function () {
     // CMS - Pages & Posts (Public)
     Route::get('/pages', [CMSController::class, 'listPages']);
     Route::get('/pages/published', [CMSController::class, 'listPublishedPages']);
+
+    // No-Code Custom Page Builder (Public)
+    Route::get('/pages/public-builder', [\App\Http\Controllers\Api\v1\Owner\PageController::class, 'getPublicPage']);
+
     Route::get('/pages/{identifier}', [CMSController::class, 'getPage']);
 
     Route::get('/posts', [CMSController::class, 'listPosts']);
@@ -340,6 +344,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/pages', [CMSController::class, 'createPage']);
         Route::put('/pages/{page_id}', [CMSController::class, 'updatePage'])->whereNumber('page_id');
         Route::delete('/pages/{page_id}', [CMSController::class, 'deletePage'])->whereNumber('page_id');
+
+        // No-Code Custom Page Builder (Owner)
+        Route::get('/owner/pages-builder', [\App\Http\Controllers\Api\v1\Owner\PageController::class, 'index']);
+        Route::post('/owner/pages-builder', [\App\Http\Controllers\Api\v1\Owner\PageController::class, 'store']);
+        Route::delete('/owner/pages-builder/{id}', [\App\Http\Controllers\Api\v1\Owner\PageController::class, 'destroy'])->whereNumber('id');
         Route::post('/posts', [CMSController::class, 'createPost']);
         Route::put('/posts/{post_id}', [CMSController::class, 'updatePost'])->whereNumber('post_id');
         Route::delete('/posts/{post_id}', [CMSController::class, 'deletePost'])->whereNumber('post_id');

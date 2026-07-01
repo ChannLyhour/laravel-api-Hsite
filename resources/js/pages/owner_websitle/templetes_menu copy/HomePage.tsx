@@ -20,6 +20,7 @@ import { TabletAppView } from '../mobile/tablet/TabletAppView';
 import { storeBrandingService } from '@/api/created_by/getFaviconById';
 import { getLightTheme } from './utils/themeHelper';
 import { useOwnerURL } from '@/app/OwnerURL';
+import { PageRenderer } from './components/PageRenderer';
 
 
 interface HomePageProps {
@@ -217,6 +218,38 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   // Intercept and render dynamic niche template builder storefronts
   const theme = storeInfo?.website_theme || settings?.website_theme;
+  if (theme === 'custom_builder') {
+    return (
+      <div className={`min-h-screen flex flex-col transition-all duration-300 ${activeTheme.bgClass} animate-fade-in`}>
+        <NavbarPage
+          token={token}
+          profile={profile}
+          onNavigateLogin={onNavigateLogin}
+          onLogout={onLogout}
+          onNavigate={onNavigate}
+          currentPath={currentPath}
+          stores={settings}
+          onOwnerChange={onOwnerChange}
+          storeName={storeInfo?.store_name || storeName || settings?.store_name || ''}
+          ownerUserId={ownerUserId}
+          locale={locale}
+          setLocale={handleLocaleChange}
+          onCartClick={() => setIsCartOpen(true)}
+        />
+        
+        {/* Main Custom Layout Content */}
+        <main className="flex-grow pt-24 px-4">
+          <PageRenderer
+            ownerUserId={ownerUserId || storeInfo?.created_by || storeInfo?.owner_id || storeInfo?.hashid || (settings as any)?.created_by || (settings as any)?.owner_id}
+            slug="home"
+            storeName={storeInfo?.store_name || storeName || settings?.store_name || ''}
+            onNavigate={onNavigate}
+            addToCart={addToCart}
+          />
+        </main>
+      </div>
+    );
+  }
   if (theme === 'cafe_shop') {
     return (
       <CafeShopPage

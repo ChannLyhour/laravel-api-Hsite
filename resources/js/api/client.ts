@@ -38,11 +38,8 @@ const getApiBaseUrl = (): string => {
     return `${window.location.origin}/api`;
   }
 
-  // Default to Laravel API on Vercel
-  // return 'http://192.168.100.121:8000/api';
-  // return 'http://localhost:8000/api';
-  // return 'http://[IP_ADDRESS]/api';
-  return "https://laravel-api-hsite.vercel.app/api";
+  // Default fallback
+  return "/api";
 };
 
 export const API_BASE_URL = getApiBaseUrl();
