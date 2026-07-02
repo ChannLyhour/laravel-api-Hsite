@@ -402,7 +402,7 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
                     onClick={onClose}
                 />
 
-                <div className="relative bg-white w-full max-w-4xl rounded-[4px] shadow-2xl border border-stone-200 overflow-hidden flex flex-col md:flex-row max-h-[100vh] md:max-h-[100vh] animate-slide-up z-10">
+                <div className="relative bg-white w-full max-w-4xl rounded-[8px] sm:rounded-xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col md:flex-row max-h-[90vh] md:max-h-[90vh] animate-slide-up z-10">
                     {onClose && (
                         <button
                             onClick={onClose}
@@ -413,7 +413,7 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
                     )}
 
                     {/* Left Column: Gallery */}
-                    <div className="w-full md:w-fit md:shrink-0 p-4 sm:p-6 flex flex-col gap-4 border-r border-stone-100 overflow-hidden">
+                    <div className="w-full md:w-fit md:shrink-0 p-4 sm:p-6 flex flex-col gap-4 border-b md:border-b-0 md:border-r border-stone-100 overflow-hidden">
                         <div
                             onClick={() => {
                                 if (onNavigate) {
@@ -422,7 +422,7 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
                                     onNavigate(FASHION_ROUTES.getProduct(product.id, ownerId, storeSlug));
                                 }
                             }}
-                            className="relative w-[420px] h-[380px] sm:h-[500px] md:h-[620px] max-h-[60vh] md:max-h-[70vh] max-w-full bg-white border border-stone-200 rounded-[3px] overflow-hidden flex items-center justify-center group/main-image cursor-pointer"
+                            className="relative w-full md:w-[420px] aspect-[4/3] sm:aspect-square md:aspect-auto h-auto md:h-[620px] max-h-[35vh] sm:max-h-[50vh] md:max-h-[70vh] max-w-full bg-white border border-stone-200 rounded-[3px] overflow-hidden flex items-center justify-center group/main-image cursor-pointer"
                         >
                             {/* Premium Rotated Price-Tag Badge */}
                             {discount && (
@@ -530,8 +530,8 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
                     </div>
 
                     {/* Right Column: Details */}
-                    <div className="w-full md:flex-1 p-6 flex flex-col justify-between overflow-y-auto md:h-full">
-                        <div className="space-y-6">
+                    <div className="w-full md:flex-1 p-5 sm:p-6 flex flex-col justify-between overflow-y-auto md:h-full">
+                        <div className="space-y-4 sm:space-y-6">
                             <div className="space-y-1.5 pt-2">
                                 <div className="flex items-center gap-3 flex-wrap">
                                     <div className="flex items-baseline gap-3 font-mono">
@@ -624,7 +624,7 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
                                             select sizing
                                         </span>
                                     </div>
-                                    <div className="grid grid-cols-5 gap-2">
+                                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 sm:gap-2">
                                         {sizes.map((sz: string) => {
                                             const isSelected = selectedSize === sz;
                                             const isAvailable = isSizeAvailable(sz);
@@ -672,7 +672,7 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
                             </div>
                         </div>
 
-                        <div className="sticky bottom-0 bg-white dark:bg-stone-950 pt-4 mt-auto border-t border-stone-150 z-20 -mx-6 px-6 pb-2">
+                        <div className="sticky bottom-0 bg-white dark:bg-stone-950 pt-4 mt-auto border-t border-stone-150 z-20 -mx-5 sm:-mx-6 px-5 sm:px-6 pb-2">
                             <div className="flex gap-3">
                                 <button
                                     disabled={isSelectionComplete ? isOutOfStock : false}
@@ -687,7 +687,7 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
                                         }
                                         addToCart(product, detailQuantity, selectedSize, selectedColor);
                                     }}
-                                    className={`flex-1 py-4 font-black text-xs uppercase tracking-widest rounded-[5px] transition-colors border-none shadow-sm flex items-center justify-center gap-2 ${(isSelectionComplete ? isOutOfStock : false)
+                                    className={`flex-1 py-3 sm:py-4 font-black text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest rounded-[5px] transition-colors border-none shadow-sm flex items-center justify-center gap-1.5 ${(isSelectionComplete ? isOutOfStock : false)
                                         ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
                                         : 'btn-shine-swipe bg-stone-950 hover:bg-[#E61E25] text-white cursor-pointer'
                                         }`}
@@ -714,7 +714,7 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
                                             onNavigate(FASHION_ROUTES.getCheckout(ownerId, storeSlug));
                                         }
                                     }}
-                                    className={`flex-1 py-4 font-black text-xs uppercase tracking-widest rounded-[5px] transition-colors border-none shadow-sm flex items-center justify-center gap-2 ${(isSelectionComplete ? isOutOfStock : false)
+                                    className={`flex-1 py-3 sm:py-4 font-black text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest rounded-[5px] transition-colors border-none shadow-sm flex items-center justify-center gap-1.5 ${(isSelectionComplete ? isOutOfStock : false)
                                         ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
                                         : 'bg-[#E61E25] hover:bg-stone-900 text-white cursor-pointer'
                                         }`}
