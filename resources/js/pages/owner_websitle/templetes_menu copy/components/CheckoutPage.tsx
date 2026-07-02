@@ -628,7 +628,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         return (
             <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-4 font-kuntomruy animate-fade-in">
                 <div className="bg-white p-8 sm:p-12 rounded-sm border border-stone-200/60 shadow-2xl max-w-md w-full text-center space-y-6">
-                    <div className="w-20 h-20 bg-stone-900 rounded-full flex items-center justify-center mx-auto text-white shadow-lg animate-bounce">
+                    <div className="w-20 h-20 bg-stone-900 rounded-full flex items-center justify-center mx-auto text-white shadow-lg">
                         <FiCheck className="w-10 h-10 stroke-[3]" />
                     </div>
 

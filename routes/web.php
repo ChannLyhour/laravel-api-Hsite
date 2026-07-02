@@ -104,6 +104,23 @@ Route::get('/owner/{any}', function () {
 })->where('any', '.*');
 
 // React SPA storefront routing fallback (serves the React app for all frontend routes)
+Route::get('/shop', function () { return view('app'); });
+Route::get('/product', function () { return view('app'); });
+Route::get('/checkout', function () { return view('app'); });
+Route::get('/profile', function () { return view('app'); });
+Route::get('/wishlist', function () { return view('app'); });
+Route::get('/categories', function () { return view('app'); });
+Route::get('/walkin', function () { return view('app'); });
+
+// React SPA Storefront-specific clean slug routing
+Route::get('/{storeSlug}/shop', function () { return view('app'); });
+Route::get('/{storeSlug}/product', function () { return view('app'); });
+Route::get('/{storeSlug}/checkout', function () { return view('app'); });
+Route::get('/{storeSlug}/profile', function () { return view('app'); });
+Route::get('/{storeSlug}/wishlist', function () { return view('app'); });
+Route::get('/{storeSlug}/categories', function () { return view('app'); });
+Route::get('/{storeSlug}/menu', function () { return view('app'); });
+
 Route::get('/', function () {
     return view('app');
 });

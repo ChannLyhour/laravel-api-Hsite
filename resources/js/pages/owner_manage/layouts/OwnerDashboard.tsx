@@ -38,6 +38,7 @@ import { chatService } from '@/api/owner/chat';
 import { toast, setToastRef } from '../utils/toast';
 import { Toast } from 'primereact/toast';
 import { Storefront_ThemeTab } from '../components/Store_Settings/Storefront_ThemeTab';
+import { PagesBuilderTab } from '../components/PagesBuilderTab';
 import { BrandsTab } from '../components/BrandsTab';
 import { ProductBadgesTab } from '../components/ProductBadgesTab';
 import { CustomersTab } from '../components/CustomersTab';
@@ -728,6 +729,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'orders-completed': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="complete" />;
       case 'orders-cancelled': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="canceled" />;
       case 'posts': return <PostsTab ownerId={activeOwnerId} />;
+      case 'pages-builder': return <PagesBuilderTab ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'theme': return <Storefront_ThemeTab ownerId={activeOwnerId} profile={profile} />;
       case 'customize-system': return <CustomizeSystemTab />;
       case 'settings': return <SettingsTab profile={profile} ownerId={activeOwnerId} />;

@@ -12,6 +12,9 @@ import type { FooterPageProps } from '../types';
 import { FASHION_ROUTES } from '../routes';
 import { client } from '@/api/client';
 import { publicFlashDealsService } from '@/api/created_by/getFlashDealsOwnerByid';
+import { resolveImageUrl } from '../utils/imageUtils';
+
+
 
 export const FooterPage: React.FC<FooterPageProps> = ({
   storeName = '---',
@@ -141,6 +144,138 @@ export const FooterPage: React.FC<FooterPageProps> = ({
     return (categories || []).filter((c: any) => !c.parent_id);
   }, [categories]);
 
+  const enabledPayments = React.useMemo(() => {
+    if (!storeInfo) return [];
+    
+    // Parse value if it is a JSON string
+    let settings = storeInfo;
+    if (storeInfo.value) {
+      try {
+        const parsed = typeof storeInfo.value === 'string' ? JSON.parse(storeInfo.value) : storeInfo.value;
+        settings = { ...storeInfo, ...parsed };
+      } catch (e) {
+        console.warn('Failed to parse store settings in footer:', e);
+      }
+    }
+
+    const methodsBase = [
+      { key: 'aba', name: 'ABA PAY', bg: 'bg-[#005D7E]' },
+      { key: 'bakong', name: 'Bakong KHQR', bg: 'bg-[#b30006]' },
+      { key: 'card', name: 'Credit/Debit Card' },
+      { key: 'acleda', name: 'ACLEDA PAY', bg: 'bg-[#0d3b66]' },
+      { key: 'wing', name: 'Wing Bank', bg: 'bg-[#84bd00]' },
+      { key: 'chipmong', name: 'CHIP MONG BANK', bg: 'bg-[#009b72]' },
+      { key: 'transfer', name: 'Bank Transfer' },
+      { key: 'cod', name: 'Cash on Delivery' }
+    ];
+
+    const activeKeys = methodsBase.filter(p => {
+      const methods = settings.payment_methods || {};
+      const config = methods[p.key];
+      if (config) return config.enabled;
+
+      const legacyConfig = settings[`payment_gw_${p.key}`];
+      if (legacyConfig) {
+        try {
+          const parsed = typeof legacyConfig === 'string' ? JSON.parse(legacyConfig) : legacyConfig;
+          return parsed.enabled;
+        } catch { return false; }
+      }
+      return p.key === 'cod' || p.key === 'transfer';
+    });
+
+    return activeKeys.map(p => {
+      const methods = settings.payment_methods || {};
+      const config = methods[p.key] || {};
+      const configValues = config.values || {};
+
+      // 1. If custom logo is uploaded dynamically, use it!
+      if (configValues.logo_url) {
+        return {
+          key: p.key,
+          name: p.name,
+          logo: (
+            <img 
+              src={resolveImageUrl(configValues.logo_url)} 
+              alt={p.name} 
+              className="w-10 h-7 rounded border border-stone-200 bg-white object-contain p-[2px]" 
+            />
+          )
+        };
+      }
+
+      // 2. Otherwise, fall back to clean custom stylized labels
+      let fallbackLogo = null;
+      if (p.key === 'aba') {
+        fallbackLogo = (
+          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center shadow-3xs bg-[#005D7E] text-white font-sans font-black text-[11px] tracking-tight relative select-none">
+            ABA
+            <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#E61E25]" />
+          </div>
+        );
+      } else if (p.key === 'bakong') {
+        fallbackLogo = (
+          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#b30006] text-white font-sans font-black text-[9px] tracking-tight relative select-none">
+            Bakong
+          </div>
+        );
+      } else if (p.key === 'card') {
+        fallbackLogo = (
+          <div className="w-10 h-7 rounded shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200/85 select-none">
+            <div className="grid grid-cols-2 gap-[1px] p-[1px]">
+              <span className="text-[5.5px] font-black text-blue-800 leading-none">VISA</span>
+              <span className="text-[5.5px] font-black text-red-500 leading-none">MC</span>
+              <span className="text-[5.5px] font-black text-green-700 leading-none">JCB</span>
+              <span className="text-[5.5px] font-black text-blue-900 leading-none">UP</span>
+            </div>
+          </div>
+        );
+      } else if (p.key === 'acleda') {
+        fallbackLogo = (
+          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#0d3b66] text-amber-400 font-bold text-[8px] select-none">
+            ACLEDA
+          </div>
+        );
+      } else if (p.key === 'wing') {
+        fallbackLogo = (
+          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#84bd00] text-blue-900 font-black text-[9px] select-none">
+            Wing
+          </div>
+        );
+      } else if (p.key === 'chipmong') {
+        fallbackLogo = (
+          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#009b72] text-white font-bold text-[8px] select-none">
+            CMB
+          </div>
+        );
+      } else if (p.key === 'transfer') {
+        fallbackLogo = (
+          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200 select-none">
+            <span className="text-[13px]">🏦</span>
+          </div>
+        );
+      } else if (p.key === 'cod') {
+        fallbackLogo = (
+          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200 select-none">
+            <span className="text-[13px]">💵</span>
+          </div>
+        );
+      } else {
+        fallbackLogo = (
+          <div className={`w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center font-bold text-[8px] select-none uppercase ${p.bg || 'bg-stone-100 border border-stone-200'}`}>
+            {p.key}
+          </div>
+        );
+      }
+
+      return {
+        key: p.key,
+        name: p.name,
+        logo: fallbackLogo
+      };
+    });
+  }, [storeInfo]);
+
   const handleLinkClick = (e: React.MouseEvent, url: string) => {
     if (onNavigate) {
       e.preventDefault();
@@ -149,96 +284,138 @@ export const FooterPage: React.FC<FooterPageProps> = ({
   };
 
   return (
-    <footer className="bg-white text-stone-500 pt-12 sm:pt-16 pb-16 sm:pb-10 mt-auto border-t border-stone-200/60 font-sans">
+    <footer className="bg-stone-50 text-stone-600 pt-16 pb-8 mt-auto border-t border-stone-200/80 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-4 sm:gap-10">
-          {/* Column 1: Brand & Bio */}
-          <div className="col-span-3 sm:col-span-1 space-y-4 text-left">
-            <span className="font-sans font-black text-xl text-stone-900 uppercase tracking-widest block transition-all duration-300 hover:text-[#E61E25] cursor-default">
-              {storeInfo?.store_name || storeName}
-            </span>
-            <p className="text-xs leading-relaxed text-stone-500 font-medium">
-              Premium haute-couture boutique specializing in minimalist organic clothing, linen collections,
-              and handcrafted style lookbooks.
-            </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-10 gap-x-8 lg:gap-12">
+          
+          {/* Column 1: Brand & Newsletter */}
+          <div className="space-y-6 text-left">
+            <div className="space-y-3">
+              <span className="font-sans font-black text-xl text-stone-900 uppercase tracking-[0.2em] block transition-all duration-300 hover:text-[#E61E25] cursor-pointer"
+                onClick={() => {
+                  if (onNavigate) {
+                    onNavigate(homeUrl);
+                  }
+                }}
+              >
+                {storeInfo?.store_name || storeName}
+              </span>
+              <p className="text-[9px] tracking-widest text-stone-400 font-extrabold uppercase leading-normal">
+                Minimalist Organic Essentials
+              </p>
+            </div>
 
-            {/* Dynamic Social Icons */}
-            <div className="flex items-center space-x-3 pt-2">
-              {socials.map((social) => (
-                <a
-                  key={social.id}
-                  href={formatSocialUrl(social.link)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-full border border-stone-200 hover:border-stone-400 text-stone-500 hover:text-stone-900 flex items-center justify-center transition-all duration-300"
-                  title={social.name}
+            {/* Newsletter input */}
+            <div className="space-y-3 pr-2">
+              <h5 className="text-[10px] font-black text-stone-900 uppercase tracking-widest m-0">Newsletter</h5>
+              <p className="text-[11px] text-stone-500 font-semibold leading-normal m-0">
+                Join our list for exclusive releases and 10% off your first order.
+              </p>
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                }}
+                className="flex items-center border-b border-stone-300 py-1"
+              >
+                <input 
+                  type="email" 
+                  required
+                  placeholder="Enter email address"
+                  className="appearance-none bg-transparent border-none w-full text-stone-855 mr-3 py-1 px-2 text-xs font-bold leading-tight focus:outline-none placeholder:text-stone-350"
+                />
+                <button 
+                  type="submit"
+                  className="bg-transparent hover:text-[#E61E25] text-stone-900 text-[10px] font-black uppercase tracking-wider border-none cursor-pointer transition-colors p-1"
                 >
-                  {getSocialIcon(social.name)}
-                </a>
-              ))}
+                  Join
+                </button>
+              </form>
             </div>
           </div>
 
-          {/* Column 2: Product Badges / Collections */}
-          <div className="col-span-1 space-y-4 text-left">
-            <h4 className="text-stone-900 font-black text-xs uppercase tracking-wider">Collections</h4>
-            <ul className="space-y-2.5 text-xs font-semibold list-none p-0 m-0">
-              {badges.length > 0 ? (
-                badges.map((badge) => {
-                  const targetId = badge.name.toLowerCase().replace(/\s+/g, '-');
-                  return (
-                    <li key={badge.id}>
-                      <a href={`#${targetId}`} className="footer-link-draw text-stone-500 hover:text-stone-900 no-underline flex items-center gap-1.5 capitalize">
-                        <span
-                          className="w-1.5 h-1.5 rounded-full shrink-0"
-                          style={{ backgroundColor: badge.background_color || '#E61E25' }}
-                        />
-                        {badge.name.toLowerCase()}
-                      </a>
-                    </li>
-                  );
-                })
-              ) : (
-                <>
-                </>
-              )}
+          {/* Column 2: Discover / Shopping */}
+          <div className="space-y-4 text-left">
+            <h4 className="text-stone-900 font-black text-xs uppercase tracking-wider">Explore</h4>
+            <ul className="space-y-3 text-xs font-semibold list-none p-0 m-0">
+              <li>
+                <a 
+                  href={homeUrl} 
+                  onClick={(e) => handleLinkClick(e, homeUrl)}
+                  className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5"
+                >
+                  Home
+                </a>
+              </li>
+              <li>
+                <a 
+                  href={shopUrl} 
+                  onClick={(e) => handleLinkClick(e, shopUrl)}
+                  className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5"
+                >
+                  Shop All
+                </a>
+              </li>
+              {topCategories.slice(0, 4).map((c: any) => {
+                const catSlug = `#${c.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+                const catUrl = FASHION_ROUTES.getShop(ownerUserId || storeInfo?.created_by, storeSlug, { hash: catSlug });
+                return (
+                  <li key={c.id}>
+                    <a 
+                      href={catUrl} 
+                      onClick={(e) => handleLinkClick(e, catUrl)}
+                      className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5 capitalize"
+                    >
+                      {c.name.toLowerCase()}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
-          {/* Column 3: Offers & Deals */}
-          <div className="col-span-1 space-y-4 text-left">
-            <h4 className="text-stone-900 font-black text-xs uppercase tracking-wider">Offers & Deals</h4>
-            <ul className="space-y-2.5 text-xs font-semibold list-none p-0 m-0">
-              {promotions.map((promo) => (
-                <li key={promo.id}>
-                  <a
-                    href={promo.link}
-                    onClick={(e) => handleLinkClick(e, promo.link)}
-                    className="footer-link-draw text-stone-500 no-underline capitalize"
-                  >
-                    {promo.title.toLowerCase()}
-                  </a>
-                </li>
-              ))}
+          {/* Column 3: Customer Service */}
+          <div className="space-y-4 text-left">
+            <h4 className="text-stone-900 font-black text-xs uppercase tracking-wider">Assistance</h4>
+            <ul className="space-y-3 text-xs font-semibold list-none p-0 m-0">
+              <li>
+                <a href="#shipping" className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5">
+                  Shipping & Delivery
+                </a>
+              </li>
+              <li>
+                <a href="#returns" className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5">
+                  Returns & Exchanges
+                </a>
+              </li>
+              <li>
+                <a href="#size-guide" className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5">
+                  Size Guide
+                </a>
+              </li>
+              <li>
+                <a href="#faq" className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5">
+                  FAQ
+                </a>
+              </li>
             </ul>
           </div>
 
-          {/* Column 4: Contact / Hub */}
-          <div className="col-span-1 sm:col-span-1 space-y-4 text-left">
+          {/* Column 4: Contact Us */}
+          <div className="space-y-4 text-left">
             <h4 className="text-stone-900 font-black text-xs uppercase tracking-wider">Contact Us</h4>
             <div className="space-y-3.5 text-xs font-semibold">
               {storeInfo?.store_address && storeInfo.store_address !== '---' && (
                 <div className="flex items-start sm:gap-3 group min-w-0">
-                  <div className="hidden sm:flex w-8 h-8 rounded-full bg-stone-50 dark:bg-stone-900 border border-stone-150 dark:border-stone-850 items-center justify-center shrink-0 text-stone-500 group-hover:text-stone-900 group-hover:bg-stone-100/50 transition-all duration-300">
+                  <div className="hidden sm:flex w-8 h-8 rounded-full bg-white border border-stone-200 items-center justify-center shrink-0 text-stone-500 group-hover:text-stone-900 group-hover:bg-stone-100 transition-all duration-300">
                     <FiMapPin className="w-3.5 h-3.5" />
                   </div>
                   <div className="space-y-1 min-w-0">
                     <span className="flex items-center gap-1.5 text-[10px] font-black text-stone-400 uppercase tracking-wider leading-none">
                       <FiMapPin className="w-3.5 h-3.5 sm:hidden shrink-0 text-stone-400" />
-                      {storeInfo?.store_name && storeInfo.store_name || '---'}
+                      {storeInfo?.store_name || 'Store'}
                     </span>
-                    <span className="text-stone-700 dark:text-stone-300 leading-normal block break-words text-[11px] sm:text-xs">
+                    <span className="text-stone-700 leading-normal block break-words text-[11px] sm:text-xs">
                       {storeInfo.store_address}
                     </span>
                   </div>
@@ -247,9 +424,9 @@ export const FooterPage: React.FC<FooterPageProps> = ({
               {storeInfo?.store_phone && storeInfo.store_phone !== '---' && (
                 <a 
                   href={`tel:${storeInfo.store_phone}`} 
-                  className="flex items-start sm:items-center sm:gap-3 group text-stone-700 dark:text-stone-300 no-underline hover:text-[#E61E25] transition-colors min-w-0"
+                  className="flex items-start sm:items-center sm:gap-3 group text-stone-700 no-underline hover:text-[#E61E25] transition-colors min-w-0"
                 >
-                  <div className="hidden sm:flex w-8 h-8 rounded-full bg-stone-50 dark:bg-stone-900 border border-stone-150 dark:border-stone-850 items-center justify-center shrink-0 text-stone-500 group-hover:text-[#E61E25] group-hover:bg-[#E61E25]/5 group-hover:border-[#E61E25]/20 transition-all duration-300">
+                  <div className="hidden sm:flex w-8 h-8 rounded-full bg-white border border-stone-200 items-center justify-center shrink-0 text-stone-500 group-hover:text-[#E61E25] group-hover:bg-white group-hover:border-[#E61E25] transition-all duration-300">
                     <FiPhone className="w-3.5 h-3.5" />
                   </div>
                   <div className="space-y-1 min-w-0">
@@ -266,9 +443,9 @@ export const FooterPage: React.FC<FooterPageProps> = ({
               {storeInfo?.store_email && storeInfo.store_email !== '---' && (
                 <a 
                   href={`mailto:${storeInfo.store_email}`} 
-                  className="flex items-start sm:items-center sm:gap-3 group text-stone-700 dark:text-stone-300 no-underline hover:text-[#E61E25] transition-colors min-w-0"
+                  className="flex items-start sm:items-center sm:gap-3 group text-stone-700 no-underline hover:text-[#E61E25] transition-colors min-w-0"
                 >
-                  <div className="hidden sm:flex w-8 h-8 rounded-full bg-stone-50 dark:bg-stone-900 border border-stone-150 dark:border-stone-850 items-center justify-center shrink-0 text-stone-500 group-hover:text-[#E61E25] group-hover:bg-[#E61E25]/5 group-hover:border-[#E61E25]/20 transition-all duration-300">
+                  <div className="hidden sm:flex w-8 h-8 rounded-full bg-white border border-stone-200 items-center justify-center shrink-0 text-stone-500 group-hover:text-[#E61E25] group-hover:bg-white group-hover:border-[#E61E25] transition-all duration-300">
                     <FiMail className="w-3.5 h-3.5" />
                   </div>
                   <div className="space-y-1 min-w-0 w-full">
@@ -283,6 +460,50 @@ export const FooterPage: React.FC<FooterPageProps> = ({
                 </a>
               )}
             </div>
+            
+            {/* Dynamic Social Icons */}
+            {socials.length > 0 && (
+              <div className="flex items-center space-x-3 pt-4 border-t border-stone-200/40 mt-4">
+                {socials.map((social) => (
+                  <a
+                    key={social.id}
+                    href={formatSocialUrl(social.link)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-full border border-stone-200 hover:border-stone-900 hover:bg-stone-900 hover:text-white text-stone-500 flex items-center justify-center transition-all duration-300 shadow-3xs"
+                    title={social.name}
+                  >
+                    {getSocialIcon(social.name)}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer Copyright Bar */}
+        <div className="pt-8 mt-12 border-t border-stone-200/80 flex flex-col lg:flex-row items-center justify-between gap-6 text-[10px] font-black uppercase tracking-widest text-stone-400">
+          <p className="m-0 text-center lg:text-left">© {new Date().getFullYear()} {storeInfo?.store_name || storeName}. All Rights Reserved.</p>
+          
+          {/* Enabled Payment Gateways Logos */}
+          {enabledPayments.length > 0 && (
+            <div className="flex items-center justify-center flex-wrap gap-2.5 animate-fade-in select-none">
+              {enabledPayments.map((p) => (
+                <div 
+                  key={p.key} 
+                  title={p.name}
+                  className="transition-transform duration-300 hover:scale-105"
+                >
+                  {p.logo}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-4 m-0 text-center lg:text-right">
+            <span className="cursor-pointer hover:text-stone-900 transition-colors">Privacy Policy</span>
+            <span className="text-stone-200 font-normal select-none">•</span>
+            <span className="cursor-pointer hover:text-stone-900 transition-colors">Terms of Service</span>
           </div>
         </div>
       </div>

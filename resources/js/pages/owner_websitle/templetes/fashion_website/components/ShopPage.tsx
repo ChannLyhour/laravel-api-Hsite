@@ -1155,7 +1155,7 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
               </div>
             ) : (
               <div
-                className={`grid animate-fade-in ${gridCols === 2
+                className={`grid animate-fade-in gap-x-6 gap-y-10 w-full ${gridCols === 2
                   ? 'grid-cols-2'
                   : gridCols === 3
                     ? 'grid-cols-2 sm:grid-cols-3'

@@ -32,12 +32,12 @@ import { adminSettingApi } from '@/api/admin/setting';
 const getTenantDomain = (): string | null => {
   if (typeof window === 'undefined') return null;
   const hostname = window.location.hostname;
-  
+
   // Ignore standard local dev hosts without subdomains
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return null;
   }
-  
+
   // List of root platform domains
   const platformDomains = [
     'lvh.me',
@@ -47,12 +47,12 @@ const getTenantDomain = (): string | null => {
     'yourplatform.com',
     'laravel-api-hsite.vercel.app'
   ];
-  
+
   // If the hostname matches one of these platform roots exactly, it's the main platform site
   if (platformDomains.includes(hostname)) {
     return null;
   }
-  
+
   // Otherwise, it's a tenant subdomain or custom domain (we return the full host including port if present)
   return window.location.host;
 };
@@ -121,7 +121,7 @@ function App() {
   const [settings, setSettings] = useState<SettingResponse['settings'] | null>(() => {
     try {
       const initialOwnerId = getInitialOwnerId();
-      
+
       // If it's a storefront path slug and we haven't resolved it yet, start as null
       if (initialOwnerId === OWNER_USER_ID && parseStorePath(window.location.pathname) !== null) {
         return null;
@@ -277,7 +277,7 @@ function App() {
     // Priority 1: Direct ID in URL (the most explicit intent)
     if (urlOwnerId) {
       const parsedId = isNaN(Number(urlOwnerId)) ? urlOwnerId : parseInt(urlOwnerId, 10);
-      
+
       // Block public access to Super Admin (Owner ID 1 or Super_Admin slug) only on public storefront
       const isOwnerPath = currentPath.startsWith('/owner') && currentPath !== '/owner/menu';
       if (!isOwnerPath && (String(parsedId) === '1' || String(params.get('store')).toLowerCase() === 'super_admin')) {
@@ -352,7 +352,7 @@ function App() {
     const storeRoute = parseStorePath(currentPath);
     if (storeRoute) {
       const slugLower = storeRoute.storeSlug.toLowerCase();
-      
+
       // Check if store is already cached in memory
       if (resolvedStores[slugLower]) {
         const cached = resolvedStores[slugLower];
@@ -609,7 +609,7 @@ function App() {
     const storeSlug = storeInfo.store_name.replace(/\s+/g, '_');
     const urlStore = params.get('store');
     const urlId = params.get('id') || params.get('owner');
-    
+
     let needsUpdate = false;
     if (urlStore !== storeSlug) {
       params.set('store', storeSlug);
@@ -772,7 +772,7 @@ function App() {
       }
 
       const tenantDomain = getTenantDomain();
-      
+
       // If we are on a tenant subdomain/custom domain, the clean URL is just / or /menu (no path slug prefix)
       if (tenantDomain) {
         const isMenu = currentPath.includes('/menu');
@@ -787,7 +787,15 @@ function App() {
       const params = new URLSearchParams(location.search);
       const storeRoute = parseStorePath(currentPath);
       const isOwnerPath = currentPath.startsWith('/owner') && currentPath !== '/owner/menu';
-      const isCleanHomeOrMenu = currentPath === '/' || currentPath === '/menu' || !!storeRoute;
+
+      // Only redirect query-param URLs (/?id=...&store=...) or bare home/menu paths to clean slug URLs.
+      // Do NOT redirect sub-page paths like /{storeSlug}/shop, /{storeSlug}/product, etc. —
+      // those are already in the correct clean format and should be preserved.
+      const pathParts = currentPath.split('/').filter(Boolean);
+      const subPath = storeRoute && pathParts.length > 1 ? '/' + pathParts.slice(1).join('/') : '';
+      const isStoreSubPage = !!storeRoute && subPath !== '' && subPath !== '/menu';
+
+      const isCleanHomeOrMenu = currentPath === '/' || currentPath === '/menu' || (!!storeRoute && !isStoreSubPage);
       const isStorefront = (hasOwnerParam || currentPath === '/menu' || currentPath === '/owner/menu' || !!storeRoute) && !isOwnerPath && isCleanHomeOrMenu && String(ownerUserId) !== '1';
 
       if (isStorefront) {
@@ -796,7 +804,7 @@ function App() {
         if (!storeSlug || storeSlug.includes('.')) {
           storeSlug = storeInfo.store_name.replace(/\s+/g, '_');
         }
-        
+
         const isMenu = currentPath.includes('/menu') || (storeRoute && storeRoute.isMenu);
         const expectedPath = isMenu ? `/${storeSlug}/menu` : `/${storeSlug}`;
 
@@ -821,7 +829,7 @@ function App() {
     const updateFavicon = async () => {
       // 1. Check if favicon URL is already in current store/settings objects
       const settingsFavicon = settings?.favicon_url || storeInfo?.favicon_url;
-      
+
       if (settingsFavicon) {
         const resolvedUrl = resolveImageUrl(settingsFavicon);
         storeBrandingService.applyFavicon(`${resolvedUrl}?v=${Date.now()}`);
@@ -1024,7 +1032,7 @@ function App() {
         if (platformSettings.platform_name) {
           platformName = platformSettings.platform_name;
         }
-        
+
         // Apply platform favicon for non-owner routes
         if (!hasOwner && platformSettings.favicon_url) {
           storeBrandingService.applyFavicon(resolveImageUrl(platformSettings.favicon_url));
@@ -1312,7 +1320,7 @@ const SocialAuthCallback: React.FC<SocialAuthCallbackProps> = ({ provider, onSuc
 
         const savedOwnerId = localStorage.getItem('oauth_owner_id');
         const savedStoreName = localStorage.getItem('oauth_store_name');
-        
+
         let createdBy: number | string | undefined = undefined;
         if (savedOwnerId) {
           createdBy = isNaN(Number(savedOwnerId)) ? savedOwnerId : parseInt(savedOwnerId, 10);
@@ -1335,14 +1343,14 @@ const SocialAuthCallback: React.FC<SocialAuthCallbackProps> = ({ provider, onSuc
           window.dispatchEvent(new Event('aura_token_changed'));
           setStatus('success');
           toast.success('Signed in successfully!');
-          
+
           setTimeout(() => {
             // Restore store url
             const storeSlug = (savedStoreName || 'store').replace(/\s+/g, '_');
-            const targetUrl = savedOwnerId 
-              ? `/?id=${savedOwnerId}&store=${storeSlug}` 
+            const targetUrl = savedOwnerId
+              ? `/?id=${savedOwnerId}&store=${storeSlug}`
               : '/';
-            
+
             // Clean up oauth variables
             localStorage.removeItem('oauth_owner_id');
             localStorage.removeItem('oauth_store_name');

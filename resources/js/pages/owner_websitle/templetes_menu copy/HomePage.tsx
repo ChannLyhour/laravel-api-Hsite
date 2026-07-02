@@ -241,9 +241,15 @@ export const HomePage: React.FC<HomePageProps> = ({
         <main className="flex-grow pt-24 px-4">
           <PageRenderer
             ownerUserId={ownerUserId || storeInfo?.created_by || storeInfo?.owner_id || storeInfo?.hashid || (settings as any)?.created_by || (settings as any)?.owner_id}
-            slug="home"
+            slug={currentPath && currentPath !== '/' ? currentPath.replace(/^\//, '') : 'home'}
             storeName={storeInfo?.store_name || storeName || settings?.store_name || ''}
-            onNavigate={onNavigate}
+            onNavigate={(to) => {
+              if (to && !to.startsWith('http') && !to.startsWith('#') && !to.startsWith('mailto:') && !to.startsWith('tel:')) {
+                onNavigate(buildStoreLink(to));
+              } else {
+                onNavigate(to);
+              }
+            }}
             addToCart={addToCart}
           />
         </main>

@@ -222,9 +222,10 @@ export const PageRenderer: React.FC<PageRendererProps> = ({
             data-builder-id={el.id}
             href={el.settings?.link || '#'}
             onClick={(e) => {
-              if (onNavigate && el.settings?.link?.startsWith('/')) {
+              const link = el.settings?.link;
+              if (onNavigate && link && !link.startsWith('http') && !link.startsWith('#') && !link.startsWith('mailto:') && !link.startsWith('tel:')) {
                 e.preventDefault();
-                onNavigate(el.settings.link);
+                onNavigate(link.startsWith('/') ? link : `/${link}`);
               }
             }}
             className="inline-block hover:opacity-90 hover:scale-105 transition-all text-center"
@@ -259,9 +260,10 @@ export const PageRenderer: React.FC<PageRendererProps> = ({
                     key={i}
                     href={link.url}
                     onClick={(e) => {
-                      if (onNavigate && link.url.startsWith('/')) {
+                      const url = link.url;
+                      if (onNavigate && url && !url.startsWith('http') && !url.startsWith('#') && !url.startsWith('mailto:') && !url.startsWith('tel:')) {
                         e.preventDefault();
-                        onNavigate(link.url);
+                        onNavigate(url.startsWith('/') ? url : `/${url}`);
                       }
                     }}
                     className="text-stone-300 hover:text-white text-xs font-bold uppercase transition-colors"

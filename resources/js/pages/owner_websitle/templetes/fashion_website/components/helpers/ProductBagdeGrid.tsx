@@ -56,16 +56,16 @@ const getHeaderTextColor = (name: string) => {
 const getGridColsClass = (cols: number) => {
   switch (cols) {
     case 2:
-      return 'grid-cols-2';
+      return 'grid-cols-2 gap-4';
     case 3:
-      return 'grid-cols-2 sm:grid-cols-3';
+      return 'grid-cols-2 sm:grid-cols-3 gap-4';
     case 4:
-      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4';
+      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4';
     case 5:
-      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5';
+      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
     case 6:
     default:
-      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6';
+      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4';
   }
 };
 

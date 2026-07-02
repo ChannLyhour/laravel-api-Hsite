@@ -372,7 +372,7 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                         }
                         setHoveredCategory(null);
                       }}
-                      className="h-full flex items-center cursor-pointer relative"
+                      className="h-full flex items-center cursor-pointer"
                     >
                       <span
                         className={`nav-link-draw hover:text-[#E61E25] transition-colors py-8 ${hoveredCategory === catKey ? 'text-[#E61E25]' : 'text-stone-800'
@@ -729,7 +729,7 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                         setIsProfileDropdownOpen(false);
                         if (onNavigate) onNavigate(FASHION_ROUTES.getOwnerDashboard());
                       }}
-                      className={`flex items-center gap-2 px-3 py-2 text-[10px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
+                      className={`flex items-center gap-2 px-3 py-2 text-[14px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
                         isDashboardActive
                           ? 'bg-stone-900 text-white hover:bg-stone-850'
                           : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50 bg-transparent'
@@ -746,7 +746,7 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                       setIsProfileDropdownOpen(false);
                       if (onNavigate) onNavigate(FASHION_ROUTES.getProfile(ownerUserId, storeSlug, 'profile'));
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 text-[10px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
+                    className={`flex items-center gap-2 px-3 py-2 text-[14px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
                       isProfilePage && currentTab === 'profile'
                         ? 'bg-stone-900 text-white hover:bg-stone-850'
                         : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50 bg-transparent'
@@ -761,7 +761,7 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                       setIsProfileDropdownOpen(false);
                       if (onNavigate) onNavigate(FASHION_ROUTES.getProfile(ownerUserId, storeSlug, 'orders'));
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 text-[10px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
+                    className={`flex items-center gap-2 px-3 py-2 text-[14px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
                       isProfilePage && currentTab === 'orders'
                         ? 'bg-stone-900 text-white hover:bg-stone-850'
                         : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50 bg-transparent'
@@ -776,7 +776,7 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                       setIsProfileDropdownOpen(false);
                       if (onNavigate) onNavigate(FASHION_ROUTES.getProfile(ownerUserId, storeSlug, 'giftcard'));
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 text-[10px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
+                    className={`flex items-center gap-2 px-3 py-2 text-[14px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
                       isProfilePage && currentTab === 'giftcard'
                         ? 'bg-stone-900 text-white hover:bg-stone-850'
                         : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50 bg-transparent'
@@ -791,7 +791,7 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                       setIsProfileDropdownOpen(false);
                       if (onNavigate) onNavigate(FASHION_ROUTES.getProfile(ownerUserId, storeSlug, 'address'));
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 text-[10px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
+                    className={`flex items-center gap-2 px-3 py-2 text-[14px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
                       isProfilePage && currentTab === 'address'
                         ? 'bg-stone-900 text-white hover:bg-stone-850'
                         : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50 bg-transparent'
@@ -806,7 +806,7 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                       setIsProfileDropdownOpen(false);
                       if (onNavigate) onNavigate(FASHION_ROUTES.getProfile(ownerUserId, storeSlug, 'chat'));
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 text-[10px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
+                    className={`flex items-center gap-2 px-3 py-2 text-[14px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
                       isProfilePage && currentTab === 'chat'
                         ? 'bg-stone-900 text-white hover:bg-stone-850'
                         : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50 bg-transparent'
