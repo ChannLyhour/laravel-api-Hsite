@@ -1120,39 +1120,26 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
 
 
             {/* Products Grid */}
-            {isLimitLoading && paginatedItems.length === 0 ? (
-              <div className="w-full py-10">
-                <SkeletonGrid
-                  count={12}
-                  gridColsClass={`grid gap-x-6 gap-y-10 w-full ${
-                    gridCols === 2
-                      ? 'grid-cols-2'
-                      : gridCols === 3
-                      ? 'grid-cols-2 sm:grid-cols-3'
-                      : gridCols === 4
-                      ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
-                      : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6'
-                  }`}
-                />
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="py-24 text-center space-y-4">
-                <span className="text-4xl">🔍</span>
-                <div>
-                  <h3 className="font-extrabold text-stone-850 text-sm uppercase tracking-wider">
-                    No matching styles
-                  </h3>
-                  <p className="text-stone-400 text-2xs font-semibold mt-1">
-                    Try resetting color, size, or price bounds.
-                  </p>
+            {filteredProducts.length === 0 ? (
+              !isLimitLoading && (
+                <div className="py-24 text-center space-y-4">
+                  <span className="text-4xl">🔍</span>
+                  <div>
+                    <h3 className="font-extrabold text-stone-850 text-sm uppercase tracking-wider">
+                      No matching styles
+                    </h3>
+                    <p className="text-stone-400 text-2xs font-semibold mt-1">
+                      Try resetting color, size, or price bounds.
+                    </p>
+                  </div>
+                  <button
+                    onClick={clearAllFilters}
+                    className="px-5 py-3 border border-stone-900 text-stone-900 text-[10px] font-black uppercase tracking-widest hover:bg-stone-950 hover:text-white transition-all duration-300 rounded-[2px]"
+                  >
+                    Clear all filters
+                  </button>
                 </div>
-                <button
-                  onClick={clearAllFilters}
-                  className="px-5 py-3 border border-stone-900 text-stone-900 text-[10px] font-black uppercase tracking-widest hover:bg-stone-950 hover:text-white transition-all duration-300 rounded-[2px]"
-                >
-                  Clear all filters
-                </button>
-              </div>
+              )
             ) : (
               <div
                 className={`grid animate-fade-in gap-x-6 gap-y-10 w-full ${gridCols === 2
@@ -1213,35 +1200,10 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
               </div>
             )}
 
-            {/* Infinite Scroll loading more spinner indicator */}
-            {loadingMore && (
-              <div className="w-full py-10 space-y-6">
-                <SkeletonGrid
-                  count={gridCols || 4}
-                  gridColsClass={`grid gap-x-6 gap-y-10 w-full ${
-                    gridCols === 2
-                      ? 'grid-cols-2'
-                      : gridCols === 3
-                      ? 'grid-cols-2 sm:grid-cols-3'
-                      : gridCols === 4
-                      ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
-                      : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6'
-                  }`}
-                />
-                <div className="flex flex-col items-center justify-center space-y-2 animate-fade-in w-full">
-                  <div className="relative w-10 h-10">
-                    <div className="absolute inset-0 rounded-full border-4 border-stone-200 dark:border-stone-800" />
-                    <div className="absolute inset-0 rounded-full border-4 border-t-stone-900 dark:border-t-stone-100 animate-spin" />
-                  </div>
-                  <span className="text-2xs font-extrabold text-stone-400 dark:text-stone-500 uppercase tracking-widest animate-pulse">
-                    Loading More Styles...
-                  </span>
-                </div>
-              </div>
-            )}
+            {/* Infinite Scroll loading more spinner indicator removed */}
 
             {/* Badge-grouped products (New, Sale, Trending, etc.) */}
-            <ProductBagdeGrid
+            {/* <ProductBagdeGrid
               items={filteredProducts}
               ownerUserId={ownerUserId}
               stores={stores}
@@ -1251,7 +1213,7 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
               favorites={favorites}
               toggleFavorite={toggleFavorite}
               gridCols={gridCols}
-            />
+            /> */}
           </main>
         </div>
       </div>
