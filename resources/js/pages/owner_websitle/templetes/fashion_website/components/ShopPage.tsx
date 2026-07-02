@@ -9,7 +9,6 @@ import { CardProduct } from './helpers/CardProduct';
 import { ProductBagdeGrid } from './helpers/ProductBagdeGrid';
 import { Special_Product } from './helpers/Special_Product';
 import { FilterSf } from './helpers/Filter_sf';
-import { useLimitGet } from '../hooks/useLimitGet';
 import { SkeletonGrid, LineLoading } from './helpers/SkeletonSt';
 import { brandsService, type Brand } from '@/api/owner/brands';
 import { attributesService, type ProductAttribute } from '@/api/owner/product';
@@ -32,45 +31,7 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
   featuredDeals = [],
   clearanceSales = [],
 }) => {
-  // Infinite scroll limits query hook
-  const {
-    items: paginatedItems,
-    loading: isLimitLoading,
-    loadingMore,
-    hasMore,
-    loadMore,
-  } = useLimitGet({
-    limit: 24, // multiples of 2, 3, and 4 items per page grid layout
-    ownerUserId,
-    storeId: stores?.id,
-  });
-
-  // Infinite Scroll page bottom check handler with requestAnimationFrame tick optimization
-  useEffect(() => {
-    let ticking = false;
-
-    const handleScrollEvent = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const scrollHeight = document.documentElement.scrollHeight;
-          const scrollTop = window.scrollY || document.documentElement.scrollTop;
-          const clientHeight = window.innerHeight;
-
-          // Scroll trigger threshold of 150px close to bottom of page
-          const isNearBottom = scrollTop + clientHeight >= scrollHeight - 150;
-
-          if (isNearBottom && !isLimitLoading && !loadingMore && hasMore) {
-            loadMore();
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScrollEvent, { passive: true });
-    return () => window.removeEventListener('scroll', handleScrollEvent);
-  }, [loadMore, isLimitLoading, loadingMore, hasMore]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Filter States
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | 'all'>(() => {
@@ -102,6 +63,7 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
   const [isFiltering, setIsFiltering] = useState(false);
   useEffect(() => {
     setIsFiltering(true);
+    setCurrentPage(1);
     const timer = setTimeout(() => {
       setIsFiltering(false);
     }, 450);
@@ -283,8 +245,8 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
 
 
   const displayItems = useMemo(() => {
-    return paginatedItems;
-  }, [paginatedItems]);
+    return (items || []).map(item => mapToUIItem(item));
+  }, [items]);
 
   const filterBadges = useMemo(() => {
     const badgesSet = new Set<string>();
@@ -460,16 +422,16 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
     searchQuery,
   ]);
 
-  // Auto-fetch more items if client-side filtering leaves the current display list too short,
-  // preventing user from scrolling and getting stuck on an empty screen while more items exist.
-  useEffect(() => {
-    if (paginatedItems.length > 0 && filteredProducts.length < 8 && !isLimitLoading && !loadingMore && hasMore) {
-      const timer = setTimeout(() => {
-        loadMore();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [paginatedItems.length, filteredProducts.length, isLimitLoading, loadingMore, hasMore, loadMore]);
+  // Paginated items slicing
+  const itemsPerPage = 24;
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(start, start + itemsPerPage);
+  }, [filteredProducts, currentPage]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredProducts.length / itemsPerPage);
+  }, [filteredProducts]);
 
   // Count items per category for sidebar
   const getCategoryCount = (catId: number) => {
@@ -525,11 +487,11 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
         searchQuery={searchQuery}
         filteredCount={filteredProducts.length}
         onClearSearch={() => onSearchChange && onSearchChange('')}
-        isLoading={isLimitLoading || isFiltering || loadingMore}
+        isLoading={isFiltering}
       />
 
       {/* Main Catalog View Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Render overlay & drawer in React Portal to bypass parent stacking contexts */}
@@ -1018,11 +980,26 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
           )}
 
           {/* Catalog & Products Grid (Right Column) */}
-          <main className="flex-1 space-y-6 overflow-hidden">
+          <main className="flex-1 space-y-6 overflow-hidden relative">
+            <LineLoading isLoading={isFiltering} />
             {/* Grid Tools & Sorting Header */}
-            <div className="flex items-center justify-between border-b border-stone-200 pb-4 gap-4 select-none">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-4 select-none">
               {/* Subcategories / Sub-subcategories pills */}
               <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto scroll-smooth py-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {/* Grid layout controls */}
+                <div className="hidden sm:flex items-center border border-stone-200 rounded-[3px] p-0.5 bg-white text-stone-400 select-none shrink-0">
+                  {[2, 3, 4, 6].map(cols => (
+                    <button
+                      key={cols}
+                      onClick={() => setGridCols(cols)}
+                      className={`p-1.5 hover:text-stone-900 focus:outline-none transition-colors ${gridCols === cols ? 'text-stone-950 bg-stone-50 font-black' : ''
+                        }`}
+                      title={`${cols} Columns`}
+                    >
+                      <FiGrid className="w-4 h-4" />
+                    </button>
+                  ))}
+                </div>
                 {selectedCategoryId !== 'all' && (() => {
                   // Find direct children of selected category
                   const subCats = categories.filter(c => c.parent_id === selectedCategoryId && c.status === 1);
@@ -1045,7 +1022,11 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
 
                   return (
                     <>
-                      {displaySubs.map(sub => {
+                      {displaySubs.filter(sub => {
+                        const subCount = getCategoryCount(sub.id);
+                        const isActive = selectedCategoryId === sub.id;
+                        return subCount > 0 || isActive;
+                      }).map(sub => {
                         const isActive = selectedCategoryId === sub.id;
                         const subCount = getCategoryCount(sub.id);
                         // Check if this sub has its own children (sub-sub)
@@ -1055,13 +1036,13 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
                           <React.Fragment key={sub.id}>
                             <button
                               onClick={() => handleCategorySelect(sub.id)}
-                              className={`shrink-0 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wide whitespace-nowrap cursor-pointer transition-all duration-200 focus:outline-none ${isActive
-                                ? 'bg-stone-950 text-white border-stone-950 shadow-xs'
-                                : 'bg-white text-stone-500 border-stone-200 hover:border-stone-400 hover:text-stone-800'
+                              className={`shrink-0 px-2.5 py-1 rounded-full border text-[14px] font-black uppercase tracking-wide whitespace-nowrap cursor-pointer transition-all duration-200 focus:outline-none ${isActive
+                                ? 'bg-white text-stone-950 border-stone-950 ring-2 ring-stone-950/10 shadow-sm'
+                                : 'bg-white text-stone-500 border-stone-200 hover:border-stone-400 hover:text-stone-850'
                                 }`}
                             >
                               {sub.name}
-                              <span className={`ml-1 text-[8px] font-bold ${isActive ? 'text-white/70' : 'text-stone-400'}`}>
+                              <span className={`ml-1 text-[8px] font-bold px-1 py-0.5 rounded-full ${isActive ? 'bg-stone-950 text-white' : 'bg-stone-100 text-stone-400'}`}>
                                 {subCount}
                               </span>
                             </button>
@@ -1070,7 +1051,11 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
                             {isActive && subSubCats.length > 0 && (
                               <>
                                 <span className="text-stone-300 text-[10px] shrink-0 mx-0.5">›</span>
-                                {subSubCats.map(subSub => {
+                                {subSubCats.filter(subSub => {
+                                  const subSubCount = getCategoryCount(subSub.id);
+                                  const isSubSubActive = selectedCategoryId === subSub.id;
+                                  return subSubCount > 0 || isSubSubActive;
+                                }).map(subSub => {
                                   const isSubSubActive = selectedCategoryId === subSub.id;
                                   const subSubCount = getCategoryCount(subSub.id);
                                   return (
@@ -1078,12 +1063,12 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
                                       key={subSub.id}
                                       onClick={() => handleCategorySelect(subSub.id)}
                                       className={`shrink-0 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wide whitespace-nowrap cursor-pointer transition-all duration-200 focus:outline-none ${isSubSubActive
-                                        ? 'bg-[#E61E25] text-white border-[#E61E25]'
+                                        ? 'bg-white text-[#E61E25] border-[#E61E25] ring-2 ring-[#E61E25]/10 shadow-sm'
                                         : 'bg-stone-50 text-stone-500 border-stone-200 hover:border-stone-400 hover:text-stone-700'
                                         }`}
                                     >
                                       {subSub.name}
-                                      <span className={`ml-1 text-[7px] ${isSubSubActive ? 'text-white/70' : 'text-stone-400'}`}>
+                                      <span className={`ml-1 text-[7px] px-1 py-0.5 rounded-full ${isSubSubActive ? 'bg-[#E61E25] text-white' : 'bg-stone-100/80 text-stone-400'}`}>
                                         {subSubCount}
                                       </span>
                                     </button>
@@ -1098,51 +1083,47 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
                   );
                 })()}
               </div>
-
-              <div className="flex items-center space-x-4">
-                {/* Grid layout controls */}
-                <div className="hidden sm:flex items-center border border-stone-200 rounded-[3px] p-0.5 bg-white text-stone-400 select-none">
-                  {[2, 3, 4, 6].map(cols => (
-                    <button
-                      key={cols}
-                      onClick={() => setGridCols(cols)}
-                      className={`p-1.5 hover:text-stone-900 focus:outline-none transition-colors ${gridCols === cols ? 'text-stone-950 bg-stone-50 font-black' : ''
-                        }`}
-                      title={`${cols} Columns`}
-                    >
-                      <FiGrid className="w-4 h-4" />
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
 
 
             {/* Products Grid */}
-            {filteredProducts.length === 0 ? (
-              !isLimitLoading && (
-                <div className="py-24 text-center space-y-4">
-                  <span className="text-4xl">🔍</span>
-                  <div>
-                    <h3 className="font-extrabold text-stone-850 text-sm uppercase tracking-wider">
-                      No matching styles
-                    </h3>
-                    <p className="text-stone-400 text-2xs font-semibold mt-1">
-                      Try resetting color, size, or price bounds.
-                    </p>
-                  </div>
-                  <button
-                    onClick={clearAllFilters}
-                    className="px-5 py-3 border border-stone-900 text-stone-900 text-[10px] font-black uppercase tracking-widest hover:bg-stone-950 hover:text-white transition-all duration-300 rounded-[2px]"
-                  >
-                    Clear all filters
-                  </button>
+            {items.length === 0 ? (
+              <div className="w-full py-10">
+                <SkeletonGrid
+                  count={12}
+                  gridColsClass={`grid gap-x-2 gap-y-4 w-full ${
+                    gridCols === 2
+                      ? 'grid-cols-2'
+                      : gridCols === 3
+                      ? 'grid-cols-2 sm:grid-cols-3'
+                      : gridCols === 4
+                      ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
+                      : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6'
+                  }`}
+                />
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="py-24 text-center space-y-4">
+                <span className="text-4xl">🔍</span>
+                <div>
+                  <h3 className="font-extrabold text-stone-850 text-sm uppercase tracking-wider">
+                    No matching styles
+                  </h3>
+                  <p className="text-stone-400 text-2xs font-semibold mt-1">
+                    Try resetting color, size, or price bounds.
+                  </p>
                 </div>
-              )
+                <button
+                  onClick={clearAllFilters}
+                  className="px-5 py-3 border border-stone-900 text-stone-900 text-[10px] font-black uppercase tracking-widest hover:bg-stone-950 hover:text-white transition-all duration-300 rounded-[2px]"
+                >
+                  Clear all filters
+                </button>
+              </div>
             ) : (
               <div
-                className={`grid animate-fade-in gap-x-6 gap-y-10 w-full ${gridCols === 2
+                className={`grid animate-fade-in gap-x-2 gap-y-4 w-full ${gridCols === 2
                   ? 'grid-cols-2'
                   : gridCols === 3
                     ? 'grid-cols-2 sm:grid-cols-3'
@@ -1152,7 +1133,7 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
                   }`}
               >
                 {/* Special Products Showcase (Full Width) */}
-                {filteredProducts.filter(item => !!item.is_special).map((item) => {
+                {paginatedProducts.filter(item => !!item.is_special).map((item) => {
                   return (
                     <div key={item.id} className="col-span-full">
                       <Special_Product
@@ -1170,7 +1151,7 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
                 })}
 
                 {/* Standard Products (Grid Flow) */}
-                {filteredProducts.filter(item => !item.is_special).map((item, idx) => {
+                {paginatedProducts.filter(item => !item.is_special).map((item, idx) => {
                   const isFavorited = !!favorites[String(item.id)];
                   const isPopular = !!(item.order_items_count && item.order_items_count >= 3);
 
@@ -1200,7 +1181,51 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
               </div>
             )}
 
-            {/* Infinite Scroll loading more spinner indicator removed */}
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center space-x-2 py-10 select-none">
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.max(1, prev - 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  className="w-10 h-10 rounded-full border border-stone-200 bg-white flex items-center justify-center text-stone-600 hover:border-stone-400 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <FiChevronLeft className="w-4 h-4" />
+                </button>
+                {Array.from({ length: totalPages }).map((_, idx) => {
+                  const pageNum = idx + 1;
+                  const isActive = currentPage === pageNum;
+                  return (
+                     <button
+                       key={pageNum}
+                       onClick={() => {
+                         setCurrentPage(pageNum);
+                         window.scrollTo({ top: 0, behavior: 'smooth' });
+                       }}
+                       className={`w-10 h-10 rounded-full border font-bold text-xs transition-colors ${
+                         isActive
+                           ? 'bg-stone-950 text-white border-stone-950 shadow-xs'
+                           : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:text-stone-900'
+                       }`}
+                     >
+                       {pageNum}
+                     </button>
+                  );
+                })}
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.min(totalPages, prev + 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="w-10 h-10 rounded-full border border-stone-200 bg-white flex items-center justify-center text-stone-600 hover:border-stone-400 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <FiChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* Badge-grouped products (New, Sale, Trending, etc.) */}
             {/* <ProductBagdeGrid

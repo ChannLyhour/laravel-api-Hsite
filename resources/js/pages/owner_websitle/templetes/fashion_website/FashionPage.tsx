@@ -22,6 +22,7 @@ import { FooterPage } from './components/FooterPage';
 import { ListProdoct } from './components/ShopPage';
 import { ListProductLike } from './components/ListProductLike';
 import { SocialMediaGrid } from './components/SocialMediaGrid';
+import { LineLoading } from './components/helpers/SkeletonSt';
 import './styles/animation.css';
 
 import type { FashionPageProps } from './types';
@@ -168,27 +169,8 @@ export const FashionPage: React.FC<FashionPageProps> = ({
     if (flashDeals && flashDeals.length > 0) {
       return flashDeals;
     }
-    if (displayItems && displayItems.length > 0) {
-      const discounted = displayItems.filter(
-        item => item.compare_at_price && parseFloat(item.compare_at_price) > parseFloat(item.price)
-      );
-      const dealProducts = discounted.length > 0 ? discounted : displayItems.slice(0, 6);
-
-      const tomorrow = new Date();
-      tomorrow.setHours(tomorrow.getHours() + 24);
-
-      return [
-        {
-          id: 'fallback-flash-deal',
-          title: 'Limited Flash Sale',
-          end_date: tomorrow.toISOString(),
-          is_published: true,
-          products: dealProducts,
-        }
-      ];
-    }
     return [];
-  }, [flashDeals, displayItems]);
+  }, [flashDeals]);
 
   // Dynamically update favicon for this specific store
   useEffect(() => {
@@ -491,7 +473,8 @@ export const FashionPage: React.FC<FashionPageProps> = ({
   const activeProduct = directProduct || displayItems.find(item => String(item.id) === urlProductId);
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] text-[#1C1C1C] font-sans antialiased flex flex-col min-h-screen">
+    <div className="min-h-screen bg-[#F9F9F9] text-[#1C1C1C] font-sans antialiased flex flex-col min-h-screen relative">
+      <LineLoading isLoading={loading || isAuthLoading || isLoadingCart || loadingPromotions} />
       {/* Mega Menu Dropdown Navbar Component */}
       <NavbarPage
         cartCount={cart.reduce((sum, ci) => sum + ci.qty, 0)}

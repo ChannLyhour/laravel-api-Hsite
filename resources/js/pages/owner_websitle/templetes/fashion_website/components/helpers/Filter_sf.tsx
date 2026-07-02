@@ -168,7 +168,7 @@ export const FilterSf: React.FC<FilterSfProps> = ({
                          )}
 
                          {/* Active Category Badge */}
-                         <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-stone-600">
+                         <div className="hidden sm:flex items-center gap-1.5 text-[15px] font-black uppercase tracking-wider text-stone-600">
                               <span className="text-stone-400">{activeCategoryName}</span>
                               {filteredCount !== undefined && (
                                    <span className="px-1.5 py-0.5 bg-stone-100 text-stone-500 rounded-full text-[9px] font-bold">
@@ -179,7 +179,7 @@ export const FilterSf: React.FC<FilterSfProps> = ({
 
                          {/* Search Query Tag */}
                          {searchQuery && (
-                              <span className="flex items-center gap-1 text-[10px] text-[#E61E25] font-black bg-red-50 border border-red-100/60 px-2 py-0.5 rounded-full">
+                              <span className="flex items-center gap-1 text-[15px] text-[#E61E25] font-black bg-red-50 border border-red-100/60 px-2 py-0.5 rounded-full">
                                    "{searchQuery}"
                                    {onClearSearch && (
                                         <FiX
@@ -211,51 +211,43 @@ export const FilterSf: React.FC<FilterSfProps> = ({
                               {/* All Categories Pill */}
                               <button
                                    onClick={() => onCategorySelect('all')}
-                                   className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-300 cursor-pointer text-[10px] font-black uppercase tracking-wide whitespace-nowrap focus:outline-none ${selectedCategoryId === 'all'
-                                             ? 'bg-stone-950 text-white border-stone-950 shadow-xs'
-                                             : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:text-stone-900 shadow-2xs'
+                                   className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-300 cursor-pointer text-[14px] font-black uppercase tracking-wide whitespace-nowrap focus:outline-none ${selectedCategoryId === 'all'
+                                        ? 'bg-white text-stone-950 border-stone-950 ring-2 ring-stone-950/10 shadow-sm'
+                                        : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:text-stone-900 shadow-2xs'
                                         }`}
                               >
                                    <FiGrid className="w-3 h-3" />
                                    All
                                    <span className={`text-[8px] font-bold px-1 py-0 rounded-full ${selectedCategoryId === 'all'
-                                             ? 'bg-white/20 text-white/80'
-                                             : 'bg-stone-100 text-stone-400'
+                                        ? 'bg-stone-950 text-white'
+                                        : 'bg-stone-100 text-stone-400'
                                         }`}>
                                         {items.length}
                                    </span>
                               </button>
 
                               {/* Category Pills */}
-                              {topCategories.map((cat: any) => {
+                              {topCategories.filter((cat: any) => {
                                    const count = getCategoryCount(cat.id);
                                    const isSelected = selectedCategoryId === cat.id;
-                                   const imgSrc = resolveImageUrl(cat.image) || getCategoryImage(cat.name);
+                                   return count > 0 || isSelected;
+                              }).map((cat: any) => {
+                                   const count = getCategoryCount(cat.id);
+                                   const isSelected = selectedCategoryId === cat.id;
 
                                    return (
                                         <button
                                              key={cat.id}
                                              onClick={() => onCategorySelect(cat.id)}
-                                             className={`shrink-0 flex items-center gap-1.5 pl-1 pr-3 py-1 rounded-full border transition-all duration-300 cursor-pointer text-[10px] font-black uppercase tracking-wide whitespace-nowrap focus:outline-none ${isSelected
-                                                       ? 'bg-stone-950 text-white border-stone-950 shadow-xs'
-                                                       : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:text-stone-900 shadow-2xs'
+                                             className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-300 cursor-pointer text-[14px] font-black uppercase tracking-wide whitespace-nowrap focus:outline-none ${isSelected
+                                                  ? 'bg-white text-stone-950 border-stone-950 ring-2 ring-stone-950/10 shadow-sm'
+                                                  : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:text-stone-900 shadow-2xs'
                                                   }`}
                                         >
-                                             {/* Mini Category Image */}
-                                             {imgSrc && (
-                                                  <div className={`w-5 h-5 rounded-full overflow-hidden border shrink-0 ${isSelected ? 'border-white/30' : 'border-stone-200'
-                                                       }`}>
-                                                       <img
-                                                            src={imgSrc}
-                                                            alt={cat.name}
-                                                            className="w-full h-full object-cover"
-                                                       />
-                                                  </div>
-                                             )}
                                              {cat.name}
                                              <span className={`text-[8px] font-bold px-1 py-0 rounded-full ${isSelected
-                                                       ? 'bg-white/20 text-white/80'
-                                                       : 'bg-stone-100 text-stone-400'
+                                                  ? 'bg-stone-950 text-white'
+                                                  : 'bg-stone-100 text-stone-400'
                                                   }`}>
                                                   {count}
                                              </span>
