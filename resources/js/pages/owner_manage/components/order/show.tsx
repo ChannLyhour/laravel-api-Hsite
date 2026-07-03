@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fi';
 import { StatusOrder } from './components/StatusOrder';
 import { OrderManage } from './components/OrderManage';
+import { PopupDetailLocation } from './components/PopupDetialLoaction';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { useConfirm } from '@/components/ConfirmProvider';
 import { storesService, Store_setting } from '@/api/owner/stores';
@@ -47,6 +48,19 @@ export interface Order {
   orderType?: string;
   shippingFee?: string;
   notes?: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  shippingAddress?: {
+    id: number;
+    first_name: string | null;
+    last_name: string | null;
+    telephone: string;
+    address: string;
+    country: string | null;
+    city_province: string;
+    latitude: number | string | null;
+    longitude: number | string | null;
+  } | null;
 }
 
 interface ShowOrderPageProps {
@@ -152,6 +166,7 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
     orders_count?: number | null;
   } | null>(null);
   const [couponDetails, setCouponDetails] = React.useState<CouponRow | null>(null);
+  const [showLocationMap, setShowLocationMap] = React.useState(false);
 
   React.useEffect(() => {
     if (order.storeId) {
@@ -407,9 +422,19 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
               </h4>
               <div className="text-xs space-y-1.5">
                 <p className="font-black text-sm text-inherit">{customerName}</p>
-                <p className="opacity-70 font-medium leading-relaxed flex items-start gap-1">
+                <p className="opacity-70 font-medium leading-relaxed flex items-start gap-1 flex-wrap">
                   <span className="opacity-55 font-semibold">Location :</span> 
                   <span>{order.address === 'Walk-in' ? '---' : order.address}</span>
+                  {order.address && order.address !== 'Walk-in' && order.address !== 'POS Walk-in' && (
+                    <button
+                      onClick={() => setShowLocationMap(true)}
+                      className="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-650 text-[10px] font-black uppercase rounded-lg cursor-pointer transition-all active:scale-95 shrink-0"
+                      type="button"
+                    >
+                      <FiMapPin className="w-3 h-3 text-indigo-550" />
+                      <span>View Map</span>
+                    </button>
+                  )}
                 </p>
                 <p className="opacity-70 font-medium flex items-center gap-1">
                   <span className="opacity-55 font-semibold">Telephone :</span> 
@@ -772,6 +797,17 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
         </div>
 
       </div>
+
+      {showLocationMap && (
+        <PopupDetailLocation
+          onClose={() => setShowLocationMap(false)}
+          customerName={customerName}
+          customerPhone={customerPhone}
+          addressText={order.address === 'Walk-in' ? '' : order.address}
+          latitude={order.latitude ?? order.shippingAddress?.latitude}
+          longitude={order.longitude ?? order.shippingAddress?.longitude}
+        />
+      )}
     </div>
   );
 };

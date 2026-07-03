@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\v1\Owner\FlashDealController;
 use App\Http\Controllers\Api\v1\Owner\FeaturedDealController;
 use App\Http\Controllers\Api\v1\Owner\ClearanceSaleController;
 use App\Http\Controllers\Api\v1\Owner\DeliveryMethodController;
+use App\Http\Controllers\Api\v1\Owner\DeliveryZoneController;
 use App\Http\Controllers\Api\v1\LikeController;
 use App\Http\Controllers\Api\v1\ShippingAddressController;
 use App\Http\Controllers\Api\v1\CartController;
@@ -143,6 +144,10 @@ Route::middleware(['identify-store'])->group(function () {
     // Delivery Methods (Public)
     Route::get('/delivery-methods', [DeliveryMethodController::class, 'index']);
     Route::get('/delivery-methods/{id}', [DeliveryMethodController::class, 'show'])->whereNumber('id');
+
+    // Delivery Zones (Public)
+    Route::get('/delivery-zones', [DeliveryZoneController::class, 'index']);
+    Route::get('/delivery-zones/{id}', [DeliveryZoneController::class, 'show'])->whereNumber('id');
 
     // Vendors (Public)
     Route::get('/vendors', [VendorController::class, 'index']);
@@ -414,6 +419,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/owner/delivery-methods/{id}', [DeliveryMethodController::class, 'update'])->whereNumber('id');
         Route::put('/owner/delivery-methods/{id}/toggle', [DeliveryMethodController::class, 'toggle'])->whereNumber('id');
         Route::delete('/owner/delivery-methods/{id}', [DeliveryMethodController::class, 'destroy'])->whereNumber('id');
+
+        // Delivery Zones Configuration
+        Route::get('/owner/delivery-zones/mine', [DeliveryZoneController::class, 'mine']);
+        Route::post('/owner/delivery-zones', [DeliveryZoneController::class, 'store']);
+        Route::put('/owner/delivery-zones/{id}', [DeliveryZoneController::class, 'update'])->whereNumber('id');
+        Route::post('/owner/delivery-zones/{id}', [DeliveryZoneController::class, 'update'])->whereNumber('id');
+        Route::put('/owner/delivery-zones/{id}/toggle', [DeliveryZoneController::class, 'toggle'])->whereNumber('id');
+        Route::delete('/owner/delivery-zones/{id}', [DeliveryZoneController::class, 'destroy'])->whereNumber('id');
 
         // Temporary Food Items Configuration
         Route::post('/items', [FoodItemController::class, 'store']);

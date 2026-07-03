@@ -52,7 +52,9 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
         address: '',
         city_province: 'Phnom Penh',
         country: 'Cambodia',
-        set_as_default: false
+        set_as_default: false,
+        latitude: null,
+        longitude: null
     });
 
     const fetchAddresses = () => {
@@ -81,7 +83,9 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
             address: '',
             city_province: 'Phnom Penh',
             country: 'Cambodia',
-            set_as_default: addresses.length === 0
+            set_as_default: addresses.length === 0,
+            latitude: null,
+            longitude: null
         });
         setShowAddressForm(true);
     };
@@ -95,7 +99,9 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
             address: addr.address,
             city_province: addr.city_province,
             country: addr.country || 'Cambodia',
-            set_as_default: addr.set_as_default
+            set_as_default: addr.set_as_default,
+            latitude: addr.latitude || null,
+            longitude: addr.longitude || null
         });
         setShowAddressForm(true);
     };
@@ -158,7 +164,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                 {!showAddressForm && (
                     <button
                         onClick={openAddAddress}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-900 hover:bg-stone-950 text-white text-[9px] font-black uppercase tracking-widest rounded-[2px] border-none cursor-pointer transition-colors shadow-3xs"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-stone-900 hover:bg-stone-850 active:scale-98 text-white text-[9px] font-black uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all shadow-md"
                     >
                         <FiPlus className="w-3.5 h-3.5" /> {t('addressBook.addNew')}
                     </button>
@@ -171,7 +177,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                 </div>
             ) : showAddressForm ? (
                 /* Address Creation / Edit Form */
-                <div className="bg-stone-50/50 border border-stone-200 p-6 rounded-[3px] animate-fade-in">
+                <div className="bg-white border border-stone-200/50 p-6 rounded-2xl shadow-sm animate-fade-in">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-[10px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2">
                             {editingAddress ? <FiEdit2 /> : <FiPlus />}
@@ -194,7 +200,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                                     type="text"
                                     value={addressFormData.first_name}
                                     onChange={e => setAddressFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                                    className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-[3px] text-xs font-medium text-stone-850 focus:border-stone-900 transition-colors focus:outline-none"
+                                    className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs font-medium text-stone-850 focus:border-stone-950 transition-colors focus:outline-none"
                                     placeholder="First name"
                                 />
                             </div>
@@ -204,7 +210,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                                     type="text"
                                     value={addressFormData.last_name}
                                     onChange={e => setAddressFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                                    className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-[3px] text-xs font-medium text-stone-850 focus:border-stone-900 transition-colors focus:outline-none"
+                                    className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs font-medium text-stone-850 focus:border-stone-950 transition-colors focus:outline-none"
                                     placeholder="Last name"
                                 />
                             </div>
@@ -221,7 +227,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                                     required
                                     value={addressFormData.telephone}
                                     onChange={e => setAddressFormData(prev => ({ ...prev, telephone: e.target.value }))}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-[3px] text-xs font-medium text-stone-850 focus:border-stone-900 transition-colors focus:outline-none"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-xl text-xs font-medium text-stone-850 focus:border-stone-955 transition-colors focus:outline-none"
                                     placeholder="e.g. 012 345 678"
                                 />
                             </div>
@@ -234,7 +240,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                                     <select
                                         value={addressFormData.city_province}
                                         onChange={e => setAddressFormData(prev => ({ ...prev, city_province: e.target.value }))}
-                                        className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-[3px] text-xs font-medium text-stone-850 focus:border-stone-900 transition-colors focus:outline-none appearance-none cursor-pointer"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs font-medium text-stone-855 focus:border-stone-955 transition-colors focus:outline-none appearance-none cursor-pointer"
                                     >
                                         {CITIES.map(c => (
                                             <option key={c} value={c}>{c}</option>
@@ -253,7 +259,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                                         type="text"
                                         value={addressFormData.country}
                                         onChange={e => setAddressFormData(prev => ({ ...prev, country: e.target.value }))}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-[3px] text-xs font-medium text-stone-850 focus:border-stone-900 transition-colors focus:outline-none"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-xl text-xs font-medium text-stone-850 focus:border-stone-955 transition-colors focus:outline-none"
                                         placeholder="Cambodia"
                                     />
                                 </div>
@@ -267,7 +273,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                                 rows={3}
                                 value={addressFormData.address}
                                 onChange={e => setAddressFormData(prev => ({ ...prev, address: e.target.value }))}
-                                className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-[3px] text-xs font-medium text-stone-850 focus:border-stone-900 transition-colors focus:outline-none resize-none"
+                                className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs font-medium text-stone-850 focus:border-stone-955 transition-colors focus:outline-none resize-none"
                                 placeholder="Street No, House No, Group, Village..."
                             />
                         </div>
@@ -289,14 +295,14 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                             <button
                                 type="button"
                                 onClick={() => setShowAddressForm(false)}
-                                className="px-6 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 text-[10px] font-black uppercase tracking-widest rounded-[3px] border-none cursor-pointer transition-colors"
+                                className="px-6 py-3 bg-stone-100 hover:bg-stone-200 active:scale-98 text-stone-800 text-[10px] font-black uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all"
                             >
                                 {t('addressBook.back')}
                             </button>
                             <button
                                 type="submit"
                                 disabled={isUpdating}
-                                className="px-8 py-3 bg-stone-900 hover:bg-stone-950 text-white text-[10px] font-black uppercase tracking-widest rounded-[3px] border-none cursor-pointer transition-colors shadow-3xs disabled:opacity-50"
+                                className="px-8 py-3.5 bg-stone-900 hover:bg-stone-850 active:scale-98 text-white text-[10px] font-black uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all shadow-md disabled:opacity-50"
                             >
                                 {isUpdating ? t('profile.saving') : (editingAddress ? t('addressBook.modify') : t('addressBook.saveAddress'))}
                             </button>
@@ -314,7 +320,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                     </div>
                     <button
                         onClick={openAddAddress}
-                        className="px-6 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-900 text-[9px] font-black uppercase tracking-widest rounded-[2px] border-none cursor-pointer transition-colors"
+                        className="px-6 py-3 bg-stone-100 hover:bg-stone-200 active:scale-98 text-stone-900 text-[9px] font-black uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all shadow-sm"
                     >
                         Add First Address
                     </button>
@@ -325,19 +331,19 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                     {addresses.map(addr => (
                         <div
                             key={addr.id}
-                            className={`group relative p-5 rounded-[3px] transition-all flex flex-col justify-between ${addr.set_as_default
-                                ? 'bg-stone-50 border-2 border-stone-900 shadow-sm'
-                                : 'bg-white border border-stone-200 hover:border-stone-400'
+                            className={`group relative p-5 rounded-2xl transition-all flex flex-col justify-between ${addr.set_as_default
+                                ? 'bg-stone-50 border border-stone-900 shadow-sm'
+                                : 'bg-white border border-stone-200/60 hover:border-stone-400 hover:shadow-xs'
                                 }`}
                         >
                             {/* Status Badge */}
                             <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center gap-2">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${addr.set_as_default ? 'bg-stone-900 text-white shadow-3xs' : 'bg-stone-50 text-stone-400'}`}>
+                                    <div className={`w-8.5 h-8.5 rounded-full flex items-center justify-center ${addr.set_as_default ? 'bg-stone-900 text-white shadow-xs' : 'bg-stone-50 text-stone-400'}`}>
                                         <FiMapPin className="w-4 h-4" />
                                     </div>
                                     {addr.set_as_default && (
-                                        <span className="text-[8px] font-black uppercase tracking-widest bg-emerald-500 text-white px-2 py-0.5 rounded-[1px] leading-none">
+                                        <span className="text-[8px] font-black uppercase tracking-widest bg-emerald-500 text-white px-2.5 py-1 rounded-full leading-none">
                                             Primary
                                         </span>
                                     )}
@@ -347,14 +353,14 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                                 <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={() => openEditAddress(addr)}
-                                        className="p-1.5 rounded-[2px] transition-colors border-none bg-transparent cursor-pointer text-stone-400 hover:text-stone-900 hover:bg-stone-100"
+                                        className="p-1.5 rounded-xl transition-colors border-none bg-transparent cursor-pointer text-stone-400 hover:text-stone-900 hover:bg-stone-100"
                                         title="Edit"
                                     >
                                         <FiEdit2 className="w-3.5 h-3.5" />
                                     </button>
                                     <button
                                         onClick={() => handleDeleteAddress(addr.id)}
-                                        className="p-1.5 rounded-[2px] transition-colors border-none bg-transparent cursor-pointer text-stone-400 hover:text-stone-900 hover:bg-red-50"
+                                        className="p-1.5 rounded-xl transition-colors border-none bg-transparent cursor-pointer text-stone-400 hover:text-stone-900 hover:bg-red-50"
                                         title="Delete"
                                     >
                                         <FiTrash2 className="w-3.5 h-3.5" />
@@ -403,7 +409,7 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
             )}
 
             {/* Pro-tip for users */}
-            <div className="bg-stone-50 border border-stone-200/60 p-4 rounded-[3px] flex items-start gap-3 mt-4">
+            <div className="bg-stone-50 border border-stone-200/50 p-5 rounded-2xl flex items-start gap-3 mt-4 shadow-3xs">
                 <FiInfo className="w-4 h-4 text-stone-400 shrink-0 mt-0.5" />
                 <p className="text-[10px] text-stone-500 font-medium leading-relaxed italic">
                     Keeping multiple addresses allows you to quickly switch between home, office, or gift locations during checkout. Your primary address is selected by default for every new order.

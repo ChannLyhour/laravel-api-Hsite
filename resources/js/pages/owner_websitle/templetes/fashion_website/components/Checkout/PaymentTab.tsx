@@ -30,11 +30,11 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
      const hasError = !!(validationError?.field === 'payment');
 
      return (
-          <div className={`bg-white rounded-sm border transition-all duration-300 shadow-2xs ${isActive ? (hasError ? 'border-red-500 ring-1 ring-red-500/20 p-5' : 'border-stone-900 ring-1 ring-stone-900/10 p-5') : 'border-stone-200/40 p-5 opacity-60'}`}>
+          <div className={`bg-white rounded-2xl border transition-all duration-300 shadow-sm ${isActive ? (hasError ? 'border-red-500 ring-1 ring-red-500/20 p-5' : 'border-stone-900 ring-1 ring-stone-900/5 p-5') : 'border-stone-200/50 p-5 opacity-60'}`}>
                {/* Header */}
                <div className="flex items-center justify-between pb-4 border-b border-stone-100">
                     <div className="flex items-center gap-3">
-                         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs transition-colors duration-300 ${isActive ? 'bg-stone-900 text-white' : 'bg-stone-200 text-stone-500'}`}>
+                         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs transition-colors duration-300 shadow-xs ${isActive ? 'bg-stone-900 text-white' : 'bg-stone-200 text-stone-500'}`}>
                               3
                          </div>
                          <div>
@@ -49,7 +49,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                          </div>
                     </div>
                     {isActive && (
-                         <span className="text-[11px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded-sm font-black uppercase tracking-wider">
+                         <span className="text-[11px] bg-stone-100 text-stone-600 px-3 py-1 rounded-xl font-black uppercase tracking-wider">
                               Step 3 of 3
                          </span>
                     )}
@@ -75,8 +75,8 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                              paymentMethods.map((p, idx) => (
                                                   <label
                                                        key={p.key}
-                                                       className={`flex items-center gap-4 p-4 border rounded-sm cursor-pointer transition-colors ${selectedPayment === p.key
-                                                            ? 'border-stone-900 bg-stone-50/60'
+                                                       className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-colors ${selectedPayment === p.key
+                                                            ? 'border-stone-900 bg-stone-50/60 shadow-xs'
                                                             : validationError?.field === 'payment'
                                                                  ? 'border-red-300 hover:border-red-450 hover:bg-stone-50'
                                                                  : 'border-stone-150 hover:bg-stone-50'
@@ -92,8 +92,8 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                                        />
                                                        {p.logo}
                                                        <div className="text-xs">
-                                                            <h4 className="font-bold text-stone-900 text-sm">{p.name}</h4>
-                                                            <div className="text-[10px] text-stone-400 font-medium mt-0.5">{p.desc}</div>
+                                                            <h4 className="font-extrabold text-stone-900 text-sm">{p.name}</h4>
+                                                            <div className="text-[10px] text-stone-400 font-semibold mt-0.5">{p.desc}</div>
                                                        </div>
                                                   </label>
                                              ))
@@ -115,9 +115,9 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                    <textarea
                                         value={note}
                                         onChange={(e) => setNote(e.target.value)}
-                                        placeholder="E.g., Special instructions for delivery, drop-off, or custom packaging request..."
+                                        placeholder="Note"
                                         rows={4}
-                                        className="w-full p-4 border border-stone-200 rounded-[3px] text-xs font-bold text-stone-850 placeholder:text-stone-300 focus:outline-none focus:border-stone-955 resize-none transition-colors duration-200"
+                                        className="w-full p-4 border border-stone-200 rounded-xl text-xs font-bold text-stone-850 placeholder:text-stone-300 focus:outline-none focus:border-stone-950 resize-none transition-colors duration-200"
                                    />
                               </div>
 
@@ -126,7 +126,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                    <button
                                         onClick={onSubmit}
                                         disabled={isCheckingOut || !selectedPayment}
-                                        className={`px-8 py-3.5 rounded-[3px] font-black text-xs uppercase tracking-widest border-none transition-all duration-200 flex items-center gap-2.5 shadow-sm focus:outline-none ${(isCheckingOut || !selectedPayment) ? 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none' : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'}`}
+                                        className={`px-8 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest border-none transition-all duration-200 flex items-center gap-2.5 shadow-md focus:outline-none ${(isCheckingOut || !selectedPayment) ? 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none' : 'bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white cursor-pointer'}`}
                                    >
                                         {isCheckingOut ? (
                                              <>

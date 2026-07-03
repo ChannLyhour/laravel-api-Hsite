@@ -30,6 +30,8 @@ class ShippingAddressController extends Controller
             'country' => 'nullable|string|max:255',
             'city_province' => 'required|string|max:255',
             'set_as_default' => 'boolean',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $user = $request->user();
@@ -50,6 +52,8 @@ class ShippingAddressController extends Controller
             'country' => $request->country,
             'city_province' => $request->city_province,
             'set_as_default' => $isFirst || $request->set_as_default,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
         ]);
 
         return response()->json($address, 201);
@@ -79,6 +83,8 @@ class ShippingAddressController extends Controller
             'country' => 'nullable|string|max:255',
             'city_province' => 'sometimes|required|string|max:255',
             'set_as_default' => 'boolean',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         if ($request->set_as_default && !$address->set_as_default) {

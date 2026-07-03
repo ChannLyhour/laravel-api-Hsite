@@ -18,6 +18,8 @@ class ShippingAddress extends Model
         'country',
         'city_province',
         'set_as_default',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [

@@ -31,6 +31,8 @@ class Order extends Model
         'customer_phone',
         'customer_email',
         'customer_address',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [

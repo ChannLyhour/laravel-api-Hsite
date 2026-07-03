@@ -23,6 +23,8 @@ import {
   FiCoffee,
   FiChevronDown,
   FiMessageSquare,
+  FiTruck,
+  FiMapPin,
 } from 'react-icons/fi';
 import { OverviewTab } from '../components/OverviewTab';
 import { CategoriesTab } from '../components/CategoriesTab';
@@ -63,6 +65,7 @@ import { resolveImageUrl } from '@/api/imageUtils';
 import { ProfileOwnerTab } from '../components/ProfileOwnerTab';
 import { CustomizeSystemTab } from '../components/Store_Settings/CustomizeSystemTab';
 import { DeliveryMethodsTab } from '../components/Delivery_Methods';
+import { DeliveryZonesTab } from '../components/Delivery_Zones';
 
 interface AdminDashboardProps {
   token: string | null;
@@ -71,7 +74,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
 
 interface NotificationItem {
   id: string;
@@ -682,6 +685,8 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
         { id: 'theme', label: t('sidebar.storefront_themes'), icon: <FiLayout className="w-[18px] h-[18px]" /> },
         { id: 'settings', label: t('sidebar.store_settings'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
         { id: 'social-media', label: t('sidebar.social_media'), icon: <FiShare2 className="w-[18px] h-[18px]" /> },
+        { id: 'settings-delivery-methods', label: 'Delivery Methods', icon: <FiTruck className="w-[18px] h-[18px]" /> },
+        { id: 'settings-delivery-zones', label: 'Delivery Zones', icon: <FiMapPin className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-payment', label: t('sidebar.payment_methods'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-firebase', label: t('sidebar.firebase'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-pusher', label: t('sidebar.pusher_config'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
@@ -738,6 +743,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'customer-reviews': return <CustomerReviewsTab ownerId={activeOwnerId} />;
       case 'social-media': return <SocialMediaTab ownerId={activeOwnerId} />;
       case 'settings-delivery-methods': return <DeliveryMethodsTab />;
+      case 'settings-delivery-zones': return <DeliveryZonesTab />;
       case 'settings-thirdparty-payment': return <Payment_Gateways_SetupTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-firebase': return <ThirdPartyFirebaseTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-pusher': return <Pusher_ConfigurationTab ownerId={activeOwnerId} profile={profile} />;

@@ -28,7 +28,7 @@ class OrderController extends Controller
         $customerEmail = $request->query('customer_email');
         $customerPhone = $request->query('customer_phone');
 
-        $query = Order::query()->with(['items.productVariant.product', 'store']);
+        $query = Order::query()->with(['items.productVariant.product', 'store', 'shippingAddress']);
 
         // Owner logic: ensure they only see their own store orders
         $hasStore = Store::where('created_by', $user->id)->exists();

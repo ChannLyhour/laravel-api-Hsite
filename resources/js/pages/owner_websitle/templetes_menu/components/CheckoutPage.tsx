@@ -45,7 +45,8 @@ const CAMBODIA_CITIES = [
     'Kampong Cham', 'Koh Kong', 'Kratie', 'Takéo', 'Kampot',
     'Pursat', 'Prey Veng', 'Svay Rieng', 'Kandal', 'Mondulkiri',
     'Ratanakiri', 'Stung Treng', 'Preah Vihear', 'Oddar Meanchey',
-    'Pailin', 'Kep', 'Tbong Khmum',
+    'Pailin', 'Kep', 'Tbong Khmum', 'Banteay Meanchey',
+    'Kampong Chhnang', 'Kampong Speu', 'Kampong Thom'
 ];
 
 // ─── Add New Address Modal ──────────────────────────────────────────────────────

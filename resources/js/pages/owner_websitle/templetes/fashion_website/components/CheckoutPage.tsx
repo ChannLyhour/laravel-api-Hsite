@@ -29,6 +29,7 @@ import { chatService } from '@/api/owner/chat';
 import { Store_setting } from '@/api/owner/stores';
 import { resolveImageUrl } from '../utils/imageUtils';
 import { deliveryMethodsService, type DeliveryMethod } from '@/api/owner/deliveryMethods';
+import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
 
 import { useTranslation } from '../utils/translate';
 import { ModelCoupon } from './helpers/ModelCoupon';
@@ -54,14 +55,14 @@ export interface CheckoutPageProps {
     clearCart?: () => void;
     locale?: string;
 }
-
 // ─── Cambodian Cities ──────────────────────────────────────────────────────────
 const CAMBODIA_CITIES = [
     'Phnom Penh', 'Siem Reap', 'Battambang', 'Sihanoukville',
     'Kampong Cham', 'Koh Kong', 'Kratie', 'Takéo', 'Kampot',
     'Pursat', 'Prey Veng', 'Svay Rieng', 'Kandal', 'Mondulkiri',
     'Ratanakiri', 'Stung Treng', 'Preah Vihear', 'Oddar Meanchey',
-    'Pailin', 'Kep', 'Tbong Khmum',
+    'Pailin', 'Kep', 'Tbong Khmum', 'Banteay Meanchey',
+    'Kampong Chhnang', 'Kampong Speu', 'Kampong Thom'
 ];
 
 // ─── Map Matching Helper ────────────────────────────────────────────────────────
@@ -94,6 +95,52 @@ const findMatchingProvince = (addressObj: any): string => {
         if (matched) return matched;
     }
     return '';
+};
+
+// ─── Coordinate Distance & Polygon Matching Helpers ────────────────────────────
+const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+};
+
+const parseWKTPolygon = (wkt: string): [number, number][] => {
+    const match = wkt.match(/POLYGON\s*\(\s*\(([^)]+)\)\s*\)/i);
+    if (!match) return [];
+    const pointsStr = match[1].split(',');
+    const points: [number, number][] = [];
+    for (const p of pointsStr) {
+        const coords = p.trim().split(/\s+/);
+        if (coords.length >= 2) {
+            const lng = parseFloat(coords[0]);
+            const lat = parseFloat(coords[1]);
+            if (!isNaN(lng) && !isNaN(lat)) {
+                points.push([lat, lng]);
+            }
+        }
+    }
+    return points;
+};
+
+const isPointInPolygon = (lat: number, lng: number, polygon: [number, number][]): boolean => {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i][1], yi = polygon[i][0];
+        const xj = polygon[j][1], yj = polygon[j][0];
+        
+        const intersect = ((yi > lat) !== (yj > lat))
+            && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
 };
 
 // ─── Add New Address Modal ──────────────────────────────────────────────────────
@@ -133,6 +180,8 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
         address: addressToEdit?.address || '',
         country: addressToEdit?.country || 'Cambodia',
         city_province: addressToEdit?.city_province || '',
+        latitude: addressToEdit?.latitude || null as number | string | null,
+        longitude: addressToEdit?.longitude || null as number | string | null,
     });
     const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -171,7 +220,9 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                         setForm(prev => ({
                             ...prev,
                             address: cleanAddress,
-                            city_province: matchedProvince || prev.city_province
+                            city_province: matchedProvince || prev.city_province,
+                            latitude: latitude,
+                            longitude: longitude,
                         }));
 
                         toast.success('Location auto-filled!');
@@ -234,6 +285,8 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                 city_province: form.city_province,
                 country: form.country,
                 set_as_default: true,
+                latitude: form.latitude,
+                longitude: form.longitude,
                 created_at: addressToEdit ? addressToEdit.created_at : new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             };
@@ -253,7 +306,9 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                     address: form.address,
                     city_province: form.city_province,
                     country: form.country,
-                    set_as_default: addressToEdit.set_as_default
+                    set_as_default: addressToEdit.set_as_default,
+                    latitude: form.latitude,
+                    longitude: form.longitude,
                 });
                 onSave(updatedAddress);
                 onClose();
@@ -266,7 +321,9 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                     address: form.address,
                     city_province: form.city_province,
                     country: form.country,
-                    set_as_default: false
+                    set_as_default: false,
+                    latitude: form.latitude,
+                    longitude: form.longitude,
                 });
                 onSave(newAddress);
                 onClose();
@@ -443,6 +500,50 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                             </div>
                         </div>
                     </div>
+
+                    {/* GPS Coordinates (Optional) */}
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
+                                Latitude (Optional)
+                            </label>
+                            <input
+                                type="number"
+                                step="0.00000001"
+                                value={form.latitude !== null && form.latitude !== undefined ? form.latitude : ''}
+                                onChange={(e) => setForm(prev => ({ ...prev, latitude: e.target.value ? parseFloat(e.target.value) : null }))}
+                                placeholder="e.g., 11.5564"
+                                className="w-full px-3 py-2.5 border border-stone-200 rounded-[3px] text-xs font-medium text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-stone-900"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
+                                Longitude (Optional)
+                            </label>
+                            <input
+                                type="number"
+                                step="0.00000001"
+                                value={form.longitude !== null && form.longitude !== undefined ? form.longitude : ''}
+                                onChange={(e) => setForm(prev => ({ ...prev, longitude: e.target.value ? parseFloat(e.target.value) : null }))}
+                                placeholder="e.g., 104.9282"
+                                className="w-full px-3 py-2.5 border border-stone-200 rounded-[3px] text-xs font-medium text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-stone-900"
+                            />
+                        </div>
+                    </div>
+
+                    {form.latitude && form.longitude && !isNaN(parseFloat(String(form.latitude))) && !isNaN(parseFloat(String(form.longitude))) && (
+                        <div className="w-full h-32 border border-stone-200 rounded-[3px] overflow-hidden mt-1 relative">
+                            <iframe
+                                title="Selected Location Preview"
+                                src={`https://maps.google.com/maps?q=${parseFloat(String(form.latitude))},${parseFloat(String(form.longitude))}&z=15&output=embed`}
+                                className="w-full h-full border-none"
+                                loading="lazy"
+                            />
+                            <div className="absolute top-2 right-2 bg-stone-900/80 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded backdrop-blur-xs">
+                                Pinned Map Preview
+                            </div>
+                        </div>
+                    )}
 
                     {/* Save */}
                     <button
@@ -655,9 +756,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const [selectedDeliveryMethod, setSelectedDeliveryMethod] = useState<DeliveryMethod | null>(null);
     const [loadingDeliveryMethods, setLoadingDeliveryMethods] = useState(false);
 
+    const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
+    const [loadingDeliveryZones, setLoadingDeliveryZones] = useState(false);
+
     useEffect(() => {
         if (ownerUserId) {
             fetchDeliveryMethods();
+            fetchDeliveryZones();
         }
     }, [ownerUserId]);
 
@@ -677,36 +782,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         }
     };
 
-    const deliveryFee = useMemo(() => {
-        // Validation: Free delivery coupon (Continuous validation) takes absolute priority
-        if (appliedCoupon?.coupon_type === 'free_delivery') {
-            const minPurchase = appliedCoupon.minimum_purchase ? parseFloat(String(appliedCoupon.minimum_purchase)) : 0;
-            if (subtotal >= minPurchase) return 0;
+    const fetchDeliveryZones = async () => {
+        try {
+            setLoadingDeliveryZones(true);
+            const data = await deliveryZonesService.getPublicDeliveryZones(ownerUserId);
+            setDeliveryZones(data || []);
+        } catch (err) {
+            console.error('Failed to fetch delivery zones:', err);
+        } finally {
+            setLoadingDeliveryZones(false);
         }
-
-        if (selectedDeliveryMethod) {
-            return parseFloat(String(selectedDeliveryMethod.cost)) || 0;
-        }
-
-        if (propDeliveryFee !== undefined) return propDeliveryFee;
-
-        const localSettings = Store_setting();
-        const activeSettings = { ...(stores || {}), ...(localSettings || {}) };
-
-        let fee = 0;
-        let threshold = 0;
-
-        if (activeSettings) {
-            if (activeSettings.shipping_fee !== undefined && activeSettings.shipping_fee !== null) {
-                fee = parseFloat(String(activeSettings.shipping_fee)) || 0;
-            }
-            if (activeSettings.free_shipping_threshold !== undefined && activeSettings.free_shipping_threshold !== null) {
-                threshold = parseFloat(String(activeSettings.free_shipping_threshold)) || 0;
-            }
-        }
-
-        return (threshold > 0 && subtotal >= threshold) ? 0 : fee;
-    }, [propDeliveryFee, stores, subtotal, appliedCoupon, selectedDeliveryMethod]);
+    };
 
     // ── Address Book state ──
     const [savedAddresses, setSavedAddresses] = useState<ShippingAddress[]>([]);
@@ -735,6 +821,77 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     };
 
     const selectedAddress = savedAddresses.find(a => a.id === selectedAddressId);
+
+    const matchingZone = useMemo(() => {
+        if (!selectedAddress || !selectedAddress.latitude || !selectedAddress.longitude) {
+            return null;
+        }
+        
+        const lat = parseFloat(String(selectedAddress.latitude));
+        const lng = parseFloat(String(selectedAddress.longitude));
+        if (isNaN(lat) || isNaN(lng)) return null;
+
+        for (const zone of deliveryZones) {
+            if (!zone.is_active) continue;
+
+            if (!zone.type || zone.type === 'radius') {
+                const centerLat = zone.center_lat ? parseFloat(String(zone.center_lat)) : null;
+                const centerLng = zone.center_lng ? parseFloat(String(zone.center_lng)) : null;
+                const radiusKm = zone.radius_km ? parseFloat(String(zone.radius_km)) : null;
+
+                if (centerLat !== null && centerLng !== null && radiusKm !== null) {
+                    const distance = getHaversineDistance(lat, lng, centerLat, centerLng);
+                    if (distance <= radiusKm) {
+                        return zone;
+                    }
+                }
+            } else if (zone.type === 'polygon' && zone.polygon_coordinates) {
+                const polygon = parseWKTPolygon(zone.polygon_coordinates);
+                if (polygon.length > 0 && isPointInPolygon(lat, lng, polygon)) {
+                    return zone;
+                }
+            }
+        }
+        return null;
+    }, [selectedAddress, deliveryZones]);
+
+    const deliveryFee = useMemo(() => {
+        // Validation: Free delivery coupon (Continuous validation) takes absolute priority
+        if (appliedCoupon?.coupon_type === 'free_delivery') {
+            const minPurchase = appliedCoupon.minimum_purchase ? parseFloat(String(appliedCoupon.minimum_purchase)) : 0;
+            if (subtotal >= minPurchase) return 0;
+        }
+
+        if (selectedDeliveryMethod) {
+            const isPickup = selectedDeliveryMethod.code?.toLowerCase().includes('pickup') || 
+                             selectedDeliveryMethod.code?.toLowerCase().includes('pick-up') ||
+                             selectedDeliveryMethod.name?.toLowerCase().includes('pickup') ||
+                             selectedDeliveryMethod.name?.toLowerCase().includes('pick up');
+            if (!isPickup && matchingZone) {
+                return parseFloat(String(matchingZone.delivery_fee)) || 0;
+            }
+            return parseFloat(String(selectedDeliveryMethod.cost)) || 0;
+        }
+
+        if (propDeliveryFee !== undefined) return propDeliveryFee;
+
+        const localSettings = Store_setting();
+        const activeSettings = { ...(stores || {}), ...(localSettings || {}) };
+
+        let fee = 0;
+        let threshold = 0;
+
+        if (activeSettings) {
+            if (activeSettings.shipping_fee !== undefined && activeSettings.shipping_fee !== null) {
+                fee = parseFloat(String(activeSettings.shipping_fee)) || 0;
+            }
+            if (activeSettings.free_shipping_threshold !== undefined && activeSettings.free_shipping_threshold !== null) {
+                threshold = parseFloat(String(activeSettings.free_shipping_threshold)) || 0;
+            }
+        }
+
+        return (threshold > 0 && subtotal >= threshold) ? 0 : fee;
+    }, [propDeliveryFee, stores, subtotal, appliedCoupon, selectedDeliveryMethod, matchingZone]);
 
     // ── Payment & Contact state ──
     const [storeSettings, setStoreSettings] = useState(() => {
@@ -1130,6 +1287,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             customer_address: selectedAddress
                 ? `${selectedAddress.address}, ${selectedAddress.city_province}, ${selectedAddress.country}`
                 : 'Guest Address',
+            shipping_address_id: (isLoggedIn && selectedAddress) ? selectedAddress.id : null,
+            latitude: selectedAddress?.latitude || null,
+            longitude: selectedAddress?.longitude || null,
             payment_method: selectedPayment || 'cod',
             notes: orderNotes,
             items: validItems,
@@ -1346,6 +1506,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             selectedDeliveryMethod={selectedDeliveryMethod}
                             onSelectDeliveryMethod={setSelectedDeliveryMethod}
                             loadingDeliveryMethods={loadingDeliveryMethods}
+                            matchingZone={matchingZone}
                         />
                     ) : (
                         <div className="bg-white p-5 rounded-sm border border-stone-200/60 shadow-2xs flex items-center justify-between opacity-60 cursor-not-allowed select-none">

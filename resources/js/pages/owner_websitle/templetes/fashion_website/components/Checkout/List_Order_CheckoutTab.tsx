@@ -34,12 +34,12 @@ export const List_Order_CheckoutTab: React.FC<ListOrderCheckoutTabProps> = ({
     onNavigate,
 }) => {
     return (
-        <div className={`bg-white rounded-sm border transition-all duration-300 shadow-2xs ${!isLocked ? 'border-stone-900 ring-1 ring-stone-900/10 p-5' : 'border-stone-200/60 p-5'}`}>
+        <div className={`bg-white rounded-2xl border transition-all duration-300 shadow-sm ${!isLocked ? 'border-stone-900 ring-1 ring-stone-900/5 p-5' : 'border-stone-200/50 p-5'}`}>
             {/* Header section (shows summary if locked, otherwise step title) */}
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">
                 {isLocked ? (
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center text-white shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center text-white shrink-0 shadow-xs">
                             <FiCheck className="w-4 h-4 stroke-[3]" />
                         </div>
                         <div>
@@ -53,7 +53,7 @@ export const List_Order_CheckoutTab: React.FC<ListOrderCheckoutTabProps> = ({
                     </div>
                 ) : (
                     <h2 className="text-sm font-black text-stone-900 uppercase tracking-widest flex items-center gap-2.5">
-                        <span className="w-6 h-6 rounded-full bg-stone-900 text-white flex items-center justify-center text-xs font-black">1</span>
+                        <span className="w-6 h-6 rounded-full bg-stone-900 text-white flex items-center justify-center text-xs font-black shadow-xs">1</span>
                         Review Shopping Bag
                     </h2>
                 )}
@@ -61,12 +61,12 @@ export const List_Order_CheckoutTab: React.FC<ListOrderCheckoutTabProps> = ({
                 {isLocked ? (
                     <button
                         onClick={onEdit}
-                        className="text-[10px] font-black text-stone-500 hover:text-stone-900 uppercase tracking-widest border border-stone-200 hover:border-stone-900 px-3 py-1.5 rounded-sm bg-transparent cursor-pointer transition-all duration-200"
+                        className="text-[10px] font-black text-stone-500 hover:text-stone-900 uppercase tracking-widest border border-stone-200 hover:border-stone-900 px-3.5 py-1.5 rounded-xl bg-transparent cursor-pointer transition-all duration-200"
                     >
                         Modify
                     </button>
                 ) : (
-                    <span className="text-[11px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded-sm font-black uppercase tracking-wider">
+                    <span className="text-[11px] bg-stone-100 text-stone-600 px-3 py-1 rounded-xl font-black uppercase tracking-wider">
                         Step 1 of 3
                     </span>
                 )}
@@ -78,7 +78,7 @@ export const List_Order_CheckoutTab: React.FC<ListOrderCheckoutTabProps> = ({
                     <div className="divide-y divide-stone-100 mt-4 space-y-4">
                         {items.length === 0 ? (
                             <div className="text-center py-12 flex flex-col items-center justify-center gap-4 animate-fade-in">
-                                <span className="text-3xl text-stone-300">🛍️</span>
+                                <span className="text-3xl text-stone-300 animate-bounce">🛍️</span>
                                 <p className="text-stone-500 text-xs font-bold uppercase tracking-wider">Your shopping bag is empty</p>
                                 <button
                                     onClick={() => {
@@ -89,7 +89,7 @@ export const List_Order_CheckoutTab: React.FC<ListOrderCheckoutTabProps> = ({
                                             onNavigate(FASHION_ROUTES.getShop(resolvedId, storeSlug));
                                         }
                                     }}
-                                    className="px-6 py-3 bg-stone-900 hover:bg-stone-850 text-white rounded-[3px] font-black text-xs uppercase tracking-widest border-none cursor-pointer transition-colors duration-200 shadow-xs focus:outline-none"
+                                    className="px-6 py-3 bg-stone-900 hover:bg-stone-850 active:scale-98 text-white rounded-xl font-black text-xs uppercase tracking-widest border-none cursor-pointer transition-all shadow-md focus:outline-none"
                                 >
                                     Go to Shop
                                 </button>
@@ -99,7 +99,7 @@ export const List_Order_CheckoutTab: React.FC<ListOrderCheckoutTabProps> = ({
                                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
                                     {items.map((item, idx) => (
                                         <div key={item.id + idx} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                                            <div className="w-16 h-20 bg-stone-50 border border-stone-100 rounded-sm overflow-hidden shrink-0">
+                                            <div className="w-16 h-20 bg-stone-50 border border-stone-100 rounded-lg overflow-hidden shrink-0 shadow-xs">
                                                 <img
                                                     src={item.image}
                                                     alt={item.name}
@@ -107,9 +107,9 @@ export const List_Order_CheckoutTab: React.FC<ListOrderCheckoutTabProps> = ({
                                                 />
                                             </div>
 
-                                            <div className="flex-1 flex flex-col justify-between text-xs text-stone-500">
+                                            <div className="flex-1 flex flex-col justify-between text-xs text-stone-505">
                                                 <div className="space-y-1">
-                                                    <h3 className="font-bold text-stone-900 text-sm line-clamp-1">{item.name}</h3>
+                                                    <h3 className="font-extrabold text-stone-900 text-sm line-clamp-1">{item.name}</h3>
                                                     {item.code && <p className="text-[10px]">Code: {item.code}</p>}
                                                     {item.variant && (
                                                         <p className="text-[10px] uppercase font-bold text-stone-400">
@@ -132,7 +132,7 @@ export const List_Order_CheckoutTab: React.FC<ListOrderCheckoutTabProps> = ({
                                 <div className="pt-6 flex justify-end">
                                     <button
                                         onClick={onNext}
-                                        className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[3px] font-black text-xs uppercase tracking-widest border-none cursor-pointer transition-all duration-200 flex items-center gap-2 shadow-sm focus:outline-none"
+                                        className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl font-bold text-xs uppercase tracking-widest border-none cursor-pointer transition-all flex items-center gap-2 shadow-md focus:outline-none"
                                     >
                                         Proceed to Delivery <FiChevronRight className="w-4 h-4 stroke-[2.5]" />
                                     </button>

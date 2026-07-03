@@ -10,6 +10,8 @@ export interface ShippingAddress {
   country: string | null;
   city_province: string;
   set_as_default: boolean;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +24,8 @@ export interface ShippingAddressPayload {
   country?: string;
   city_province: string;
   set_as_default?: boolean;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
 }
 
 export const shippingAddressesService = {

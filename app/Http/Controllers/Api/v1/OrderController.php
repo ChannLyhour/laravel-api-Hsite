@@ -23,6 +23,8 @@ class OrderController extends Controller
             'items' => 'required|array',
             'store_id' => 'required|exists:stores,id',
             'total_amount' => 'required|numeric',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         try {
@@ -92,6 +94,8 @@ class OrderController extends Controller
                     'customer_email' => $request->customer_email,
                     'customer_address' => $request->customer_address,
                     'shipping_address_id' => $request->shipping_address_id,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
                     'notes' => $request->notes,
                     'status' => 'pending',
                     'subtotal' => $request->subtotal ?? $request->total_amount,
