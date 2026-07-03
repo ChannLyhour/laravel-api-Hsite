@@ -9,6 +9,7 @@ use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Helpers\OrderNoHelper;
 
 class OrderController extends Controller
 {
@@ -85,7 +86,7 @@ class OrderController extends Controller
                 }
 
                 $order = Order::create([
-                    'order_no' =>strtoupper(Str::random(8)),
+                    'order_no' => OrderNoHelper::generate(),
                     'order_type' => $request->order_type ?? 'delivery',
                     'user_id' => $userId,
                     'created_by' => $userId,

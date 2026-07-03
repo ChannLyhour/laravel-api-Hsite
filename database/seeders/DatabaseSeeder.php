@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use App\Helpers\OrderNoHelper;
 
 class DatabaseSeeder extends Seeder
 {
@@ -245,7 +246,7 @@ class DatabaseSeeder extends Seeder
             $amount = rand(30, 450);
             $orders[] = [
                 'id' => $i,
-                'order_no' => 'FSH-' . strtoupper(Str::random(6)),
+                'order_no' => OrderNoHelper::generate(),
                 'user_id' => rand(3, 20),
                 'status' => 'completed',
                 'total_amount' => $amount,
