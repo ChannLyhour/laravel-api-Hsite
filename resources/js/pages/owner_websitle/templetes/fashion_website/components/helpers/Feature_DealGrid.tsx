@@ -5,6 +5,7 @@ import { CardProduct } from './CardProduct';
 import { resolveImageUrl } from '../../utils/imageUtils';
 import { FiStar } from 'react-icons/fi';
 import { SkeletonCard } from './SkeletonSt';
+import { FASHION_ROUTES } from '../../routes';
 
 interface Feature_DealGridProps {
      deal?: any; // FeaturedDealRow
@@ -82,7 +83,8 @@ export const Feature_DealGrid: React.FC<Feature_DealGridProps> = ({
                          className="w-full lg:w-[320px] shrink-0 rounded-[6px] relative overflow-hidden flex flex-col justify-end p-6 min-h-[280px] lg:min-h-[420px] shadow-sm select-none lg:sticky lg:top-[90px] self-start group cursor-pointer"
                          onClick={() => {
                               if (onNavigate) {
-                                   onNavigate(`/shop?deal=featured_deals`);
+                                   const storeSlug = (stores?.store_name || storeName || '').replace(/\s+/g, '_');
+                                   onNavigate(FASHION_ROUTES.getOffers(ownerUserId, storeSlug, 'featured'));
                               }
                          }}
                     >

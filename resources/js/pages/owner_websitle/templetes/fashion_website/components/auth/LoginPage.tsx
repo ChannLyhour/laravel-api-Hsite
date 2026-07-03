@@ -3,6 +3,7 @@ import { FiX, FiEye, FiEyeOff, FiMail, FiLock } from 'react-icons/fi';
 import '../../styles/animation.css';
 import { AuthSuccessOverlay } from '../../message/LoadingTime';
 import type { StoreRow } from '@/api/owner/stores';
+import { resolveImageUrl } from '@/api/imageUtils';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -53,12 +54,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
         if (ownerUserId) localStorage.setItem('oauth_owner_id', String(ownerUserId));
         if (storeName) localStorage.setItem('oauth_store_name', storeName);
+        if (stores?.logo_url) {
+            localStorage.setItem('oauth_store_logo', resolveImageUrl(stores.logo_url));
+        }
 
         const redirectUri = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
         const scope = encodeURIComponent('email profile openid');
         const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}`;
 
-        window.location.href = googleAuthUrl;
+        const width = 500;
+        const height = 650;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+        window.open(
+            googleAuthUrl,
+            'GoogleLoginPopup',
+            `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+        );
     };
 
     const handleFacebookLogin = () => {
@@ -77,12 +89,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
         if (ownerUserId) localStorage.setItem('oauth_owner_id', String(ownerUserId));
         if (storeName) localStorage.setItem('oauth_store_name', storeName);
+        if (stores?.logo_url) {
+            localStorage.setItem('oauth_store_logo', resolveImageUrl(stores.logo_url));
+        }
 
         const redirectUri = encodeURIComponent(`${window.location.origin}/auth/facebook/callback`);
         const scope = encodeURIComponent('email,public_profile');
         const facebookAuthUrl = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}`;
 
-        window.location.href = facebookAuthUrl;
+        const width = 580;
+        const height = 650;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+        window.open(
+            facebookAuthUrl,
+            'FacebookLoginPopup',
+            `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+        );
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

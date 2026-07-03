@@ -22,6 +22,7 @@ import { FooterPage } from './components/FooterPage';
 import { ListProdoct } from './components/ShopPage';
 import { ListProductLike } from './components/ListProductLike';
 import { SocialMediaGrid } from './components/SocialMediaGrid';
+import { ProductOffersDeals } from './components/ProductOffersDeals';
 import { LineLoading } from './components/helpers/SkeletonSt';
 import './styles/animation.css';
 
@@ -562,6 +563,23 @@ export const FashionPage: React.FC<FashionPageProps> = ({
               </div>
             </div>
           )}
+        </main>
+      ) : activePath === '/offers' || activePath === '/deals' ? (
+        <main className="flex-grow animate-fade-in">
+          <ProductOffersDeals
+            coupons={coupons}
+            flashDeals={flashDeals}
+            featuredDeals={featuredDeals}
+            clearanceSales={clearanceSales}
+            ownerUserId={ownerUserId}
+            storeName={storeName}
+            stores={stores}
+            onNavigate={onNavigate}
+            addToCart={addToCart}
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+            isLoading={loadingPromotions}
+          />
         </main>
       ) : activePath === '/shop' ? (
         <main className="flex-grow animate-fade-in">

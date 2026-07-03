@@ -95,6 +95,22 @@ export const FASHION_ROUTES = {
   },
 
   /**
+   * Generates the offers/promotions page URL.
+   */
+  getOffers: (
+    ownerUserId: number | string | undefined,
+    storeSlug: string,
+    tab?: 'coupons' | 'flash' | 'featured' | 'clearance'
+  ): string => {
+    const base = storeSlug ? `/${storeSlug}/offers` : `/offers?id=${ownerUserId || ''}`;
+    if (tab) {
+      const sep = base.includes('?') ? '&' : '?';
+      return `${base}${sep}tab=${tab}`;
+    }
+    return base;
+  },
+
+  /**
    * Generates the owner management dashboard URL.
    */
   getOwnerDashboard: (): string => {

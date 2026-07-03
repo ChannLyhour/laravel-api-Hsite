@@ -140,7 +140,7 @@ const FlashDealsGridInner: React.FC<FlashDealsGridProps> = ({
     if (onNavigate) {
       e.preventDefault();
       const storeSlug = (stores?.store_name || storeName).replace(/\s+/g, '_');
-      onNavigate(FASHION_ROUTES.getShop(ownerUserId, storeSlug));
+      onNavigate(FASHION_ROUTES.getOffers(ownerUserId, storeSlug, 'flash'));
     }
   };
 

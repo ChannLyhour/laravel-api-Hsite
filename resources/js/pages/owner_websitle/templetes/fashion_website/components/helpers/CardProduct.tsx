@@ -273,14 +273,7 @@ const CardProductInner: React.FC<CardProductProps> = ({
         >
             {/* Product Image Area */}
             <div className="relative aspect-[4/5] overflow-hidden rounded-md bg-stone-50">
-                {/* Premium Rotated Price-Tag Badge (placed inside image to avoid clipping) */}
-                {discountLabel && (
-                    <div className="absolute top-2 right-2 z-10 pointer-events-none select-none">
-                        <span className="inline-block bg-[#E61E25] text-white text-[10px] sm:text-[11px] font-black uppercase px-2 py-1 rounded-[3px] tracking-wider leading-none shadow-md border border-white/95 transform ">
-                            {discountLabel}
-                        </span>
-                    </div>
-                )}
+                {/* Discount label is now rendered in the badges top-left stack to avoid overlaps */}
 
                 <div
                     ref={containerRef}
@@ -357,17 +350,22 @@ const CardProductInner: React.FC<CardProductProps> = ({
                     )}
                 </div>
 
-                {/* Badges top-left overlay (including Top Seller crown) */}
-                {((showBadge && item.badge) || isLarge) && (
+                {/* Badges top-left overlay (including discount and Top Seller crown) */}
+                {(discountLabel || (showBadge && item.badge) || isLarge) && (
                     <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1.5 z-10 pointer-events-none select-none">
-                        {isLarge && (
-                            <span className="w-fit bg-gradient-to-r from-amber-500 to-yellow-600 text-white border border-amber-400 px-2 py-0.5 rounded-[3px] leading-none shadow-md flex items-center gap-1">
+                        {discountLabel && (
+                            <span className="w-fit bg-[#E61E25] text-white text-[10px] sm:text-[11px] font-bold uppercase px-2.5 py-1 rounded-full leading-none shadow-md">
+                                {discountLabel}
+                            </span>
+                        )}
+                        {isLarge && (   
+                            <span className="w-fit bg-gradient-to-r from-amber-500 to-yellow-600 text-white border border-amber-400 px-2.5 py-1 rounded-full leading-none shadow-md flex items-center gap-1">
                                 👑 <TextSp size="3xs" weight="black" uppercase tracking="wider" font={font}>TOP SELLER</TextSp>
                             </span>
                         )}
                         {showBadge && item.badge && (
                             <span
-                                className="w-fit px-2 py-0.5 rounded-[3px] leading-none shadow-3xs"
+                                className="w-fit px-2.5 py-1 rounded-full leading-none shadow-sm"
                                 style={{
                                     backgroundColor: item.badge.background_color || '#E61E25',
                                     color: item.badge.text_color || '#FFFFFF',
@@ -408,6 +406,11 @@ const CardProductInner: React.FC<CardProductProps> = ({
                                 const defaultColor = item.colors?.[0] || 'No color';
                                 addToCart(item, 1, defaultSize, defaultColor);
                                 toast.success(`"${item.name}" added to bag!`);
+
+                                // Trigger flying cart animation
+                                const startX = e.clientX || e.currentTarget.getBoundingClientRect().left + 20;
+                                const startY = e.clientY || e.currentTarget.getBoundingClientRect().top + 20;
+                                window.dispatchEvent(new CustomEvent('animate_to_cart', { detail: { startX, startY } }));
                             }}
                             className="w-full py-2 bg-stone-950/90 hover:bg-[#E61E25] text-white text-[10px] font-black uppercase tracking-widest rounded-[2px] shadow-md transition-colors duration-300 cursor-pointer border-none flex items-center justify-center gap-1.5"
                         >

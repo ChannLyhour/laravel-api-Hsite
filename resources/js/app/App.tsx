@@ -1044,6 +1044,12 @@ function App() {
       }
 
       if (!hasOwner) {
+        if (currentPath.startsWith('/auth/')) {
+          const providerName = currentPath.includes('google') ? 'Google' : 'Facebook';
+          document.title = `${providerName} Login`;
+          return;
+        }
+
         const pageTitles: Record<string, string> = {
           '/': platformName,
           '/about': `Platform | ${platformName}`,
@@ -1277,6 +1283,7 @@ const SocialAuthCallback: React.FC<SocialAuthCallbackProps> = ({ provider, onSuc
 
   useEffect(() => {
     let active = true;
+    document.title = provider === 'google' ? 'Google Login' : 'Facebook Login';
 
     const authenticate = async () => {
       try {
@@ -1285,7 +1292,25 @@ const SocialAuthCallback: React.FC<SocialAuthCallbackProps> = ({ provider, onSuc
         const accessToken = params.get('access_token');
 
         if (!accessToken) {
-          throw new Error('No access token returned from identity provider.');
+          const savedOwnerId = localStorage.getItem('oauth_owner_id');
+          const savedStoreName = localStorage.getItem('oauth_store_name');
+          const searchParams = new URLSearchParams(window.location.search);
+          const urlError = searchParams.get('error') || searchParams.get('error_description');
+
+          // Clean up oauth variables
+          localStorage.removeItem('oauth_owner_id');
+          localStorage.removeItem('oauth_store_name');
+
+          if (urlError || savedOwnerId) {
+            throw new Error(urlError || 'No access token returned from identity provider.');
+          }
+
+          const storeSlug = (savedStoreName || 'store').replace(/\s+/g, '_');
+          const targetUrl = savedOwnerId
+            ? `/?id=${savedOwnerId}&store=${storeSlug}`
+            : '/';
+          onNavigate(targetUrl);
+          return;
         }
 
         let email = '';
@@ -1340,6 +1365,25 @@ const SocialAuthCallback: React.FC<SocialAuthCallbackProps> = ({ provider, onSuc
 
         if (res.token) {
           localStorage.setItem('aura_customer_token', res.token);
+
+          if (window.opener) {
+            try {
+              window.opener.localStorage.setItem('aura_customer_token', res.token);
+              window.opener.dispatchEvent(new Event('aura_token_changed'));
+            } catch (e) {
+              console.error('Failed to notify parent window:', e);
+            }
+            localStorage.removeItem('oauth_owner_id');
+            localStorage.removeItem('oauth_store_name');
+            localStorage.removeItem('oauth_store_logo');
+            setStatus('success');
+            toast.success('Signed in successfully!');
+            setTimeout(() => {
+              window.close();
+            }, 1000);
+            return;
+          }
+
           window.dispatchEvent(new Event('aura_token_changed'));
           setStatus('success');
           toast.success('Signed in successfully!');
@@ -1354,6 +1398,7 @@ const SocialAuthCallback: React.FC<SocialAuthCallbackProps> = ({ provider, onSuc
             // Clean up oauth variables
             localStorage.removeItem('oauth_owner_id');
             localStorage.removeItem('oauth_store_name');
+            localStorage.removeItem('oauth_store_logo');
 
             // Navigate back
             onNavigate(targetUrl);
@@ -1377,54 +1422,121 @@ const SocialAuthCallback: React.FC<SocialAuthCallbackProps> = ({ provider, onSuc
     };
   }, [provider, onSuccess, onNavigate]);
 
+  const savedStoreName = localStorage.getItem('oauth_store_name');
+  const storeName = savedStoreName ? savedStoreName.replace(/_/g, ' ') : 'Our20s';
+  const firstLetter = storeName.charAt(0).toUpperCase();
+  const storeLogo = localStorage.getItem('oauth_store_logo');
+
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-[#F9F9F9] text-[#1C1C1C]">
-      <div className="bg-white p-8 rounded-[12px] shadow-2xl max-w-sm w-full text-center space-y-6 animate-modal-zando border border-stone-100">
-        {status === 'authenticating' && (
-          <>
-            <div className="relative w-12 h-12 mx-auto">
-              <div className="absolute inset-0 rounded-full border-4 border-stone-100" />
-              <div className="absolute inset-0 rounded-full border-4 border-stone-900 border-t-transparent animate-spin" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Verifying Identity</p>
-              <h3 className="text-base font-black text-stone-900 mt-1 uppercase tracking-wider">Authenticating...</h3>
-              <p className="text-stone-400 text-3xs font-semibold mt-1.5">Exchanging authorization credentials with the runway server.</p>
-            </div>
-          </>
-        )}
+    <div className="h-screen w-screen flex items-center justify-center bg-[#121212] text-[#E0E0E0] font-sans selection:bg-stone-800">
+      <style>{`
+        @keyframes custom-progress-anim {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .custom-progress-bar {
+          background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #3b82f6 100%);
+          background-size: 200% 100%;
+          animation: custom-progress-anim 1.5s infinite linear;
+        }
+      `}</style>
+      
+      <div className="bg-[#1C1C1E] p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-stone-800 flex flex-col space-y-7 relative overflow-hidden select-none animate-modal-zando">
+        {/* Top Header Row */}
+        <div className="flex items-center gap-2 pb-4 border-b border-stone-800/80">
+          {provider === 'google' ? (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05" />
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 6.54l3.66 2.83c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          )}
+          <span className="text-stone-400 text-xs font-bold tracking-wide" style={{ color: '#a8a29e' }}>
+            {provider === 'google' ? 'Sign in with Google' : 'Sign in with Facebook'}
+          </span>
+        </div>
 
-        {status === 'success' && (
-          <>
-            <div className="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-              ✓
+        {/* Center Logo Area */}
+        <div className="flex flex-col items-center justify-center space-y-4">
+          {storeLogo ? (
+            <div className="w-16 h-16 rounded-full bg-white border border-stone-800 flex items-center justify-center shadow-lg relative overflow-hidden p-1.5 animate-modal-zando">
+              <img src={storeLogo} alt={storeName} className="max-w-full max-h-full object-contain rounded-full" />
+              <div className="absolute -inset-1 rounded-full border border-indigo-500/30 animate-pulse pointer-events-none" />
             </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-green-500">Access Granted</p>
-              <h3 className="text-base font-black text-stone-900 mt-1 uppercase tracking-wider">Welcome back</h3>
-              <p className="text-stone-400 text-3xs font-semibold mt-1.5">Preparing your wardrobe and custom styling dashboard.</p>
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-stone-850 to-stone-900 border border-stone-800 flex items-center justify-center shadow-lg text-2xl font-black text-white relative animate-modal-zando" style={{ color: '#ffffff' }}>
+              {firstLetter}
+              <div className="absolute -inset-1 rounded-full border border-indigo-500/30 animate-pulse pointer-events-none" />
             </div>
-          </>
-        )}
+          )}
+          <div className="text-center space-y-1">
+            <h2 className="text-xl font-bold tracking-tight" style={{ color: '#ffffff' }}>
+              {status === 'authenticating' && 'Choose an account'}
+              {status === 'success' && 'Welcome Back!'}
+              {status === 'error' && 'Authentication Error'}
+            </h2>
+            <p className="text-xs font-medium" style={{ color: '#a8a29e' }}>
+              to continue to <span className="font-semibold" style={{ color: '#ffffff' }}>{storeName}</span>
+            </p>
+          </div>
+        </div>
 
-        {status === 'error' && (
-          <>
-            <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-              ✕
+        {/* Status Body Area */}
+        <div className="space-y-4 pt-2">
+          {status === 'authenticating' && (
+            <div className="space-y-5">
+              {/* Account Loader Line */}
+              <div className="w-full bg-stone-800 h-1 rounded-full overflow-hidden">
+                <div className="h-full rounded-full custom-progress-bar" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#78716c' }}>Exchanging Credentials</p>
+                <p className="text-3xs font-semibold leading-relaxed" style={{ color: '#a8a29e' }}>
+                  {provider === 'google' 
+                    ? 'Verifying account information ...' 
+                    : 'Verifying account information ...'}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-red-500">Failed</p>
-              <h3 className="text-base font-black text-stone-900 mt-1 uppercase tracking-wider">Authentication Error</h3>
-              <p className="text-red-500 text-3xs font-bold mt-2 bg-red-50 py-1.5 px-2.5 rounded-[4px]">{errorMessage}</p>
-              <button
-                onClick={() => onNavigate('/')}
-                className="mt-4 w-full py-2 bg-stone-900 hover:bg-stone-850 text-white font-black text-3xs uppercase tracking-widest rounded-[4px] border-none cursor-pointer transition-colors"
-              >
-                Return to Store
-              </button>
+          )}
+
+          {status === 'success' && (
+            <div className="space-y-4 flex flex-col items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-emerald-950/40 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-lg font-bold shadow-md">
+                ✓
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#34d399' }}>Access Granted</p>
+                <p className="text-3xs font-semibold" style={{ color: '#a8a29e' }}>Preparing your custom styling dashboard...</p>
+              </div>
             </div>
-          </>
-        )}
+          )}
+
+          {status === 'error' && (
+            <div className="space-y-4 flex flex-col items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-red-950/40 text-red-400 border border-red-500/30 flex items-center justify-center text-lg font-bold shadow-md">
+                ✕
+              </div>
+              <div className="w-full text-center space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#f87171' }}>Failed</p>
+                <p className="text-3xs font-bold leading-relaxed max-h-24 overflow-y-auto" style={{ color: '#f87171', backgroundColor: 'rgba(69, 10, 10, 0.2)', borderColor: 'rgba(127, 29, 29, 0.3)' }}>
+                  {errorMessage}
+                </p>
+                <button
+                  onClick={() => onNavigate('/')}
+                  className="w-full py-2 bg-stone-800 hover:bg-stone-750 text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-stone-700 cursor-pointer transition-all active:scale-95 outline-none mt-2"
+                >
+                  Return to Store
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

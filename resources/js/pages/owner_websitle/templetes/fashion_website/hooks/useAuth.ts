@@ -15,23 +15,35 @@ export const useAuth = (ownerUserId?: number | string) => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // ── Restore session on mount ──────────────────────────────────────────────
+    // ── Restore session on mount and listen to changes ─────────────────────────
     useEffect(() => {
-        const token = localStorage.getItem(AUTH_TOKEN_KEY);
-        if (!token) {
-            // No token — already not loading, nothing to restore
-            setIsLoading(false);
-            return;
-        }
-        authService
-            .getCurrentUser()
-            .then(({ user }) => setUser(user))
-            .catch(() => {
-                // Token likely expired — clear it
-                localStorage.removeItem(AUTH_TOKEN_KEY);
-                window.dispatchEvent(new Event('aura_token_changed'));
-            })
-            .finally(() => setIsLoading(false));
+        const syncUser = () => {
+            const token = localStorage.getItem(AUTH_TOKEN_KEY);
+            if (!token) {
+                setUser(null);
+                setIsLoading(false);
+                return;
+            }
+            setIsLoading(true);
+            authService
+                .getCurrentUser()
+                .then(({ user }) => setUser(user))
+                .catch(() => {
+                    localStorage.removeItem(AUTH_TOKEN_KEY);
+                    setUser(null);
+                })
+                .finally(() => setIsLoading(false));
+        };
+
+        syncUser();
+
+        window.addEventListener('aura_token_changed', syncUser);
+        window.addEventListener('storage', syncUser);
+
+        return () => {
+            window.removeEventListener('aura_token_changed', syncUser);
+            window.removeEventListener('storage', syncUser);
+        };
     }, []);
 
     // ── Login ─────────────────────────────────────────────────────────────────

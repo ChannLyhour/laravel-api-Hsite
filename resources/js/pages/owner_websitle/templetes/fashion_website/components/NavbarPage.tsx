@@ -78,6 +78,13 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
     };
   }, []);
 
+  // Close login/register modal automatically once user is logged in
+  useEffect(() => {
+    if (user) {
+      setAuthModal(null);
+    }
+  }, [user]);
+
   const isProfilePage = currentPathname === '/profile' || currentPathname.endsWith('/profile');
   const isDashboardActive = currentPathname === '/owner' || currentPathname.endsWith('/owner');
 
@@ -176,6 +183,62 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
     return () => {
       window.removeEventListener('click', handleClickOutside);
     };
+  }, []);
+
+  // Flying cart items animation listener
+  useEffect(() => {
+    const handleAnimate = (e: Event) => {
+      const customEvent = e as CustomEvent<{ startX: number; startY: number }>;
+      const { startX, startY } = customEvent.detail;
+
+      const targetEl = document.getElementById('nav-shopping-bag');
+      if (!targetEl) return;
+
+      const targetRect = targetEl.getBoundingClientRect();
+      const targetX = targetRect.left + targetRect.width / 2;
+      const targetY = targetRect.top + targetRect.height / 2;
+
+      // Create flyer div
+      const flyer = document.createElement('div');
+      flyer.className = 'fixed z-[9999] pointer-events-none flex items-center justify-center';
+      flyer.style.left = `${startX}px`;
+      flyer.style.top = `${startY}px`;
+
+      // Draw flying bag icon inside red circle badge
+      flyer.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-[#E61E25] text-white flex items-center justify-center shadow-lg transform -translate-x-1/2 -translate-y-1/2 transition-all duration-700 ease-in-out">
+          <svg stroke="currentColor" fill="none" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </div>
+      `;
+
+      document.body.appendChild(flyer);
+
+      // Force reflow
+      flyer.getBoundingClientRect();
+
+      // Trigger transition
+      flyer.style.transition = 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1), left 700ms cubic-bezier(0.16, 1, 0.3, 1), top 700ms cubic-bezier(0.45, 0, 0.55, 1), opacity 700ms ease';
+      flyer.style.left = `${targetX}px`;
+      flyer.style.top = `${targetY}px`;
+      flyer.style.transform = 'scale(0.2)';
+      flyer.style.opacity = '0.2';
+
+      setTimeout(() => {
+        flyer.remove();
+        // Landing pulse pop effect
+        targetEl.classList.add('animate-cart-pop');
+        setTimeout(() => {
+          targetEl.classList.remove('animate-cart-pop');
+        }, 500);
+      }, 700);
+    };
+
+    window.addEventListener('animate_to_cart', handleAnimate);
+    return () => window.removeEventListener('animate_to_cart', handleAnimate);
   }, []);
 
 
@@ -342,6 +405,21 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
               >
                 <span className="nav-link-draw hover:text-[#E61E25] text-stone-800 transition-colors py-8">
                   {t('navbar.shop')}
+                </span>
+              </div>
+
+              {/* Static Link Offers & Deals */}
+              <div
+                onClick={() => {
+                  if (onNavigate) {
+                    const storeSlug = activeStoreName.replace(/\s+/g, '_');
+                    onNavigate(FASHION_ROUTES.getOffers(ownerUserId, storeSlug));
+                  }
+                }}
+                className="h-full flex items-center relative cursor-pointer"
+              >
+                <span className="nav-link-draw hover:text-[#E61E25] text-stone-800 transition-colors py-8">
+                  Offers & Deals
                 </span>
               </div>
             </div>
@@ -676,6 +754,7 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
 
             {/* Shopping Bag Button */}
             <button
+              id="nav-shopping-bag"
               onClick={() => setIsCartOpen(true)}
               className="icon-scale-hover relative p-2 text-stone-800 hover:text-stone-600 bg-transparent border-none cursor-pointer transition-colors flex items-center justify-center focus:outline-none"
             >
@@ -974,6 +1053,21 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                 className="block text-2xs font-extrabold tracking-widest uppercase text-stone-955 hover:text-[#E61E25] transition-colors animate-fade-in"
               >
                 Shop
+              </a>
+
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsMobileMenuOpen(false);
+                  if (onNavigate) {
+                    const storeSlug = activeStoreName.replace(/\s+/g, '_');
+                    onNavigate(FASHION_ROUTES.getOffers(ownerUserId, storeSlug));
+                  }
+                }}
+                className="block text-2xs font-extrabold tracking-widest uppercase text-stone-955 hover:text-[#E61E25] transition-colors animate-fade-in"
+              >
+                Offers & Deals
               </a>
 
               {/* Categories Accordion */}

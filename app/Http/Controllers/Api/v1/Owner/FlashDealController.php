@@ -20,7 +20,7 @@ class FlashDealController extends Controller
 
         $query = FlashDeal::where('is_published', true)
             ->with(['products' => function ($query) {
-                $query->with(['translations', 'variants']);
+                $query->with(['translations', 'variants', 'badge']);
             }]);
 
         if ($request->filled('created_by')) {
@@ -52,7 +52,7 @@ class FlashDealController extends Controller
         $limit = $request->query('limit', 100);
 
         $query = FlashDeal::with(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         if ($user->role_id != 1) {
@@ -74,7 +74,7 @@ class FlashDealController extends Controller
     public function show($id)
     {
         $deal = FlashDeal::with(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }])->findOrFail($id);
 
         return response()->json($deal);
@@ -152,7 +152,7 @@ class FlashDealController extends Controller
         }
 
         $deal->load(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         return response()->json($deal, 201);
@@ -259,7 +259,7 @@ class FlashDealController extends Controller
         }
 
         $deal->load(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         return response()->json($deal);
@@ -343,7 +343,7 @@ class FlashDealController extends Controller
         $deal->products()->syncWithoutDetaching($request->product_ids);
 
         $deal->load(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         return response()->json($deal);
@@ -368,7 +368,7 @@ class FlashDealController extends Controller
         $deal->products()->detach($product_id);
 
         $deal->load(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         return response()->json($deal);

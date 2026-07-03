@@ -21,7 +21,7 @@ class ClearanceSaleController extends Controller
         $query = ClearanceSale::where('is_active', true)
             ->with(['products' => function ($query) {
                 $query->wherePivot('is_active', true)
-                    ->with(['translations', 'variants']);
+                    ->with(['translations', 'variants', 'badge']);
             }]);
 
         if ($request->filled('created_by')) {
@@ -53,7 +53,7 @@ class ClearanceSaleController extends Controller
         $limit = $request->query('limit', 100);
 
         $query = ClearanceSale::with(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         if ($user->role_id != 1) {
@@ -75,7 +75,7 @@ class ClearanceSaleController extends Controller
     public function show($id)
     {
         $deal = ClearanceSale::with(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }])->findOrFail($id);
 
         return response()->json($deal);
@@ -166,7 +166,7 @@ class ClearanceSaleController extends Controller
         }
 
         $deal->load(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         return response()->json($deal, 201);
@@ -296,7 +296,7 @@ class ClearanceSaleController extends Controller
         }
 
         $deal->load(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         return response()->json($deal);
@@ -393,7 +393,7 @@ class ClearanceSaleController extends Controller
         }
 
         $deal->load(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         return response()->json($deal);
@@ -435,7 +435,7 @@ class ClearanceSaleController extends Controller
         $deal->products()->updateExistingPivot($product_id, $pivotData);
 
         $deal->load(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         return response()->json($deal);
@@ -460,7 +460,7 @@ class ClearanceSaleController extends Controller
         $deal->products()->detach($product_id);
 
         $deal->load(['products' => function ($query) {
-            $query->with(['translations', 'variants']);
+            $query->with(['translations', 'variants', 'badge']);
         }]);
 
         return response()->json($deal);
