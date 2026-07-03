@@ -856,13 +856,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }, [selectedAddress, deliveryZones]);
 
     const filteredDeliveryMethods = useMemo(() => {
-        const activeZoneId = matchingZone ? matchingZone.id : null;
-        return (deliveryMethods || []).filter(m => {
-            if (m.delivery_zone_id === null || m.delivery_zone_id === undefined) {
-                return true;
+        if (matchingZone) {
+            // Local customer: Show ONLY methods restricted to this matching zone
+            const localMethods = (deliveryMethods || []).filter(m => m.delivery_zone_id === matchingZone.id);
+            if (localMethods.length > 0) {
+                return localMethods;
             }
-            return m.delivery_zone_id === activeZoneId;
-        });
+            // Fallback to global/nationwide methods if no local methods exist for the zone
+            return (deliveryMethods || []).filter(m => m.delivery_zone_id === null || m.delivery_zone_id === undefined);
+        } else {
+            // Global/Nationwide customer: Show ONLY global/nationwide methods
+            return (deliveryMethods || []).filter(m => m.delivery_zone_id === null || m.delivery_zone_id === undefined);
+        }
     }, [deliveryMethods, matchingZone]);
 
     useEffect(() => {

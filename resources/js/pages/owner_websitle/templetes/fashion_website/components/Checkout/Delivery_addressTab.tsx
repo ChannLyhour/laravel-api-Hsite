@@ -56,8 +56,8 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
      matchingZone,
 }) => {
      const hasError = !!(
-          validationError?.field === 'address' || 
-          validationError?.field === 'preferredContact' || 
+          validationError?.field === 'address' ||
+          validationError?.field === 'preferredContact' ||
           validationError?.field === 'contactInput' ||
           validationError?.field === 'deliveryMethod'
      );
@@ -228,47 +228,46 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                                              <FiTruck className="w-3.5 h-3.5 text-stone-900 stroke-[2.5]" />
                                              Delivery Method
                                         </h3>
-                                        
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                              {deliveryMethods.map((method) => {
                                                   const isSelected = selectedDeliveryMethod?.id === method.id;
                                                   const hasImage = !!method.image;
-                                                  const isPickup = method.code?.toLowerCase().includes('pickup') || 
-                                                                   method.code?.toLowerCase().includes('pick-up') ||
-                                                                   method.name?.toLowerCase().includes('pickup') ||
-                                                                   method.name?.toLowerCase().includes('pick up');
-                                                  const displayCost = (!isPickup && matchingZone) 
-                                                      ? parseFloat(String(matchingZone.delivery_fee))
-                                                      : parseFloat(String(method.cost));
+                                                  const isPickup = method.code?.toLowerCase().includes('pickup') ||
+                                                       method.code?.toLowerCase().includes('pick-up') ||
+                                                       method.name?.toLowerCase().includes('pickup') ||
+                                                       method.name?.toLowerCase().includes('pick up');
+                                                  const displayCost = (!isPickup && matchingZone)
+                                                       ? parseFloat(String(matchingZone.delivery_fee))
+                                                       : parseFloat(String(method.cost));
                                                   const displayTimeline = (!isPickup && matchingZone && matchingZone.estimated_delivery_time)
-                                                      ? matchingZone.estimated_delivery_time
-                                                      : `Est: ${method.estimated_days_min} - ${method.estimated_days_max} Days`;
+                                                       ? matchingZone.estimated_delivery_time
+                                                       : `Est: ${method.estimated_days_min} - ${method.estimated_days_max} Days`;
                                                   return (
                                                        <button
                                                             key={method.id}
                                                             type="button"
                                                             onClick={() => onSelectDeliveryMethod(method)}
-                                                            className={`flex items-start gap-3 p-4 border rounded-xl transition-all duration-200 text-left cursor-pointer bg-white ${
-                                                                 isSelected 
-                                                                      ? 'border-stone-900 ring-1 ring-stone-900/5 shadow-xs' 
+                                                            className={`flex items-start gap-3 p-4 border rounded-xl transition-all duration-200 text-left cursor-pointer bg-white ${isSelected
+                                                                      ? 'border-stone-900 ring-1 ring-stone-900/5 shadow-xs'
                                                                       : validationError?.field === 'deliveryMethod'
                                                                            ? 'border-red-300 bg-red-50/5 hover:bg-red-50/10'
                                                                            : 'border-stone-200 hover:bg-stone-50/50'
-                                                            }`}
+                                                                 }`}
                                                        >
                                                             {/* Icon or Image */}
                                                             <div className="w-11 h-11 rounded-lg overflow-hidden bg-stone-100 flex items-center justify-center shrink-0 border border-stone-100">
                                                                  {hasImage ? (
-                                                                      <img 
-                                                                           src={resolveImageUrl(method.image!)} 
-                                                                           alt={method.name} 
-                                                                           className="w-full h-full object-cover" 
+                                                                      <img
+                                                                           src={resolveImageUrl(method.image!)}
+                                                                           alt={method.name}
+                                                                           className="w-full h-full object-cover"
                                                                       />
                                                                  ) : (
                                                                       <FiTruck className="w-5 h-5 text-stone-550" />
                                                                  )}
                                                             </div>
-                                                            
+
                                                             <div className="flex-1 text-xs min-w-0">
                                                                  <div className="flex justify-between items-start gap-2">
                                                                       <h4 className="font-extrabold text-stone-900 truncate">
