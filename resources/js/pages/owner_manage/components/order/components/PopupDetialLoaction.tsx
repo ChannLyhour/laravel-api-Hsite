@@ -41,7 +41,11 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                />
 
                {/* Dialog Container */}
-               <div className="relative z-10 bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
+               <div
+                    data-aos="fade-up"
+                    data-aos-anchor-placement="center-bottom"
+                    className="relative z-10 bg-white w-full max-w-[95%] md:max-w-7xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+               >
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100 shrink-0">
                          <div className="flex items-center gap-2.5">
