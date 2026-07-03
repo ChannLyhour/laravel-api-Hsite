@@ -25,7 +25,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
 
      // Construct map embed source. If coordinates exist, use exact GPS, else geocode by address string
      const embedUrl = hasCoordinates && !isNaN(latVal) && !isNaN(lngVal)
-          ? `https://maps.google.com/maps?q=${latVal},${lngVal}&z=16&output=embed`
+          ? `https://maps.google.com/maps?q=${latVal},${lngVal}&z=15&output=embed`
           : `https://maps.google.com/maps?q=${encodeURIComponent(addressText)}&z=15&output=embed`;
 
      const externalMapUrl = hasCoordinates && !isNaN(latVal) && !isNaN(lngVal)
@@ -36,7 +36,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
                {/* Backdrop */}
                <div
-                    className="absolute inset-0 bg-slate-955/45 backdrop-blur-xs transition-opacity duration-300"
+                    className="absolute inset-0 bg-slate-955/45  transition-opacity duration-300"
                     onClick={onClose}
                />
 
@@ -44,6 +44,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                <div
                     data-aos="fade-up"
                     data-aos-anchor-placement="center-bottom"
+                    
                     className="relative z-10 bg-white w-full max-w-[95%] md:max-w-7xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                >
                     {/* Header */}
