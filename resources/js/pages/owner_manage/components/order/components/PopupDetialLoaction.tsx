@@ -41,7 +41,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                />
 
                {/* Dialog Container */}
-               <div className="relative z-10 bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
+               <div className="relative z-10 bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100 shrink-0">
                          <div className="flex items-center gap-2.5">
@@ -65,84 +65,89 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                          </button>
                     </div>
 
-                    {/* Map Frame */}
-                    <div className="w-full h-80 sm:h-96 relative bg-slate-50 border-b border-slate-150 shrink-0">
-                         <iframe
-                              title="Customer Map Location"
-                              src={embedUrl}
-                              className="w-full h-full border-none"
-                              allowFullScreen
-                              loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
-                         />
-                    </div>
+                    {/* Two-Column Content Layout */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden">
+                         {/* Left Column: Map Frame */}
+                         <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[350px] md:min-h-0">
+                              <iframe
+                                   title="Customer Map Location"
+                                   src={embedUrl}
+                                   className="w-full h-full border-none"
+                                   allowFullScreen
+                                   loading="lazy"
+                                   referrerPolicy="no-referrer-when-downgrade"
+                              />
+                         </div>
 
-                    {/* Details and Actions */}
-                    <div className="p-6 space-y-5 overflow-y-auto flex-1 text-left">
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {/* Customer Details */}
-                              <div className="space-y-3">
-                                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                        Recipient Details
-                                   </h4>
-                                   <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                             <FiUser className="w-3.5 h-3.5 text-slate-400" />
-                                             <span>{customerName}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                             <FiPhone className="w-3.5 h-3.5 text-slate-400" />
-                                             <span>{customerPhone}</span>
-                                        </div>
-                                   </div>
-                              </div>
-
-                              {/* Coordinates / Map details */}
-                              <div className="space-y-3">
-                                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                        GPS Position
-                                   </h4>
-                                   <div className="text-xs font-bold text-slate-700">
-                                        {hasCoordinates ? (
-                                             <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl font-mono text-[11px] leading-relaxed">
-                                                  <p>Lat: <span className="text-indigo-650">{latVal.toFixed(6)}</span></p>
-                                                  <p>Lng: <span className="text-indigo-650">{lngVal.toFixed(6)}</span></p>
+                         {/* Right Column: Details and Actions */}
+                         <div className="p-6 space-y-5 overflow-y-auto flex flex-col justify-between max-h-[calc(90vh-70px)] md:max-h-none">
+                              <div className="space-y-5 text-left">
+                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* Customer Details */}
+                                        <div className="space-y-3">
+                                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                                  Recipient Details
+                                             </h4>
+                                             <div className="space-y-2">
+                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                       <FiUser className="w-3.5 h-3.5 text-slate-400" />
+                                                       <span>{customerName}</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                       <FiPhone className="w-3.5 h-3.5 text-slate-400" />
+                                                       <span>{customerPhone}</span>
+                                                  </div>
                                              </div>
-                                        ) : (
-                                             <p className="text-slate-450 italic font-medium leading-relaxed">
-                                                  No physical GPS tags saved with this address. Map fallback displays a best-match query.
-                                             </p>
-                                        )}
+                                        </div>
+
+                                        {/* Coordinates / Map details */}
+                                        <div className="space-y-3">
+                                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                                  GPS Position
+                                             </h4>
+                                             <div className="text-xs font-bold text-slate-700">
+                                                  {hasCoordinates ? (
+                                                       <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl font-mono text-[11px] leading-relaxed">
+                                                            <p>Lat: <span className="text-indigo-650">{latVal.toFixed(6)}</span></p>
+                                                            <p>Lng: <span className="text-indigo-650">{lngVal.toFixed(6)}</span></p>
+                                                       </div>
+                                                  ) : (
+                                                       <p className="text-slate-450 italic font-medium leading-relaxed">
+                                                            No physical GPS tags saved with this address. Map fallback displays a best-match query.
+                                                       </p>
+                                                  )}
+                                             </div>
+                                        </div>
+                                   </div>
+
+                                   {/* Full Address Text */}
+                                   <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                             Street Address
+                                        </h4>
+                                        <p className="text-xs font-semibold text-slate-600 leading-relaxed bg-slate-50 p-3.5 border border-slate-150/50 rounded-xl">
+                                             {addressText}
+                                        </p>
                                    </div>
                               </div>
-                         </div>
 
-                         {/* Full Address Text */}
-                         <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                   Street Address
-                              </h4>
-                              <p className="text-xs font-semibold text-slate-600 leading-relaxed bg-slate-50 p-3.5 border border-slate-150/50 rounded-xl">
-                                   {addressText}
-                              </p>
-                         </div>
-
-                         {/* Action buttons */}
-                         <div className="flex flex-col sm:flex-row gap-3 pt-3">
-                              <a
-                                   href={externalMapUrl}
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-stone-900 hover:bg-stone-850 active:scale-98 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md decoration-none border-none cursor-pointer text-center"
-                              >
-                                   <FiExternalLink className="w-4 h-4" /> Open in Google Maps
-                              </a>
-                              <button
-                                   onClick={onClose}
-                                   className="px-6 py-3 bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-800 text-[11px] font-black uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all"
-                              >
-                                   Close Details
-                              </button>
+                              {/* Action buttons */}
+                              <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">
+                                   <a
+                                        href={externalMapUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-stone-900 hover:bg-stone-850 active:scale-98 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md decoration-none border-none cursor-pointer text-center"
+                                   >
+                                        <FiExternalLink className="w-4 h-4" /> Open in Google Maps
+                                   </a>
+                                   <button
+                                        onClick={onClose}
+                                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-800 text-[11px] font-black uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all"
+                                   >
+                                        Close Details
+                                   </button>
+                              </div>
                          </div>
                     </div>
                </div>
