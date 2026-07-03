@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiSettings, FiLoader, FiUploadCloud, FiTrash2, FiImage, FiGlobe } from 'react-icons/fi';
+import { FiSettings, FiLoader, FiUploadCloud, FiTrash2, FiImage, FiGlobe, FiMapPin } from 'react-icons/fi';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { storesService, Store_setting } from '@/api/owner/stores';
 import { resolveImageUrl } from '@/api/imageUtils';
@@ -51,6 +51,56 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
   useEffect(() => {
     setFaviconError(false);
   }, [faviconUrl]);
+
+  const handleAutoGetStoreLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    const loadingToast = toast.loading('Accessing GPS location...');
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setStoreLatitude(latitude.toFixed(8));
+        setStoreLongitude(longitude.toFixed(8));
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+            {
+              headers: {
+                'Accept-Language': 'en',
+              },
+            }
+          );
+          const data = await res.json();
+          toast.dismiss(loadingToast);
+
+          if (data) {
+            const fullAddress = data.display_name || '';
+            const cleanAddress = fullAddress
+              .replace(/, Cambodia$/, '')
+              .replace(/, \d{5,6}$/, '')
+              .trim();
+            setStoreAddress(cleanAddress);
+            toast.success('Location coordinates detected and address updated!');
+          } else {
+            toast.success('Location coordinates detected!');
+          }
+        } catch (err) {
+          toast.dismiss(loadingToast);
+          toast.success('Location coordinates detected!');
+        }
+      },
+      (error) => {
+        toast.dismiss(loadingToast);
+        toast.error('Failed to access location. Please check your browser permissions.');
+      },
+      { enableHighAccuracy: true, timeout: 10005 }
+    );
+  };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -509,7 +559,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
               </div>
 
               {/* Store Latitude and Longitude */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="flex justify-between items-center pt-2">
+                <label className="text-xs font-bold text-slate-700 block">Store Coordinates</label>
+                <button
+                  type="button"
+                  onClick={handleAutoGetStoreLocation}
+                  className="px-3 py-1 bg-orange-50 hover:bg-orange-100 text-orange-650 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border border-orange-100 cursor-pointer flex items-center gap-1"
+                >
+                  <FiMapPin className="w-3 h-3 stroke-[2.5]" /> Auto-Detect GPS
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-1">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 block">Store Latitude</label>
                   <input

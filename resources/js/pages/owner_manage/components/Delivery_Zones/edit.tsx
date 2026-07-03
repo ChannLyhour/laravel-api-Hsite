@@ -46,6 +46,33 @@ export const DeliveryZoneEditPage: React.FC<DeliveryZoneEditPageProps> = ({
     }
   };
 
+  const handleDetectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    const loadingToast = toast.loading('Detecting GPS location...');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        toast.dismiss(loadingToast);
+        const { latitude, longitude } = position.coords;
+        setFormData(prev => ({
+          ...prev,
+          center_lat: latitude.toFixed(8),
+          center_lng: longitude.toFixed(8),
+        }));
+        toast.success('Loaded current coordinates!');
+      },
+      (error) => {
+        toast.dismiss(loadingToast);
+        toast.error('Failed to detect location. Please check browser permissions.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   useEffect(() => {
     if (zone) {
       setFormData({
@@ -202,13 +229,22 @@ export const DeliveryZoneEditPage: React.FC<DeliveryZoneEditPageProps> = ({
                   <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
                     Radius Center Point
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleUseStoreLocation}
-                    className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-650 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border border-indigo-100 cursor-pointer"
-                  >
-                    Use Store Location
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleUseStoreLocation}
+                      className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-650 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border border-indigo-100 cursor-pointer"
+                    >
+                      Use Store Location
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDetectCurrentLocation}
+                      className="px-3 py-1 bg-slate-50 hover:bg-slate-100 text-slate-655 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border border-slate-200 cursor-pointer flex items-center gap-1"
+                    >
+                      <FiMapPin className="w-3 h-3" /> Detect GPS
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1.5">
