@@ -71,9 +71,9 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                     </div>
 
                     {/* Two-Column Content Layout */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full md:h-[700px] h-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full md:h-[500px] h-auto">
                          {/* Left Column: Map Frame */}
-                         <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[350px] md:min-h-0">
+                         <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[550px] md:min-h-0">
                               <iframe
                                    title="Customer Map Location"
                                    src={embedUrl}
@@ -89,36 +89,36 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                               <div className="space-y-5 text-left">
                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {/* Customer Details */}
-                                        <div className="space-y-3">
+                                        <div className="space-y-3 bg-slate-50/50 border border-slate-100 p-4 rounded-xl">
                                              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
                                                   Recipient Details
                                              </h4>
-                                             <div className="space-y-2">
-                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                                       <FiUser className="w-3.5 h-3.5 text-slate-400" />
+                                             <div className="space-y-2.5">
+                                                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700">
+                                                       <FiUser className="w-4 h-4 text-slate-450" />
                                                        <span>{customerName}</span>
                                                   </div>
-                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                                       <FiPhone className="w-3.5 h-3.5 text-slate-400" />
+                                                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700">
+                                                       <FiPhone className="w-4 h-4 text-slate-450" />
                                                        <span>{customerPhone}</span>
                                                   </div>
                                              </div>
                                         </div>
 
                                         {/* Coordinates / Map details */}
-                                        <div className="space-y-3">
+                                        <div className="space-y-3 bg-slate-50/50 border border-slate-100 p-4 rounded-xl">
                                              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
                                                   GPS Position
                                              </h4>
                                              <div className="text-xs font-bold text-slate-700">
                                                   {hasCoordinates ? (
-                                                       <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl font-mono text-[11px] leading-relaxed">
-                                                            <p>Lat: <span className="text-indigo-650">{latVal.toFixed(6)}</span></p>
-                                                            <p>Lng: <span className="text-indigo-650">{lngVal.toFixed(6)}</span></p>
+                                                       <div className="font-mono text-[11px] leading-relaxed space-y-1 text-slate-650">
+                                                            <p>Lat: <span className="text-indigo-650 font-semibold">{latVal.toFixed(6)}</span></p>
+                                                            <p>Lng: <span className="text-indigo-650 font-semibold">{lngVal.toFixed(6)}</span></p>
                                                        </div>
                                                   ) : (
                                                        <p className="text-slate-450 italic font-medium leading-relaxed">
-                                                            No physical GPS tags saved with this address. Map fallback displays a best-match query.
+                                                            No GPS tags saved.
                                                        </p>
                                                   )}
                                              </div>
