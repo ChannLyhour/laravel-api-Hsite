@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiMapPin, FiPhone, FiUser, FiExternalLink } from 'react-icons/fi';
+import { FiX, FiMapPin, FiPhone, FiUser, FiExternalLink, FiShoppingBag, FiTruck } from 'react-icons/fi';
+import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
 
 interface PopupDetailLocationProps {
      onClose: () => void;
@@ -9,6 +10,9 @@ interface PopupDetailLocationProps {
      addressText: string;
      latitude?: number | string | null;
      longitude?: number | string | null;
+     storeLatitude?: number | string | null;
+     storeLongitude?: number | string | null;
+     storeName?: string;
 }
 
 export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
@@ -18,19 +22,263 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
      addressText,
      latitude,
      longitude,
+     storeLatitude,
+     storeLongitude,
+     storeName,
 }) => {
+     const [mapView, setMapView] = React.useState<'delivery' | 'customer' | 'store'>('delivery');
+     const [deliveryZones, setDeliveryZones] = React.useState<DeliveryZone[]>([]);
+     const [loadingZones, setLoadingZones] = React.useState(false);
+
      const hasCoordinates = latitude && longitude;
      const latVal = parseFloat(String(latitude));
      const lngVal = parseFloat(String(longitude));
 
-     // Construct map embed source. If coordinates exist, use exact GPS, else geocode by address string
-     const embedUrl = hasCoordinates && !isNaN(latVal) && !isNaN(lngVal)
-          ? `https://maps.google.com/maps?q=${latVal},${lngVal}&z=15&output=embed`
-          : `https://maps.google.com/maps?q=${encodeURIComponent(addressText)}&z=15&output=embed`;
+     const hasStoreCoordinates = storeLatitude && storeLongitude;
+     const storeLatVal = parseFloat(String(storeLatitude));
+     const storeLngVal = parseFloat(String(storeLongitude));
 
-     const externalMapUrl = hasCoordinates && !isNaN(latVal) && !isNaN(lngVal)
-          ? `https://www.google.com/maps?q=${latVal},${lngVal}`
-          : `https://www.google.com/maps?q=${encodeURIComponent(addressText)}`;
+     // Fetch active delivery zones for this store
+     React.useEffect(() => {
+          setLoadingZones(true);
+          deliveryZonesService.getMyDeliveryZones()
+               .then((zones) => {
+                    if (Array.isArray(zones)) {
+                         setDeliveryZones(zones.filter(z => z.is_active));
+                    }
+               })
+               .catch((err) => {
+                    console.warn('Failed to fetch delivery zones:', err);
+               })
+               .finally(() => {
+                    setLoadingZones(false);
+               });
+     }, []);
+
+     // Calculate Haversine distance
+     const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+          const R = 6371; // Earth's radius in km
+          const dLat = ((lat2 - lat1) * Math.PI) / 180;
+          const dLon = ((lon2 - lon1) * Math.PI) / 180;
+          const a =
+               Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+               Math.cos((lat1 * Math.PI) / 180) *
+                    Math.cos((lat2 * Math.PI) / 180) *
+                    Math.sin(dLon / 2) *
+                    Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return R * c; // Distance in km
+     };
+
+     const distanceKm =
+          hasCoordinates && !isNaN(latVal) && !isNaN(lngVal) &&
+          hasStoreCoordinates && !isNaN(storeLatVal) && !isNaN(storeLngVal)
+               ? getHaversineDistance(storeLatVal, storeLngVal, latVal, lngVal)
+               : null;
+
+     // Construct Google Map embed source based on active view selection
+     const isStoreView = mapView === 'store';
+     const activeLat = isStoreView ? storeLatVal : latVal;
+     const activeLng = isStoreView ? storeLngVal : lngVal;
+     const activeHasCoords = isStoreView ? hasStoreCoordinates : hasCoordinates;
+     const activeAddress = isStoreView ? (storeName || 'Store Location') : addressText;
+
+     const embedUrl = activeHasCoords && !isNaN(activeLat) && !isNaN(activeLng)
+          ? `https://maps.google.com/maps?q=${activeLat},${activeLng}&z=15&output=embed`
+          : `https://maps.google.com/maps?q=${encodeURIComponent(activeAddress)}&z=15&output=embed`;
+
+     const externalMapUrl = activeHasCoords && !isNaN(activeLat) && !isNaN(activeLng)
+          ? `https://www.google.com/maps?q=${activeLat},${activeLng}`
+          : `https://www.google.com/maps?q=${encodeURIComponent(activeAddress)}`;
+
+     // Generate interactive Leaflet map including store radius and polygons
+     const generateMapSrcDoc = () => {
+          const store = hasStoreCoordinates && !isNaN(storeLatVal) && !isNaN(storeLngVal)
+               ? { lat: storeLatVal, lng: storeLngVal, name: storeName || 'Store' }
+               : null;
+
+          const customer = hasCoordinates && !isNaN(latVal) && !isNaN(lngVal)
+               ? { lat: latVal, lng: lngVal, name: customerName || 'Customer', address: addressText }
+               : null;
+
+          const zonesData = deliveryZones.map(zone => {
+               if (!zone.type || zone.type === 'radius') {
+                    return {
+                         type: 'radius',
+                         name: zone.name,
+                         lat: zone.center_lat ? parseFloat(String(zone.center_lat)) : (store?.lat || 0),
+                         lng: zone.center_lng ? parseFloat(String(zone.center_lng)) : (store?.lng || 0),
+                         radiusMeters: zone.radius_km ? parseFloat(String(zone.radius_km)) * 1000 : 0,
+                         fee: zone.delivery_fee
+                    };
+               } else if (zone.type === 'polygon' && zone.polygon_coordinates) {
+                    return {
+                         type: 'polygon',
+                         name: zone.name,
+                         wkt: zone.polygon_coordinates,
+                         fee: zone.delivery_fee
+                    };
+               }
+               return null;
+          }).filter(Boolean);
+
+          return `
+<!DOCTYPE html>
+<html>
+<head>
+     <meta charset="utf-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+     <style>
+          html, body, #map { height: 100%; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+          .custom-popup .leaflet-popup-content-wrapper {
+               border-radius: 12px;
+               box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+               padding: 4px;
+          }
+          .popup-title { font-weight: 800; font-size: 13px; color: #1e293b; margin-bottom: 4px; }
+          .popup-desc { font-size: 11px; color: #64748b; margin-bottom: 2px; }
+          .popup-badge { display: inline-block; background: #e0e7ff; color: #4338ca; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 9999px; margin-top: 4px; }
+     </style>
+</head>
+<body>
+     <div id="map"></div>
+     <script>
+          const storeData = ${JSON.stringify(store)};
+          const customerData = ${JSON.stringify(customer)};
+          const zones = ${JSON.stringify(zonesData)};
+
+          // Initialize Leaflet map
+          const map = L.map('map', { zoomControl: false });
+          L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+          // Add OpenStreetMap tiles
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+               attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+
+          const bounds = [];
+
+          // Helper to parse WKT POLYGON((lng lat, lng lat, ...))
+          function parseWKTPolygon(wkt) {
+               try {
+                    const match = wkt.match(/POLYGON\\s*\\(\\s*\\(([^)]+)\\)\\s*\\)/i);
+                    if (!match) return [];
+                    const pointsStr = match[1].split(',');
+                    const points = [];
+                    for (const p of pointsStr) {
+                         const coords = p.trim().split(/\\s+/);
+                         if (coords.length >= 2) {
+                              const lng = parseFloat(coords[0]);
+                              const lat = parseFloat(coords[1]);
+                              if (!isNaN(lng) && !isNaN(lat)) {
+                                   points.push([lat, lng]);
+                              }
+                         }
+                    }
+                    return points;
+               } catch (e) {
+                    console.error("WKT parse error:", e);
+                    return [];
+               }
+          }
+
+          // Custom Marker Icons using Leaflet's divIcon (SVG pins)
+          const storeIcon = L.divIcon({
+               html: \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4f46e5" width="34" height="34"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>\`,
+               className: 'custom-pin',
+               iconSize: [34, 34],
+               iconAnchor: [17, 34],
+               popupAnchor: [0, -30]
+          });
+
+          const customerIcon = L.divIcon({
+               html: \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ea580c" width="34" height="34"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>\`,
+               className: 'custom-pin',
+               iconSize: [34, 34],
+               iconAnchor: [17, 34],
+               popupAnchor: [0, -30]
+          });
+
+          // Draw Store Marker
+          if (storeData) {
+               const storeMarker = L.marker([storeData.lat, storeData.lng], { icon: storeIcon }).addTo(map);
+               storeMarker.bindPopup(\`
+                    <div class="custom-popup">
+                         <div class="popup-title">\${storeData.name}</div>
+                         <div class="popup-desc">Dispatch Center (Store)</div>
+                         <div class="popup-badge" style="background:#e0e7ff; color:#4338ca;">Origin</div>
+                    </div>
+               \`);
+               bounds.push([storeData.lat, storeData.lng]);
+          }
+
+          // Draw Customer Marker
+          if (customerData) {
+               const customerMarker = L.marker([customerData.lat, customerData.lng], { icon: customerIcon }).addTo(map);
+               customerMarker.bindPopup(\`
+                    <div class="custom-popup">
+                         <div class="popup-title">\${customerData.name}</div>
+                         <div class="popup-desc">\${customerData.address}</div>
+                         <div class="popup-badge" style="background:#ffedd5; color:#c2410c;">Recipient</div>
+                    </div>
+               \`);
+               bounds.push([customerData.lat, customerData.lng]);
+               customerMarker.openPopup();
+          }
+
+          // Draw Delivery Zones (Radius Circles / Polygons)
+          zones.forEach(zone => {
+               if (zone.type === 'radius' && zone.lat && zone.lng && zone.radiusMeters > 0) {
+                    const circle = L.circle([zone.lat, zone.lng], {
+                         radius: zone.radiusMeters,
+                         color: '#4f46e5',
+                         fillColor: '#818cf8',
+                         fillOpacity: 0.15,
+                         weight: 2,
+                         dashArray: '5, 5'
+                    }).addTo(map);
+                    circle.bindPopup(\`
+                         <div class="custom-popup">
+                              <div class="popup-title">\${zone.name}</div>
+                              <div class="popup-desc">Radius: \${(zone.radiusMeters / 1000).toFixed(1)} km</div>
+                              <div class="popup-badge">Fee: $\${parseFloat(zone.fee).toFixed(2)}</div>
+                         </div>
+                    \`);
+               } else if (zone.type === 'polygon' && zone.wkt) {
+                    const coords = parseWKTPolygon(zone.wkt);
+                    if (coords.length > 0) {
+                         const polygon = L.polygon(coords, {
+                              color: '#10b981',
+                              fillColor: '#34d399',
+                              fillOpacity: 0.15,
+                              weight: 2
+                         }).addTo(map);
+                         polygon.bindPopup(\`
+                              <div class="custom-popup">
+                                   <div class="popup-title">\${zone.name}</div>
+                                   <div class="popup-desc">Delivery Area (Polygon)</div>
+                                   <div class="popup-badge" style="background:#d1fae5; color:#065f46;">Fee: $\${parseFloat(zone.fee).toFixed(2)}</div>
+                              </div>
+                         \`);
+                    }
+               }
+          });
+
+          // Auto center and zoom map to show all elements
+          if (bounds.length > 0) {
+               map.fitBounds(bounds, { padding: [50, 50] });
+          } else if (storeData) {
+               map.setView([storeData.lat, storeData.lng], 13);
+          } else {
+               map.setView([11.5564, 104.9282], 13); // Default Phnom Penh fallback
+          }
+     </script>
+</body>
+</html>
+          `;
+     };
 
      return createPortal(
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
@@ -53,7 +301,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                         Delivery Location Map
                                    </h3>
                                    <p className="text-[10px] text-slate-450 font-bold mt-1">
-                                        {hasCoordinates ? 'GPS Tagged Coordinates Match' : 'Address Text Search Resolution'}
+                                        {mapView === 'delivery' ? 'Interactive Radius & Zone Map Overlay' : 'Google Maps Embed Resolution'}
                                    </p>
                               </div>
                          </div>
@@ -68,65 +316,180 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                     {/* Two-Column Content Layout */}
                     <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full h-full">
                          {/* Left Column: Map Frame */}
-                         <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[300px] md:min-h-0">
-                              <iframe
-                                   title="Customer Map Location"
-                                   src={embedUrl}
-                                   className="w-full h-full border-none"
-                                   allowFullScreen
-                                   loading="lazy"
-                                   referrerPolicy="no-referrer-when-downgrade"
-                              />
+                         <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[300px] md:min-h-0 flex flex-col">
+                              {/* Map View Toggle Overlay */}
+                              <div className="absolute top-4 left-4 z-20 flex bg-white/90 backdrop-blur-xs p-1 rounded-xl shadow-md border border-slate-150/50 gap-1">
+                                   <button
+                                        type="button"
+                                        onClick={() => setMapView('delivery')}
+                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
+                                             mapView === 'delivery'
+                                                  ? 'bg-indigo-600 text-white shadow-xs'
+                                                  : 'bg-transparent text-slate-655 hover:text-indigo-600'
+                                        }`}
+                                   >
+                                        <FiMapPin className="w-3.5 h-3.5 shrink-0" />
+                                        Delivery Map
+                                   </button>
+                                   <button
+                                        type="button"
+                                        onClick={() => setMapView('customer')}
+                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
+                                             mapView === 'customer'
+                                                  ? 'bg-indigo-600 text-white shadow-xs'
+                                                  : 'bg-transparent text-slate-655 hover:text-indigo-600'
+                                        }`}
+                                   >
+                                        <FiUser className="w-3.5 h-3.5 shrink-0" />
+                                        Customer Google Map
+                                   </button>
+                                   {hasStoreCoordinates && (
+                                        <button
+                                             type="button"
+                                             onClick={() => setMapView('store')}
+                                             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
+                                                  mapView === 'store'
+                                                       ? 'bg-indigo-600 text-white shadow-xs'
+                                                       : 'bg-transparent text-slate-655 hover:text-indigo-600'
+                                        }`}
+                                        >
+                                             <FiShoppingBag className="w-3.5 h-3.5 shrink-0" />
+                                             Store Google Map
+                                        </button>
+                                   )}
+                              </div>
+
+                              {mapView === 'delivery' ? (
+                                   <iframe
+                                        title="Delivery Zone Map"
+                                        srcDoc={generateMapSrcDoc()}
+                                        className="w-full h-full flex-1 border-none"
+                                        allowFullScreen
+                                        loading="lazy"
+                                   />
+                              ) : (
+                                   <iframe
+                                        title={mapView === 'store' ? "Store Google Map" : "Customer Google Map"}
+                                        src={embedUrl}
+                                        className="w-full h-full flex-1 border-none"
+                                        allowFullScreen
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                   />
+                              )}
                          </div>
 
                          {/* Right Column: Details and Actions */}
                          <div className="p-8 space-y-6 overflow-y-auto flex flex-col justify-between h-full">
                               <div className="space-y-6 text-left">
                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {/* Customer Details */}
+                                        {/* Customer / Recipient Card */}
                                         <div className="space-y-3 bg-slate-50/50 border border-slate-100 p-4 rounded-xl">
-                                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                                  Recipient Details
-                                             </h4>
+                                             <div className="flex items-center gap-1.5">
+                                                  <FiUser className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                                       Recipient Details
+                                                  </h4>
+                                             </div>
                                              <div className="space-y-2.5">
-                                                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700">
-                                                       <FiUser className="w-4 h-4 text-slate-450" />
-                                                       <span>{customerName}</span>
+                                                  <div className="text-xs font-bold text-slate-700 space-y-1">
+                                                       <p className="text-slate-500">Name: <span className="text-slate-800 font-extrabold">{customerName}</span></p>
+                                                       <p className="text-slate-505 font-bold">Phone: <span className="text-slate-800 font-extrabold">{customerPhone}</span></p>
                                                   </div>
-                                                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700">
-                                                       <FiPhone className="w-4 h-4 text-slate-450" />
-                                                       <span>{customerPhone}</span>
+                                                  <div className="text-[11px] pt-2 border-t border-slate-100 font-mono space-y-1 text-slate-500">
+                                                       {hasCoordinates && !isNaN(latVal) && !isNaN(lngVal) ? (
+                                                            <>
+                                                                 <p>Lat: <span className="text-indigo-650 font-bold">{latVal.toFixed(6)}</span></p>
+                                                                 <p>Lng: <span className="text-indigo-650 font-bold">{lngVal.toFixed(6)}</span></p>
+                                                            </>
+                                                       ) : (
+                                                            <p className="text-slate-400 italic font-sans font-medium">No Customer GPS coords</p>
+                                                       )}
                                                   </div>
                                              </div>
                                         </div>
 
-                                        {/* Coordinates / Map details */}
+                                        {/* Store / Merchant Card */}
                                         <div className="space-y-3 bg-slate-50/50 border border-slate-100 p-4 rounded-xl">
-                                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                                  GPS Position
-                                             </h4>
-                                             <div className="text-xs font-bold text-slate-700">
-                                                  {hasCoordinates ? (
-                                                       <div className="font-mono text-[11px] leading-relaxed space-y-1 text-slate-650">
-                                                            <p>Lat: <span className="text-indigo-650 font-semibold">{latVal.toFixed(6)}</span></p>
-                                                            <p>Lng: <span className="text-indigo-650 font-semibold">{lngVal.toFixed(6)}</span></p>
-                                                       </div>
-                                                  ) : (
-                                                       <p className="text-slate-450 italic font-medium leading-relaxed">
-                                                            No GPS tags saved.
-                                                       </p>
-                                                  )}
+                                             <div className="flex items-center gap-1.5">
+                                                  <FiShoppingBag className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                                       Store Details
+                                                  </h4>
+                                             </div>
+                                             <div className="space-y-2.5">
+                                                  <div className="text-xs font-bold text-slate-700 space-y-1">
+                                                       <p className="text-slate-500">Store: <span className="text-slate-800 font-extrabold">{storeName || 'Store Location'}</span></p>
+                                                       <p className="text-slate-500">Role: <span className="text-slate-800 font-bold">Dispatch Center</span></p>
+                                                  </div>
+                                                  <div className="text-[11px] pt-2 border-t border-slate-100 font-mono space-y-1 text-slate-500">
+                                                       {hasStoreCoordinates && !isNaN(storeLatVal) && !isNaN(storeLngVal) ? (
+                                                            <>
+                                                                 <p>Lat: <span className="text-indigo-650 font-bold">{storeLatVal.toFixed(6)}</span></p>
+                                                                 <p>Lng: <span className="text-indigo-650 font-bold">{storeLngVal.toFixed(6)}</span></p>
+                                                            </>
+                                                       ) : (
+                                                            <p className="text-slate-400 italic font-sans font-medium">No Store GPS coords</p>
+                                                       )}
+                                                  </div>
                                              </div>
                                         </div>
                                    </div>
+
+                                   {/* Distance computation card */}
+                                   {distanceKm !== null && (
+                                        <div className="bg-gradient-to-r from-indigo-500/5 to-purple-500/5 border border-indigo-150/40 p-4 rounded-xl flex items-center justify-between transition-all duration-300">
+                                             <div className="flex items-center gap-3">
+                                                  <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
+                                                       <FiTruck className="w-5 h-5 shrink-0" />
+                                                  </div>
+                                                  <div>
+                                                       <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-wider leading-none">
+                                                            Delivery Distance
+                                                       </h4>
+                                                       <p className="text-base font-black text-slate-855 mt-1.5 leading-none">
+                                                            {distanceKm.toFixed(2)} km
+                                                       </p>
+                                                  </div>
+                                             </div>
+                                             <span className="text-[9px] font-extrabold bg-indigo-100 border border-indigo-200 text-indigo-750 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none">
+                                                  Direct Route
+                                             </span>
+                                        </div>
+                                   )}
+
+                                   {/* Active Delivery Zones List */}
+                                   {deliveryZones.length > 0 && (
+                                        <div className="space-y-2 pt-2 border-t border-slate-100">
+                                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                                  Active Delivery Zones
+                                             </h4>
+                                             <div className="grid grid-cols-1 gap-2 max-h-[140px] overflow-y-auto pr-1">
+                                                  {deliveryZones.map(zone => (
+                                                       <div key={zone.id} className="flex items-center justify-between text-xs bg-slate-50 p-2.5 border border-slate-100 rounded-lg">
+                                                            <div className="flex items-center gap-2">
+                                                                 <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                                 <span className="font-extrabold text-slate-700">{zone.name}</span>
+                                                                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                                                                      {(!zone.type || zone.type === 'radius') ? `${zone.radius_km || 0} km radius` : 'polygon'}
+                                                                 </span>
+                                                            </div>
+                                                            <span className="font-black text-emerald-600">
+                                                                 ${parseFloat(String(zone.delivery_fee)).toFixed(2)}
+                                                            </span>
+                                                       </div>
+                                                  ))}
+                                             </div>
+                                        </div>
+                                   )}
 
                                    {/* Full Address Text */}
                                    <div className="space-y-1.5 pt-2 border-t border-slate-100">
                                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
                                              Street Address
                                         </h4>
-                                        <p className="text-xs font-semibold text-slate-600 leading-relaxed bg-slate-50 p-3.5 border border-slate-150/50 rounded-xl">
-                                             {addressText}
+                                        <p className="text-xs font-semibold text-slate-655 leading-relaxed bg-slate-50 p-3.5 border border-slate-150/50 rounded-xl">
+                                             {addressText || 'No custom street address specified.'}
                                         </p>
                                    </div>
                               </div>
@@ -137,9 +500,9 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                         href={externalMapUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-stone-900 hover:bg-stone-850 active:scale-98 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md decoration-none border-none cursor-pointer text-center"
+                                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-stone-900 hover:bg-stone-855 active:scale-98 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md decoration-none border-none cursor-pointer text-center"
                                    >
-                                        <FiExternalLink className="w-4 h-4" /> Open in Google Maps
+                                        <FiExternalLink className="w-4 h-4 shrink-0" /> Open in Google Maps
                                    </a>
                                    <button
                                         onClick={onClose}

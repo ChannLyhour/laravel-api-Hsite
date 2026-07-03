@@ -153,7 +153,14 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
     }
   };
 
-  const [realStoreDetails, setRealStoreDetails] = React.useState<{ name: string; phone: string; address: string; taxPercentage?: string | number } | null>(null);
+  const [realStoreDetails, setRealStoreDetails] = React.useState<{
+    name: string;
+    phone: string;
+    address: string;
+    taxPercentage?: string | number;
+    latitude?: string | number | null;
+    longitude?: string | number | null;
+  } | null>(null);
   const [realCustomerDetails, setRealCustomerDetails] = React.useState<{
     customer: string;
     email: string;
@@ -177,7 +184,9 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
               name: sData.store_name || order.store || '---',
               phone: sData.store_phone || '---',
               address: sData.store_address || '---',
-              taxPercentage: sData.tax_percentage
+              taxPercentage: sData.tax_percentage,
+              latitude: sData.store_latitude,
+              longitude: sData.store_longitude
             });
           }
         })
@@ -306,6 +315,8 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
   const storeName = realStoreDetails?.name || (order.store && order.store !== '---' && !order.store.startsWith('Store #') ? order.store : (settings?.store_name || order.store || '---'));
   const storePhone = realStoreDetails?.phone || (order.storePhone && order.storePhone !== '---' ? order.storePhone : (settings?.store_phone || '---'));
   const storeAddress = realStoreDetails?.address || (order.storeAddress && order.storeAddress !== '---' ? order.storeAddress : (settings?.store_address || '---'));
+  const storeLatitude = realStoreDetails?.latitude || settings?.store_latitude || null;
+  const storeLongitude = realStoreDetails?.longitude || settings?.store_longitude || null;
 
   // Customer Fallbacks: (1) realCustomerDetails dynamically fetched from API, (2) order properties
   const isWalkIn = order.address === 'POS Walk-in' || order.customer === 'Walk In Customer' || order.orderType === 'walk_in';
@@ -806,6 +817,9 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
           addressText={order.address === 'Walk-in' ? '' : order.address}
           latitude={order.latitude ?? order.shippingAddress?.latitude}
           longitude={order.longitude ?? order.shippingAddress?.longitude}
+          storeLatitude={storeLatitude}
+          storeLongitude={storeLongitude}
+          storeName={storeName}
         />
       )}
     </div>
