@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('center_lat', 10, 8)->nullable();
             $table->decimal('center_lng', 11, 8)->nullable();
             $table->decimal('radius_km', 5, 2)->nullable();
-            $table->geometry('polygon_coordinates')->nullable(); // For spatial data if needed
+            $table->text('polygon_coordinates')->nullable(); // For spatial data representation
             $table->decimal('delivery_fee', 10, 2)->default(0.00);
             $table->string('estimated_delivery_time')->nullable();
             $table->boolean('is_active')->default(true);
