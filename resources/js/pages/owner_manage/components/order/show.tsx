@@ -160,6 +160,7 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
     taxPercentage?: string | number;
     latitude?: string | number | null;
     longitude?: string | number | null;
+    logoUrl?: string | null;
   } | null>(null);
   const [realCustomerDetails, setRealCustomerDetails] = React.useState<{
     customer: string;
@@ -186,7 +187,8 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
               address: sData.store_address || '---',
               taxPercentage: sData.tax_percentage,
               latitude: sData.store_latitude,
-              longitude: sData.store_longitude
+              longitude: sData.store_longitude,
+              logoUrl: sData.logo_url
             });
           }
         })
@@ -317,6 +319,7 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
   const storeAddress = realStoreDetails?.address || (order.storeAddress && order.storeAddress !== '---' ? order.storeAddress : (settings?.store_address || '---'));
   const storeLatitude = realStoreDetails?.latitude || settings?.store_latitude || null;
   const storeLongitude = realStoreDetails?.longitude || settings?.store_longitude || null;
+  const storeLogo = resolveImageUrl(realStoreDetails?.logoUrl || settings?.logo_url || '');
 
   // Customer Fallbacks: (1) realCustomerDetails dynamically fetched from API, (2) order properties
   const isWalkIn = order.address === 'POS Walk-in' || order.customer === 'Walk In Customer' || order.orderType === 'walk_in';
@@ -820,6 +823,7 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
           storeLatitude={storeLatitude}
           storeLongitude={storeLongitude}
           storeName={storeName}
+          storeLogo={storeLogo}
         />
       )}
     </div>

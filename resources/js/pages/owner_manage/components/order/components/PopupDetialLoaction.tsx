@@ -13,6 +13,7 @@ interface PopupDetailLocationProps {
      storeLatitude?: number | string | null;
      storeLongitude?: number | string | null;
      storeName?: string;
+     storeLogo?: string;
 }
 
 export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
@@ -25,6 +26,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
      storeLatitude,
      storeLongitude,
      storeName,
+     storeLogo,
 }) => {
      const [mapView, setMapView] = React.useState<'delivery' | 'customer' | 'store'>('delivery');
      const [deliveryZones, setDeliveryZones] = React.useState<DeliveryZone[]>([]);
@@ -33,10 +35,6 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
      const hasCoordinates = latitude && longitude;
      const latVal = parseFloat(String(latitude));
      const lngVal = parseFloat(String(longitude));
-
-     const hasStoreCoordinates = storeLatitude && storeLongitude;
-     const storeLatVal = parseFloat(String(storeLatitude));
-     const storeLngVal = parseFloat(String(storeLongitude));
 
      // Fetch active delivery zones for this store
      React.useEffect(() => {
@@ -55,6 +53,21 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                });
      }, []);
 
+     // Robust store coordinates fallback logic: 
+     // If the store coordinate settings are empty, we fall back to the first active radius zone's center coordinates.
+     const hasExplicitStoreCoords = storeLatitude && storeLongitude;
+     const fallbackZone = deliveryZones.find(z => (!z.type || z.type === 'radius') && z.center_lat && z.center_lng);
+     
+     const storeLatVal = hasExplicitStoreCoords
+          ? parseFloat(String(storeLatitude))
+          : (fallbackZone?.center_lat ? parseFloat(String(fallbackZone.center_lat)) : NaN);
+
+     const storeLngVal = hasExplicitStoreCoords
+          ? parseFloat(String(storeLongitude))
+          : (fallbackZone?.center_lng ? parseFloat(String(fallbackZone.center_lng)) : NaN);
+
+     const hasStoreCoordinates = !isNaN(storeLatVal) && !isNaN(storeLngVal);
+
      // Calculate Haversine distance
      const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
           const R = 6371; // Earth's radius in km
@@ -72,7 +85,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
 
      const distanceKm =
           hasCoordinates && !isNaN(latVal) && !isNaN(lngVal) &&
-          hasStoreCoordinates && !isNaN(storeLatVal) && !isNaN(storeLngVal)
+          hasStoreCoordinates
                ? getHaversineDistance(storeLatVal, storeLngVal, latVal, lngVal)
                : null;
 
@@ -91,10 +104,20 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
           ? `https://www.google.com/maps?q=${activeLat},${activeLng}`
           : `https://www.google.com/maps?q=${encodeURIComponent(activeAddress)}`;
 
+     // Ensure store logo is a fully qualified absolute URL so the srcDoc iframe can resolve it from about:blank
+     const absoluteStoreLogo = React.useMemo(() => {
+          if (!storeLogo) return '';
+          if (storeLogo.startsWith('http://') || storeLogo.startsWith('https://') || storeLogo.startsWith('data:')) {
+               return storeLogo;
+          }
+          const origin = typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8000';
+          return `${origin}/${storeLogo.replace(/^\//, '')}`;
+     }, [storeLogo]);
+
      // Generate interactive Leaflet map including store radius and polygons
      const generateMapSrcDoc = () => {
-          const store = hasStoreCoordinates && !isNaN(storeLatVal) && !isNaN(storeLngVal)
-               ? { lat: storeLatVal, lng: storeLngVal, name: storeName || 'Store' }
+          const store = hasStoreCoordinates
+               ? { lat: storeLatVal, lng: storeLngVal, name: storeName || 'Store', logo: absoluteStoreLogo || '' }
                : null;
 
           const customer = hasCoordinates && !isNaN(latVal) && !isNaN(lngVal)
@@ -110,7 +133,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                          lng: zone.center_lng ? parseFloat(String(zone.center_lng)) : (store?.lng || 0),
                          radiusMeters: zone.radius_km ? parseFloat(String(zone.radius_km)) * 1000 : 0,
                          fee: zone.delivery_fee
-                    };
+                     };
                } else if (zone.type === 'polygon' && zone.polygon_coordinates) {
                     return {
                          type: 'polygon',
@@ -133,7 +156,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
      <style>
           html, body, #map { height: 100%; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
           .custom-popup .leaflet-popup-content-wrapper {
-               border-radius: 12px;
+               border-radius: 5px;
                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
                padding: 4px;
           }
@@ -184,21 +207,39 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                }
           }
 
-          // Custom Marker Icons using Leaflet's divIcon (SVG pins)
+          // Custom Store Pin HTML containing Store Logo image or storefront SVG fallback
+          const storePinHtml = storeData && storeData.logo
+               ? \`<div style="position: relative; width: 42px; height: 42px;">
+                    <svg viewBox="0 0 100 100" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" xmlns="http://www.w3.org/2000/svg">
+                         <path d="M50 0 C22.4 0 0 22.4 0 50 C0 85 50 100 50 100 C50 100 100 85 100 50 C100 22.4 77.6 0 50 0 Z" fill="#4f46e5"/>
+                         <circle cx="50" cy="45" r="32" fill="white"/>
+                    </svg>
+                    <img src="\${storeData.logo}" style="position: absolute; width: 26px; height: 26px; top: 6px; left: 8px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0;" />
+                  </div>\`
+               : \`<div style="position: relative; width: 42px; height: 42px;">
+                    <svg viewBox="0 0 100 100" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" xmlns="http://www.w3.org/2000/svg">
+                         <path d="M50 0 C22.4 0 0 22.4 0 50 C0 85 50 100 50 100 C50 100 100 85 100 50 C100 22.4 77.6 0 50 0 Z" fill="#4f46e5"/>
+                         <circle cx="50" cy="45" r="32" fill="white"/>
+                    </svg>
+                    <svg viewBox="0 0 24 24" style="position: absolute; width: 18px; height: 18px; top: 10px; left: 12px;" fill="#4f46e5" xmlns="http://www.w3.org/2000/svg">
+                         <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/>
+                    </svg>
+                  </div>\`;
+
           const storeIcon = L.divIcon({
-               html: \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4f46e5" width="34" height="34"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>\`,
-               className: 'custom-pin',
-               iconSize: [34, 34],
-               iconAnchor: [17, 34],
-               popupAnchor: [0, -30]
+               html: storePinHtml,
+               className: 'custom-pin-store',
+               iconSize: [42, 42],
+               iconAnchor: [21, 42],
+               popupAnchor: [0, -38]
           });
 
           const customerIcon = L.divIcon({
-               html: \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ea580c" width="34" height="34"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>\`,
-               className: 'custom-pin',
-               iconSize: [34, 34],
-               iconAnchor: [17, 34],
-               popupAnchor: [0, -30]
+               html: \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ea580c" width="36" height="36"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>\`,
+               className: 'custom-pin-customer',
+               iconSize: [36, 36],
+               iconAnchor: [18, 36],
+               popupAnchor: [0, -32]
           });
 
           // Draw Store Marker
@@ -288,19 +329,19 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                     onClick={onClose}
                />
 
-               {/* Dialog Container */}
-               <div className="relative z-10 bg-white w-full max-w-[95vw] xl:max-w-[90vw] h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-scale-up">
+               {/* Dialog Container - Styled with rounded-[5px] to match order show.tsx invoice containers */}
+               <div className="relative z-10 bg-white w-full max-w-[95vw] xl:max-w-[90vw] h-[90vh] rounded-[5px] shadow-2xl overflow-hidden flex flex-col animate-scale-up">
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100 shrink-0">
                          <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                              <div className="w-8 h-8 rounded-[5px] bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
                                    <FiMapPin className="w-4.5 h-4.5 stroke-[2.2]" />
                               </div>
                               <div>
                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-none">
                                         Delivery Location Map
                                    </h3>
-                                   <p className="text-[10px] text-slate-450 font-bold mt-1">
+                                   <p className="opacity-60 text-[10px] font-bold uppercase tracking-wider mt-1.5">
                                         {mapView === 'delivery' ? 'Interactive Radius & Zone Map Overlay' : 'Google Maps Embed Resolution'}
                                    </p>
                               </div>
@@ -317,15 +358,15 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full h-full">
                          {/* Left Column: Map Frame */}
                          <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[300px] md:min-h-0 flex flex-col">
-                              {/* Map View Toggle Overlay */}
-                              <div className="absolute top-4 left-4 z-20 flex bg-white/90 backdrop-blur-xs p-1 rounded-xl shadow-md border border-slate-150/50 gap-1">
+                              {/* Map View Toggle Overlay - styled with rounded-[5px] */}
+                              <div className="absolute top-4 left-4 z-20 flex bg-white/90 backdrop-blur-xs p-1 rounded-[5px] shadow-md border border-slate-150/50 gap-1">
                                    <button
                                         type="button"
                                         onClick={() => setMapView('delivery')}
-                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
+                                        className={`px-3 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
                                              mapView === 'delivery'
                                                   ? 'bg-indigo-600 text-white shadow-xs'
-                                                  : 'bg-transparent text-slate-655 hover:text-indigo-600'
+                                                  : 'bg-transparent text-slate-600 hover:text-indigo-600'
                                         }`}
                                    >
                                         <FiMapPin className="w-3.5 h-3.5 shrink-0" />
@@ -334,10 +375,10 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                    <button
                                         type="button"
                                         onClick={() => setMapView('customer')}
-                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
+                                        className={`px-3 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
                                              mapView === 'customer'
                                                   ? 'bg-indigo-600 text-white shadow-xs'
-                                                  : 'bg-transparent text-slate-655 hover:text-indigo-600'
+                                                  : 'bg-transparent text-slate-600 hover:text-indigo-600'
                                         }`}
                                    >
                                         <FiUser className="w-3.5 h-3.5 shrink-0" />
@@ -347,10 +388,10 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                         <button
                                              type="button"
                                              onClick={() => setMapView('store')}
-                                             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
+                                             className={`px-3 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
                                                   mapView === 'store'
                                                        ? 'bg-indigo-600 text-white shadow-xs'
-                                                       : 'bg-transparent text-slate-655 hover:text-indigo-600'
+                                                       : 'bg-transparent text-slate-600 hover:text-indigo-600'
                                         }`}
                                         >
                                              <FiShoppingBag className="w-3.5 h-3.5 shrink-0" />
@@ -383,24 +424,31 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                          <div className="p-8 space-y-6 overflow-y-auto flex flex-col justify-between h-full">
                               <div className="space-y-6 text-left">
                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {/* Customer / Recipient Card */}
-                                        <div className="space-y-3 bg-slate-50/50 border border-slate-100 p-4 rounded-xl">
-                                             <div className="flex items-center gap-1.5">
-                                                  <FiUser className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                                                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                                       Recipient Details
-                                                  </h4>
+                                        {/* Customer / Recipient Card - Styled to match show.tsx custom-card-container */}
+                                        <div className="border rounded-[5px] p-6 shadow-sm space-y-4 custom-card-container bg-white">
+                                             <div className="pb-3 border-b">
+                                                  <h3 className="font-extrabold text-sm flex items-center gap-2">
+                                                       <FiUser className="text-blue-500 w-4.5 h-4.5 shrink-0" />
+                                                       <span>Recipient Details</span>
+                                                  </h3>
+                                                  <p className="opacity-60 text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                                                       delivery destination
+                                                  </p>
                                              </div>
-                                             <div className="space-y-2.5">
-                                                  <div className="text-xs font-bold text-slate-700 space-y-1">
-                                                       <p className="text-slate-500">Name: <span className="text-slate-800 font-extrabold">{customerName}</span></p>
-                                                       <p className="text-slate-505 font-bold">Phone: <span className="text-slate-800 font-extrabold">{customerPhone}</span></p>
+                                             <div className="space-y-3.5 text-xs font-semibold text-slate-700 leading-normal">
+                                                  <div className="space-y-1">
+                                                       <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Name</p>
+                                                       <p className="font-black text-sm text-slate-800">{customerName}</p>
                                                   </div>
-                                                  <div className="text-[11px] pt-2 border-t border-slate-100 font-mono space-y-1 text-slate-500">
+                                                  <div className="space-y-1">
+                                                       <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Phone</p>
+                                                       <p className="font-black text-sm text-slate-800">{customerPhone}</p>
+                                                  </div>
+                                                  <div className="text-[11px] pt-3 border-t font-mono space-y-1 text-slate-700">
                                                        {hasCoordinates && !isNaN(latVal) && !isNaN(lngVal) ? (
                                                             <>
-                                                                 <p>Lat: <span className="text-indigo-650 font-bold">{latVal.toFixed(6)}</span></p>
-                                                                 <p>Lng: <span className="text-indigo-650 font-bold">{lngVal.toFixed(6)}</span></p>
+                                                                 <p>Lat: <span className="text-indigo-600 font-bold">{latVal.toFixed(6)}</span></p>
+                                                                 <p>Lng: <span className="text-indigo-600 font-bold">{lngVal.toFixed(6)}</span></p>
                                                             </>
                                                        ) : (
                                                             <p className="text-slate-400 italic font-sans font-medium">No Customer GPS coords</p>
@@ -409,64 +457,86 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                              </div>
                                         </div>
 
-                                        {/* Store / Merchant Card */}
-                                        <div className="space-y-3 bg-slate-50/50 border border-slate-100 p-4 rounded-xl">
-                                             <div className="flex items-center gap-1.5">
-                                                  <FiShoppingBag className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                                                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                                       Store Details
-                                                  </h4>
-                                             </div>
-                                             <div className="space-y-2.5">
-                                                  <div className="text-xs font-bold text-slate-700 space-y-1">
-                                                       <p className="text-slate-500">Store: <span className="text-slate-800 font-extrabold">{storeName || 'Store Location'}</span></p>
-                                                       <p className="text-slate-500">Role: <span className="text-slate-800 font-bold">Dispatch Center</span></p>
+                                        {/* Store / Merchant Card - Styled to match show.tsx custom-card-container */}
+                                        <div className="border rounded-[5px] p-6 shadow-sm space-y-4 custom-card-container bg-white">
+                                             <div className="pb-3 border-b flex items-center justify-between">
+                                                  <div>
+                                                       <h3 className="font-extrabold text-sm flex items-center gap-2">
+                                                            <FiShoppingBag className="text-indigo-500 w-4.5 h-4.5 shrink-0" />
+                                                            <span>Store Details</span>
+                                                       </h3>
+                                                       <p className="opacity-60 text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                                                            dispatch center
+                                                       </p>
                                                   </div>
-                                                  <div className="text-[11px] pt-2 border-t border-slate-100 font-mono space-y-1 text-slate-500">
-                                                       {hasStoreCoordinates && !isNaN(storeLatVal) && !isNaN(storeLngVal) ? (
+                                                  {storeLogo && (
+                                                       <img 
+                                                            src={storeLogo} 
+                                                            alt="Store Logo" 
+                                                            className="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-2xs" 
+                                                       />
+                                                  )}
+                                             </div>
+                                             <div className="space-y-3.5 text-xs font-semibold text-slate-700 leading-normal">
+                                                  <div className="space-y-1">
+                                                       <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Store</p>
+                                                       <p className="font-black text-sm text-slate-800">{storeName || 'Store Location'}</p>
+                                                  </div>
+                                                  <div className="space-y-1">
+                                                       <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Role</p>
+                                                       <p className="font-black text-sm text-slate-800">Dispatch Center</p>
+                                                  </div>
+                                                  <div className="text-[11px] pt-3 border-t font-mono space-y-1 text-slate-700">
+                                                       {hasStoreCoordinates ? (
                                                             <>
-                                                                 <p>Lat: <span className="text-indigo-650 font-bold">{storeLatVal.toFixed(6)}</span></p>
-                                                                 <p>Lng: <span className="text-indigo-650 font-bold">{storeLngVal.toFixed(6)}</span></p>
+                                                                 <p>Lat: <span className="text-indigo-600 font-bold">{storeLatVal.toFixed(6)}</span></p>
+                                                                 <p>Lng: <span className="text-indigo-600 font-bold">{storeLngVal.toFixed(6)}</span></p>
                                                             </>
                                                        ) : (
-                                                            <p className="text-slate-400 italic font-sans font-medium">No Store GPS coords</p>
+                                                            <p className="text-slate-450 italic font-sans font-medium">No Store GPS coords</p>
                                                        )}
                                                   </div>
                                              </div>
                                         </div>
                                    </div>
 
-                                   {/* Distance computation card */}
+                                   {/* Distance computation card - Styled to match show.tsx invoices (rounded-[5px] and custom card styles) */}
                                    {distanceKm !== null && (
-                                        <div className="bg-gradient-to-r from-indigo-500/5 to-purple-500/5 border border-indigo-150/40 p-4 rounded-xl flex items-center justify-between transition-all duration-300">
+                                        <div className="border rounded-[5px] p-6 shadow-sm custom-card-container bg-gradient-to-r from-indigo-500/5 to-purple-500/5 flex items-center justify-between transition-all duration-300">
                                              <div className="flex items-center gap-3">
-                                                  <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
+                                                  <div className="w-10 h-10 rounded-[5px] bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold shadow-2xs">
                                                        <FiTruck className="w-5 h-5 shrink-0" />
                                                   </div>
                                                   <div>
                                                        <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-wider leading-none">
                                                             Delivery Distance
                                                        </h4>
-                                                       <p className="text-base font-black text-slate-855 mt-1.5 leading-none">
+                                                       <p className="text-base font-black text-slate-800 mt-1.5 leading-none">
                                                             {distanceKm.toFixed(2)} km
                                                        </p>
                                                   </div>
                                              </div>
-                                             <span className="text-[9px] font-extrabold bg-indigo-100 border border-indigo-200 text-indigo-750 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none">
+                                             <span className="text-[9px] font-extrabold bg-indigo-100 border border-indigo-200 text-indigo-750 px-2.5 py-1 rounded-[5px] uppercase tracking-wider leading-none shadow-3xs">
                                                   Direct Route
                                              </span>
                                         </div>
                                    )}
 
-                                   {/* Active Delivery Zones List */}
+                                   {/* Active Delivery Zones List - Styled to match show.tsx list elements */}
                                    {deliveryZones.length > 0 && (
-                                        <div className="space-y-2 pt-2 border-t border-slate-100">
-                                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                                  Active Delivery Zones
-                                             </h4>
-                                             <div className="grid grid-cols-1 gap-2 max-h-[140px] overflow-y-auto pr-1">
+                                        <div className="border rounded-[5px] p-6 shadow-sm space-y-4 custom-card-container bg-white">
+                                             <div className="pb-3 border-b">
+                                                  <h4 className="font-extrabold text-sm flex items-center gap-2">
+                                                       <FiMapPin className="text-emerald-500 w-4.5 h-4.5 shrink-0" />
+                                                       <span>Active Delivery Zones</span>
+                                                  </h4>
+                                                  <p className="opacity-60 text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                                                       applicable fee schedules
+                                                  </p>
+                                             </div>
+                                             <div className="grid grid-cols-1 gap-2.5 max-h-[140px] overflow-y-auto pr-1">
                                                   {deliveryZones.map(zone => (
-                                                       <div key={zone.id} className="flex items-center justify-between text-xs bg-slate-50 p-2.5 border border-slate-100 rounded-lg">
+                                                       <div key={zone.id} className="flex items-center justify-between text-xs bg-slate-50 p-3 border rounded-[5px] font-semibold text-slate-700">
                                                             <div className="flex items-center gap-2">
                                                                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                                                  <span className="font-extrabold text-slate-700">{zone.name}</span>
@@ -483,30 +553,33 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                         </div>
                                    )}
 
-                                   {/* Full Address Text */}
-                                   <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                             Street Address
-                                        </h4>
-                                        <p className="text-xs font-semibold text-slate-655 leading-relaxed bg-slate-50 p-3.5 border border-slate-150/50 rounded-xl">
+                                   {/* Full Address Text - Styled to match show.tsx layout */}
+                                   <div className="border rounded-[5px] p-6 shadow-sm space-y-3 custom-card-container bg-white">
+                                        <div className="pb-2 border-b">
+                                             <h4 className="font-extrabold text-sm flex items-center gap-2 text-slate-800">
+                                                  <FiMapPin className="text-orange-500 w-4 h-4 shrink-0" />
+                                                  <span>Street Address</span>
+                                             </h4>
+                                        </div>
+                                        <p className="text-xs font-semibold text-slate-700 leading-relaxed bg-slate-50 p-3.5 border rounded-[5px]">
                                              {addressText || 'No custom street address specified.'}
                                         </p>
                                    </div>
                               </div>
 
-                              {/* Action buttons */}
+                              {/* Action buttons - styled with rounded-[5px] */}
                               <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">
                                    <a
                                         href={externalMapUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-stone-900 hover:bg-stone-855 active:scale-98 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md decoration-none border-none cursor-pointer text-center"
+                                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-stone-900 hover:bg-stone-800 active:scale-[0.98] text-white text-[11px] font-black uppercase tracking-widest rounded-[5px] transition-all shadow-md decoration-none border-none cursor-pointer text-center"
                                    >
                                         <FiExternalLink className="w-4 h-4 shrink-0" /> Open in Google Maps
                                    </a>
                                    <button
                                         onClick={onClose}
-                                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-800 text-[11px] font-black uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all"
+                                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-800 text-[11px] font-black uppercase tracking-widest rounded-[5px] border-none cursor-pointer transition-all"
                                    >
                                         Close Details
                                    </button>
