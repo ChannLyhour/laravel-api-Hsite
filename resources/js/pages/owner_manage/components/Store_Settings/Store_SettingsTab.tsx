@@ -18,6 +18,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
   const [storePhone, setStorePhone] = useState('');
   const [storeEmail, setStoreEmail] = useState('');
   const [storeAddress, setStoreAddress] = useState('');
+  const [storeLatitude, setStoreLatitude] = useState('');
+  const [storeLongitude, setStoreLongitude] = useState('');
   const [taxPercentage, setTaxPercentage] = useState('0');
   const [shippingFee, setShippingFee] = useState('0');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState('0');
@@ -132,6 +134,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
           setStorePhone(loadSetting('store_phone', '---'));
           setStoreEmail(loadSetting('store_email', '---'));
           setStoreAddress(loadSetting('store_address', '---'));
+          setStoreLatitude(loadSetting('store_latitude', ''));
+          setStoreLongitude(loadSetting('store_longitude', ''));
           setTaxPercentage(loadSetting('tax_percentage', '0'));
           setShippingFee(loadSetting('shipping_fee', '0'));
           setFreeShippingThreshold(loadSetting('free_shipping_threshold', '0'));
@@ -211,6 +215,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
       checkout_preferred_contact: checkoutPreferredContact,
       checkout_note: checkoutNote,
       checkout_claim_code: checkoutClaimCode,
+      store_latitude: storeLatitude,
+      store_longitude: storeLongitude,
     };
 
     const mergedSettings = {
@@ -247,6 +253,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
           setStorePhone(data.store_phone || '---');
           setStoreEmail(data.store_email || '---');
           setStoreAddress(data.store_address || '---');
+          setStoreLatitude(data.store_latitude ? String(data.store_latitude) : '');
+          setStoreLongitude(data.store_longitude ? String(data.store_longitude) : '');
           setTaxPercentage(data.tax_percentage !== undefined && data.tax_percentage !== null ? String(data.tax_percentage) : '0');
           setShippingFee(data.shipping_fee !== undefined && data.shipping_fee !== null ? String(data.shipping_fee) : '0');
           setFreeShippingThreshold(data.free_shipping_threshold !== undefined && data.free_shipping_threshold !== null ? String(data.free_shipping_threshold) : '0');
@@ -499,6 +507,52 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
                   className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
                 />
               </div>
+
+              {/* Store Latitude and Longitude */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 block">Store Latitude</label>
+                  <input
+                    type="number"
+                    step="0.00000001"
+                    value={storeLatitude}
+                    onChange={(e) => setStoreLatitude(e.target.value)}
+                    placeholder="e.g. 11.5564"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 block">Store Longitude</label>
+                  <input
+                    type="number"
+                    step="0.00000001"
+                    value={storeLongitude}
+                    onChange={(e) => setStoreLongitude(e.target.value)}
+                    placeholder="e.g. 104.9282"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
+                  />
+                </div>
+              </div>
+
+              {/* Store Map Preview */}
+              {(storeLatitude || storeLongitude || storeAddress) && (
+                <div className="pt-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Store Location Preview</label>
+                  <div className="w-full h-44 rounded-[5px] overflow-hidden border border-slate-200 bg-slate-50 relative">
+                    <iframe
+                      title="Store Map Preview"
+                      src={
+                        storeLatitude && storeLongitude
+                          ? `https://maps.google.com/maps?q=${parseFloat(storeLatitude)},${parseFloat(storeLongitude)}&z=15&output=embed`
+                          : `https://maps.google.com/maps?q=${encodeURIComponent(storeAddress)}&z=15&output=embed`
+                      }
+                      className="w-full h-full border-none"
+                      allowFullScreen
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+              )}
             </GroupDiv>
           </div>
         </div>

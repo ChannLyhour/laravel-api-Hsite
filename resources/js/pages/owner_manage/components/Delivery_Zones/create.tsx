@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FiArrowLeft, FiMapPin } from 'react-icons/fi';
 import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
+import { Store_setting } from '@/api/owner/stores';
 import { ApiError } from '@/api/client';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import '@/pages/owner_manage/style/font.css';
@@ -28,6 +29,20 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
     is_active: true,
   });
   const [saving, setSaving] = useState(false);
+
+  const handleUseStoreLocation = () => {
+    const settings = Store_setting();
+    if (settings && settings.store_latitude && settings.store_longitude) {
+      setFormData(prev => ({
+        ...prev,
+        center_lat: String(settings.store_latitude),
+        center_lng: String(settings.store_longitude),
+      }));
+      toast.success('Loaded store coordinates!');
+    } else {
+      toast.error('Store coordinates are not configured in Store Settings.');
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,47 +175,79 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
             </div>
 
             {formData.type === 'radius' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
-                    Center Latitude
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                    Radius Center Point
                   </label>
-                  <input
-                    type="number"
-                    step="0.00000001"
-                    value={formData.center_lat}
-                    onChange={e => setFormData({ ...formData, center_lat: e.target.value })}
-                    placeholder="e.g., 11.5564"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
-                  />
+                  <button
+                    type="button"
+                    onClick={handleUseStoreLocation}
+                    className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-650 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border border-indigo-100 cursor-pointer"
+                  >
+                    Use Store Location
+                  </button>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
-                    Center Longitude
-                  </label>
-                  <input
-                    type="number"
-                    step="0.00000001"
-                    value={formData.center_lng}
-                    onChange={e => setFormData({ ...formData, center_lng: e.target.value })}
-                    placeholder="e.g., 104.9282"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-450 uppercase tracking-wider block">
+                      Center Latitude
+                    </label>
+                    <input
+                      type="number"
+                      step="0.00000001"
+                      value={formData.center_lat}
+                      onChange={e => setFormData({ ...formData, center_lat: e.target.value })}
+                      placeholder="e.g., 11.5564"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-450 uppercase tracking-wider block">
+                      Center Longitude
+                    </label>
+                    <input
+                      type="number"
+                      step="0.00000001"
+                      value={formData.center_lng}
+                      onChange={e => setFormData({ ...formData, center_lng: e.target.value })}
+                      placeholder="e.g., 104.9282"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-450 uppercase tracking-wider block">
+                      Radius (KM)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.radius_km}
+                      onChange={e => setFormData({ ...formData, radius_km: e.target.value })}
+                      placeholder="e.g., 5.00"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
-                    Radius (KM)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.radius_km}
-                    onChange={e => setFormData({ ...formData, radius_km: e.target.value })}
-                    placeholder="e.g., 5.00"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
-                  />
-                </div>
+
+                {/* Live Zone Center Map Preview */}
+                {formData.center_lat && formData.center_lng && (
+                  <div className="space-y-1.5 pt-2">
+                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+                      Zone Center Map Preview
+                    </label>
+                    <div className="w-full h-48 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                      <iframe
+                        title="Zone Center Location Check"
+                        src={`https://maps.google.com/maps?q=${parseFloat(formData.center_lat)},${parseFloat(formData.center_lng)}&z=14&output=embed`}
+                        className="w-full h-full border-none"
+                        allowFullScreen
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-1.5 animate-fade-in">
