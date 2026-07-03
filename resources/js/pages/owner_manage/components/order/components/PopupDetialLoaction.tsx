@@ -41,12 +41,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                />
 
                {/* Dialog Container */}
-               <div
-                    data-aos="fade-up"
-                    data-aos-anchor-placement="center-bottom"
-                    
-                    className="relative z-10 bg-white w-full max-w-[95%] md:max-w-7xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-               >
+               <div className="relative z-10 bg-white w-full max-w-[95%] md:max-w-7xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up">
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100 shrink-0">
                          <div className="flex items-center gap-2.5">
@@ -71,7 +66,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                     </div>
 
                     {/* Two-Column Content Layout */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full md:h-[500px] h-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full md:h-[800px] h-auto">
                          {/* Left Column: Map Frame */}
                          <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[550px] md:min-h-0">
                               <iframe
