@@ -28,4 +28,12 @@ class DeliveryZone extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    /**
+     * Delivery methods linked to this zone.
+     */
+    public function deliveryMethods()
+    {
+        return $this->hasMany(DeliveryMethod::class, 'delivery_zone_id');
+    }
 }

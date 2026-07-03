@@ -855,6 +855,26 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         return null;
     }, [selectedAddress, deliveryZones]);
 
+    const filteredDeliveryMethods = useMemo(() => {
+        const activeZoneId = matchingZone ? matchingZone.id : null;
+        return (deliveryMethods || []).filter(m => {
+            if (m.delivery_zone_id === null || m.delivery_zone_id === undefined) {
+                return true;
+            }
+            return m.delivery_zone_id === activeZoneId;
+        });
+    }, [deliveryMethods, matchingZone]);
+
+    useEffect(() => {
+        if (filteredDeliveryMethods.length > 0) {
+            if (!selectedDeliveryMethod || !filteredDeliveryMethods.some(m => m.id === selectedDeliveryMethod.id)) {
+                setSelectedDeliveryMethod(filteredDeliveryMethods[0]);
+            }
+        } else {
+            setSelectedDeliveryMethod(null);
+        }
+    }, [filteredDeliveryMethods, selectedDeliveryMethod]);
+
     const deliveryFee = useMemo(() => {
         // Validation: Free delivery coupon (Continuous validation) takes absolute priority
         if (appliedCoupon?.coupon_type === 'free_delivery') {
@@ -1014,7 +1034,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             contactInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return false;
         }
-        if (deliveryMethods.length > 0 && !selectedDeliveryMethod) {
+        if (filteredDeliveryMethods.length > 0 && !selectedDeliveryMethod) {
             const err = { field: 'deliveryMethod', message: 'Please select a delivery method.' };
             setValidationError(err as any);
             toast.error(err.message);
@@ -1502,7 +1522,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             addressBtnRef={addressBtnRef}
                             preferredContactRef={preferredContactRef}
                             contactInputRef={contactInputRef}
-                            deliveryMethods={deliveryMethods}
+                            deliveryMethods={filteredDeliveryMethods}
                             selectedDeliveryMethod={selectedDeliveryMethod}
                             onSelectDeliveryMethod={setSelectedDeliveryMethod}
                             loadingDeliveryMethods={loadingDeliveryMethods}

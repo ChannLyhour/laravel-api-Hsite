@@ -77,6 +77,7 @@ class DeliveryMethodController extends Controller
             'is_active' => 'boolean',
             'image' => 'nullable', // Can be file upload or string/URL
             'created_by' => 'nullable|integer|exists:users,id',
+            'delivery_zone_id' => 'nullable|integer|exists:delivery_zones,id',
         ]);
 
         $imagePath = null;
@@ -94,6 +95,11 @@ class DeliveryMethodController extends Controller
             }
         }
 
+        $deliveryZoneId = $request->delivery_zone_id;
+        if ($deliveryZoneId === 'null' || $deliveryZoneId === '') {
+            $deliveryZoneId = null;
+        }
+
         $method = DeliveryMethod::create([
             'name' => $request->name,
             'code' => $request->code,
@@ -104,6 +110,7 @@ class DeliveryMethodController extends Controller
             'is_active' => $request->has('is_active') ? filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN) : true,
             'image' => $imagePath,
             'created_by' => $request->created_by ?? $user->id,
+            'delivery_zone_id' => $deliveryZoneId,
         ]);
 
         return response()->json($method, 201);
@@ -135,6 +142,7 @@ class DeliveryMethodController extends Controller
             'estimated_days_max' => 'required|integer|min:0|gte:estimated_days_min',
             'is_active' => 'boolean',
             'image' => 'nullable', // Can be file upload, string/URL, or null
+            'delivery_zone_id' => 'nullable|integer|exists:delivery_zones,id',
         ]);
 
         $imagePath = $method->image;
@@ -156,6 +164,11 @@ class DeliveryMethodController extends Controller
             }
         }
 
+        $deliveryZoneId = $request->delivery_zone_id;
+        if ($deliveryZoneId === 'null' || $deliveryZoneId === '') {
+            $deliveryZoneId = null;
+        }
+
         $method->update([
             'name' => $request->name,
             'code' => $request->code,
@@ -165,6 +178,7 @@ class DeliveryMethodController extends Controller
             'estimated_days_max' => $request->estimated_days_max,
             'is_active' => $request->has('is_active') ? filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN) : $method->is_active,
             'image' => $imagePath,
+            'delivery_zone_id' => $deliveryZoneId,
         ]);
 
         return response()->json($method);

@@ -11,6 +11,7 @@ export interface DeliveryMethod {
   is_active: boolean;
   image: string | null;
   created_by: number;
+  delivery_zone_id: number | null;
   created_at: string;
   updated_at: string;
 }

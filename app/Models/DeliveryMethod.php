@@ -19,6 +19,7 @@ class DeliveryMethod extends Model
         'is_active',
         'image',
         'created_by',
+        'delivery_zone_id',
     ];
 
     protected $casts = [
@@ -26,6 +27,7 @@ class DeliveryMethod extends Model
         'estimated_days_min' => 'integer',
         'estimated_days_max' => 'integer',
         'is_active' => 'boolean',
+        'delivery_zone_id' => 'integer',
     ];
 
     /**
@@ -34,5 +36,13 @@ class DeliveryMethod extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * The delivery zone this method is restricted to.
+     */
+    public function deliveryZone()
+    {
+        return $this->belongsTo(DeliveryZone::class, 'delivery_zone_id');
     }
 }

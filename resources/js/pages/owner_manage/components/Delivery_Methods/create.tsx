@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiArrowLeft, FiTruck, FiUpload, FiX } from 'react-icons/fi';
 import { deliveryMethodsService, type DeliveryMethod } from '@/api/owner/deliveryMethods';
+import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
 import { ApiError } from '@/api/client';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import '@/pages/owner_manage/style/font.css';
@@ -22,7 +23,26 @@ export const DeliveryMethodCreatePage: React.FC<DeliveryMethodCreatePageProps> =
     estimated_days_min: 1,
     estimated_days_max: 3,
     is_active: true,
+    delivery_zone_id: '',
   });
+  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
+  const [loadingZones, setLoadingZones] = useState(false);
+
+  useEffect(() => {
+    const loadZones = async () => {
+      try {
+        setLoadingZones(true);
+        const data = await deliveryZonesService.getMyDeliveryZones();
+        setDeliveryZones(data || []);
+      } catch (err) {
+        console.error('Failed to fetch delivery zones:', err);
+      } finally {
+        setLoadingZones(false);
+      }
+    };
+    loadZones();
+  }, []);
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -59,6 +79,11 @@ export const DeliveryMethodCreatePage: React.FC<DeliveryMethodCreatePageProps> =
       data.append('estimated_days_min', String(formData.estimated_days_min));
       data.append('estimated_days_max', String(formData.estimated_days_max));
       data.append('is_active', formData.is_active ? '1' : '0');
+      if (formData.delivery_zone_id) {
+        data.append('delivery_zone_id', formData.delivery_zone_id);
+      } else {
+        data.append('delivery_zone_id', 'null');
+      }
       if (imageFile) {
         data.append('image', imageFile);
       }
@@ -144,6 +169,28 @@ export const DeliveryMethodCreatePage: React.FC<DeliveryMethodCreatePageProps> =
               rows={3}
               className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white resize-none"
             />
+          </div>
+
+          {/* Restrict to Delivery Zone */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 block">
+              Restrict to Delivery Zone <span className="text-slate-400 font-medium">(Optional)</span>
+            </label>
+            <select
+              value={formData.delivery_zone_id}
+              onChange={e => setFormData(prev => ({ ...prev, delivery_zone_id: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white cursor-pointer"
+            >
+              <option value="">All Zones / Nationwide (Global)</option>
+              {deliveryZones.map(zone => (
+                <option key={zone.id} value={zone.id}>
+                  {zone.name} ({zone.code})
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+              If restricted, this delivery method will only be shown to customers residing in the selected zone during checkout.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
