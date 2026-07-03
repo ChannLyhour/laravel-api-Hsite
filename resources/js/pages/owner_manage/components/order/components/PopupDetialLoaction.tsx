@@ -36,7 +36,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
                {/* Backdrop */}
                <div
-                    className="absolute inset-0 bg-slate-955/45  transition-opacity duration-300"
+                    className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300"
                     onClick={onClose}
                />
 
