@@ -66,9 +66,9 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                     </div>
 
                     {/* Two-Column Content Layout */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full md:h-[800px] h-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full md:h-[520px] h-auto">
                          {/* Left Column: Map Frame */}
-                         <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[550px] md:min-h-0">
+                         <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[350px] md:min-h-0">
                               <iframe
                                    title="Customer Map Location"
                                    src={embedUrl}
