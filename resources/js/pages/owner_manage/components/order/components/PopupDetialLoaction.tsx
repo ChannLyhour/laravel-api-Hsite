@@ -2,6 +2,8 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { FiX, FiMapPin, FiPhone, FiUser, FiExternalLink, FiShoppingBag, FiTruck } from 'react-icons/fi';
 import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
+import { deliveryMethodsService, type DeliveryMethod } from '@/api/owner/deliveryMethods';
+import { resolveImageUrl } from '@/api/imageUtils';
 
 interface PopupDetailLocationProps {
      onClose: () => void;
@@ -14,6 +16,8 @@ interface PopupDetailLocationProps {
      storeLongitude?: number | string | null;
      storeName?: string;
      storeLogo?: string;
+     deliveryMethod?: string;
+     deliveryFee?: number | string;
 }
 
 export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
@@ -27,16 +31,20 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
      storeLongitude,
      storeName,
      storeLogo,
+     deliveryMethod,
+     deliveryFee,
 }) => {
      const [mapView, setMapView] = React.useState<'delivery' | 'customer' | 'store'>('delivery');
      const [deliveryZones, setDeliveryZones] = React.useState<DeliveryZone[]>([]);
      const [loadingZones, setLoadingZones] = React.useState(false);
+     const [deliveryMethods, setDeliveryMethods] = React.useState<DeliveryMethod[]>([]);
+     const [loadingMethods, setLoadingMethods] = React.useState(false);
 
      const hasCoordinates = latitude && longitude;
      const latVal = parseFloat(String(latitude));
      const lngVal = parseFloat(String(longitude));
 
-     // Fetch active delivery zones for this store
+     // Fetch active delivery zones and methods for this store
      React.useEffect(() => {
           setLoadingZones(true);
           deliveryZonesService.getMyDeliveryZones()
@@ -50,6 +58,20 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                })
                .finally(() => {
                     setLoadingZones(false);
+               });
+
+          setLoadingMethods(true);
+          deliveryMethodsService.getMyDeliveryMethods()
+               .then((methods) => {
+                    if (Array.isArray(methods)) {
+                         setDeliveryMethods(methods);
+                    }
+               })
+               .catch((err) => {
+                    console.warn('Failed to fetch delivery methods:', err);
+               })
+               .finally(() => {
+                    setLoadingMethods(false);
                });
      }, []);
 
@@ -67,6 +89,19 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
           : (fallbackZone?.center_lng ? parseFloat(String(fallbackZone.center_lng)) : NaN);
 
      const hasStoreCoordinates = !isNaN(storeLatVal) && !isNaN(storeLngVal);
+
+     // Find matching delivery method to resolve the logo image
+     const matchedMethod = React.useMemo(() => {
+          if (!deliveryMethod) return null;
+          return deliveryMethods.find(
+               m => m.name.toLowerCase() === deliveryMethod.toLowerCase()
+          );
+     }, [deliveryMethods, deliveryMethod]);
+
+     const matchedMethodImage = React.useMemo(() => {
+          if (!matchedMethod?.image) return null;
+          return resolveImageUrl(matchedMethod.image);
+     }, [matchedMethod]);
 
      // Calculate Haversine distance
      const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -444,6 +479,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Phone</p>
                                                        <p className="font-black text-sm text-slate-800">{customerPhone}</p>
                                                   </div>
+                                                  
                                                   <div className="text-[11px] pt-3 border-t font-mono space-y-1 text-slate-700">
                                                        {hasCoordinates && !isNaN(latVal) && !isNaN(lngVal) ? (
                                                             <>
@@ -493,34 +529,58 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                                                  <p>Lng: <span className="text-indigo-600 font-bold">{storeLngVal.toFixed(6)}</span></p>
                                                             </>
                                                        ) : (
-                                                            <p className="text-slate-450 italic font-sans font-medium">No Store GPS coords</p>
+                                                            <p className="text-slate-455 italic font-sans font-medium">No Store GPS coords</p>
                                                        )}
                                                   </div>
                                              </div>
                                         </div>
                                    </div>
 
-                                   {/* Distance computation card - Styled to match show.tsx invoices (rounded-[5px] and custom card styles) */}
-                                   {distanceKm !== null && (
-                                        <div className="border rounded-[5px] p-6 shadow-sm custom-card-container bg-gradient-to-r from-indigo-500/5 to-purple-500/5 flex items-center justify-between transition-all duration-300">
-                                             <div className="flex items-center gap-3">
-                                                  <div className="w-10 h-10 rounded-[5px] bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold shadow-2xs">
-                                                       <FiTruck className="w-5 h-5 shrink-0" />
-                                                  </div>
-                                                  <div>
-                                                       <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-wider leading-none">
-                                                            Delivery Distance
-                                                       </h4>
-                                                       <p className="text-base font-black text-slate-800 mt-1.5 leading-none">
-                                                            {distanceKm.toFixed(2)} km
+                                   {/* Delivery Details Card - Styled to match show.tsx invoices (rounded-[5px] and custom card styles) */}
+                                   <div className="border rounded-[5px] p-6 shadow-sm custom-card-container bg-gradient-to-r from-indigo-500/5 to-purple-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300">
+                                        <div className="flex items-center gap-3">
+                                             {matchedMethodImage ? (
+                                                  <img 
+                                                       src={matchedMethodImage} 
+                                                       alt={deliveryMethod || 'Delivery Method'} 
+                                                       className="w-12 h-12 rounded-[5px] object-cover border border-slate-200 shadow-2xs bg-white shrink-0" 
+                                                  />
+                                             ) : (
+                                                  storeLogo ? (
+                                                       <img 
+                                                            src={storeLogo} 
+                                                            alt="Store Logo" 
+                                                            className="w-12 h-12 rounded-[5px] object-cover border border-slate-200 shadow-2xs bg-white shrink-0" 
+                                                       />
+                                                  ) : (
+                                                       <div className="w-12 h-12 rounded-[5px] bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                                                            <FiTruck className="w-5 h-5 shrink-0" />
+                                                       </div>
+                                                  )
+                                             )}
+                                             <div>
+                                                  <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-wider leading-none">
+                                                       Delivery Method
+                                                  </h4>
+                                                  <p className="text-sm font-black text-slate-800 mt-1.5 leading-none">
+                                                       {deliveryMethod || 'Standard Shipping'}
+                                                  </p>
+                                                  {distanceKm !== null && (
+                                                       <p className="text-[10px] font-bold text-slate-400 mt-1.5 leading-none">
+                                                            Distance: <span className="text-slate-700 font-extrabold">{distanceKm.toFixed(2)} km</span> (Direct Route)
                                                        </p>
-                                                  </div>
+                                                  )}
                                              </div>
-                                             <span className="text-[9px] font-extrabold bg-indigo-100 border border-indigo-200 text-indigo-750 px-2.5 py-1 rounded-[5px] uppercase tracking-wider leading-none shadow-3xs">
-                                                  Direct Route
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1.5 shrink-0">
+                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider leading-none">
+                                                  Delivery Fee
+                                             </span>
+                                             <span className="text-sm font-black text-emerald-600 bg-emerald-50 border border-emerald-200/30 px-3 py-1 rounded-[5px] shadow-3xs leading-none">
+                                                  ${deliveryFee !== undefined && deliveryFee !== null ? parseFloat(String(deliveryFee)).toFixed(2) : '0.00'}
                                              </span>
                                         </div>
-                                   )}
+                                   </div>
 
                                    {/* Active Delivery Zones List - Styled to match show.tsx list elements */}
                                    {deliveryZones.length > 0 && (

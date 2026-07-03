@@ -824,6 +824,13 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
           storeLongitude={storeLongitude}
           storeName={storeName}
           storeLogo={storeLogo}
+          deliveryMethod={(() => {
+            const notesStr = order.notes || '';
+            return notesStr.match(/^\[Delivery:\s*([^\]]+)\]/) 
+              ? notesStr.match(/^\[Delivery:\s*([^\]]+)\]/)![1] 
+              : (order.address === 'POS Walk-in' ? 'Walk-in Store Purchase' : 'Standard Shipping');
+          })()}
+          deliveryFee={deliveryFee}
         />
       )}
     </div>
