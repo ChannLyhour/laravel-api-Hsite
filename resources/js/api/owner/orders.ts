@@ -24,6 +24,8 @@ export interface BackendOrder {
   customer_name: string | null;
   customer_phone: string | null;
   customer_address: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -142,6 +144,8 @@ export function mapBackendOrder(o: BackendOrder): Order {
     taxAmount: o.tax_amount !== undefined && o.tax_amount !== null ? String(o.tax_amount) : undefined,
     orderType: o.order_type || undefined,
     shippingFee: o.shipping_fee !== undefined && o.shipping_fee !== null ? String(o.shipping_fee) : '0',
+    latitude: o.latitude !== undefined && o.latitude !== null ? String(o.latitude) : undefined,
+    longitude: o.longitude !== undefined && o.longitude !== null ? String(o.longitude) : undefined,
     notes: o.notes || ''
   };
 }
@@ -328,6 +332,8 @@ export const ordersService = {
     coupon_code?: string;
     subtotal?: number;
     order_type?: string;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
   }): Promise<Order> {
     const res = await client.post<any>('/orders', data);
     const orderData = res?.order || res;
