@@ -41,7 +41,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                />
 
                {/* Dialog Container */}
-               <div className="relative z-10 bg-white w-full max-w-[95%] md:max-w-7xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up">
+               <div className="relative z-10 bg-white w-full max-w-[95vw] xl:max-w-[90vw] h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-scale-up">
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100 shrink-0">
                          <div className="flex items-center gap-2.5">
@@ -66,9 +66,9 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                     </div>
 
                     {/* Two-Column Content Layout */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full md:h-[520px] h-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full h-full">
                          {/* Left Column: Map Frame */}
-                         <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[350px] md:min-h-0">
+                         <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[300px] md:min-h-0">
                               <iframe
                                    title="Customer Map Location"
                                    src={embedUrl}
@@ -80,8 +80,8 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                          </div>
 
                          {/* Right Column: Details and Actions */}
-                         <div className="p-6 space-y-5 overflow-y-auto flex flex-col justify-between max-h-[calc(90vh-70px)] md:max-h-none">
-                              <div className="space-y-5 text-left">
+                         <div className="p-8 space-y-6 overflow-y-auto flex flex-col justify-between h-full">
+                              <div className="space-y-6 text-left">
                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {/* Customer Details */}
                                         <div className="space-y-3 bg-slate-50/50 border border-slate-100 p-4 rounded-xl">
