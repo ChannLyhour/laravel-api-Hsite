@@ -67,6 +67,13 @@ class DeliveryMethodController extends Controller
             return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);
         }
 
+        if ($request->has('delivery_zone_id')) {
+            $val = $request->input('delivery_zone_id');
+            if ($val === 'null' || $val === '' || $val === 'undefined') {
+                $request->merge(['delivery_zone_id' => null]);
+            }
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:100',
@@ -131,6 +138,13 @@ class DeliveryMethodController extends Controller
         // Authorization check: non-admin owners can only edit their own
         if ($user->role_id != 1 && $method->created_by != $user->id) {
             return response()->json(['detail' => 'You are not authorized to update this delivery method.'], 403);
+        }
+
+        if ($request->has('delivery_zone_id')) {
+            $val = $request->input('delivery_zone_id');
+            if ($val === 'null' || $val === '' || $val === 'undefined') {
+                $request->merge(['delivery_zone_id' => null]);
+            }
         }
 
         $request->validate([
