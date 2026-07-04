@@ -60,7 +60,7 @@
     "DB_USERNAME": "EqyMtPi63u9wFEb.root",
     "DB_PASSWORD": "vDz5l9R1W4EZk4WB",
     "SESSION_DRIVER": "cookie",
-    "CACHE_STORE": "array",
+    "CACHE_STORE": "database",
     "QUEUE_CONNECTION": "sync",
     "BROADCAST_CONNECTION": "log",
     "FILESYSTEM_DISK": "local",

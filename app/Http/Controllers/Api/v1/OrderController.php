@@ -242,7 +242,7 @@ class OrderController extends Controller
                 // Send OTP code via Telegram if order was placed using a phone number
                 if ($custPhone) {
                     try {
-                        $otpCode = rand(100000, 999999);
+                        $otpCode = (string) rand(100000, 999999);
                         \Illuminate\Support\Facades\Cache::put("order_otp_{$order->id}", $otpCode, 3600);
                         
                         \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
@@ -425,7 +425,7 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
         $cachedOtp = \Illuminate\Support\Facades\Cache::get("order_otp_{$order->id}");
 
-        if (!$cachedOtp || trim($request->otp) !== trim($cachedOtp)) {
+        if (!$cachedOtp || trim((string) $request->otp) !== trim((string) $cachedOtp)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid or expired OTP code. Please check your Telegram and try again.'
