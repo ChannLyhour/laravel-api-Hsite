@@ -30,6 +30,8 @@ import { Store_setting } from '@/api/owner/stores';
 import { resolveImageUrl } from '../utils/imageUtils';
 import { deliveryMethodsService, type DeliveryMethod } from '@/api/owner/deliveryMethods';
 import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
+import { socialMediaService } from '@/api/owner/socialMedia';
+import { FaTelegramPlane } from 'react-icons/fa';
 
 import { useTranslation } from '../utils/translate';
 import { ModelCoupon } from './helpers/ModelCoupon';
@@ -76,22 +78,22 @@ const findMatchingProvince = (addressObj: any): string => {
         addressObj.county,
         addressObj.municipality
     ];
-    
+
     for (const val of fieldsToSearch) {
         if (!val) continue;
         const cleanVal = String(val).toLowerCase();
-        
+
         if (cleanVal.includes('sihanouk') || cleanVal.includes('sihanoukville')) {
             return 'Sihanoukville';
         }
-        
+
         // Find match in CAMBODIA_CITIES
         const matched = CAMBODIA_CITIES.find(city => {
             const cleanCity = city.toLowerCase().replace(/[\u0300-\u036f]/g, ""); // strip accents
             const cleanSearch = cleanVal.replace(/[\u0300-\u036f]/g, "");
             return cleanSearch.includes(cleanCity) || cleanCity.includes(cleanSearch);
         });
-        
+
         if (matched) return matched;
     }
     return '';
@@ -105,9 +107,9 @@ const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: nu
     const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos((lat1 * Math.PI) / 180) *
-            Math.cos((lat2 * Math.PI) / 180) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in km
 };
@@ -135,7 +137,7 @@ const isPointInPolygon = (lat: number, lng: number, polygon: [number, number][])
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
         const xi = polygon[i][1], yi = polygon[i][0];
         const xj = polygon[j][1], yj = polygon[j][0];
-        
+
         const intersect = ((yi > lat) !== (yj > lat))
             && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi);
         if (intersect) inside = !inside;
@@ -826,7 +828,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         if (!selectedAddress || !selectedAddress.latitude || !selectedAddress.longitude) {
             return null;
         }
-        
+
         const lat = parseFloat(String(selectedAddress.latitude));
         const lng = parseFloat(String(selectedAddress.longitude));
         if (isNaN(lat) || isNaN(lng)) return null;
@@ -888,10 +890,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         }
 
         if (selectedDeliveryMethod) {
-            const isPickup = selectedDeliveryMethod.code?.toLowerCase().includes('pickup') || 
-                             selectedDeliveryMethod.code?.toLowerCase().includes('pick-up') ||
-                             selectedDeliveryMethod.name?.toLowerCase().includes('pickup') ||
-                             selectedDeliveryMethod.name?.toLowerCase().includes('pick up');
+            const isPickup = selectedDeliveryMethod.code?.toLowerCase().includes('pickup') ||
+                selectedDeliveryMethod.code?.toLowerCase().includes('pick-up') ||
+                selectedDeliveryMethod.name?.toLowerCase().includes('pickup') ||
+                selectedDeliveryMethod.name?.toLowerCase().includes('pick up');
             if (!isPickup && matchingZone) {
                 return parseFloat(String(matchingZone.delivery_fee)) || 0;
             }
@@ -1236,6 +1238,27 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const [isKHQROpen, setIsKHQROpen] = useState(false);
     const [pendingOrderId, setPendingOrderId] = useState<number | string | null>(null);
     const [pendingOrderNo, setPendingOrderNo] = useState<string | null>(null);
+    const [telegramLink, setTelegramLink] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchTelegramLink = async () => {
+            const vendorId = ownerUserId || stores?.created_by || storeSettings?.created_by;
+            if (vendorId) {
+                try {
+                    const socialData = await socialMediaService.getPublicSocials(vendorId);
+                    const telegramSocial = (socialData || []).find(
+                        s => s.name.toLowerCase() === 'telegram' && s.status
+                    );
+                    if (telegramSocial && telegramSocial.link) {
+                        setTelegramLink(telegramSocial.link);
+                    }
+                } catch (err) {
+                    console.warn('Failed to load telegram social link for checkout page:', err);
+                }
+            }
+        };
+        fetchTelegramLink();
+    }, [ownerUserId, stores, storeSettings]);
 
     const sendOrderNotificationToChat = async (orderId: number | string, orderNo: string | null, totalAmt: number, paymentMethod: string) => {
         if (!isLoggedIn || !user || !ownerUserId) return;
@@ -1252,7 +1275,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 const messageBody = `${t('checkout.chatOrderPlaced')}\n\n${t('checkout.chatOrderNo')}: #${orderNo || orderId}\n${t('checkout.chatTotalAmount')}: $${Number(totalAmt).toFixed(2)}\n${t('checkout.chatPaymentMethod')}: ${paymentMethod.toUpperCase()}\n\n${t('checkout.chatClickLink')}\n${orderHistoryUrl}`;
 
                 await chatService.sendMessage(convo.id, messageBody, 'text');
-                
+
             }
         } catch (err) {
             console.error('[Checkout] Failed to send chat notification for order:', err);
@@ -1658,8 +1681,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             {/* Order Success Popup Modal */}
             {orderSuccess && createPortal(
                 <div className="fixed inset-0 z-55 flex items-center justify-center bg-stone-950/45 backdrop-blur-2xs p-4 font-kuntomruy animate-fade-in">
-                    <div 
-                        className="fixed inset-0 cursor-default" 
+                    <div
+                        className="fixed inset-0 cursor-default"
                         onClick={() => {
                             // Keep modal open until they choose an action
                         }}
@@ -1690,7 +1713,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                     </div>
                                     <div className="text-xs">
                                         <p className="font-black text-stone-900 uppercase tracking-wider">{t('checkout.orderPlaced').replace('!', '')}</p>
-                                        <p className="text-stone-405 text-[10px] font-medium">{t('checkout.placedDesc')}</p>
+                                        <p className="text-stone-500 text-[10px] font-medium">{t('checkout.placedDesc')}</p>
                                     </div>
                                 </div>
 
@@ -1701,7 +1724,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                     </div>
                                     <div className="text-xs">
                                         <p className="font-black text-stone-900 uppercase tracking-wider">{t('checkout.addressVerified')}</p>
-                                        <p className="text-stone-405 text-[10px] font-medium">{t('checkout.addressVerifiedDesc')}</p>
+                                        <p className="text-stone-500 text-[10px] font-medium">{t('checkout.addressVerifiedDesc')}</p>
                                     </div>
                                 </div>
 
@@ -1715,7 +1738,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         <p className="font-black text-stone-900 uppercase tracking-wider flex items-center gap-2">
                                             {t('checkout.processingOrder')}
                                         </p>
-                                        <p className="text-stone-405 text-[10px] font-medium">{t('checkout.processingOrderDesc')}</p>
+                                        <p className="text-stone-500 text-[10px] font-medium">{t('checkout.processingOrderDesc')}</p>
                                     </div>
                                 </div>
 
@@ -1744,15 +1767,27 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             >
                                 {t('checkout.viewDetail')}
                             </button>
-                            <button
-                                onClick={() => {
-                                    const storeSlug = (stores?.store_name || storeSettings?.store_name || 'store').replace(/\s+/g, '_');
-                                    onNavigate?.(FASHION_ROUTES.getProfile(ownerUserId, storeSlug, 'chat'));
-                                }}
-                                className="w-full py-4 bg-white border border-stone-200 hover:bg-stone-50 text-stone-900 rounded-[3px] font-black text-xs uppercase tracking-widest transition-all cursor-pointer focus:outline-none"
-                            >
-                                {t('checkout.chatToStore')}
-                            </button>
+                            {telegramLink ? (
+                                <a
+                                    href={telegramLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full py-4 bg-white border border-[#24A1DE] hover:bg-[#24A1DE]/5 text-[#24A1DE] rounded-[3px] font-black text-xs uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2 text-center decoration-none focus:outline-none"
+                                >
+                                    <FaTelegramPlane className="w-4 h-4 shrink-0 text-[#24A1DE]" />
+                                    {locale === 'km' ? 'ឆែកស្ថានភាពតាម Telegram' : 'Check Status via Telegram'}
+                                </a>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        const storeSlug = (stores?.store_name || storeSettings?.store_name || 'store').replace(/\s+/g, '_');
+                                        onNavigate?.(FASHION_ROUTES.getProfile(ownerUserId, storeSlug, 'chat'));
+                                    }}
+                                    className="w-full py-4 bg-white border border-stone-200 hover:bg-stone-50 text-stone-900 rounded-[3px] font-black text-xs uppercase tracking-widest transition-all cursor-pointer focus:outline-none"
+                                >
+                                    {t('checkout.chatToStore')}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>,

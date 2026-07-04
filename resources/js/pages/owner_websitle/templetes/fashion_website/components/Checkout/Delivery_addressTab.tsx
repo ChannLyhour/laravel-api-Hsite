@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiMapPin, FiCheck, FiChevronRight, FiPhone, FiSend, FiMessageSquare, FiTruck } from 'react-icons/fi';
+import { FaTelegramPlane, FaWhatsapp } from 'react-icons/fa';
 import type { ShippingAddress } from '@/api/owner/shippingAddresses';
 import { type CheckoutValidationError } from '../../validation/CheckoutValidationError';
 import { type DeliveryMethod } from '@/api/owner/deliveryMethods';
@@ -162,9 +163,24 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                                    <div className="space-y-4">
                                         <div className="grid grid-cols-3 gap-2">
                                              {[
-                                                  { key: 'phone', icon: <FiPhone className="w-3.5 h-3.5" />, label: 'Phone call' },
-                                                  { key: 'telegram', icon: <FiSend className="w-3.5 h-3.5 rotate-[-15deg]" />, label: 'Telegram' },
-                                                  { key: 'whatsapp', icon: <FiMessageSquare className="w-3.5 h-3.5" />, label: 'WhatsApp' },
+                                                  { 
+                                                       key: 'phone', 
+                                                       icon: <FiPhone className="w-3.5 h-3.5 text-blue-600" />, 
+                                                       label: 'Phone call',
+                                                       activeClass: 'bg-blue-50 text-blue-700 border-blue-300'
+                                                  },
+                                                  { 
+                                                       key: 'telegram', 
+                                                       icon: <FaTelegramPlane className="w-3.5 h-3.5 text-[#24A1DE]" />, 
+                                                       label: 'Telegram',
+                                                       activeClass: 'bg-[#24A1DE]/10 text-[#2088b9] border-[#24A1DE]/30'
+                                                  },
+                                                  { 
+                                                       key: 'whatsapp', 
+                                                       icon: <FaWhatsapp className="w-3.5 h-3.5 text-[#25D366]" />, 
+                                                       label: 'WhatsApp',
+                                                       activeClass: 'bg-[#25D366]/10 text-[#128C7E] border-[#25D366]/30'
+                                                  },
                                              ].map((c, idx) => (
                                                   <button
                                                        key={c.key}
@@ -172,7 +188,7 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                                                        ref={idx === 0 ? preferredContactRef : undefined}
                                                        onClick={() => setPreferredContact(c.key)}
                                                        className={`flex items-center justify-center gap-1.5 py-2.5 px-3 border rounded-xl text-xs font-bold transition-all cursor-pointer ${preferredContact === c.key
-                                                            ? 'bg-stone-900 text-white border-stone-900 shadow-sm active:scale-98'
+                                                            ? `${c.activeClass} shadow-xs active:scale-98`
                                                             : validationError?.field === 'preferredContact'
                                                                  ? 'bg-white text-red-500 border-red-300 hover:bg-red-50/50 active:scale-98'
                                                                  : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50 active:scale-98'
