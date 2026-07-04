@@ -453,35 +453,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                         </div>
                     </div>
 
-                    {/* GPS Coordinates (Optional) */}
-                    <div className="grid grid-cols-2 gap-3 pt-1">
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
-                                Latitude (Optional)
-                            </label>
-                            <input
-                                type="number"
-                                step="0.00000001"
-                                value={form.latitude !== null && form.latitude !== undefined ? form.latitude : ''}
-                                onChange={(e) => setForm(prev => ({ ...prev, latitude: e.target.value ? parseFloat(e.target.value) : null }))}
-                                placeholder="e.g., 11.5564"
-                                className="w-full px-3 py-2.5 border border-stone-200 rounded-[3px] text-xs font-medium text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-stone-900"
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
-                                Longitude (Optional)
-                            </label>
-                            <input
-                                type="number"
-                                step="0.00000001"
-                                value={form.longitude !== null && form.longitude !== undefined ? form.longitude : ''}
-                                onChange={(e) => setForm(prev => ({ ...prev, longitude: e.target.value ? parseFloat(e.target.value) : null }))}
-                                placeholder="e.g., 104.9282"
-                                className="w-full px-3 py-2.5 border border-stone-200 rounded-[3px] text-xs font-medium text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-stone-900"
-                            />
-                        </div>
-                    </div>
+
 
                     {form.latitude && form.longitude && !isNaN(parseFloat(String(form.latitude))) && !isNaN(parseFloat(String(form.longitude))) && (
                         <div className="w-full h-32 border border-stone-200 rounded-[3px] overflow-hidden mt-1 relative">
@@ -774,14 +746,58 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     const selectedAddress = savedAddresses.find(a => a.id === selectedAddressId);
 
+    // ── Store settings & checkout configs ──
+    const [storeSettings, setStoreSettings] = useState(() => {
+        try {
+            const saved = localStorage.getItem('store_settings');
+            const parsed = saved ? JSON.parse(saved) : {};
+            // Merge stores prop as baseline settings
+            return { ...stores, ...parsed };
+        } catch {
+            return stores || {};
+        }
+    });
+
+    const checkoutDeliveryAddress = storeSettings?.checkout_delivery_address || 'open';
+    const checkoutPreferredContact = storeSettings?.checkout_preferred_contact || 'open';
+    const preferredContactPhone = storeSettings?.preferred_contact_phone !== false && storeSettings?.preferred_contact_phone !== 'false' && storeSettings?.preferred_contact_phone !== '0';
+    const preferredContactTelegram = storeSettings?.preferred_contact_telegram !== false && storeSettings?.preferred_contact_telegram !== 'false' && storeSettings?.preferred_contact_telegram !== '0';
+    const preferredContactWhatsapp = storeSettings?.preferred_contact_whatsapp !== false && storeSettings?.preferred_contact_whatsapp !== 'false' && storeSettings?.preferred_contact_whatsapp !== '0';
+
+    const isGuestCheckoutEnabled = useMemo(() => {
+        return storeSettings?.guest_checkout !== false && storeSettings?.guest_checkout !== 'false';
+    }, [storeSettings]);
+
+    // ── Custom address states & refs ──
+    const [customCustomerName, setCustomCustomerName] = useState<string>('');
+    const [customCustomerPhone, setCustomCustomerPhone] = useState<string>('');
+    const [customCustomerAddress, setCustomCustomerAddress] = useState<string>('');
+    const [customLatitude, setCustomLatitude] = useState<string>('');
+    const [customLongitude, setCustomLongitude] = useState<string>('');
+
+    const customNameRef = React.useRef<HTMLInputElement>(null);
+    const customPhoneRef = React.useRef<HTMLInputElement>(null);
+    const customAddressRef = React.useRef<HTMLInputElement>(null);
+
     const matchingZone = useMemo(() => {
-        if (!selectedAddress || !selectedAddress.latitude || !selectedAddress.longitude) {
-            return null;
+        let lat: number | null = null;
+        let lng: number | null = null;
+
+        if (checkoutDeliveryAddress === 'close') {
+            if (customLatitude && customLongitude) {
+                lat = parseFloat(String(customLatitude));
+                lng = parseFloat(String(customLongitude));
+            }
+        } else {
+            if (selectedAddress && selectedAddress.latitude && selectedAddress.longitude) {
+                lat = parseFloat(String(selectedAddress.latitude));
+                lng = parseFloat(String(selectedAddress.longitude));
+            }
         }
 
-        const lat = parseFloat(String(selectedAddress.latitude));
-        const lng = parseFloat(String(selectedAddress.longitude));
-        if (isNaN(lat) || isNaN(lng)) return null;
+        if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
+            return null;
+        }
 
         for (const zone of deliveryZones) {
             if (!zone.is_active) continue;
@@ -805,21 +821,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             }
         }
         return null;
-    }, [selectedAddress, deliveryZones]);
+    }, [selectedAddress, customLatitude, customLongitude, checkoutDeliveryAddress, deliveryZones]);
 
     const filteredDeliveryMethods = useMemo(() => {
         if (matchingZone) {
             // Local customer: Show ONLY methods restricted to this matching zone
-            const localMethods = (deliveryMethods || []).filter(m => m.delivery_zone_id === matchingZone.id);
-            if (localMethods.length > 0) {
-                return localMethods;
-            }
-            // Fallback to global/nationwide methods if no local methods exist for the zone
-            return (deliveryMethods || []).filter(m => m.delivery_zone_id === null || m.delivery_zone_id === undefined);
-        } else {
-            // Global/Nationwide customer: Show ONLY global/nationwide methods
-            return (deliveryMethods || []).filter(m => m.delivery_zone_id === null || m.delivery_zone_id === undefined);
+            return (deliveryMethods || []).filter(m => m.delivery_zone_id === matchingZone.id);
         }
+        // Out of Delivery Zone: Show Nationwide (Global) methods
+        return (deliveryMethods || []).filter(m => !m.delivery_zone_id);
     }, [deliveryMethods, matchingZone]);
 
     useEffect(() => {
@@ -871,17 +881,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }, [propDeliveryFee, stores, subtotal, appliedCoupon, selectedDeliveryMethod, matchingZone]);
 
     // ── Payment & Contact state ──
-    const [storeSettings, setStoreSettings] = useState(() => {
-        try {
-            const saved = localStorage.getItem('store_settings');
-            const parsed = saved ? JSON.parse(saved) : {};
-            // Merge stores prop as baseline settings
-            return { ...stores, ...parsed };
-        } catch {
-            return stores || {};
-        }
-    });
-
     const paymentMethods = React.useMemo(() => {
         const methodsBase = [
             {
@@ -954,16 +953,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const [preferredContact, setPreferredContact] = useState<string>('');
     const [contactInput, setContactInput] = useState<string>('');
 
-    const [customCustomerName, setCustomCustomerName] = useState<string>('');
-    const [customCustomerPhone, setCustomCustomerPhone] = useState<string>('');
-    const [customCustomerAddress, setCustomCustomerAddress] = useState<string>('');
-    const [customLatitude, setCustomLatitude] = useState<string>('');
-    const [customLongitude, setCustomLongitude] = useState<string>('');
-
-    const customNameRef = React.useRef<HTMLInputElement>(null);
-    const customPhoneRef = React.useRef<HTMLInputElement>(null);
-    const customAddressRef = React.useRef<HTMLInputElement>(null);
-
     useEffect(() => {
         if (user) {
             setCustomCustomerName(user.name || '');
@@ -978,13 +967,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     const [currentStep, setCurrentStep] = useState<number>(1);
     const [validationError, setValidationError] = useState<CheckoutValidationError | null>(null);
-
-    const checkoutDeliveryAddress = storeSettings?.checkout_delivery_address || 'open';
-    const checkoutPreferredContact = storeSettings?.checkout_preferred_contact || 'open';
-
-    const isGuestCheckoutEnabled = useMemo(() => {
-        return storeSettings?.guest_checkout !== false && storeSettings?.guest_checkout !== 'false';
-    }, [storeSettings]);
 
     const validateStep2 = () => {
         if (checkoutDeliveryAddress === 'close') {
@@ -1050,7 +1032,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 return false;
             }
         }
-        if (filteredDeliveryMethods.length > 0 && !selectedDeliveryMethod) {
+        if (filteredDeliveryMethods.length === 0) {
+            const err = { field: 'address', message: 'We do not deliver to this location. Please choose another shipping address or pin location.' };
+            setValidationError(err as any);
+            toast.error(err.message);
+            return false;
+        }
+        if (!selectedDeliveryMethod) {
             const err = { field: 'deliveryMethod', message: 'Please select a delivery method.' };
             setValidationError(err as any);
             toast.error(err.message);
@@ -1271,6 +1259,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     const sendOrderNotificationToChat = async (orderId: number | string, orderNo: string | null, totalAmt: number, paymentMethod: string) => {
         if (!isLoggedIn || !user || !ownerUserId) return;
+
+        // Check if Send Chat Order is enabled in settings
+        const localSettings = Store_setting();
+        const activeSettings = { ...(stores || {}), ...(localSettings || {}) };
+        const isSendChatOrderEnabled = activeSettings?.send_chat_order !== 'false' && activeSettings?.send_chat_order !== false;
+
+        if (!isSendChatOrderEnabled) {
+            console.log('[Checkout] Send Chat Order is disabled. Skipping chat notification.');
+            return;
+        }
+
         try {
             const vendorId = ownerUserId || stores?.created_by || storeSettings?.created_by;
             if (!vendorId) return;
@@ -1344,7 +1343,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 : (selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Customer'),
             customer_phone: checkoutDeliveryAddress === 'close'
                 ? customCustomerPhone
-                : contactInput,
+                : (checkoutPreferredContact === 'close' ? (selectedAddress?.telephone || '') : contactInput),
             customer_address: checkoutDeliveryAddress === 'close'
                 ? customCustomerAddress
                 : (selectedAddress
@@ -1574,6 +1573,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             // Custom delivery closed variables
                             checkoutDeliveryAddress={checkoutDeliveryAddress}
                             checkoutPreferredContact={checkoutPreferredContact}
+                            preferredContactPhone={preferredContactPhone}
+                            preferredContactTelegram={preferredContactTelegram}
+                            preferredContactWhatsapp={preferredContactWhatsapp}
                             customCustomerName={customCustomerName}
                             setCustomCustomerName={setCustomCustomerName}
                             customCustomerPhone={customCustomerPhone}

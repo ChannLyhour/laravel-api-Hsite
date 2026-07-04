@@ -78,6 +78,14 @@ export const chatService = {
   },
 
   /**
+   * Delete/Close a conversation.
+   * DELETE /api/chat/conversations/{id}
+   */
+  async deleteConversation(conversationId: number): Promise<{ message: string }> {
+    return client.delete<{ message: string }>(`/chat/conversations/${conversationId}`);
+  },
+
+  /**
    * Get all messages for a specific conversation.
    * GET /api/chat/conversations/{id}/messages
    */

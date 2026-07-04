@@ -362,6 +362,17 @@ export const useCheckout = ({
     const sendOrderNotificationToChat = async (orderId: number | string, orderNo: string | null, totalAmt: number, paymentMethod: string) => {
         const resolvedOwner = nullOrRequest(ownerUserId);
         if (!isLoggedIn || !user || !resolvedOwner) return;
+
+        // Check if Send Chat Order is enabled in settings
+        const localSettings = Store_setting();
+        const activeSettings = { ...(stores || {}), ...(localSettings || {}) };
+        const isSendChatOrderEnabled = activeSettings?.send_chat_order !== 'false' && activeSettings?.send_chat_order !== false;
+
+        if (!isSendChatOrderEnabled) {
+            console.log('[useCheckout] Send Chat Order is disabled. Skipping chat notification.');
+            return;
+        }
+
         try {
             const vendorId = resolvedOwner || nullOrRequest(stores?.created_by) || nullOrRequest(storeSettings?.created_by);
             if (!vendorId) return;

@@ -280,7 +280,7 @@ export function openLocationMapModal(
         const container = document.createElement("div");
         container.style.cssText = `
             background: white;
-            border-radius: 24px;
+            border-radius: 4px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             width: 92%;
             max-width: 520px;
@@ -300,7 +300,7 @@ export function openLocationMapModal(
                     <h3 style="margin: 0; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #1c1917;">Select Shipping Location</h3>
                     <p style="margin: 4px 0 0; font-size: 10px; color: #78716c; font-weight: 500;">Drag the marker or search to point your address</p>
                 </div>
-                <button id="loc-modal-close" style="background: transparent; border: none; cursor: pointer; color: #a8a29e; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 12px; transition: all 0.2s;" onmouseover="this.style.color='#1c1917'; this.style.backgroundColor='#f4f4f5'" onmouseout="this.style.color='#a8a29e'; this.style.backgroundColor='transparent'">
+                <button id="loc-modal-close" style="background: transparent; border: none; cursor: pointer; color: #a8a29e; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 3px; transition: all 0.2s;" onmouseover="this.style.color='#1c1917'; this.style.backgroundColor='#f4f4f5'" onmouseout="this.style.color='#a8a29e'; this.style.backgroundColor='transparent'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
@@ -308,10 +308,10 @@ export function openLocationMapModal(
             <!-- Search Area -->
             <div style="padding: 16px 24px; background: #fafaf9; border-b: 1px solid #f4f4f5; display: flex; gap: 8px;">
                 <div style="position: relative; flex: 1;">
-                    <input type="text" id="loc-search-input" placeholder="Search town, street, landmark in Cambodia..." style="width: 100%; padding: 10px 14px; border: 1px solid #e4e4e7; border-radius: 14px; font-size: 12px; font-weight: 600; outline: none; transition: border-color 0.2s; box-sizing: border-box;" />
-                    <div id="loc-search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e4e4e7; border-radius: 14px; margin-top: 4px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); max-height: 200px; overflow-y: auto; display: none; z-index: 10;"></div>
+                    <input type="text" id="loc-search-input" autocomplete="off" placeholder="Search town, street, landmark in Cambodia..." style="width: 100%; padding: 10px 14px; border: 1px solid #e4e4e7; border-radius: 3px; font-size: 12px; font-weight: 600; outline: none; transition: border-color 0.2s; box-sizing: border-box; color: #1c1917;" />
+                    <div id="loc-search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e4e4e7; border-radius: 3px; margin-top: 4px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); max-height: 200px; overflow-y: auto; display: none; z-index: 9999;"></div>
                 </div>
-                <button id="loc-search-btn" style="background: #1c1917; border: none; border-radius: 14px; padding: 10px 16px; color: white; cursor: pointer; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; transition: background-color 0.2s;">
+                <button id="loc-search-btn" style="background: #1c1917; border: none; border-radius: 3px; padding: 10px 16px; color: white; cursor: pointer; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; transition: background-color 0.2s;">
                     Search
                 </button>
             </div>
@@ -321,7 +321,7 @@ export function openLocationMapModal(
                 <div id="loc-map" style="width: 100%; height: 280px;"></div>
                 
                 <!-- GPS Auto Detect button on Map -->
-                <button id="loc-gps-btn" style="position: absolute; bottom: 16px; right: 16px; z-index: 1000; background: white; border: 1px solid #e4e4e7; border-radius: 14px; padding: 10px 14px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #1c1917; transition: all 0.2s;">
+                <button id="loc-gps-btn" style="position: absolute; bottom: 16px; right: 16px; z-index: 1000; background: white; border: 1px solid #e4e4e7; border-radius: 3px; padding: 10px 14px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #1c1917; transition: all 0.2s;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
                     Locate Me
                 </button>
@@ -333,18 +333,18 @@ export function openLocationMapModal(
                 <div id="loc-address-text" style="font-size: 11.5px; font-weight: 600; color: #27272a; min-height: 34px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                     Fetching location details...
                 </div>
-                <div style="display: flex; gap: 8px; margin-top: 10px; font-size: 10px; color: #71717a;">
-                    <div style="background: #f4f4f5; padding: 4px 8px; border-radius: 6px; font-weight: 700;">Lat: <span id="loc-lat-val">${currentLat.toFixed(5)}</span></div>
-                    <div style="background: #f4f4f5; padding: 4px 8px; border-radius: 6px; font-weight: 700;">Lng: <span id="loc-lng-val">${currentLng.toFixed(5)}</span></div>
+                <div style="display: none; gap: 8px; margin-top: 10px; font-size: 10px; color: #71717a;">
+                    <div style="background: #f4f4f5; padding: 4px 8px; border-radius: 3px; font-weight: 700;">Lat: <span id="loc-lat-val">${currentLat.toFixed(5)}</span></div>
+                    <div style="background: #f4f4f5; padding: 4px 8px; border-radius: 3px; font-weight: 700;">Lng: <span id="loc-lng-val">${currentLng.toFixed(5)}</span></div>
                 </div>
             </div>
 
             <!-- Modal Actions -->
             <div style="padding: 16px 24px; border-t: 1px solid #f4f4f5; display: flex; justify-content: flex-end; gap: 12px; background: white;">
-                <button id="loc-modal-cancel" style="background: #f4f4f5; border: none; border-radius: 14px; padding: 12px 20px; color: #44403c; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e4e4e7'" onmouseout="this.style.backgroundColor='#f4f4f5'">
+                <button id="loc-modal-cancel" style="background: #f4f4f5; border: none; border-radius: 3px; padding: 12px 20px; color: #44403c; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e4e4e7'" onmouseout="this.style.backgroundColor='#f4f4f5'">
                     Cancel
                 </button>
-                <button id="loc-modal-confirm" style="background: #10b981; border: none; border-radius: 14px; padding: 12px 24px; color: white; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);" onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">
+                <button id="loc-modal-confirm" style="background: #10b981; border: none; border-radius: 3px; padding: 12px 24px; color: white; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);" onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">
                     Confirm Location
                 </button>
             </div>

@@ -213,6 +213,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('chat')->group(function () {
         Route::get('/conversations', [ChatController::class, 'getConversations']);
         Route::post('/conversations', [ChatController::class, 'startConversation']);
+        Route::delete('/conversations/{id}', [ChatController::class, 'deleteConversation']);
         Route::get('/conversations/{id}/messages', [ChatController::class, 'getMessages']);
         Route::post('/conversations/{id}/messages', [ChatController::class, 'sendMessage']);
         Route::post('/upload', [ChatController::class, 'uploadMedia']);

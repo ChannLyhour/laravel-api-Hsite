@@ -1316,6 +1316,22 @@ export const ChatInboxTab: React.FC<ChatInboxTabProps> = ({ ownerId, storeId }) 
     }
   };
 
+  const handleCloseConversation = async () => {
+    if (!activeConvo) return;
+    if (!window.confirm('Are you sure you want to close and delete this conversation? This will permanently erase the chat history.')) {
+      return;
+    }
+    const targetConvoId = activeConvo.id;
+    try {
+      await chatService.deleteConversation(targetConvoId);
+      toast.success('Conversation closed successfully');
+      setConversations(prev => prev.filter(c => c.id !== targetConvoId));
+      setActiveConvo(null);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to close conversation');
+    }
+  };
+
   const handlePinMessage = async (msgId: number) => {
     if (!activeConvoId) return;
     const isCurrentlyPinned = !!(pinnedMessagesByConvo[activeConvoId]?.has(msgId));
@@ -1579,15 +1595,27 @@ export const ChatInboxTab: React.FC<ChatInboxTabProps> = ({ ownerId, storeId }) 
               </div>
 
               {/* Action items */}
-              <button
-                onClick={() => setShowContextPanel(p => !p)}
-                className={`p-2 rounded-[5px] hover:bg-black/[0.04] text-inherit transition-colors border-none cursor-pointer flex items-center gap-1 text-[11px] font-bold ${showContextPanel ? 'bg-black/[0.06] text-primary' : 'bg-transparent'
-                  }`}
-                title="Toggle customer info drawer"
-              >
-                <FiInfo className="w-4.5 h-4.5" />
-                <span>Customer Info</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCloseConversation}
+                  className="p-2 rounded-[5px] hover:bg-red-50 text-red-650 hover:text-red-750 transition-colors border-none cursor-pointer flex items-center gap-1 text-[11px] font-bold bg-transparent"
+                  title="Close and delete conversation"
+                >
+                  <FiTrash2 className="w-4.5 h-4.5 text-red-550" />
+                  <span>Close Chat</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowContextPanel(p => !p)}
+                  className={`p-2 rounded-[5px] hover:bg-black/[0.04] text-inherit transition-colors border-none cursor-pointer flex items-center gap-1 text-[11px] font-bold ${showContextPanel ? 'bg-black/[0.06] text-primary' : 'bg-transparent'
+                    }`}
+                  title="Toggle customer info drawer"
+                >
+                  <FiInfo className="w-4.5 h-4.5" />
+                  <span>Customer Info</span>
+                </button>
+              </div>
             </div>
 
             {/* Pinned Messages Banner */}

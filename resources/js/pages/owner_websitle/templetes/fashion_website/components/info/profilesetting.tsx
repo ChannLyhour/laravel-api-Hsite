@@ -22,6 +22,7 @@ import { VouchersTab } from './VouchersTab';
 import { ShippingAddressTab } from './ShippingAddressTab';
 import { OrderHistoryTab } from './OrderHistoryTab';
 import { ChatTab } from './ChatTab';
+import { Store_setting } from '@/api/owner/stores';
 
 const formatPhoneNumber = (phone: string) => {
     if (!phone) return '';
@@ -63,11 +64,21 @@ export const ProfileSetting: React.FC<ProfileSettingProps> = ({
     stores,
 }) => {
     const { t } = useTranslation(locale);
+    const localSettings = Store_setting();
+    const activeSettings = { ...(stores || {}), ...(localSettings || {}) };
+    const isChatEnabled = activeSettings?.customer_chat !== 'false' && activeSettings?.customer_chat !== false;
+
     const [activeTab, setActiveTab] = useState<TabState>(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
             const tab = params.get('tab') as TabState;
             if (['profile', 'orders', 'giftcard', 'address', 'chat'].includes(tab)) {
+                if (tab === 'address' && Store_setting()?.checkout_delivery_address === 'close') {
+                    return 'profile';
+                }
+                if (tab === 'chat' && !isChatEnabled) {
+                    return 'profile';
+                }
                 return tab;
             }
         }
@@ -93,7 +104,9 @@ export const ProfileSetting: React.FC<ProfileSettingProps> = ({
                 const params = new URLSearchParams(window.location.search);
                 const tab = params.get('tab') as TabState;
                 if (['profile', 'orders', 'giftcard', 'address', 'chat'].includes(tab)) {
-                    if (tab !== activeTab) {
+                    if (tab === 'chat' && !isChatEnabled) {
+                        setActiveTab('profile');
+                    } else if (tab !== activeTab) {
                         setActiveTab(tab);
                     }
                 } else {
@@ -307,27 +320,31 @@ export const ProfileSetting: React.FC<ProfileSettingProps> = ({
                             {t('navbar.vouchers')}
                         </button>
 
-                        <button
-                            onClick={() => setActiveTab('address')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 text-left font-black uppercase tracking-wider text-[10px] border-none cursor-pointer transition-all rounded-[3px] focus:outline-none ${activeTab === 'address'
-                                ? 'bg-stone-900 text-white shadow-3xs'
-                                : 'bg-transparent text-stone-500 hover:text-stone-900 hover:bg-stone-50'
-                                }`}
-                        >
-                            <FiMapPin className="w-4 h-4" />
-                            {t('navbar.addressBook')}
-                        </button>
+                        {Store_setting()?.checkout_delivery_address !== 'close' && (
+                            <button
+                                onClick={() => setActiveTab('address')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-left font-black uppercase tracking-wider text-[10px] border-none cursor-pointer transition-all rounded-[3px] focus:outline-none ${activeTab === 'address'
+                                    ? 'bg-stone-900 text-white shadow-3xs'
+                                    : 'bg-transparent text-stone-500 hover:text-stone-900 hover:bg-stone-50'
+                                    }`}
+                            >
+                                <FiMapPin className="w-4 h-4" />
+                                {t('navbar.addressBook')}
+                            </button>
+                        )}
 
-                        <button
-                            onClick={() => setActiveTab('chat')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 text-left font-black uppercase tracking-wider text-[10px] border-none cursor-pointer transition-all rounded-[3px] focus:outline-none ${activeTab === 'chat'
-                                ? 'bg-stone-900 text-white shadow-3xs'
-                                : 'bg-transparent text-stone-500 hover:text-stone-900 hover:bg-stone-50'
-                                }`}
-                        >
-                            <FiMessageSquare className="w-4 h-4" />
-                            {t('navbar.messagesChat')}
-                        </button>
+                        {isChatEnabled && (
+                            <button
+                                onClick={() => setActiveTab('chat')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-left font-black uppercase tracking-wider text-[10px] border-none cursor-pointer transition-all rounded-[3px] focus:outline-none ${activeTab === 'chat'
+                                    ? 'bg-stone-900 text-white shadow-3xs'
+                                    : 'bg-transparent text-stone-500 hover:text-stone-900 hover:bg-stone-50'
+                                    }`}
+                            >
+                                <FiMessageSquare className="w-4 h-4" />
+                                {t('navbar.messagesChat')}
+                            </button>
+                        )}
                     </div>
 
                     <div className="border-t border-stone-100" />
@@ -596,7 +613,7 @@ export const ProfileSetting: React.FC<ProfileSettingProps> = ({
                     )}
 
                     {/* TAB 5: Live Chat */}
-                    {activeTab === 'chat' && (
+                    {activeTab === 'chat' && isChatEnabled && (
                         <ChatTab user={user} ownerUserId={ownerUserId} stores={stores} onTabChange={setActiveTab} />
                     )}
                 </div>

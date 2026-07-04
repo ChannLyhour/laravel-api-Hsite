@@ -22,6 +22,7 @@ import { resolveImageUrl } from '@/api/imageUtils';
 import { OrderHistoryTab } from '../../components/info/OrderHistoryTab';
 import { VouchersTab } from '../../components/info/VouchersTab';
 import { ShippingAddressTab } from '../../components/info/ShippingAddressTab';
+import { Store_setting } from '@/api/owner/stores';
 
 const CITIES = [
     'Phnom Penh', 'Siem Reap', 'Battambang', 'Sihanoukville',
@@ -327,18 +328,20 @@ export const FashionProfileCustomer: React.FC<FashionProfileCustomerProps> = ({
                             </button>
 
                             {/* Addresses */}
-                            <button
-                                onClick={() => setActiveSection('address')}
-                                className={`w-full flex items-center justify-between px-4 py-4 text-left border-none bg-transparent cursor-pointer transition-colors ${
-                                    isDarkTheme ? 'hover:bg-stone-900/40 text-stone-300' : 'hover:bg-stone-50 text-stone-700'
-                                }`}
-                            >
-                                <div className="flex items-center gap-3.5">
-                                    <FiMapPin className="w-4.5 h-4.5 text-stone-400" />
-                                    <span className="text-xs font-semibold">{t.addresses}</span>
-                                </div>
-                                <FiChevronRight className="w-4 h-4 text-stone-400" />
-                            </button>
+                            {Store_setting()?.checkout_delivery_address !== 'close' && (
+                                <button
+                                    onClick={() => setActiveSection('address')}
+                                    className={`w-full flex items-center justify-between px-4 py-4 text-left border-none bg-transparent cursor-pointer transition-colors ${
+                                        isDarkTheme ? 'hover:bg-stone-900/40 text-stone-300' : 'hover:bg-stone-50 text-stone-700'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3.5">
+                                        <FiMapPin className="w-4.5 h-4.5 text-stone-400" />
+                                        <span className="text-xs font-semibold">{t.addresses}</span>
+                                    </div>
+                                    <FiChevronRight className="w-4 h-4 text-stone-400" />
+                                </button>
+                            )}
                         </div>
 
                         {/* Logout Section */}

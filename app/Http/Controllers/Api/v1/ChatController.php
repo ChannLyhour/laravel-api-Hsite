@@ -435,6 +435,44 @@ class ChatController extends Controller
     }
 
     /**
+     * Delete/Close a conversation.
+     * DELETE /api/chat/conversations/{id}
+     */
+    public function deleteConversation(Request $request, $id)
+    {
+        $user = $request->user();
+        $conversation = Conversation::find($id);
+
+        if (!$conversation) {
+            return response()->json(['detail' => 'Conversation not found.'], 404);
+        }
+
+        // Verify participant
+        $isParticipant = Participant::where('conversation_id', $id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if (!$isParticipant) {
+            return response()->json(['detail' => 'Access denied.'], 403);
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($conversation) {
+            // Delete messages (and their reactions)
+            $messageIds = Message::where('conversation_id', $conversation->id)->pluck('id');
+            MessageReaction::whereIn('message_id', $messageIds)->delete();
+            Message::where('conversation_id', $conversation->id)->delete();
+            
+            // Delete participants
+            Participant::where('conversation_id', $conversation->id)->delete();
+            
+            // Delete conversation
+            $conversation->delete();
+        });
+
+        return response()->json(['message' => 'Conversation closed and deleted successfully.']);
+    }
+
+    /**
      * Pin/unpin a message.
      * POST /api/chat/messages/{id}/pin
      */

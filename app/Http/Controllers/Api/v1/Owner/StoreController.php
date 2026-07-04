@@ -155,11 +155,16 @@ class StoreController extends Controller
             'facebook_enabled',
             'checkout_delivery_address',
             'checkout_preferred_contact',
+            'preferred_contact_phone',
+            'preferred_contact_telegram',
+            'preferred_contact_whatsapp',
             'checkout_note',
             'checkout_claim_code',
             'telegram_bot_token',
             'telegram_chat_id',
-            'telegram_enabled'
+            'telegram_enabled',
+            'customer_chat',
+            'send_chat_order'
         ];
 
         if ($request->has('website_theme')) {
@@ -295,11 +300,16 @@ class StoreController extends Controller
             'facebook_enabled',
             'checkout_delivery_address',
             'checkout_preferred_contact',
+            'preferred_contact_phone',
+            'preferred_contact_telegram',
+            'preferred_contact_whatsapp',
             'checkout_note',
             'checkout_claim_code',
             'telegram_bot_token',
             'telegram_chat_id',
-            'telegram_enabled'
+            'telegram_enabled',
+            'customer_chat',
+            'send_chat_order'
         ];
 
         $ownerId = $request->created_by;
@@ -423,11 +433,16 @@ class StoreController extends Controller
             'facebook_enabled',
             'checkout_delivery_address',
             'checkout_preferred_contact',
+            'preferred_contact_phone',
+            'preferred_contact_telegram',
+            'preferred_contact_whatsapp',
             'checkout_note',
             'checkout_claim_code',
             'telegram_bot_token',
             'telegram_chat_id',
-            'telegram_enabled'
+            'telegram_enabled',
+            'customer_chat',
+            'send_chat_order'
         ];
 
         $data = $request->all();

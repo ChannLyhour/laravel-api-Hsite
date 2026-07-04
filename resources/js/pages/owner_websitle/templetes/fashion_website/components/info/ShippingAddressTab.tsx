@@ -7,6 +7,8 @@ import {
 import { toast } from '../../utils/toast';
 import { shippingAddressesService, type ShippingAddress, type ShippingAddressPayload } from '@/api/owner/shippingAddresses';
 import { useTranslation } from '../../utils/translate';
+import { openLocationMapModal } from '../helpers/autoLocationCustomer';
+import { Store_setting } from '@/api/owner/stores';
 
 const CITIES = [
     'Phnom Penh', 'Siem Reap', 'Battambang', 'Sihanoukville',
@@ -39,6 +41,27 @@ interface ShippingAddressTabProps {
 
 export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, locale }) => {
     const { t } = useTranslation(locale);
+    const storeSettings = Store_setting();
+    const checkoutDeliveryAddress = storeSettings?.checkout_delivery_address || 'open';
+
+    if (checkoutDeliveryAddress === 'close') {
+        return (
+            <div className="py-20 text-center space-y-4 max-w-md mx-auto animate-fade-in font-sans">
+                <div className="w-12 h-12 bg-stone-50 rounded-full flex items-center justify-center mx-auto border border-stone-100/50">
+                    <FiMapPin className="w-5 h-5 text-stone-300" />
+                </div>
+                <div className="space-y-1.5 text-center">
+                    <p className="text-[11px] font-black text-stone-900 uppercase tracking-widest">
+                        Shipping Address Disabled
+                    </p>
+                    <p className="text-[10px] text-stone-400 font-semibold leading-relaxed">
+                        The store owner has disabled shipping addresses for this website. You do not need to configure delivery locations.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
     const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
     const [showAddressForm, setShowAddressForm] = useState(false);
@@ -267,7 +290,31 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-[9px] font-black uppercase tracking-wider text-stone-400">Detailed Shipping Address <span className="text-red-500">*</span></label>
+                            <div className="flex justify-between items-center">
+                                <label className="text-[9px] font-black uppercase tracking-wider text-stone-400">Detailed Shipping Address <span className="text-red-500">*</span></label>
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        const result = await openLocationMapModal(
+                                            addressFormData.latitude ? parseFloat(String(addressFormData.latitude)) : null,
+                                            addressFormData.longitude ? parseFloat(String(addressFormData.longitude)) : null
+                                        );
+                                        if (result) {
+                                            setAddressFormData(prev => ({
+                                                ...prev,
+                                                address: result.address,
+                                                city_province: result.city_province || prev.city_province,
+                                                latitude: result.latitude,
+                                                longitude: result.longitude
+                                            }));
+                                            toast.success('Location loaded from map!');
+                                        }
+                                    }}
+                                    className="text-[9px] font-bold text-stone-600 hover:text-stone-900 uppercase tracking-wider flex items-center gap-1 border-none bg-transparent cursor-pointer transition-colors"
+                                >
+                                    <FiMapPin className="w-3.5 h-3.5" /> Detect on Map
+                                </button>
+                            </div>
                             <textarea
                                 required
                                 rows={3}
@@ -277,6 +324,8 @@ export const ShippingAddressTab: React.FC<ShippingAddressTabProps> = ({ user, lo
                                 placeholder="Street No, House No, Group, Village..."
                             />
                         </div>
+
+
 
                         <div className="flex items-center gap-2 pt-2">
                             <input

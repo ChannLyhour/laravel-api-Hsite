@@ -50,6 +50,8 @@ import { ProfileSetting } from './components/info/profilesetting';
 import { useAuth } from './hooks/useAuth';
 import { likesService } from '@/api/owner/likes';
 import { storeBrandingService } from '@/api/created_by/getFaviconById';
+import { Store_setting } from '@/api/owner/stores';
+
 
 
 export const FashionPage: React.FC<FashionPageProps> = ({
@@ -62,6 +64,10 @@ export const FashionPage: React.FC<FashionPageProps> = ({
   onChangeLanguage,
 }) => {
   // Interactive UI State
+  const localSettings = Store_setting();
+  const activeSettings = { ...(stores || {}), ...(localSettings || {}) };
+  const isChatEnabled = activeSettings?.customer_chat !== 'false' && activeSettings?.customer_chat !== false;
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(() => {
     const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -1149,6 +1155,7 @@ export const FashionPage: React.FC<FashionPageProps> = ({
         copiedCode={copiedCouponCode}
         onCopyCode={handleCopyCouponCode}
       />
+
 
       {/* Floating Back to Top Scroll Indicator */}
       <DotTechSc />

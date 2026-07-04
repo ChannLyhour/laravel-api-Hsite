@@ -24,6 +24,9 @@ export interface SettingResponse {
         checkout_note?: 'open' | 'close' | 'null';
         checkout_claim_code?: 'open' | 'close' | 'null';
         guest_checkout?: boolean | string;
+        preferred_contact_phone?: boolean | string;
+        preferred_contact_telegram?: boolean | string;
+        preferred_contact_whatsapp?: boolean | string;
     };
 }
 
@@ -83,6 +86,9 @@ export const settingService = {
                 checkout_note: rawSettings.checkout_note || 'open',
                 checkout_claim_code: rawSettings.checkout_claim_code || 'open',
                 guest_checkout: rawSettings.guest_checkout,
+                preferred_contact_phone: rawSettings.preferred_contact_phone === 'true' || rawSettings.preferred_contact_phone === true || rawSettings.preferred_contact_phone === undefined,
+                preferred_contact_telegram: rawSettings.preferred_contact_telegram === 'true' || rawSettings.preferred_contact_telegram === true || rawSettings.preferred_contact_telegram === undefined,
+                preferred_contact_whatsapp: rawSettings.preferred_contact_whatsapp === 'true' || rawSettings.preferred_contact_whatsapp === true || rawSettings.preferred_contact_whatsapp === undefined,
             }
         };
     },

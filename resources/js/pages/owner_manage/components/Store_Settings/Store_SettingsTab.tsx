@@ -32,12 +32,17 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
   const [currency, setCurrency] = useState('USD');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [guestCheckout, setGuestCheckout] = useState(true);
+  const [customerChat, setCustomerChat] = useState(true);
+  const [sendChatOrder, setSendChatOrder] = useState(true);
   const [announcementText, setAnnouncementText] = useState('');
   const [footerText, setFooterText] = useState('');
   const [checkoutDeliveryAddress, setCheckoutDeliveryAddress] = useState<'open' | 'close' | 'null'>('open');
   const [checkoutPreferredContact, setCheckoutPreferredContact] = useState<'open' | 'close' | 'null'>('open');
   const [checkoutNote, setCheckoutNote] = useState<'open' | 'close' | 'null'>('open');
   const [checkoutClaimCode, setCheckoutClaimCode] = useState<'open' | 'close' | 'null'>('open');
+  const [preferredContactPhone, setPreferredContactPhone] = useState(true);
+  const [preferredContactTelegram, setPreferredContactTelegram] = useState(true);
+  const [preferredContactWhatsapp, setPreferredContactWhatsapp] = useState(true);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
@@ -194,13 +199,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
           setCurrency(loadSetting('currency', 'USD'));
           setMaintenanceMode(loadSetting('maintenance_mode', 'false') === 'true');
           setGuestCheckout(loadSetting('guest_checkout', 'true') === 'true');
-           setAnnouncementText(loadSetting('announcement_text', ''));
+          setCustomerChat(loadSetting('customer_chat', 'true') === 'true');
+          setSendChatOrder(loadSetting('send_chat_order', 'true') === 'true');
+          setAnnouncementText(loadSetting('announcement_text', ''));
           setFooterText(loadSetting('footer_text', ''));
           setCheckoutDeliveryAddress((loadSetting('checkout_delivery_address', 'open') as any));
-          setCheckoutPreferredContact((loadSetting('checkout_preferred_contact', 'open') as any));
-          setCheckoutNote((loadSetting('checkout_note', 'open') as any));
-          setCheckoutClaimCode((loadSetting('checkout_claim_code', 'open') as any));
-        }
+           setCheckoutPreferredContact((loadSetting('checkout_preferred_contact', 'open') as any));
+           setPreferredContactPhone(loadSetting('preferred_contact_phone', 'true') === 'true');
+           setPreferredContactTelegram(loadSetting('preferred_contact_telegram', 'true') === 'true');
+           setPreferredContactWhatsapp(loadSetting('preferred_contact_whatsapp', 'true') === 'true');
+           setCheckoutNote((loadSetting('checkout_note', 'open') as any));
+           setCheckoutClaimCode((loadSetting('checkout_claim_code', 'open') as any));
+         }
       })
       .catch((err) => {
         console.warn('Failed to fetch store settings from API, loading local backup.', err);
@@ -220,13 +230,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
           setCurrency(parsed.currency || 'USD');
           setMaintenanceMode(parsed.maintenance_mode === 'true' || parsed.maintenance_mode === true);
           setGuestCheckout(parsed.guest_checkout === 'true' || parsed.guest_checkout === true || parsed.guest_checkout === undefined);
-           setAnnouncementText(parsed.announcement_text || '');
+          setCustomerChat(parsed.customer_chat === 'true' || parsed.customer_chat === true || parsed.customer_chat === undefined);
+          setSendChatOrder(parsed.send_chat_order === 'true' || parsed.send_chat_order === true || parsed.send_chat_order === undefined);
+          setAnnouncementText(parsed.announcement_text || '');
           setFooterText(parsed.footer_text || '');
           setCheckoutDeliveryAddress(parsed.checkout_delivery_address || 'open');
-          setCheckoutPreferredContact(parsed.checkout_preferred_contact || 'open');
-          setCheckoutNote(parsed.checkout_note || 'open');
-          setCheckoutClaimCode(parsed.checkout_claim_code || 'open');
-        }
+           setCheckoutPreferredContact(parsed.checkout_preferred_contact || 'open');
+           setPreferredContactPhone(parsed.preferred_contact_phone === 'true' || parsed.preferred_contact_phone === true || parsed.preferred_contact_phone === undefined);
+           setPreferredContactTelegram(parsed.preferred_contact_telegram === 'true' || parsed.preferred_contact_telegram === true || parsed.preferred_contact_telegram === undefined);
+           setPreferredContactWhatsapp(parsed.preferred_contact_whatsapp === 'true' || parsed.preferred_contact_whatsapp === true || parsed.preferred_contact_whatsapp === undefined);
+           setCheckoutNote(parsed.checkout_note || 'open');
+           setCheckoutClaimCode(parsed.checkout_claim_code || 'open');
+         }
       })
       .finally(() => {
         setLoading(false);
@@ -259,10 +274,15 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
       currency: currency,
       maintenance_mode: String(maintenanceMode),
       guest_checkout: String(guestCheckout),
+      customer_chat: String(customerChat),
+      send_chat_order: String(sendChatOrder),
       announcement_text: announcementText,
       footer_text: footerText,
       checkout_delivery_address: checkoutDeliveryAddress,
       checkout_preferred_contact: checkoutPreferredContact,
+      preferred_contact_phone: String(preferredContactPhone),
+      preferred_contact_telegram: String(preferredContactTelegram),
+      preferred_contact_whatsapp: String(preferredContactWhatsapp),
       checkout_note: checkoutNote,
       checkout_claim_code: checkoutClaimCode,
       store_latitude: storeLatitude,
@@ -313,13 +333,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
           setCurrency(data.currency || 'USD');
           setMaintenanceMode(data.maintenance_mode === 'true' || data.maintenance_mode === true);
           setGuestCheckout(data.guest_checkout === 'true' || data.guest_checkout === true || data.guest_checkout === undefined);
-           setAnnouncementText(data.announcement_text || '');
+          setCustomerChat(data.customer_chat === 'true' || data.customer_chat === true || data.customer_chat === undefined);
+          setSendChatOrder(data.send_chat_order === 'true' || data.send_chat_order === true || data.send_chat_order === undefined);
+          setAnnouncementText(data.announcement_text || '');
           setFooterText(data.footer_text || '');
           setCheckoutDeliveryAddress(data.checkout_delivery_address || 'open');
-          setCheckoutPreferredContact(data.checkout_preferred_contact || 'open');
-          setCheckoutNote(data.checkout_note || 'open');
-          setCheckoutClaimCode(data.checkout_claim_code || 'open');
-        }
+           setCheckoutPreferredContact(data.checkout_preferred_contact || 'open');
+           setPreferredContactPhone(data.preferred_contact_phone === 'true' || data.preferred_contact_phone === true || data.preferred_contact_phone === undefined);
+           setPreferredContactTelegram(data.preferred_contact_telegram === 'true' || data.preferred_contact_telegram === true || data.preferred_contact_telegram === undefined);
+           setPreferredContactWhatsapp(data.preferred_contact_whatsapp === 'true' || data.preferred_contact_whatsapp === true || data.preferred_contact_whatsapp === undefined);
+           setCheckoutNote(data.checkout_note || 'open');
+           setCheckoutClaimCode(data.checkout_claim_code || 'open');
+         }
         toast.success('Modifications discarded. Reverted to stored server config.');
       })
       .catch((err) => {
@@ -687,6 +712,40 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
                 <p className="text-[10px] text-slate-400 font-medium">Allow customers to checkout without creating an account.</p>
               </div>
 
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Customer Live Chat Widget</label>
+                <div className="flex items-center space-x-3 bg-white p-3 rounded-[5px] border border-slate-200">
+                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={customerChat}
+                      onChange={(e) => setCustomerChat(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500" />
+                  </label>
+                  <span className="text-xs font-bold text-slate-600">{customerChat ? 'Enabled (Show Chat Bubble)' : 'Disabled (Close/Hide Chat Widget)'}</span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium">Control whether the live chat widget is visible to customers on your storefront.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Send Chat Order</label>
+                <div className="flex items-center space-x-3 bg-white p-3 rounded-[5px] border border-slate-200">
+                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={sendChatOrder}
+                      onChange={(e) => setSendChatOrder(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500" />
+                  </label>
+                  <span className="text-xs font-bold text-slate-600">{sendChatOrder ? 'Enabled (Send Chat Order)' : 'Disabled (Do Not Send Chat Order)'}</span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium">Automatically send order details to the customer's live chat conversation on successful checkout.</p>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">Website Announcement Bar</label>
                 <input
@@ -746,6 +805,42 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
                 </select>
                 <p className="text-[10px] text-slate-400 font-medium">Control whether preferred contact method/details are required, optional, or hidden.</p>
               </div>
+
+              {checkoutPreferredContact !== 'close' && (
+                <div className="space-y-2 pt-1">
+                  <label className="text-xs font-bold text-slate-700 block">Enabled Contact Channels</label>
+                  <div className="space-y-2 bg-slate-50 p-3 rounded-[5px] border border-slate-200">
+                    <label className="flex items-center space-x-2.5 cursor-pointer text-xs font-bold text-slate-650">
+                      <input
+                        type="checkbox"
+                        checked={preferredContactPhone}
+                        onChange={(e) => setPreferredContactPhone(e.target.checked)}
+                        className="w-4 h-4 rounded text-orange-550 border-slate-350 focus:ring-orange-550 cursor-pointer"
+                      />
+                      <span>Phone Call (+855...)</span>
+                    </label>
+                    <label className="flex items-center space-x-2.5 cursor-pointer text-xs font-bold text-slate-650">
+                      <input
+                        type="checkbox"
+                        checked={preferredContactTelegram}
+                        onChange={(e) => setPreferredContactTelegram(e.target.checked)}
+                        className="w-4 h-4 rounded text-orange-550 border-slate-355 focus:ring-orange-555 cursor-pointer"
+                      />
+                      <span>Telegram (username/phone)</span>
+                    </label>
+                    <label className="flex items-center space-x-2.5 cursor-pointer text-xs font-bold text-slate-650">
+                      <input
+                        type="checkbox"
+                        checked={preferredContactWhatsapp}
+                        onChange={(e) => setPreferredContactWhatsapp(e.target.checked)}
+                        className="w-4 h-4 rounded text-orange-550 border-slate-355 focus:ring-orange-555 cursor-pointer"
+                      />
+                      <span>WhatsApp (phone)</span>
+                    </label>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium">Select which contact channels are allowed for the customer during checkout.</p>
+                </div>
+              )}
 
               {/* Note Field */}
               <div className="space-y-1.5">

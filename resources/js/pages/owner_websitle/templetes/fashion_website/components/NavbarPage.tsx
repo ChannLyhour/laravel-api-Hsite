@@ -864,21 +864,23 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                     <FiGift className={`w-3.5 h-3.5 shrink-0 ${isProfilePage && currentTab === 'giftcard' ? 'text-stone-200' : 'text-stone-400'}`} />
                     {t('navbar.vouchers')}
                   </button>
-                  <button
-                    onClick={() => {
-                      const storeSlug = (initialStores?.store_name || initialStoreName || 'store').replace(/\s+/g, '_');
-                      setIsProfileDropdownOpen(false);
-                      if (onNavigate) onNavigate(FASHION_ROUTES.getProfile(ownerUserId, storeSlug, 'address'));
-                    }}
-                    className={`flex items-center gap-2 px-3 py-2 text-[14px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
-                      isProfilePage && currentTab === 'address'
-                        ? 'bg-stone-900 text-white hover:bg-stone-850'
-                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50 bg-transparent'
-                    }`}
-                  >
-                    <FiMapPin className={`w-3.5 h-3.5 shrink-0 ${isProfilePage && currentTab === 'address' ? 'text-stone-200' : 'text-stone-400'}`} />
-                    {t('navbar.addressBook')}
-                  </button>
+                  {Store_setting()?.checkout_delivery_address !== 'close' && (
+                    <button
+                      onClick={() => {
+                        const storeSlug = (initialStores?.store_name || initialStoreName || 'store').replace(/\s+/g, '_');
+                        setIsProfileDropdownOpen(false);
+                        if (onNavigate) onNavigate(FASHION_ROUTES.getProfile(ownerUserId, storeSlug, 'address'));
+                      }}
+                      className={`flex items-center gap-2 px-3 py-2 text-[14px] font-bold rounded-[3px] border-none cursor-pointer w-full text-left transition-colors focus:outline-none uppercase tracking-wider ${
+                        isProfilePage && currentTab === 'address'
+                          ? 'bg-stone-900 text-white hover:bg-stone-850'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50 bg-transparent'
+                      }`}
+                    >
+                      <FiMapPin className={`w-3.5 h-3.5 shrink-0 ${isProfilePage && currentTab === 'address' ? 'text-stone-200' : 'text-stone-400'}`} />
+                      {t('navbar.addressBook')}
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       const storeSlug = (initialStores?.store_name || initialStoreName || 'store').replace(/\s+/g, '_');
