@@ -60,6 +60,9 @@ class TelegramHelper
                 ]
             ]);
 
+            // Auto-register webhook to ensure Telegram can deliver button callbacks
+            self::registerWebhook($botToken);
+
             self::sendMessage($botToken, $chatId, $message, $replyMarkup);
         } catch (\Exception $e) {
             Log::error("Telegram sendOrderNotification failed: " . $e->getMessage());
@@ -194,23 +197,25 @@ class TelegramHelper
      * Auto-register webhook with Telegram.
      *
      * @param string $botToken
-     * @param string $baseUrl
+     * @param string|null $baseUrl Optional base URL override. If null or local, will resolve from store custom_domain or APP_URL.
      * @return void
      */
-    public static function registerWebhook ($botToken, $baseUrl)
+    public static function registerWebhook ($botToken, $baseUrl = null)
     {
-        if (!$botToken || !$baseUrl) {
+        if (!$botToken) {
             return;
         }
 
         try {
-            // Exclude local dev loopback URLs as Telegram webhook requires public HTTPS
-            if (str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1')) {
-                Log::info("Local environment: skipping Telegram webhook auto-registration for URL {$baseUrl}. Webhook can be tested using ngrok/localtunnel.");
+            // Resolve a publicly reachable HTTPS base URL for the webhook
+            $publicUrl = self::resolvePublicBaseUrl($botToken, $baseUrl);
+
+            if (!$publicUrl) {
+                Log::warning("Telegram webhook: Could not resolve a public URL. Skipping webhook registration. Configure a custom_domain in store settings or set APP_URL to your production URL.");
                 return;
             }
 
-            $webhookUrl = $baseUrl . "/api/telegram/webhook?token=" . urlencode($botToken);
+            $webhookUrl = $publicUrl . "/api/telegram/webhook?token=" . urlencode($botToken);
             $url = "https://api.telegram.org/bot" . $botToken . "/setWebhook";
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -223,9 +228,54 @@ class TelegramHelper
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             $response = curl_exec($ch);
             curl_close($ch);
+            Log::info("Telegram setWebhook registered to: {$webhookUrl}");
             Log::info("Telegram setWebhook response: " . $response);
         } catch (\Exception $e) {
             Log::warning("Telegram setWebhook failed: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Resolve a publicly reachable base URL for Telegram webhook.
+     * Priority: 1) store custom_domain, 2) provided baseUrl (if public), 3) APP_URL (if public)
+     *
+     * @param string $botToken
+     * @param string|null $baseUrl
+     * @return string|null
+     */
+    private static function resolvePublicBaseUrl($botToken, $baseUrl = null)
+    {
+        // 1. Try to find the store's custom_domain from the bot token
+        $storeOwnerId = Store::where('key', 'telegram_bot_token')->where('value', $botToken)->value('created_by');
+        if ($storeOwnerId) {
+            $customDomain = Store::where('created_by', $storeOwnerId)->where('key', 'custom_domain')->value('value');
+            if ($customDomain) {
+                return 'https://' . rtrim($customDomain, '/');
+            }
+        }
+
+        // 2. Use the provided baseUrl if it's a public URL
+        if ($baseUrl && !self::isLocalUrl($baseUrl)) {
+            return rtrim($baseUrl, '/');
+        }
+
+        // 3. Fallback to APP_URL if it's public
+        $appUrl = config('app.url');
+        if ($appUrl && !self::isLocalUrl($appUrl)) {
+            return rtrim($appUrl, '/');
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if a URL is a local/non-public address.
+     */
+    private static function isLocalUrl($url)
+    {
+        return str_contains($url, 'localhost')
+            || str_contains($url, '127.0.0.1')
+            || str_contains($url, 'lvh.me')
+            || str_contains($url, '0.0.0.0');
     }
 }
