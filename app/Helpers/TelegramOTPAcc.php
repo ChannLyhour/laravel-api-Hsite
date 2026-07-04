@@ -17,20 +17,27 @@ class TelegramOTPAcc
      public static function sendOTP ($order, $otpCode)
      {
           $storeId = $order->store_id;
+          Log::info("TelegramOTPAcc::sendOTP called - Order ID: {$order->id}, Store ID: {$storeId}, Phone: {$order->customer_phone}, OTP: {$otpCode}");
+
           if (!$storeId) {
+               Log::warning("TelegramOTPAcc::sendOTP - No store_id, aborting.");
                return;
           }
 
           try {
                $enabled = Store::where('created_by', $storeId)->where('key', 'telegram_enabled')->value('value');
+               Log::info("TelegramOTPAcc::sendOTP - telegram_enabled value: " . var_export($enabled, true));
                if ($enabled !== '1' && $enabled !== 1 && $enabled !== 'true') {
+                    Log::warning("TelegramOTPAcc::sendOTP - Telegram not enabled for store {$storeId}, aborting.");
                     return;
                }
 
                $botToken = Store::where('created_by', $storeId)->where('key', 'telegram_bot_token')->value('value');
                $chatId = Store::where('created_by', $storeId)->where('key', 'telegram_chat_id')->value('value');
+               Log::info("TelegramOTPAcc::sendOTP - botToken: " . ($botToken ? 'present' : 'NULL') . ", chatId: {$chatId}");
 
                if (!$botToken) {
+                    Log::warning("TelegramOTPAcc::sendOTP - No bot token, aborting.");
                     return;
                }
 
@@ -40,8 +47,10 @@ class TelegramOTPAcc
                $normalizedPhone = self::normalizeCambodianPhone($customerPhone);
                $customerChatId = Store::where('created_by', $storeId)->where('key', "tg_chat_" . $normalizedPhone)->value('value');
                $targetChatId = $customerChatId ?: $chatId;
+               Log::info("TelegramOTPAcc::sendOTP - normalizedPhone: {$normalizedPhone}, customerChatId: " . ($customerChatId ?? 'NULL') . ", targetChatId: {$targetChatId}");
 
                if (!$targetChatId) {
+                    Log::warning("TelegramOTPAcc::sendOTP - No target chat ID, aborting.");
                     return;
                }
 
@@ -61,7 +70,8 @@ class TelegramOTPAcc
 
                $message = implode("\n", $messageLines);
 
-               self::sendMessage($botToken, $targetChatId, $message);
+               $result = self::sendMessage($botToken, $targetChatId, $message);
+               Log::info("TelegramOTPAcc::sendOTP - sendMessage result: " . json_encode($result));
           } catch (\Exception $e) {
                Log::error("TelegramOTPAcc sendOTP failed: " . $e->getMessage());
           }
