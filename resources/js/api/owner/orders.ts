@@ -337,7 +337,13 @@ export const ordersService = {
   }): Promise<Order> {
     const res = await client.post<any>('/orders', data);
     const orderData = res?.order || res;
-    return mapBackendOrder(orderData);
+    const order = mapBackendOrder(orderData);
+    if (res) {
+      if (res.token) (order as any).token = res.token;
+      if (res.otp_required) (order as any).otp_required = res.otp_required;
+      if (res.telegram_bot_link) (order as any).telegram_bot_link = res.telegram_bot_link;
+    }
+    return order;
   },
 
   /**

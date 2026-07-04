@@ -256,20 +256,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Email Input */}
                         <div className="space-y-1.5">
-                            <label className={`text-xs sm:text-sm font-black tracking-wide block ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>
-                                Email Address
+                            <label className="text-xs font-bold text-slate-400 block mb-1.5 uppercase tracking-wider">
+                                Email Address or Phone Number
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
+                                    {email && !email.includes('@') && /^[+0-9]/.test(email) ? (
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    )}
                                 </div>
                                 <input
-                                    type="email"
+                                    type="text"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="you@example.com"
+                                    placeholder="you@example.com or phone number"
                                     disabled={loading}
                                     className={`w-full pl-11 pr-4 py-3.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDarkTheme ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-500 focus:ring-slate-750 focus:border-slate-700' : 'bg-slate-50/55 border-slate-200 text-slate-850 placeholder-slate-400 focus:ring-slate-200 focus:border-slate-300'} ${validationErrors.email ? 'border-rose-500 focus:ring-rose-200' : ''}`}
                                 />

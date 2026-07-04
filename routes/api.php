@@ -176,6 +176,7 @@ Route::middleware(['identify-store'])->group(function () {
 
     // Order Placement (Public / Guest Checkout)
     Route::post('/orders', [OrderController::class, 'store']);
+    Route::post('/orders/{id}/verify-otp', [OrderController::class, 'verifyOTP'])->whereNumber('id');
     Route::delete('/orders/{order_id}', [OrderController::class, 'destroy'])->whereNumber('order_id');
 
     // ABA PayWay integration routes

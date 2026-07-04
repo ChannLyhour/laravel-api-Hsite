@@ -32,7 +32,81 @@ class OrderController extends Controller
             return DB::transaction(function () use ($request) {
                 // Try to get user from sanctum guard even if middleware is not applied to support both guest and auth
                 $user = $request->user() ?? auth('sanctum')->user();
-                $userId = $user ? $user->id : ($request->user_id ?? null);
+                // Only automatically link to the logged-in user if they are a customer (role_id = 2)
+                $userId = ($user && (int)$user->role_id === 2) ? $user->id : null;
+
+                if (!$userId && $request->customer_id) {
+                    $u = \App\Models\User::find($request->customer_id);
+                    if ($u && (int)$u->role_id === 2) {
+                        $userId = $u->id;
+                    }
+                }
+
+                $isNewCustomer = false;
+
+                // Auto-create customer user account for guest checkouts
+                if (!$userId && $request->customer_phone) {
+                    $loginValue = trim($request->customer_phone);
+                    $isEmail = filter_var($loginValue, FILTER_VALIDATE_EMAIL);
+
+                    if ($isEmail) {
+                        $existingUser = \App\Models\User::where('email', $loginValue)->first();
+                    } else {
+                        $phoneClean = preg_replace('/[^0-9]/', '', $loginValue);
+                        if (strlen($phoneClean) >= 8) {
+                            $phoneSuffix = substr($phoneClean, -8);
+                            $existingUser = \App\Models\User::where('phone', 'LIKE', '%' . $phoneSuffix)->first();
+                        } else {
+                            $existingUser = \App\Models\User::where('phone', $loginValue)->first();
+                        }
+                    }
+
+                    if ($existingUser) {
+                        $userId = $existingUser->id;
+                    } else {
+                        // Split name
+                        $fullName = trim($request->customer_name ?? 'Guest Customer');
+                        $parts = explode(' ', $fullName);
+                        $firstName = $parts[0] ?? 'Guest';
+                        $lastName = isset($parts[1]) ? implode(' ', array_slice($parts, 1)) : 'Customer';
+
+                        $phone = $isEmail ? null : \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($loginValue);
+                        $email = $isEmail ? $loginValue : (preg_replace('/[^0-9]/', '', $phone) . '@temp-customer.com');
+
+                        // Check uniqueness
+                        $emailExists = \App\Models\User::where('email', $email)->exists();
+                        if ($emailExists) {
+                            $email = time() . '_' . $email;
+                        }
+
+                        $newUser = \App\Models\User::create([
+                            'name' => $fullName,
+                            'first_name' => $firstName,
+                            'last_name' => $lastName,
+                            'email' => $email,
+                            'phone' => $phone,
+                            'address' => $request->customer_address,
+                            'role_id' => 2, // Customer
+                            'password' => \Illuminate\Support\Facades\Hash::make($loginValue),
+                            'created_by' => $request->store_id,
+                        ]);
+
+                        // Create corresponding Customer entry
+                        $newUser->customers()->create([
+                            'store_id' => $request->store_id,
+                            'name' => $fullName,
+                            'first_name' => $firstName,
+                            'last_name' => $lastName,
+                            'email' => $email,
+                            'phone' => $phone,
+                            'address' => $request->customer_address,
+                            'created_by' => $request->store_id,
+                        ]);
+
+                        $userId = $newUser->id;
+                        $isNewCustomer = true;
+                    }
+                }
 
                 if ($request->coupon_code) {
                     $coupon = \App\Models\Coupon::where('code', strtoupper($request->coupon_code))
@@ -85,20 +159,25 @@ class OrderController extends Controller
                     $coupon->increment('total_used');
                 }
 
+                $loginValue = $request->customer_phone ? trim($request->customer_phone) : null;
+                $isEmail = $loginValue ? filter_var($loginValue, FILTER_VALIDATE_EMAIL) : false;
+                $custPhone = $isEmail ? null : \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($request->customer_phone);
+                $custEmail = $isEmail ? $loginValue : $request->customer_email;
+
                 $order = Order::create([
                     'order_no' => OrderNoHelper::generate(),
                     'order_type' => $request->order_type ?? 'delivery',
                     'user_id' => $userId,
                     'created_by' => $userId,
                     'customer_name' => $request->customer_name,
-                    'customer_phone' => $request->customer_phone,
-                    'customer_email' => $request->customer_email,
+                    'customer_phone' => $custPhone,
+                    'customer_email' => $custEmail,
                     'customer_address' => $request->customer_address,
                     'shipping_address_id' => $request->shipping_address_id,
                     'latitude' => $request->latitude,
                     'longitude' => $request->longitude,
                     'notes' => $request->notes,
-                    'status' => 'pending',
+                    'status' => $custPhone ? 'unverified' : 'pending',
                     'subtotal' => $request->subtotal ?? $request->total_amount,
                     'tax' => $request->tax ?? 0,
                     'shipping_fee' => $request->shipping_fee ?? 0,
@@ -152,15 +231,70 @@ class OrderController extends Controller
                 }
 
                 // Send Telegram notification to the store owner
-                try {
-                    \App\Helpers\TelegramHelper::sendOrderNotification($order);
-                } catch (\Exception $ex) {
-                    \Illuminate\Support\Facades\Log::warning("Telegram order notification failed: " . $ex->getMessage());
+                if (!$custPhone) {
+                    try {
+                        \App\Helpers\TelegramHelper::sendOrderNotification($order);
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::warning("Telegram order notification failed: " . $ex->getMessage());
+                    }
+                }
+
+                // Send OTP code via Telegram if order was placed using a phone number
+                if ($custPhone) {
+                    try {
+                        $otpCode = rand(100000, 999999);
+                        \Illuminate\Support\Facades\Cache::put("order_otp_{$order->id}", $otpCode, 3600);
+                        
+                        \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::warning("Telegram OTP sending failed: " . $ex->getMessage());
+                    }
+                }
+
+                $token = null;
+                $otpRequired = false;
+                $telegramBotLink = null;
+                if ($custPhone) {
+                    $otpRequired = true;
+                    $botToken = Store::where('created_by', $order->store_id)->where('key', 'telegram_bot_token')->value('value');
+                    if ($botToken) {
+                        $cacheKey = "tg_bot_username_" . md5($botToken);
+                        $botUsername = \Illuminate\Support\Facades\Cache::get($cacheKey);
+                        if ($botUsername === null) {
+                            \Illuminate\Support\Facades\Cache::forget($cacheKey);
+                            $botUsername = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($botToken) {
+                                try {
+                                    $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(3)->get("https://api.telegram.org/bot" . $botToken . "/getMe");
+                                    if ($response->successful()) {
+                                        $data = $response->json();
+                                        return $data['result']['username'] ?? null;
+                                    }
+                                } catch (\Exception $e) {
+                                    \Illuminate\Support\Facades\Log::warning("Failed to fetch Telegram bot info: " . $e->getMessage());
+                                }
+                                return null;
+                            });
+                        }
+
+                        if ($botUsername) {
+                            $telegramBotLink = "https://t.me/" . $botUsername;
+                        }
+                    }
+                } else {
+                    if ($userId) {
+                        $u = \App\Models\User::find($userId);
+                        if ($u) {
+                            $token = $u->createToken('auth-token')->plainTextToken;
+                        }
+                    }
                 }
 
                 return response()->json([
                     'success' => true,
                     'message' => 'Order created successfully',
+                    'otp_required' => $otpRequired,
+                    'telegram_bot_link' => $telegramBotLink,
+                    'token' => $token,
                     'order' => $order->load(['items.productVariant.product', 'store'])
                 ], 201);
             });
@@ -183,6 +317,7 @@ class OrderController extends Controller
         }
 
         $query = Order::where('user_id', $user->id)
+            ->where('status', '!=', 'unverified')
             ->with(['items.productVariant.product', 'store']);
 
         if ($request->has('store_id')) {
@@ -276,5 +411,53 @@ class OrderController extends Controller
                 'message' => 'Failed to delete order: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Verify the OTP code for guest checkout.
+     */
+    public function verifyOTP(Request $request, $id)
+    {
+        $request->validate([
+            'otp' => 'required|string',
+        ]);
+
+        $order = Order::findOrFail($id);
+        $cachedOtp = \Illuminate\Support\Facades\Cache::get("order_otp_{$order->id}");
+
+        if (!$cachedOtp || trim($request->otp) !== trim($cachedOtp)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired OTP code. Please check your Telegram and try again.'
+            ], 400);
+        }
+
+        // OTP is correct! Clear from cache
+        \Illuminate\Support\Facades\Cache::forget("order_otp_{$order->id}");
+
+        // Update order status to pending
+        $order->update(['status' => 'pending']);
+
+        // Send Telegram notification to the store owner
+        try {
+            \App\Helpers\TelegramHelper::sendOrderNotification($order);
+        } catch (\Exception $ex) {
+            \Illuminate\Support\Facades\Log::warning("Telegram order notification failed: " . $ex->getMessage());
+        }
+
+        // Retrieve or create the token for the customer account linked to the order
+        $token = null;
+        if ($order->user_id) {
+            $u = \App\Models\User::find($order->user_id);
+            if ($u) {
+                $token = $u->createToken('auth-token')->plainTextToken;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order verified successfully.',
+            'token' => $token
+        ]);
     }
 }

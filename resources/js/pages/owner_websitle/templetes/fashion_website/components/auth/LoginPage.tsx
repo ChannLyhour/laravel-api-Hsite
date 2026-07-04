@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiX, FiEye, FiEyeOff, FiMail, FiLock } from 'react-icons/fi';
+import { FiX, FiEye, FiEyeOff, FiMail, FiLock, FiPhone } from 'react-icons/fi';
 import '../../styles/animation.css';
 import { AuthSuccessOverlay } from '../../message/LoadingTime';
 import type { StoreRow } from '@/api/owner/stores';
@@ -180,16 +180,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                         {/* Email */}
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black uppercase tracking-wider text-stone-500 block">
-                                Email
+                                Email or Phone Number
                             </label>
                             <div className="relative">
-                                <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400 pointer-events-none" />
+                                {email && !email.includes('@') && /^[+0-9]/.test(email) ? (
+                                    <FiPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400 pointer-events-none" />
+                                ) : (
+                                    <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400 pointer-events-none" />
+                                )}
                                 <input
-                                    type="email"
+                                    type="text"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    placeholder="you@example.com"
-                                    autoComplete="email"
+                                    placeholder="you@example.com or phone number"
+                                    autoComplete="username"
                                     className="w-full pl-9 pr-4 py-2.5 border border-stone-200 rounded-[6px] text-xs font-medium text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-stone-900 transition-colors"
                                 />
                             </div>

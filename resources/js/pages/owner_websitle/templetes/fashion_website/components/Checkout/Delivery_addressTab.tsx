@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiMapPin, FiCheck, FiChevronRight, FiPhone, FiSend, FiMessageSquare, FiTruck } from 'react-icons/fi';
+import { FiMapPin, FiCheck, FiChevronRight, FiPhone, FiSend, FiMessageSquare, FiTruck, FiMail } from 'react-icons/fi';
 import { FaTelegramPlane, FaWhatsapp } from 'react-icons/fa';
 import type { ShippingAddress } from '@/api/owner/shippingAddresses';
 import { type CheckoutValidationError } from '../../validation/CheckoutValidationError';
@@ -201,16 +201,23 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                                              {/* Customer Phone */}
                                              <div className="space-y-1.5 text-left">
                                                   <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block">
-                                                       Phone Number <span className="text-red-500">*</span>
+                                                       Phone Number or Email <span className="text-red-500">*</span>
                                                   </label>
-                                                  <input
-                                                       ref={customPhoneRef as any}
-                                                       type="text"
-                                                       value={customCustomerPhone}
-                                                       onChange={(e) => setCustomCustomerPhone?.(e.target.value)}
-                                                       placeholder="e.g. 012345678"
-                                                       className={`w-full px-3 py-2.5 border rounded-[3px] text-xs font-medium text-stone-855 placeholder:text-stone-300 focus:outline-none focus:border-stone-900 transition-all ${validationError?.field === 'customCustomerPhone' ? 'border-red-500' : 'border-stone-200'}`}
-                                                  />
+                                                  <div className="relative">
+                                                       {customCustomerPhone && !customCustomerPhone.includes('@') && /^[+0-9]/.test(customCustomerPhone) ? (
+                                                            <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400 pointer-events-none" />
+                                                       ) : (
+                                                            <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400 pointer-events-none" />
+                                                       )}
+                                                       <input
+                                                            ref={customPhoneRef as any}
+                                                            type="text"
+                                                            value={customCustomerPhone}
+                                                            onChange={(e) => setCustomCustomerPhone?.(e.target.value)}
+                                                            placeholder="e.g. 012345678 or you@example.com"
+                                                            className={`w-full pl-9 pr-3 py-2.5 border rounded-[3px] text-xs font-medium text-stone-855 placeholder:text-stone-300 focus:outline-none focus:border-stone-900 transition-all ${validationError?.field === 'customCustomerPhone' ? 'border-red-500' : 'border-stone-200'}`}
+                                                       />
+                                                  </div>
                                              </div>
 
                                              {/* Customer Address */}

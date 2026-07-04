@@ -22,6 +22,8 @@ class OrderController extends Controller
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
+        } else {
+            $query->where('status', '!=', 'unverified');
         }
 
         if ($request->has('store_id')) {

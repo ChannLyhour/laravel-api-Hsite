@@ -53,6 +53,11 @@ export const useOrderPending = () => {
         try {
             const order = await ordersService.createOrder(data);
             
+            if (order && (order as any).token) {
+                localStorage.setItem('aura_customer_token', (order as any).token);
+                window.dispatchEvent(new Event('aura_token_changed'));
+            }
+
             toast.dismiss(loadingToast);
             toast.success('Checkout successful! Thank you for your order.', {
                 duration: 5000,

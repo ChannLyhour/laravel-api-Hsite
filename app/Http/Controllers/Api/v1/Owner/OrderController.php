@@ -91,6 +91,8 @@ class OrderController extends Controller
 
         if ($status && strtolower($status) !== 'all') {
             $query->where('status', strtolower(trim($status)));
+        } else {
+            $query->where('status', '!=', 'unverified');
         }
 
         if ($paymentStatus && strtolower($paymentStatus) !== 'all') {

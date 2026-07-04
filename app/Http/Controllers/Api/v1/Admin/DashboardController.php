@@ -25,9 +25,9 @@ class DashboardController extends Controller
             'total_customers' => Customer::count(),
             'total_stores' => Store::where('key', 'store_name')->count(),
             'total_products' => Product::count(),
-            'total_orders' => Order::count(),
-            'total_revenue' => Order::where('payment_status', 'Paid')->sum('total_amount'),
-            'recent_orders' => Order::with(['items', 'store'])->latest()->take(5)->get(),
+            'total_orders' => Order::where('status', '!=', 'unverified')->count(),
+            'total_revenue' => Order::where('status', '!=', 'unverified')->where('payment_status', 'Paid')->sum('total_amount'),
+            'recent_orders' => Order::where('status', '!=', 'unverified')->with(['items', 'store'])->latest()->take(5)->get(),
             'top_stores' => $this->getTopStores(),
             'order_status_distribution' => $this->getOrderStatusDistribution(),
         ];
@@ -59,6 +59,7 @@ class DashboardController extends Controller
     {
         return DB::table('orders')
             ->select('status', DB::raw('COUNT(*) as count'))
+            ->where('status', '!=', 'unverified')
             ->groupBy('status')
             ->get();
     }

@@ -94,14 +94,32 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|string|email',
+            'email' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $loginValue = trim($request->email);
+        $isEmail = filter_var($loginValue, FILTER_VALIDATE_EMAIL);
+
+        if ($isEmail) {
+            $user = User::where('email', $loginValue)->first();
+        } else {
+            $normalizedPhone = \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($loginValue);
+            $user = User::where('phone', $normalizedPhone)->first();
+
+            if (!$user) {
+                $phoneClean = preg_replace('/[^0-9]/', '', $loginValue);
+                if (strlen($phoneClean) >= 8) {
+                    $phoneSuffix = substr($phoneClean, -8);
+                    $user = User::where('phone', 'LIKE', '%' . $phoneSuffix)->first();
+                } else {
+                    $user = User::where('phone', $loginValue)->first();
+                }
+            }
+        }
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json(['detail' => 'Incorrect email or password'], 401);
+            return response()->json(['detail' => 'Incorrect email, phone number, or password'], 401);
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;

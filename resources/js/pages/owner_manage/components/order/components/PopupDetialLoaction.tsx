@@ -79,7 +79,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
      // If the store coordinate settings are empty, we fall back to the first active radius zone's center coordinates.
      const hasExplicitStoreCoords = storeLatitude && storeLongitude;
      const fallbackZone = deliveryZones.find(z => (!z.type || z.type === 'radius') && z.center_lat && z.center_lng);
-     
+
      const storeLatVal = hasExplicitStoreCoords
           ? parseFloat(String(storeLatitude))
           : (fallbackZone?.center_lat ? parseFloat(String(fallbackZone.center_lat)) : NaN);
@@ -111,16 +111,16 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
           const a =
                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                Math.cos((lat1 * Math.PI) / 180) *
-                    Math.cos((lat2 * Math.PI) / 180) *
-                    Math.sin(dLon / 2) *
-                    Math.sin(dLon / 2);
+               Math.cos((lat2 * Math.PI) / 180) *
+               Math.sin(dLon / 2) *
+               Math.sin(dLon / 2);
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           return R * c; // Distance in km
      };
 
      const distanceKm =
           hasCoordinates && !isNaN(latVal) && !isNaN(lngVal) &&
-          hasStoreCoordinates
+               hasStoreCoordinates
                ? getHaversineDistance(storeLatVal, storeLngVal, latVal, lngVal)
                : null;
 
@@ -139,15 +139,16 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
           ? `https://www.google.com/maps?q=${activeLat},${activeLng}`
           : `https://www.google.com/maps?q=${encodeURIComponent(activeAddress)}`;
 
-     // Ensure store logo is a fully qualified absolute URL so the srcDoc iframe can resolve it from about:blank
-     const absoluteStoreLogo = React.useMemo(() => {
-          if (!storeLogo) return '';
-          if (storeLogo.startsWith('http://') || storeLogo.startsWith('https://') || storeLogo.startsWith('data:')) {
-               return storeLogo;
-          }
-          const origin = typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8000';
-          return `${origin}/${storeLogo.replace(/^\//, '')}`;
-     }, [storeLogo]);
+      // Ensure store logo is a fully qualified absolute URL so the srcDoc iframe can resolve it from about:blank
+      const absoluteStoreLogo = React.useMemo(() => {
+           if (!storeLogo) return '';
+           const resolved = resolveImageUrl(storeLogo);
+           if (resolved.startsWith('http://') || resolved.startsWith('https://') || resolved.startsWith('data:')) {
+                return resolved;
+           }
+           const origin = typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8000';
+           return `${origin}/${resolved.replace(/^\//, '')}`;
+      }, [storeLogo]);
 
      // Generate interactive Leaflet map including store radius and polygons
      const generateMapSrcDoc = () => {
@@ -168,7 +169,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                          lng: zone.center_lng ? parseFloat(String(zone.center_lng)) : (store?.lng || 0),
                          radiusMeters: zone.radius_km ? parseFloat(String(zone.radius_km)) * 1000 : 0,
                          fee: zone.delivery_fee
-                     };
+                    };
                } else if (zone.type === 'polygon' && zone.polygon_coordinates) {
                     return {
                          type: 'polygon',
@@ -198,6 +199,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
           .popup-title { font-weight: 800; font-size: 13px; color: #1e293b; margin-bottom: 4px; }
           .popup-desc { font-size: 11px; color: #64748b; margin-bottom: 2px; }
           .popup-badge { display: inline-block; background: #e0e7ff; color: #4338ca; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 9999px; margin-top: 4px; }
+          .custom-pin-store { background: none !important; border: none !important; }
      </style>
 </head>
 <body>
@@ -249,7 +251,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                          <path d="M50 0 C22.4 0 0 22.4 0 50 C0 85 50 100 50 100 C50 100 100 85 100 50 C100 22.4 77.6 0 50 0 Z" fill="#4f46e5"/>
                          <circle cx="50" cy="45" r="32" fill="white"/>
                     </svg>
-                    <img src="\${storeData.logo}" style="position: absolute; width: 26px; height: 26px; top: 6px; left: 8px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0;" />
+                    <img src="\${storeData.logo}" style="position: absolute; width: 26px; height: 26px; top: 6px; left: 8px; border-radius: 50%; object-fit: contain; background: white; border: 1px solid #e2e8f0;" />
                   </div>\`
                : \`<div style="position: relative; width: 42px; height: 42px;">
                     <svg viewBox="0 0 100 100" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" xmlns="http://www.w3.org/2000/svg">
@@ -376,9 +378,6 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-none">
                                         Delivery Location Map
                                    </h3>
-                                   <p className="opacity-60 text-[10px] font-bold uppercase tracking-wider mt-1.5">
-                                        {mapView === 'delivery' ? 'Interactive Radius & Zone Map Overlay' : 'Google Maps Embed Resolution'}
-                                   </p>
                               </div>
                          </div>
                          <button
@@ -390,7 +389,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                     </div>
 
                     {/* Two-Column Content Layout */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full h-full">
+                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-y-auto md:overflow-hidden w-full h-full custom-scrollbar">
                          {/* Left Column: Map Frame */}
                          <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[300px] md:min-h-0 flex flex-col">
                               {/* Map View Toggle Overlay - styled with rounded-[5px] */}
@@ -398,11 +397,10 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                    <button
                                         type="button"
                                         onClick={() => setMapView('delivery')}
-                                        className={`px-3 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
-                                             mapView === 'delivery'
+                                        className={`px-3 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${mapView === 'delivery'
                                                   ? 'bg-indigo-600 text-white shadow-xs'
                                                   : 'bg-transparent text-slate-600 hover:text-indigo-600'
-                                        }`}
+                                             }`}
                                    >
                                         <FiMapPin className="w-3.5 h-3.5 shrink-0" />
                                         Delivery Map
@@ -410,11 +408,10 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                    <button
                                         type="button"
                                         onClick={() => setMapView('customer')}
-                                        className={`px-3 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
-                                             mapView === 'customer'
+                                        className={`px-3 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${mapView === 'customer'
                                                   ? 'bg-indigo-600 text-white shadow-xs'
                                                   : 'bg-transparent text-slate-600 hover:text-indigo-600'
-                                        }`}
+                                             }`}
                                    >
                                         <FiUser className="w-3.5 h-3.5 shrink-0" />
                                         Customer Google Map
@@ -423,11 +420,10 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                         <button
                                              type="button"
                                              onClick={() => setMapView('store')}
-                                             className={`px-3 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${
-                                                  mapView === 'store'
+                                             className={`px-3 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1 ${mapView === 'store'
                                                        ? 'bg-indigo-600 text-white shadow-xs'
                                                        : 'bg-transparent text-slate-600 hover:text-indigo-600'
-                                        }`}
+                                                  }`}
                                         >
                                              <FiShoppingBag className="w-3.5 h-3.5 shrink-0" />
                                              Store Google Map
@@ -437,6 +433,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
 
                               {mapView === 'delivery' ? (
                                    <iframe
+                                        key={`zone-map-${absoluteStoreLogo}-${mapView}`}
                                         title="Delivery Zone Map"
                                         srcDoc={generateMapSrcDoc()}
                                         className="w-full h-full flex-1 border-none"
@@ -456,7 +453,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                          </div>
 
                          {/* Right Column: Details and Actions */}
-                         <div className="p-8 space-y-6 overflow-y-auto flex flex-col justify-between h-full">
+                         <div className="p-8 space-y-6 overflow-visible md:overflow-y-auto flex flex-col justify-between h-auto md:h-full custom-scrollbar">
                               <div className="space-y-6 text-left">
                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {/* Customer / Recipient Card - Styled to match show.tsx custom-card-container */}
@@ -479,7 +476,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Phone</p>
                                                        <p className="font-black text-sm text-slate-800">{customerPhone}</p>
                                                   </div>
-                                                  
+
                                                   <div className="text-[11px] pt-3 border-t font-mono space-y-1 text-slate-700">
                                                        {hasCoordinates && !isNaN(latVal) && !isNaN(lngVal) ? (
                                                             <>
@@ -506,10 +503,10 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                                        </p>
                                                   </div>
                                                   {storeLogo && (
-                                                       <img 
-                                                            src={storeLogo} 
-                                                            alt="Store Logo" 
-                                                            className="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-2xs" 
+                                                       <img
+                                                            src={resolveImageUrl(storeLogo)}
+                                                            alt="Store Logo"
+                                                            className="w-8 h-8 rounded-full object-contain bg-white border border-slate-200 shadow-2xs"
                                                        />
                                                   )}
                                              </div>
@@ -540,17 +537,17 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                    <div className="border rounded-[5px] p-6 shadow-sm custom-card-container bg-gradient-to-r from-indigo-500/5 to-purple-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300">
                                         <div className="flex items-center gap-3">
                                              {matchedMethodImage ? (
-                                                  <img 
-                                                       src={matchedMethodImage} 
-                                                       alt={deliveryMethod || 'Delivery Method'} 
-                                                       className="w-12 h-12 rounded-[5px] object-cover border border-slate-200 shadow-2xs bg-white shrink-0" 
+                                                  <img
+                                                       src={matchedMethodImage}
+                                                       alt={deliveryMethod || 'Delivery Method'}
+                                                       className="w-12 h-12 rounded-[5px] object-contain border border-slate-200 shadow-2xs bg-white shrink-0"
                                                   />
                                              ) : (
                                                   storeLogo ? (
-                                                       <img 
-                                                            src={storeLogo} 
-                                                            alt="Store Logo" 
-                                                            className="w-12 h-12 rounded-[5px] object-cover border border-slate-200 shadow-2xs bg-white shrink-0" 
+                                                       <img
+                                                            src={resolveImageUrl(storeLogo)}
+                                                            alt="Store Logo"
+                                                            className="w-12 h-12 rounded-[5px] object-contain border border-slate-200 shadow-2xs bg-white shrink-0"
                                                        />
                                                   ) : (
                                                        <div className="w-12 h-12 rounded-[5px] bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold shadow-2xs shrink-0">

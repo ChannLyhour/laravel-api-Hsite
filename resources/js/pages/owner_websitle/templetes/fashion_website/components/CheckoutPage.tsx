@@ -23,6 +23,7 @@ import type { ShippingAddress } from '@/api/owner/shippingAddresses';
 import { useAuth } from '../hooks/useAuth';
 import { useOrderPending } from '../hooks/useOrderPending';
 import { PopupPaymentKHQR } from './helpers/PopupPaymentKHQR';
+import { PopOtpVerifyTele } from './helpers/PopOtpVerifyTele';
 import { couponsService, type CouponRow } from '@/api/owner/coupons';
 import { ordersService } from '@/api/owner/orders';
 import { chatService } from '@/api/owner/chat';
@@ -38,6 +39,7 @@ import { ModelCoupon } from './helpers/ModelCoupon';
 import { FASHION_ROUTES } from '../routes';
 import { validateCheckoutForm } from '../request/FormCheckOutRequets';
 import { type CheckoutValidationError } from '../validation/CheckoutValidationError';
+import { useCustomerGuestCheckout } from '../hooks/useCustomerGuestCheckout';
 
 import { List_Order_CheckoutTab } from './Checkout/List_Order_CheckoutTab';
 import { Delivery_addressTab } from './Checkout/Delivery_addressTab';
@@ -696,9 +698,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             const data = await deliveryMethodsService.getPublicDeliveryMethods(ownerUserId);
             const activeMethods = (data || []).filter(d => d.is_active);
             setDeliveryMethods(activeMethods);
-            if (activeMethods.length > 0) {
-                setSelectedDeliveryMethod(activeMethods[0]);
-            }
         } catch (err) {
             console.error('Failed to fetch delivery methods:', err);
         } finally {
@@ -769,9 +768,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }, [storeSettings]);
 
     // ── Custom address states & refs ──
-    const [customCustomerName, setCustomCustomerName] = useState<string>('');
-    const [customCustomerPhone, setCustomCustomerPhone] = useState<string>('');
-    const [customCustomerAddress, setCustomCustomerAddress] = useState<string>('');
+    const {
+        customCustomerName,
+        setCustomCustomerName,
+        customCustomerPhone,
+        setCustomCustomerPhone,
+        customCustomerAddress,
+        setCustomCustomerAddress,
+        clearGuestCheckoutCache,
+    } = useCustomerGuestCheckout();
     const [customLatitude, setCustomLatitude] = useState<string>('');
     const [customLongitude, setCustomLongitude] = useState<string>('');
 
@@ -833,14 +838,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }, [deliveryMethods, matchingZone]);
 
     useEffect(() => {
-        if (filteredDeliveryMethods.length > 0) {
-            if (!selectedDeliveryMethod || !filteredDeliveryMethods.some(m => m.id === selectedDeliveryMethod.id)) {
-                setSelectedDeliveryMethod(filteredDeliveryMethods[0]);
+        if (selectedDeliveryMethod) {
+            const stillValid = filteredDeliveryMethods.some(m => m.id === selectedDeliveryMethod.id);
+            if (!stillValid) {
+                setSelectedDeliveryMethod(null);
             }
-        } else {
-            setSelectedDeliveryMethod(null);
         }
-    }, [filteredDeliveryMethods, selectedDeliveryMethod]);
+    }, [filteredDeliveryMethods]);
 
     const deliveryFee = useMemo(() => {
         // Validation: Free delivery coupon (Continuous validation) takes absolute priority
@@ -953,12 +957,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const [preferredContact, setPreferredContact] = useState<string>('');
     const [contactInput, setContactInput] = useState<string>('');
 
-    useEffect(() => {
-        if (user) {
-            setCustomCustomerName(user.name || '');
-            setCustomCustomerPhone(user.phone || '');
-        }
-    }, [user]);
+
 
     const addressBtnRef = React.useRef<HTMLButtonElement>(null);
     const preferredContactRef = React.useRef<HTMLButtonElement>(null);
@@ -979,21 +978,36 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 return false;
             }
             if (!customCustomerPhone || !customCustomerPhone.trim()) {
-                const err = { field: 'customCustomerPhone', message: 'Please enter your phone number.' };
+                const err = { field: 'customCustomerPhone', message: 'Please enter your phone number or email address.' };
                 setValidationError(err as any);
                 toast.error(err.message);
                 customPhoneRef.current?.focus();
                 customPhoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return false;
             }
+            const trimmed = customCustomerPhone.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             const phoneRegex = /^[+]*[0-9\s\-()]{6,20}$/;
-            if (!phoneRegex.test(customCustomerPhone.trim())) {
-                const err = { field: 'customCustomerPhone', message: 'Please enter a valid telephone number.' };
-                setValidationError(err as any);
-                toast.error(err.message);
-                customPhoneRef.current?.focus();
-                customPhoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return false;
+            const isEmail = trimmed.includes('@');
+
+            if (isEmail) {
+                if (!emailRegex.test(trimmed)) {
+                    const err = { field: 'customCustomerPhone', message: 'Please enter a valid email address.' };
+                    setValidationError(err as any);
+                    toast.error(err.message);
+                    customPhoneRef.current?.focus();
+                    customPhoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+            } else {
+                if (!phoneRegex.test(trimmed)) {
+                    const err = { field: 'customCustomerPhone', message: 'Please enter a valid phone number.' };
+                    setValidationError(err as any);
+                    toast.error(err.message);
+                    customPhoneRef.current?.focus();
+                    customPhoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
             }
             if (!customCustomerAddress || !customCustomerAddress.trim()) {
                 const err = { field: 'customCustomerAddress', message: 'Please enter your delivery address.' };
@@ -1086,13 +1100,32 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 preferredContact,
                 contactInput,
                 selectedPayment,
-                isGuestCheckoutEnabled
+                isGuestCheckoutEnabled,
+                hasSelectedDeliveryMethod: !!selectedDeliveryMethod,
+                checkoutDeliveryAddress,
+                checkoutPreferredContact,
+                customCustomerName,
+                customCustomerPhone,
+                customCustomerAddress
             });
             if (!currentErr || currentErr.field !== validationError.field) {
                 setValidationError(currentErr);
             }
         }
-    }, [selectedAddress, preferredContact, contactInput, selectedPayment, isGuestCheckoutEnabled, validationError]);
+    }, [
+        selectedAddress,
+        preferredContact,
+        contactInput,
+        selectedPayment,
+        isGuestCheckoutEnabled,
+        selectedDeliveryMethod,
+        checkoutDeliveryAddress,
+        checkoutPreferredContact,
+        customCustomerName,
+        customCustomerPhone,
+        customCustomerAddress,
+        validationError
+    ]);
 
     const [usePoints] = useState<boolean>(false);
     const [claimCode, setClaimCode] = useState<string>('');
@@ -1233,29 +1266,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const { submitOrder, isSubmitting: isCheckingOut } = useOrderPending();
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [isKHQROpen, setIsKHQROpen] = useState(false);
+    const [isOtpOpen, setIsOtpOpen] = useState(false);
     const [pendingOrderId, setPendingOrderId] = useState<number | string | null>(null);
     const [pendingOrderNo, setPendingOrderNo] = useState<string | null>(null);
-    const [telegramLink, setTelegramLink] = useState<string | null>(null);
-
-    useEffect(() => {
-        const fetchTelegramLink = async () => {
-            const vendorId = ownerUserId || stores?.created_by || storeSettings?.created_by;
-            if (vendorId) {
-                try {
-                    const socialData = await socialMediaService.getPublicSocials(vendorId);
-                    const telegramSocial = (socialData || []).find(
-                        s => s.name.toLowerCase() === 'telegram' && s.status
-                    );
-                    if (telegramSocial && telegramSocial.link) {
-                        setTelegramLink(telegramSocial.link);
-                    }
-                } catch (err) {
-                    console.warn('Failed to load telegram social link for checkout page:', err);
-                }
-            }
-        };
-        fetchTelegramLink();
-    }, [ownerUserId, stores, storeSettings]);
+    const [telegramBotLink, setTelegramBotLink] = useState<string | null>(null);
 
     const sendOrderNotificationToChat = async (orderId: number | string, orderNo: string | null, totalAmt: number, paymentMethod: string) => {
         if (!isLoggedIn || !user || !ownerUserId) return;
@@ -1333,6 +1347,22 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             ? `[Delivery: ${selectedDeliveryMethod.name}] ${note || ''}`.trim()
             : (note || '');
 
+        const rawPhone = checkoutDeliveryAddress === 'close'
+            ? customCustomerPhone
+            : (checkoutPreferredContact === 'close' ? (selectedAddress?.telephone || '') : contactInput);
+
+        const formatPhone = (val: string) => {
+            const trimmed = val.trim();
+            if (trimmed.includes('@')) return trimmed;
+            const clean = trimmed.replace(/[^0-9]/g, '');
+            if (!clean) return trimmed;
+            if (clean.startsWith('855')) return '+' + clean;
+            if (clean.startsWith('0')) return '+855' + clean.slice(1);
+            return '+855' + clean;
+        };
+
+        const resolvedPhone = rawPhone ? formatPhone(rawPhone) : '';
+
         const orderData = {
             store_id: resolvedStoreId,
             customer_id: isLoggedIn && user?.id ? Number(user.id) : null,
@@ -1341,9 +1371,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             customer_name: checkoutDeliveryAddress === 'close'
                 ? customCustomerName
                 : (selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Customer'),
-            customer_phone: checkoutDeliveryAddress === 'close'
-                ? customCustomerPhone
-                : (checkoutPreferredContact === 'close' ? (selectedAddress?.telephone || '') : contactInput),
+            customer_phone: resolvedPhone,
             customer_address: checkoutDeliveryAddress === 'close'
                 ? customCustomerAddress
                 : (selectedAddress
@@ -1365,19 +1393,27 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         console.log('[Checkout] Submitting Order Data:', orderData);
 
         await submitOrder(orderData as any, (order) => {
+            setPendingOrderId(order.id);
+            setPendingOrderNo(order.order_no || null);
+            if (order.telegram_bot_link) {
+                setTelegramBotLink(order.telegram_bot_link);
+            }
+
+            if (order.otp_required) {
+                // Open OTP verification modal
+                setIsOtpOpen(true);
+                return;
+            }
+
+            // If OTP is not required
             if (selectedPayment === 'aba' || selectedPayment === 'bakong') {
-                setPendingOrderId(order.id);
-                setPendingOrderNo(order.order_no || null);
                 setIsKHQROpen(true);
                 return;
             }
 
             // Clear cart immediately
             if (clearCart) clearCart();
-
-            // Store order details in state for success screen
-            setPendingOrderId(order.id);
-            setPendingOrderNo(order.order_no || null);
+            clearGuestCheckoutCache();
 
             // Send chat notification
             sendOrderNotificationToChat(order.id, order.order_no || null, order.total_amount || totalAmount, selectedPayment || 'cod');
@@ -1699,6 +1735,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 onConfirmPayment={() => {
                     setIsKHQROpen(false);
                     if (clearCart) clearCart();
+                    clearGuestCheckoutCache();
                     setOrderSuccess(true);
                     if (pendingOrderId) {
                         window.dispatchEvent(new CustomEvent('aura_order_placed', { detail: { id: pendingOrderId } }));
@@ -1712,9 +1749,43 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 paymentMethod={selectedPayment}
             />
 
+            {/* Telegram OTP Verification Modal */}
+            {isOtpOpen && createPortal(
+                <PopOtpVerifyTele
+                    isOpen={isOtpOpen}
+                    orderId={pendingOrderId}
+                    telegramLink={telegramBotLink}
+                    onClose={() => {
+                        setIsOtpOpen(false);
+                    }}
+                    onSuccess={(token) => {
+                        setIsOtpOpen(false);
+
+                        // If token is returned, store it and trigger login
+                        if (token) {
+                            localStorage.setItem('aura_customer_token', token);
+                            window.dispatchEvent(new Event('aura_token_changed'));
+                        }
+
+                        // Now finalize checkout flow
+                        if (selectedPayment === 'aba' || selectedPayment === 'bakong') {
+                            setIsKHQROpen(true);
+                            return;
+                        }
+
+                        if (clearCart) clearCart();
+                        clearGuestCheckoutCache();
+
+                        sendOrderNotificationToChat(pendingOrderId!, pendingOrderNo, totalAmount, selectedPayment || 'cod');
+                        setOrderSuccess(true);
+                    }}
+                />,
+                document.body
+            )}
+
             {/* Order Success Popup Modal */}
             {orderSuccess && createPortal(
-                <div className="fixed inset-0 z-55 flex items-center justify-center bg-stone-950/45 backdrop-blur-2xs p-4 font-kuntomruy animate-fade-in">
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-stone-950/45 backdrop-blur-2xs p-4 font-kuntomruy animate-fade-in">
                     <div
                         className="fixed inset-0 cursor-default"
                         onClick={() => {
@@ -1801,9 +1872,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             >
                                 {t('checkout.viewDetail')}
                             </button>
-                            {telegramLink ? (
+                            {telegramBotLink ? (
                                 <a
-                                    href={telegramLink}
+                                    href={telegramBotLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="w-full py-4 bg-white border border-[#24A1DE] hover:bg-[#24A1DE]/5 text-[#24A1DE] rounded-[3px] font-black text-xs uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2 text-center decoration-none focus:outline-none"
