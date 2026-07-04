@@ -8,10 +8,13 @@ export interface CheckoutValidationInput {
     checkoutPreferredContact?: 'open' | 'close' | 'null';
     checkoutNote?: 'open' | 'close' | 'null';
     checkoutClaimCode?: 'open' | 'close' | 'null';
+    customCustomerName?: string;
+    customCustomerPhone?: string;
+    customCustomerAddress?: string;
 }
 
 export interface CheckoutValidationError {
-    field: 'address' | 'preferredContact' | 'contactInput' | 'payment';
+    field: 'address' | 'preferredContact' | 'contactInput' | 'payment' | 'customCustomerName' | 'customCustomerPhone' | 'customCustomerAddress';
     message: string;
 }
 
@@ -27,6 +30,32 @@ export function validateCheckoutForm(input: CheckoutValidationInput): CheckoutVa
             return {
                 field: 'address',
                 message: 'Please select or add a delivery address.'
+            };
+        }
+    } else if (checkoutDeliveryAddress === 'close') {
+        if (!input.customCustomerName || !input.customCustomerName.trim()) {
+            return {
+                field: 'customCustomerName',
+                message: 'Please enter your name.'
+            };
+        }
+        if (!input.customCustomerPhone || !input.customCustomerPhone.trim()) {
+            return {
+                field: 'customCustomerPhone',
+                message: 'Please enter your phone number.'
+            };
+        }
+        const phoneRegex = /^[+]*[0-9\s\-()]{6,20}$/;
+        if (!phoneRegex.test(input.customCustomerPhone.trim())) {
+            return {
+                field: 'customCustomerPhone',
+                message: 'Please enter a valid telephone number.'
+            };
+        }
+        if (!input.customCustomerAddress || !input.customCustomerAddress.trim()) {
+            return {
+                field: 'customCustomerAddress',
+                message: 'Please enter your delivery address.'
             };
         }
     }

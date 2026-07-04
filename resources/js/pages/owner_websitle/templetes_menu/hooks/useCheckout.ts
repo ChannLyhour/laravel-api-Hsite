@@ -76,6 +76,19 @@ export const useCheckout = ({
     const [contactInput, setContactInput] = useState<string>('');
     const [note, setNote] = useState<string>('');
 
+    const [customCustomerName, setCustomCustomerName] = useState<string>('');
+    const [customCustomerPhone, setCustomCustomerPhone] = useState<string>('');
+    const [customCustomerAddress, setCustomCustomerAddress] = useState<string>('');
+    const [customLatitude, setCustomLatitude] = useState<string>('');
+    const [customLongitude, setCustomLongitude] = useState<string>('');
+
+    useEffect(() => {
+        if (user) {
+            setCustomCustomerName(user.name || '');
+            setCustomCustomerPhone(user.phone || '');
+        }
+    }, [user]);
+
     const [usePoints] = useState<boolean>(false);
     const [claimCode, setClaimCode] = useState<string>('');
     const [appliedCoupon, setAppliedCoupon] = useState<CouponRow | null>(null);
@@ -94,6 +107,10 @@ export const useCheckout = ({
     const preferredContactRef = useRef<HTMLButtonElement>(null);
     const contactInputRef = useRef<HTMLInputElement>(null);
     const paymentRef = useRef<HTMLInputElement>(null);
+    
+    const customNameRef = useRef<HTMLInputElement>(null);
+    const customPhoneRef = useRef<HTMLInputElement>(null);
+    const customAddressRef = useRef<HTMLInputElement>(null);
 
     // ─── Computed Values ───
     const displayCartItems = useMemo(() => {
@@ -397,6 +414,7 @@ export const useCheckout = ({
         
         const queryParams = new URLSearchParams(window.location.search);
         const isLocal = queryParams.get('local') === 'true';
+        const checkoutDeliveryAddress = isLocal ? 'close' : (storeSettings?.checkout_delivery_address || 'open');
 
         const orderData = {
             store_id: resolvedStoreId,
@@ -405,13 +423,23 @@ export const useCheckout = ({
             total_amount: Number(totalAmount.toFixed(2)),
             customer_name: isLocal 
                 ? (user?.name || 'Walk In')
-                : (selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Customer'),
-            customer_phone: isLocal ? (user?.phone || '') : contactInput,
+                : (checkoutDeliveryAddress === 'close'
+                    ? customCustomerName
+                    : (selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Customer')),
+            customer_phone: isLocal 
+                ? (user?.phone || '') 
+                : (checkoutDeliveryAddress === 'close'
+                    ? customCustomerPhone
+                    : contactInput),
             customer_address: isLocal
                 ? 'Walk-in'
-                : (selectedAddress
-                    ? `${selectedAddress.address}, ${selectedAddress.city_province}, ${selectedAddress.country}`
-                    : 'Guest Address'),
+                : (checkoutDeliveryAddress === 'close'
+                    ? customCustomerAddress
+                    : (selectedAddress
+                        ? `${selectedAddress.address}, ${selectedAddress.city_province}, ${selectedAddress.country}`
+                        : 'Guest Address')),
+            latitude: checkoutDeliveryAddress === 'close' ? (customLatitude ? parseFloat(customLatitude) : null) : (selectedAddress?.latitude || null),
+            longitude: checkoutDeliveryAddress === 'close' ? (customLongitude ? parseFloat(customLongitude) : null) : (selectedAddress?.longitude || null),
             payment_method: selectedPayment || 'cod',
             notes: note || '',
             items: validItems,
@@ -464,7 +492,10 @@ export const useCheckout = ({
             checkoutDeliveryAddress,
             checkoutPreferredContact,
             checkoutNote,
-            checkoutClaimCode
+            checkoutClaimCode,
+            customCustomerName,
+            customCustomerPhone,
+            customCustomerAddress,
         });
 
         if (err) {
@@ -473,6 +504,15 @@ export const useCheckout = ({
             if (err.field === 'address') {
                 addressBtnRef.current?.focus();
                 addressBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (err.field === 'customCustomerName') {
+                customNameRef.current?.focus();
+                customNameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (err.field === 'customCustomerPhone') {
+                customPhoneRef.current?.focus();
+                customPhoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (err.field === 'customCustomerAddress') {
+                customAddressRef.current?.focus();
+                customAddressRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else if (err.field === 'preferredContact') {
                 preferredContactRef.current?.focus();
                 preferredContactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -529,11 +569,26 @@ export const useCheckout = ({
         isLoggedIn,
         user,
 
+        // Custom delivery fields
+        customCustomerName,
+        setCustomCustomerName,
+        customCustomerPhone,
+        setCustomCustomerPhone,
+        customCustomerAddress,
+        setCustomCustomerAddress,
+        customLatitude,
+        setCustomLatitude,
+        customLongitude,
+        setCustomLongitude,
+
         // Refs
         addressBtnRef,
         preferredContactRef,
         contactInputRef,
         paymentRef,
+        customNameRef,
+        customPhoneRef,
+        customAddressRef,
 
         // Computed
         displayCartItems,

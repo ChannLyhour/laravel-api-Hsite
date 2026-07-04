@@ -42,6 +42,7 @@ import { type CheckoutValidationError } from '../validation/CheckoutValidationEr
 import { List_Order_CheckoutTab } from './Checkout/List_Order_CheckoutTab';
 import { Delivery_addressTab } from './Checkout/Delivery_addressTab';
 import { PaymentTab } from './Checkout/PaymentTab';
+import { openLocationMapModal } from './helpers/autoLocationCustomer';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -189,80 +190,29 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [fetchingLocation, setFetchingLocation] = useState(false);
 
-    const handleAutoGetLocation = () => {
-        if (!navigator.geolocation) {
-            toast.error('Geolocation is not supported by your browser.');
-            return;
-        }
-
-        setFetchingLocation(true);
-        const loadingToast = toast.loading('Accessing GPS location...');
-
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`, {
-                        headers: {
-                            'Accept-Language': 'en'
-                        }
-                    });
-                    const data = await res.json();
-                    toast.dismiss(loadingToast);
-
-                    if (data) {
-                        const fullAddress = data.display_name || '';
-                        const cleanAddress = fullAddress
-                            .replace(/, Cambodia$/, '')
-                            .replace(/, \d{5,6}$/, '')
-                            .trim();
-
-                        const matchedProvince = findMatchingProvince(data.address);
-
-                        setForm(prev => ({
-                            ...prev,
-                            address: cleanAddress,
-                            city_province: matchedProvince || prev.city_province,
-                            latitude: latitude,
-                            longitude: longitude,
-                        }));
-
-                        toast.success('Location auto-filled!');
-                    } else {
-                        toast.error('Could not resolve address details.');
-                    }
-                } catch (err) {
-                    toast.dismiss(loadingToast);
-                    console.error('Reverse-geocoding error:', err);
-                    toast.error('Failed to resolve address coordinates.');
-                } finally {
-                    setFetchingLocation(false);
-                }
-            },
-            (error) => {
-                toast.dismiss(loadingToast);
-                setFetchingLocation(false);
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        toast.error('Location permission denied. Please allow location access in your browser.');
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        toast.error('Location information is currently unavailable.');
-                        break;
-                    case error.TIMEOUT:
-                        toast.error('Location request timed out.');
-                        break;
-                    default:
-                        toast.error('An unknown error occurred.');
-                        break;
-                }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 8000,
-                maximumAge: 0
+    const handleAutoGetLocation = async () => {
+        try {
+            setFetchingLocation(true);
+            const result = await openLocationMapModal(
+                form.latitude ? parseFloat(String(form.latitude)) : null,
+                form.longitude ? parseFloat(String(form.longitude)) : null
+            );
+            if (result) {
+                setForm(prev => ({
+                    ...prev,
+                    address: result.address,
+                    city_province: result.city_province || prev.city_province,
+                    latitude: result.latitude,
+                    longitude: result.longitude,
+                }));
+                toast.success('Location updated from map!');
             }
-        );
+        } catch (err) {
+            console.error('Map selection error:', err);
+            toast.error('Failed to select location from map.');
+        } finally {
+            setFetchingLocation(false);
+        }
     };
 
     const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -1004,6 +954,23 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const [preferredContact, setPreferredContact] = useState<string>('');
     const [contactInput, setContactInput] = useState<string>('');
 
+    const [customCustomerName, setCustomCustomerName] = useState<string>('');
+    const [customCustomerPhone, setCustomCustomerPhone] = useState<string>('');
+    const [customCustomerAddress, setCustomCustomerAddress] = useState<string>('');
+    const [customLatitude, setCustomLatitude] = useState<string>('');
+    const [customLongitude, setCustomLongitude] = useState<string>('');
+
+    const customNameRef = React.useRef<HTMLInputElement>(null);
+    const customPhoneRef = React.useRef<HTMLInputElement>(null);
+    const customAddressRef = React.useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (user) {
+            setCustomCustomerName(user.name || '');
+            setCustomCustomerPhone(user.phone || '');
+        }
+    }, [user]);
+
     const addressBtnRef = React.useRef<HTMLButtonElement>(null);
     const preferredContactRef = React.useRef<HTMLButtonElement>(null);
     const contactInputRef = React.useRef<HTMLInputElement>(null);
@@ -1012,34 +979,76 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const [currentStep, setCurrentStep] = useState<number>(1);
     const [validationError, setValidationError] = useState<CheckoutValidationError | null>(null);
 
+    const checkoutDeliveryAddress = storeSettings?.checkout_delivery_address || 'open';
+    const checkoutPreferredContact = storeSettings?.checkout_preferred_contact || 'open';
+
     const isGuestCheckoutEnabled = useMemo(() => {
         return storeSettings?.guest_checkout !== false && storeSettings?.guest_checkout !== 'false';
     }, [storeSettings]);
 
     const validateStep2 = () => {
-        if (!selectedAddress) {
-            const err = { field: 'address', message: 'Please select a delivery address.' };
-            setValidationError(err as any);
-            toast.error(err.message);
-            addressBtnRef.current?.focus();
-            addressBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return false;
+        if (checkoutDeliveryAddress === 'close') {
+            if (!customCustomerName || !customCustomerName.trim()) {
+                const err = { field: 'customCustomerName', message: 'Please enter your name.' };
+                setValidationError(err as any);
+                toast.error(err.message);
+                customNameRef.current?.focus();
+                customNameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            if (!customCustomerPhone || !customCustomerPhone.trim()) {
+                const err = { field: 'customCustomerPhone', message: 'Please enter your phone number.' };
+                setValidationError(err as any);
+                toast.error(err.message);
+                customPhoneRef.current?.focus();
+                customPhoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            const phoneRegex = /^[+]*[0-9\s\-()]{6,20}$/;
+            if (!phoneRegex.test(customCustomerPhone.trim())) {
+                const err = { field: 'customCustomerPhone', message: 'Please enter a valid telephone number.' };
+                setValidationError(err as any);
+                toast.error(err.message);
+                customPhoneRef.current?.focus();
+                customPhoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            if (!customCustomerAddress || !customCustomerAddress.trim()) {
+                const err = { field: 'customCustomerAddress', message: 'Please enter your delivery address.' };
+                setValidationError(err as any);
+                toast.error(err.message);
+                customAddressRef.current?.focus();
+                customAddressRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+        } else {
+            if (!selectedAddress) {
+                const err = { field: 'address', message: 'Please select a delivery address.' };
+                setValidationError(err as any);
+                toast.error(err.message);
+                addressBtnRef.current?.focus();
+                addressBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
         }
-        if (!preferredContact) {
-            const err = { field: 'preferredContact', message: 'Please select your preferred contact line.' };
-            setValidationError(err as any);
-            toast.error(err.message);
-            preferredContactRef.current?.focus();
-            preferredContactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return false;
-        }
-        if (!contactInput.trim()) {
-            const err = { field: 'contactInput', message: 'Please enter your contact information.' };
-            setValidationError(err as any);
-            toast.error(err.message);
-            contactInputRef.current?.focus();
-            contactInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return false;
+
+        if (checkoutPreferredContact !== 'close') {
+            if (!preferredContact) {
+                const err = { field: 'preferredContact', message: 'Please select your preferred contact line.' };
+                setValidationError(err as any);
+                toast.error(err.message);
+                preferredContactRef.current?.focus();
+                preferredContactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            if (!contactInput.trim()) {
+                const err = { field: 'contactInput', message: 'Please enter your contact information.' };
+                setValidationError(err as any);
+                toast.error(err.message);
+                contactInputRef.current?.focus();
+                contactInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
         }
         if (filteredDeliveryMethods.length > 0 && !selectedDeliveryMethod) {
             const err = { field: 'deliveryMethod', message: 'Please select a delivery method.' };
@@ -1330,14 +1339,20 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             customer_id: isLoggedIn && user?.id ? Number(user.id) : null,
             subtotal: Number(subtotal.toFixed(2)),
             total_amount: Number(totalAmount.toFixed(2)),
-            customer_name: selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Customer',
-            customer_phone: contactInput,
-            customer_address: selectedAddress
-                ? `${selectedAddress.address}, ${selectedAddress.city_province}, ${selectedAddress.country}`
-                : 'Guest Address',
-            shipping_address_id: (isLoggedIn && selectedAddress) ? selectedAddress.id : null,
-            latitude: selectedAddress?.latitude || null,
-            longitude: selectedAddress?.longitude || null,
+            customer_name: checkoutDeliveryAddress === 'close'
+                ? customCustomerName
+                : (selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Customer'),
+            customer_phone: checkoutDeliveryAddress === 'close'
+                ? customCustomerPhone
+                : contactInput,
+            customer_address: checkoutDeliveryAddress === 'close'
+                ? customCustomerAddress
+                : (selectedAddress
+                    ? `${selectedAddress.address}, ${selectedAddress.city_province}, ${selectedAddress.country}`
+                    : 'Guest Address'),
+            shipping_address_id: (isLoggedIn && selectedAddress && checkoutDeliveryAddress !== 'close') ? selectedAddress.id : null,
+            latitude: checkoutDeliveryAddress === 'close' ? (customLatitude ? parseFloat(customLatitude) : null) : (selectedAddress?.latitude || null),
+            longitude: checkoutDeliveryAddress === 'close' ? (customLongitude ? parseFloat(customLongitude) : null) : (selectedAddress?.longitude || null),
             payment_method: selectedPayment || 'cod',
             notes: orderNotes,
             items: validItems,
@@ -1555,6 +1570,23 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             onSelectDeliveryMethod={setSelectedDeliveryMethod}
                             loadingDeliveryMethods={loadingDeliveryMethods}
                             matchingZone={matchingZone}
+
+                            // Custom delivery closed variables
+                            checkoutDeliveryAddress={checkoutDeliveryAddress}
+                            checkoutPreferredContact={checkoutPreferredContact}
+                            customCustomerName={customCustomerName}
+                            setCustomCustomerName={setCustomCustomerName}
+                            customCustomerPhone={customCustomerPhone}
+                            setCustomCustomerPhone={setCustomCustomerPhone}
+                            customCustomerAddress={customCustomerAddress}
+                            setCustomCustomerAddress={setCustomCustomerAddress}
+                            customLatitude={customLatitude}
+                            setCustomLatitude={setCustomLatitude}
+                            customLongitude={customLongitude}
+                            setCustomLongitude={setCustomLongitude}
+                            customNameRef={customNameRef}
+                            customPhoneRef={customPhoneRef}
+                            customAddressRef={customAddressRef}
                         />
                     ) : (
                         <div className="bg-white p-5 rounded-sm border border-stone-200/60 shadow-2xs flex items-center justify-between opacity-60 cursor-not-allowed select-none">

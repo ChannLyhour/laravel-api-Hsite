@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FiArrowLeft, FiTruck, FiUpload, FiX } from 'react-icons/fi';
+import { FiTruck, FiUpload, FiX, FiSliders, FiImage, FiInfo } from 'react-icons/fi';
 import { deliveryMethodsService, type DeliveryMethod } from '@/api/owner/deliveryMethods';
 import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
 import { ApiError } from '@/api/client';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import '@/pages/owner_manage/style/font.css';
+import { GroupDiv } from '@/pages/owner_manage/helper/GroupDiv';
+import { PageHeader } from '@/pages/owner_manage/helper/PageHeader';
+import { FormActions } from '@/pages/owner_manage/helper/FormActions';
 
 interface DeliveryMethodCreatePageProps {
   onClose: () => void;
@@ -105,157 +108,189 @@ export const DeliveryMethodCreatePage: React.FC<DeliveryMethodCreatePageProps> =
   };
 
   return (
-    <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 pb-10 w-full">
+    <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 pb-10 w-full text-left">
       {/* ── HEADER NAVIGATION ─────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-slate-100 pb-5">
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={onClose}
-            className="p-2 border border-slate-200 rounded-[5px] hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer flex items-center justify-center bg-white shadow-2xs"
-            title="Back to delivery methods list"
-          >
-            <FiArrowLeft className="w-5 h-5 stroke-[2.5]" />
-          </button>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
-              <FiTruck className="text-primary" />
-              <span>Add New Delivery Method</span>
-            </h2>
-            <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-              Create a shipping/delivery profile for your customers at checkout.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Add New Delivery Method"
+        subtitle="Create a shipping/delivery profile for your customers at checkout."
+        onClose={onClose}
+        backTitle="Back to delivery methods list"
+      />
 
       {/* ── FORM CONTAINER ────────────────────────────────── */}
-      <div className="max-w-2xl bg-white rounded-[5px] border border-slate-100 shadow-xs p-6 sm:p-8">
-        <form onSubmit={handleSave} className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
+      <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+        {/* Left Column: General Configuration */}
+        <div className="lg:col-span-2 space-y-6">
+          <GroupDiv className="space-y-6">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-855 flex items-center gap-1.5">
+                <FiTruck className="text-orange-500" />
+                <span>Method Configuration</span>
+              </h3>
+              <p className="text-slate-400 text-xs mt-0.5">
+                Configure primary delivery details and geographical restrictions.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                  <span>Method Name</span>
+                  <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. Express Delivery"
+                  className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold text-slate-800 bg-white"
+                />
+              </div>
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                  <span>Method Code / Slug</span>
+                  <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.code}
+                  onChange={e => setFormData(prev => ({ ...prev, code: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
+                  placeholder="e.g. express"
+                  className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold text-slate-800 bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-slate-700 block">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="e.g. Get your order in 1 to 2 hours with our express motor delivery."
+                rows={3}
+                className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold text-slate-800 bg-white resize-none"
+              />
+            </div>
+
+            {/* Restrict to Delivery Zone */}
+            <div className="space-y-1.5 text-left">
               <label className="text-xs font-bold text-slate-700 block">
-                Method Name <span className="text-rose-500">*</span>
+                Restrict to Delivery Zone <span className="text-slate-400 font-medium">(Optional)</span>
               </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g. Express Delivery"
-                className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white"
-              />
+              <select
+                value={formData.delivery_zone_id}
+                onChange={e => setFormData(prev => ({ ...prev, delivery_zone_id: e.target.value }))}
+                className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold text-slate-800 bg-white cursor-pointer"
+              >
+                <option value="">All Zones / Nationwide (Global)</option>
+                {deliveryZones.map(zone => (
+                  <option key={zone.id} value={zone.id}>
+                    {zone.name} ({zone.code})
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                If restricted, this delivery method will only be shown to customers residing in the selected zone during checkout.
+              </p>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block">
-                Method Code / Slug <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.code}
-                onChange={e => setFormData(prev => ({ ...prev, code: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
-                placeholder="e.g. express"
-                className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white"
-              />
-            </div>
-          </div>
+          </GroupDiv>
+        </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 block">Description</label>
-            <textarea
-              value={formData.description}
-              onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="e.g. Get your order in 1 to 2 hours with our express motor delivery."
-              rows={3}
-              className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white resize-none"
-            />
-          </div>
-
-          {/* Restrict to Delivery Zone */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 block">
-              Restrict to Delivery Zone <span className="text-slate-400 font-medium">(Optional)</span>
-            </label>
-            <select
-              value={formData.delivery_zone_id}
-              onChange={e => setFormData(prev => ({ ...prev, delivery_zone_id: e.target.value }))}
-              className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white cursor-pointer"
-            >
-              <option value="">All Zones / Nationwide (Global)</option>
-              {deliveryZones.map(zone => (
-                <option key={zone.id} value={zone.id}>
-                  {zone.name} ({zone.code})
-                </option>
-              ))}
-            </select>
-            <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-              If restricted, this delivery method will only be shown to customers residing in the selected zone during checkout.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block">
-                Delivery Cost ($) <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                value={formData.cost}
-                onChange={e => setFormData(prev => ({ ...prev, cost: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white"
-              />
+        {/* Right Column: Pricing, Timeline, Status & Image */}
+        <div className="space-y-6">
+          {/* Pricing & Timeline Card */}
+          <GroupDiv className="space-y-6">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-855 flex items-center gap-1.5">
+                <FiSliders className="text-orange-500" />
+                <span>Pricing & Timeline</span>
+              </h3>
+              <p className="text-slate-400 text-xs mt-0.5">
+                Set shipping fee and estimated days.
+              </p>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block">Min Est. Days</label>
-              <input
-                type="number"
-                min="0"
-                required
-                value={formData.estimated_days_min}
-                onChange={e => setFormData(prev => ({ ...prev, estimated_days_min: parseInt(e.target.value) || 0 }))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block">Max Est. Days</label>
-              <input
-                type="number"
-                min="0"
-                required
-                value={formData.estimated_days_max}
-                onChange={e => setFormData(prev => ({ ...prev, estimated_days_max: parseInt(e.target.value) || 0 }))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white"
-              />
-            </div>
-          </div>
 
-          {/* Image Upload */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 block">Image or Icon</label>
+            <div className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                  <span>Delivery Cost ($)</span>
+                  <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  value={formData.cost}
+                  onChange={e => setFormData(prev => ({ ...prev, cost: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold text-slate-800 bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-bold text-slate-700 block">Min Est. Days</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={formData.estimated_days_min}
+                    onChange={e => setFormData(prev => ({ ...prev, estimated_days_min: parseInt(e.target.value) || 0 }))}
+                    className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold text-slate-800 bg-white"
+                  />
+                </div>
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-bold text-slate-700 block">Max Est. Days</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={formData.estimated_days_max}
+                    onChange={e => setFormData(prev => ({ ...prev, estimated_days_max: parseInt(e.target.value) || 0 }))}
+                    className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold text-slate-800 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+          </GroupDiv>
+
+          {/* Image & Icon Upload Card */}
+          <GroupDiv className="space-y-4">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-855 flex items-center gap-1.5">
+                <FiImage className="text-orange-500" />
+                <span>Image or Icon</span>
+              </h3>
+              <p className="text-slate-400 text-xs mt-0.5">
+                Upload a custom branding image or icon.
+              </p>
+            </div>
+
             {imagePreview ? (
-              <div className="relative w-32 h-32 rounded-[8px] overflow-hidden border border-slate-200 shadow-2xs group">
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              <div className="flex flex-col items-center justify-center p-4 bg-black/[0.02] border border-dashed rounded-[8px] space-y-3 relative">
+                <div className="w-24 h-16 rounded-[4px] border border-black/10 bg-black/[0.03] flex items-center justify-center overflow-hidden shrink-0 shadow-2xs relative">
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-contain p-1" />
+                </div>
                 <button
                   type="button"
                   onClick={handleRemoveImage}
-                  className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-sm cursor-pointer border-none"
-                  title="Remove image"
+                  className="p-1.5 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-[5px] border border-slate-200 hover:border-rose-100 transition-all cursor-pointer flex items-center gap-1"
                 >
                   <FiX className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-bold">Remove</span>
                 </button>
               </div>
             ) : (
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-[5px] cursor-pointer hover:bg-slate-50 transition-colors">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-[5px] cursor-pointer hover:bg-black/[0.02] transition-colors">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <FiUpload className="w-8 h-8 text-slate-400 mb-2" />
                     <p className="text-2xs font-bold text-slate-500">
-                      <span>Click to upload</span> or drag and drop
+                      <span>Click to upload</span> or drag
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-1">PNG, JPG, SVG up to 2MB</p>
+                    <p className="text-[9px] text-slate-400 mt-1">PNG, JPG, SVG up to 2MB</p>
                   </div>
                   <input
                     type="file"
@@ -266,47 +301,40 @@ export const DeliveryMethodCreatePage: React.FC<DeliveryMethodCreatePageProps> =
                 </label>
               </div>
             )}
-          </div>
+          </GroupDiv>
 
-          {/* Active status */}
-          <div className="flex items-center space-x-2 pt-2">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={formData.is_active}
-              onChange={e => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-              className="w-4 h-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded cursor-pointer"
-            />
-            <label htmlFor="is_active" className="text-xs font-bold text-slate-750 cursor-pointer select-none">
-              Activate this delivery method (visible to customers at checkout)
-            </label>
-          </div>
+          {/* Active Status Card */}
+          <GroupDiv className="space-y-4">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-855 flex items-center gap-1.5">
+                <FiInfo className="text-orange-500" />
+                <span>Status Settings</span>
+              </h3>
+            </div>
+            <div className="flex items-center space-x-2 text-left">
+              <input
+                type="checkbox"
+                id="is_active"
+                checked={formData.is_active}
+                onChange={e => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                className="w-4 h-4 accent-orange-600 cursor-pointer"
+              />
+              <label htmlFor="is_active" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                Activate this delivery method (visible to customers at checkout)
+              </label>
+            </div>
+          </GroupDiv>
+        </div>
 
-          <div className="flex items-center justify-end space-x-3 pt-5 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="py-2.5 px-5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[5px] text-xs font-bold transition-all border border-slate-200/50 cursor-pointer min-w-[100px]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving || !formData.name.trim() || !formData.code.trim()}
-              className="py-2.5 px-6 bg-primary hover:bg-primary-hover text-white rounded-[5px] text-xs font-black transition-all flex items-center justify-center space-x-1.5 border-none cursor-pointer disabled:opacity-50 select-none min-w-[140px]"
-            >
-              {saving ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <span>Add Method</span>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* Action buttons */}
+        <FormActions
+          onCancel={onClose}
+          saving={saving}
+          submitLabel="Add Method"
+          disabled={!formData.name.trim() || !formData.code.trim()}
+          className="lg:col-span-3"
+        />
+      </form>
     </div>
   );
 };

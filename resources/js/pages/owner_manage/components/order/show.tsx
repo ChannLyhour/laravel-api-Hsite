@@ -12,6 +12,7 @@ import { useConfirm } from '@/components/ConfirmProvider';
 import { storesService, Store_setting } from '@/api/owner/stores';
 import { customersService } from '@/api/owner/customers';
 import { couponsService } from '@/api/owner/coupons';
+import { deliveryMethodsService } from '@/api/owner/deliveryMethods';
 import type { CouponRow } from '@/api/owner/coupons';
 import { resolveImageUrl } from '@/api/imageUtils';
 import '@/pages/owner_manage/style/font.css';
@@ -271,6 +272,81 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
     }
   }, [order.couponCode]);
 
+  const [deliveryMethods, setDeliveryMethods] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    deliveryMethodsService.getMyDeliveryMethods()
+      .then((data) => {
+        if (data) {
+          setDeliveryMethods(data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch delivery methods for order invoice image matching:', err);
+      });
+  }, []);
+
+  const [paymentGateways, setPaymentGateways] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    storesService.getPaymentGateways()
+      .then((data) => {
+        if (data && Array.isArray(data)) {
+          setPaymentGateways(data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch payment gateways for order invoice image matching:', err);
+      });
+  }, []);
+
+  const getPaymentMethodDetails = () => {
+    const defaultTemplates = [
+      { id: 'aba', name: 'ABA PAY', logoColor: 'bg-[#005d7e]', textColor: 'text-white', logoText: 'ABA' },
+      { id: 'bakong', name: 'Bakong KHQR', logoColor: 'bg-[#b30006]', textColor: 'text-white', logoText: 'Bakong' },
+      { id: 'card', name: 'Credit/Debit Card', logoColor: 'bg-slate-100 border border-slate-200', textColor: 'text-slate-800', logoText: '💳' },
+      { id: 'acleda', name: 'ACLEDA PAY', logoColor: 'bg-[#0d3b66]', textColor: 'text-amber-400', logoText: 'ACLEDA' },
+      { id: 'wing', name: 'Wing Bank', logoColor: 'bg-[#84bd00]', textColor: 'text-blue-900', logoText: 'Wing' },
+      { id: 'chipmong', name: 'CHIP MONG BANK', logoColor: 'bg-[#009b72]', textColor: 'text-white', logoText: 'CMB' },
+      { id: 'transfer', name: 'Bank Transfer', logoColor: 'bg-slate-50 border border-slate-200', textColor: 'text-slate-700', logoText: '🏦' },
+      { id: 'cod', name: 'Cash on Delivery', logoColor: 'bg-slate-50 border border-slate-200', textColor: 'text-slate-700', logoText: '💵' },
+      { id: 'cash', name: 'Cash', logoColor: 'bg-emerald-600', textColor: 'text-white', logoText: '💵' }
+    ];
+
+    const methodKey = (order.paymentMethod || '').toLowerCase().trim();
+    
+    // Find in fetched gateways first
+    const gateway = paymentGateways.find(
+      g => g.id.toLowerCase() === methodKey ||
+           g.name.toLowerCase().trim() === methodKey ||
+           methodKey.includes(g.id.toLowerCase()) ||
+           methodKey.includes(g.name.toLowerCase().trim())
+    );
+    
+    // Find in default templates
+    const template = defaultTemplates.find(
+      t => t.id.toLowerCase() === methodKey ||
+           t.name.toLowerCase().trim() === methodKey ||
+           methodKey.includes(t.id.toLowerCase()) ||
+           methodKey.includes(t.name.toLowerCase().trim())
+    );
+    
+    const finalGateway = gateway || template;
+    const displayName = finalGateway ? finalGateway.name : (order.paymentMethod === 'cod' ? 'Cash On Delivery' : order.paymentMethod);
+    
+    // Check if custom logo is configured in settings
+    const gatewayId = finalGateway?.id;
+    const customLogoUrl = gatewayId ? settings?.payment_methods?.[gatewayId]?.values?.logo_url : null;
+    
+    return {
+      name: displayName,
+      logoUrl: customLogoUrl ? resolveImageUrl(customLogoUrl) : null,
+      logoColor: finalGateway?.logoColor || 'bg-slate-50 border border-slate-200',
+      textColor: finalGateway?.textColor || 'text-slate-700',
+      logoText: finalGateway?.logoText || '💳'
+    };
+  };
+
   // Subtotal & taxes helper calculations
   const subtotal = order.items.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
 
@@ -412,32 +488,32 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
           {/* Invoice Address Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-2">
             <div className="group border-l-4 border-l-primary bg-black/[0.015] hover:bg-black/[0.035] p-4.5 rounded-r-[5px] border-y border-r transition-all duration-300 hover:-translate-y-0.5 font-bold font-kuntomruy">
-              <h4 className="opacity-60 font-black uppercase text-[10px] tracking-wider flex items-center gap-2 mb-3">
+              <h4 className="font-extrabold uppercase text-[10px] tracking-wider flex items-center gap-2 mb-3 text-slate-500">
                 <FiHome className="text-primary w-3.5 h-3.5" />
                 <span>Store Information</span>
               </h4>
               <div className="text-xs space-y-1.5">
-                <p className="font-black text-sm text-inherit">{storeName}</p>
-                <p className="opacity-70 font-medium leading-relaxed flex items-start gap-1">
-                  <span className="opacity-55 font-semibold">Location :</span> 
+                <p className="font-black text-sm text-slate-800">{storeName}</p>
+                <p className="font-medium leading-relaxed flex items-start gap-1 text-slate-850">
+                  <span className="text-slate-500 font-semibold">Location :</span> 
                   <span>{storeAddress}</span>
                 </p>
-                <p className="opacity-70 font-medium flex items-center gap-1">
-                  <span className="opacity-55 font-semibold">Telephone :</span> 
+                <p className="font-medium flex items-center gap-1 text-slate-850">
+                  <span className="text-slate-500 font-semibold">Telephone :</span> 
                   <span>{storePhone}</span>
                 </p>
               </div>
             </div>
 
             <div className="group border-l-4 border-l-indigo-500 bg-black/[0.015] hover:bg-black/[0.035] p-4.5 rounded-r-[5px] border-y border-r transition-all duration-300 hover:-translate-y-0.5 font-bold font-kuntomruy">
-              <h4 className="opacity-60 font-black uppercase text-[10px] tracking-wider flex items-center gap-2 mb-3">
+              <h4 className="font-extrabold uppercase text-[10px] tracking-wider flex items-center gap-2 mb-3 text-slate-500">
                 <FiMapPin className="text-indigo-500 w-3.5 h-3.5" />
                 <span>{order.address === 'POS Walk-in' ? 'Walk-in Customer' : 'Shipping Address'}</span>
               </h4>
               <div className="text-xs space-y-1.5">
-                <p className="font-black text-sm text-inherit">{customerName}</p>
-                <p className="opacity-70 font-medium leading-relaxed flex items-start gap-1 flex-wrap">
-                  <span className="opacity-55 font-semibold">Location :</span> 
+                <p className="font-black text-sm text-slate-800">{customerName}</p>
+                <p className="font-medium leading-relaxed flex items-start gap-1 flex-wrap text-slate-855">
+                  <span className="text-slate-500 font-semibold">Location :</span> 
                   <span>{order.address === 'Walk-in' ? '---' : order.address}</span>
                   {order.address && order.address !== 'Walk-in' && order.address !== 'POS Walk-in' && (
                     <button
@@ -450,15 +526,15 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
                     </button>
                   )}
                 </p>
-                <p className="opacity-70 font-medium flex items-center gap-1">
-                  <span className="opacity-55 font-semibold">Telephone :</span> 
+                <p className="font-medium flex items-center gap-1 text-slate-855">
+                  <span className="text-slate-500 font-semibold">Telephone :</span> 
                   <span>{customerPhone}</span>
                 </p>
               </div>
             </div>
 
             <div className="group border-l-4 border-l-emerald-500 bg-black/[0.015] hover:bg-black/[0.035] p-4.5 rounded-r-[5px] border-y border-r transition-all duration-300 hover:-translate-y-0.5 font-bold font-kuntomruy">
-              <h4 className="opacity-60 font-black uppercase text-[10px] tracking-wider flex items-center gap-2 mb-3">
+              <h4 className="font-extrabold uppercase text-[10px] tracking-wider flex items-center gap-2 mb-3 text-slate-500">
                 <FiTruck className="text-emerald-500 w-3.5 h-3.5" />
                 <span>Delivery & Notes</span>
               </h4>
@@ -470,15 +546,40 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
                     : (order.address === 'POS Walk-in' ? 'Walk-in Store Purchase' : 'Standard Shipping');
                   const cleanNotes = notesStr.replace(/^\[Delivery:\s*[^\]]+\]\s*/, '');
                   
+                  // Match method and get logo URL
+                  const matchedMethod = deliveryMethods.find(
+                    m => m.name.toLowerCase().trim() === deliveryMethod.toLowerCase().trim() ||
+                         deliveryMethod.toLowerCase().trim().includes(m.name.toLowerCase().trim()) ||
+                         m.name.toLowerCase().trim().includes(deliveryMethod.toLowerCase().trim())
+                  );
+                  const matchedImage = matchedMethod?.image ? resolveImageUrl(matchedMethod.image) : null;
+
                   return (
                     <>
-                      <p className="opacity-70 font-medium leading-relaxed flex items-start gap-1">
-                        <span className="opacity-55 font-semibold">Method :</span>
-                        <span className="font-extrabold text-slate-800">{deliveryMethod}</span>
-                      </p>
-                      <p className="opacity-70 font-medium flex items-start gap-1">
-                        <span className="opacity-55 font-semibold">Notes :</span>
-                        <span className="leading-relaxed">{cleanNotes || '---'}</span>
+                      <div className="font-medium leading-relaxed flex items-center gap-2 text-slate-855">
+                        <span className="text-slate-500 font-semibold shrink-0">Method :</span>
+                        <div className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 rounded-[5px] px-2 py-0.5 select-none">
+                          <div className="w-5 h-5 rounded-[3px] overflow-hidden bg-orange-50 border border-orange-100 text-orange-500 flex items-center justify-center font-black shadow-3xs shrink-0">
+                            {matchedImage ? (
+                              <img
+                                src={matchedImage}
+                                alt={deliveryMethod}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            ) : null}
+                            <span className="w-full h-full flex items-center justify-center" style={{ display: matchedImage ? 'none' : 'flex' }}>
+                              <FiTruck className="w-2.5 h-2.5" />
+                            </span>
+                          </div>
+                          <span className="font-extrabold text-slate-800 text-[11px]">{deliveryMethod}</span>
+                        </div>
+                      </div>
+                      <p className="font-medium flex items-start gap-1 text-slate-855 mt-1">
+                        <span className="text-slate-500 font-semibold">Notes :</span>
+                        <span className="leading-relaxed text-slate-700">{cleanNotes || '---'}</span>
                       </p>
                     </>
                   );
@@ -680,9 +781,32 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
                   <FiCreditCard className="w-3.5 h-3.5 opacity-50" />
                   <span>Method</span>
                 </span>
-                <span className="font-extrabold bg-white border px-2.5 py-1 rounded-[5px] text-[11px] shadow-2xs">
-                  {order.paymentMethod === 'cod' ? 'Cash On Delivery' : order.paymentMethod}
-                </span>
+                {(() => {
+                  const pmDetails = getPaymentMethodDetails();
+                  return (
+                    <div className="flex items-center gap-1.5 bg-white border px-2.5 py-1 rounded-[5px] shadow-2xs select-none">
+                      {pmDetails.logoUrl ? (
+                        <div className="w-7.5 h-5 rounded-[3px] overflow-hidden border border-black/5 bg-black/[0.02] flex items-center justify-center shrink-0 shadow-3xs">
+                          <img
+                            src={pmDetails.logoUrl}
+                            alt={pmDetails.name}
+                            className="w-full h-full object-contain p-0.5"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className={`w-7.5 h-5 rounded-[3px] shrink-0 flex items-center justify-center font-black text-center shadow-3xs leading-none select-none px-0.5 ${pmDetails.logoColor} ${pmDetails.textColor} ${pmDetails.logoText.length > 5 ? 'text-[5px]' : 'text-[7px]'}`}>
+                          {pmDetails.logoText}
+                        </div>
+                      )}
+                      <span className="font-extrabold text-slate-800 text-[11px]">
+                        {pmDetails.name}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Total Amount */}

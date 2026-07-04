@@ -172,10 +172,9 @@ export const DeliveryZonesTab: React.FC = () => {
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 w-full text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex items-center space-x-3 pb-2 border-b border-slate-100">
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
-            <FiMapPin className="text-primary" />
             <span>Delivery Zones Setup</span>
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
@@ -235,7 +234,7 @@ export const DeliveryZonesTab: React.FC = () => {
                 <td className="py-3.5 px-5 text-left font-bold text-slate-800">{sl}</td>
                 <td className="py-3.5 px-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-500 flex items-center justify-center font-black text-sm shadow-3xs shrink-0">
+                    <div className="w-9 h-9 rounded-[5px] bg-orange-50 border border-orange-100 text-orange-500 flex items-center justify-center font-black text-sm shadow-2xs shrink-0">
                       <FiMapPin className="w-4 h-4" />
                     </div>
                     <div>
@@ -261,7 +260,7 @@ export const DeliveryZonesTab: React.FC = () => {
                 <td className="py-3.5 px-5 text-center">
                   <button
                     onClick={() => handleToggleActive(zone)}
-                    className={`inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] uppercase tracking-wider font-extrabold cursor-pointer border transition-colors select-none ${
+                    className={`inline-flex items-center px-2.5 py-1 rounded-[5px] text-[10px] uppercase tracking-wider font-extrabold cursor-pointer border transition-colors select-none ${
                       zone.is_active
                         ? 'bg-emerald-50 text-emerald-650 border-emerald-100 hover:bg-emerald-100/50'
                         : 'bg-rose-50 text-rose-650 border-rose-100 hover:bg-rose-100/50'
@@ -274,21 +273,21 @@ export const DeliveryZonesTab: React.FC = () => {
                   <div className="flex justify-end items-center gap-2">
                     <button
                       onClick={() => handleOpenShowPage(zone)}
-                      className="w-8 h-8 border border-emerald-500/50 text-emerald-600 hover:bg-emerald-50 rounded-xl flex items-center justify-center transition-colors cursor-pointer bg-transparent"
+                      className="w-8 h-8 border border-emerald-500/50 text-emerald-600 hover:bg-emerald-50 rounded-[5px] flex items-center justify-center transition-colors cursor-pointer bg-transparent"
                       title="View details"
                     >
                       <FiInfo className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleOpenEditPage(zone)}
-                      className="w-8 h-8 border border-blue-500/50 text-blue-500 hover:bg-blue-50 rounded-xl flex items-center justify-center transition-colors cursor-pointer bg-transparent"
+                      className="w-8 h-8 border border-blue-500/50 text-blue-500 hover:bg-blue-50 rounded-[5px] flex items-center justify-center transition-colors cursor-pointer bg-transparent"
                       title="Edit zone"
                     >
                       <FiEdit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleDelete(zone)}
-                      className="w-8 h-8 border border-red-500/50 text-red-500 hover:bg-red-50 rounded-xl flex items-center justify-center transition-colors cursor-pointer bg-transparent"
+                      className="w-8 h-8 border border-red-500/50 text-red-500 hover:bg-red-50 rounded-[5px] flex items-center justify-center transition-colors cursor-pointer bg-transparent"
                       title="Delete zone"
                     >
                       <FiTrash2 className="w-3.5 h-3.5" />

@@ -1,4 +1,4 @@
-export type ValidationErrorField = 'address' | 'preferredContact' | 'contactInput' | 'payment' | 'deliveryMethod';
+export type ValidationErrorField = 'address' | 'preferredContact' | 'contactInput' | 'payment' | 'deliveryMethod' | 'customCustomerName' | 'customCustomerPhone' | 'customCustomerAddress';
 
 export interface CheckoutValidationError {
     field: ValidationErrorField;

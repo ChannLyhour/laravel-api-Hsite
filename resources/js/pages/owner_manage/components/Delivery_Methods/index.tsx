@@ -173,10 +173,9 @@ export const DeliveryMethodsTab: React.FC = () => {
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex items-center space-x-3 pb-2 border-b border-slate-100">
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
-            <FiTruck className="text-primary" />
             <span>Delivery Method Setup</span>
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
@@ -237,7 +236,7 @@ export const DeliveryMethodsTab: React.FC = () => {
                 <td className="py-3.5 px-5 text-left font-bold text-slate-800">{sl}</td>
                 <td className="py-3.5 px-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-[8px] overflow-hidden bg-gradient-to-br from-orange-400 to-amber-500 text-white flex items-center justify-center font-black text-sm shadow-sm shrink-0">
+                    <div className="w-9 h-9 rounded-[5px] overflow-hidden bg-orange-50 border border-orange-100 text-orange-500 flex items-center justify-center font-black text-sm shadow-2xs shrink-0">
                       {logoUrl ? (
                         <img
                           src={logoUrl}
@@ -279,8 +278,8 @@ export const DeliveryMethodsTab: React.FC = () => {
                     onClick={() => handleToggleActive(method)}
                     className={`inline-flex items-center px-2.5 py-1 rounded-[5px] text-[10px] uppercase tracking-wider font-extrabold cursor-pointer border transition-colors select-none ${
                       method.is_active
-                        ? 'bg-emerald-50 text-emerald-650 border-emerald-100 hover:bg-emerald-100/50'
-                        : 'bg-rose-50 text-rose-650 border-rose-100 hover:bg-rose-100/50'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100/50'
+                        : 'bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100/50'
                     }`}
                   >
                     {method.is_active ? 'Active' : 'Disabled'}

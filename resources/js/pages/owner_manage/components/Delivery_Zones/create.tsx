@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { FiArrowLeft, FiMapPin } from 'react-icons/fi';
+import { FiMapPin, FiClock } from 'react-icons/fi';
 import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
 import { Store_setting } from '@/api/owner/stores';
 import { ApiError } from '@/api/client';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import '@/pages/owner_manage/style/font.css';
+import { GroupDiv } from '@/pages/owner_manage/helper/GroupDiv';
+import { PageHeader } from '@/pages/owner_manage/helper/PageHeader';
+import { FormActions } from '@/pages/owner_manage/helper/FormActions';
 
 interface DeliveryZoneCreatePageProps {
   onClose: () => void;
@@ -113,68 +116,62 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 pb-10 w-full text-left">
       {/* ── HEADER NAVIGATION ─────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-slate-100 pb-5">
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={onClose}
-            className="p-2 border border-slate-200 rounded-[5px] hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer flex items-center justify-center bg-white shadow-2xs"
-            title="Back to delivery zones list"
-          >
-            <FiArrowLeft className="w-5 h-5 stroke-[2.5]" />
-          </button>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
-              <FiMapPin className="text-primary" />
-              <span>Add New Delivery Zone</span>
-            </h2>
-            <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-              Define a regional delivery fee and delivery timeline structure.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Add New Delivery Zone"
+        subtitle="Define a regional delivery fee and delivery timeline structure."
+        onClose={onClose}
+        backTitle="Back to delivery zones list"
+      />
 
       {/* ── FORM CONTAINER ────────────────────────────────── */}
-      <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
-            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3">
-              Zone Details
-            </h3>
+          <GroupDiv className="space-y-6">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-855 flex items-center gap-1.5">
+                <FiMapPin className="text-orange-500" />
+                <span>Zone Details</span>
+              </h3>
+              <p className="text-slate-400 text-xs mt-0.5">
+                Specify the name, shortcode, type and geographic coverage.
+              </p>
+            </div>
 
             {/* Zone Name */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
-                Zone Name <span className="text-red-500">*</span>
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <span>Zone Name</span>
+                <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Phnom Penh, Siem Reap, National Highway 6"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
+                className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                 required
               />
             </div>
 
             {/* Zone Code */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
-                Zone Code / Shortcode <span className="text-red-500">*</span>
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <span>Zone Code / Shortcode</span>
+                <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.code}
                 onChange={e => setFormData({ ...formData, code: e.target.value })}
                 placeholder="e.g., PP-ZONE, SR-ZONE"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
+                className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                 required
               />
             </div>
 
             {/* Description */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-slate-700 block">
                 Description
               </label>
               <textarea
@@ -182,19 +179,19 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe which regions or provinces are covered by this zone..."
                 rows={4}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white resize-none"
+                className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold resize-none"
               />
             </div>
 
             {/* Zone Type */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-slate-700 block">
                 Zone Type
               </label>
               <select
                 value={formData.type}
                 onChange={e => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary bg-white cursor-pointer"
+                className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold cursor-pointer bg-white"
               >
                 <option value="radius">Radius-based coverage</option>
                 <option value="polygon">Custom geographical polygon</option>
@@ -204,29 +201,30 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
             {formData.type === 'radius' ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-slate-700 block">
                     Radius Center Point
                   </label>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={handleUseStoreLocation}
-                      className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-650 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border border-indigo-100 cursor-pointer"
+                      className="px-3 py-1.5 bg-black/[0.04] hover:bg-black/[0.08] text-slate-700 rounded-[5px] text-[11px] font-extrabold transition-all cursor-pointer border-none"
                     >
                       Use Store Location
                     </button>
                     <button
                       type="button"
                       onClick={handleDetectCurrentLocation}
-                      className="px-3 py-1 bg-slate-50 hover:bg-slate-100 text-slate-655 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border border-slate-200 cursor-pointer flex items-center gap-1"
+                      className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-[5px] text-[11px] font-extrabold flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-98 cursor-pointer border-none"
                     >
-                      <FiMapPin className="w-3 h-3" /> Detect GPS
+                      <FiMapPin className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>Detect GPS</span>
                     </button>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-450 uppercase tracking-wider block">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">
                       Center Latitude
                     </label>
                     <input
@@ -235,11 +233,11 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
                       value={formData.center_lat}
                       onChange={e => setFormData({ ...formData, center_lat: e.target.value })}
                       placeholder="e.g., 11.5564"
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
+                      className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-450 uppercase tracking-wider block">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">
                       Center Longitude
                     </label>
                     <input
@@ -248,11 +246,11 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
                       value={formData.center_lng}
                       onChange={e => setFormData({ ...formData, center_lng: e.target.value })}
                       placeholder="e.g., 104.9282"
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
+                      className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-450 uppercase tracking-wider block">
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">
                       Radius (KM)
                     </label>
                     <input
@@ -262,18 +260,18 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
                       value={formData.radius_km}
                       onChange={e => setFormData({ ...formData, radius_km: e.target.value })}
                       placeholder="e.g., 5.00"
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
+                      className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                     />
                   </div>
                 </div>
 
                 {/* Live Zone Center Map Preview */}
                 {formData.center_lat && formData.center_lng && (
-                  <div className="space-y-1.5 pt-2">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+                  <div className="space-y-1.5 pt-2 text-left">
+                    <label className="text-xs font-bold text-slate-700 block">
                       Zone Center Map Preview
                     </label>
-                    <div className="w-full h-48 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                    <div className="w-full h-48 rounded-[5px] overflow-hidden border border-slate-200 bg-slate-50">
                       <iframe
                         title="Zone Center Location Check"
                         src={`https://maps.google.com/maps?q=${parseFloat(formData.center_lat)},${parseFloat(formData.center_lng)}&z=14&output=embed`}
@@ -286,8 +284,8 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
                 )}
               </div>
             ) : (
-              <div className="space-y-1.5 animate-fade-in">
-                <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+              <div className="space-y-1.5 animate-fade-in text-left">
+                <label className="text-xs font-bold text-slate-700 block">
                   Polygon Coordinates (WKT String)
                 </label>
                 <textarea
@@ -295,42 +293,49 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
                   onChange={e => setFormData({ ...formData, polygon_coordinates: e.target.value })}
                   placeholder="e.g., POLYGON((104.9 11.5, 105.0 11.5, 105.0 11.6, 104.9 11.6, 104.9 11.5))"
                   rows={2}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white resize-none"
+                  className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold font-mono resize-none"
                 />
               </div>
             )}
-          </div>
+          </GroupDiv>
         </div>
 
         {/* Right Sidebar Details */}
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
-            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3">
-              Fee & Schedule
-            </h3>
+          <GroupDiv className="space-y-4">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-855 flex items-center gap-1.5">
+                <FiClock className="text-orange-500" />
+                <span>Fee & Schedule</span>
+              </h3>
+              <p className="text-slate-400 text-xs mt-0.5">
+                Configure pricing and timeline properties.
+              </p>
+            </div>
 
             {/* Delivery Fee */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
-                Delivery Fee (USD) <span className="text-red-500">*</span>
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <span>Delivery Fee (USD)</span>
+                <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-sans font-bold text-xs">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-sans font-bold text-sm">$</span>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={formData.delivery_fee}
                   onChange={e => setFormData({ ...formData, delivery_fee: e.target.value })}
-                  className="w-full pl-8 pr-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary bg-white"
+                  className="w-full pl-7 pr-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                   required
                 />
               </div>
             </div>
 
             {/* Estimated Delivery Time */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-slate-700 block">
                 Estimated Delivery Time
               </label>
               <input
@@ -338,14 +343,14 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
                 value={formData.estimated_delivery_time}
                 onChange={e => setFormData({ ...formData, estimated_delivery_time: e.target.value })}
                 placeholder="e.g., 24 Hours, 1-2 Days, 3-5 Days"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs font-semibold placeholder:text-slate-350 focus:outline-none focus:border-primary bg-white"
+                className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
               />
             </div>
 
             {/* Active Status */}
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between pt-2 text-left">
               <div>
-                <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+                <label className="text-xs font-bold text-slate-700 block">
                   Status Active
                 </label>
                 <p className="text-[10px] text-slate-400 mt-0.5">Toggle to enable/disable this zone.</p>
@@ -354,28 +359,17 @@ export const DeliveryZoneCreatePage: React.FC<DeliveryZoneCreatePageProps> = ({
                 type="checkbox"
                 checked={formData.is_active}
                 onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                className="w-5 h-5 accent-primary cursor-pointer"
+                className="w-4 h-4 accent-orange-600 cursor-pointer"
               />
             </div>
-          </div>
+          </GroupDiv>
 
           {/* Action buttons */}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 py-3.5 bg-primary hover:bg-primary-hover active:scale-98 text-white font-black text-xs uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all shadow-md disabled:opacity-60"
-            >
-              {saving ? 'Saving...' : 'Add Zone'}
-            </button>
-          </div>
+          <FormActions
+            onCancel={onClose}
+            saving={saving}
+            submitLabel="Add Zone"
+          />
         </div>
       </form>
     </div>

@@ -6,6 +6,7 @@ import { type CheckoutValidationError } from '../../validation/CheckoutValidatio
 import { type DeliveryMethod } from '@/api/owner/deliveryMethods';
 import { type DeliveryZone } from '@/api/owner/deliveryZones';
 import { resolveImageUrl } from '../../utils/imageUtils';
+import { openLocationMapModal } from '../helpers/autoLocationCustomer';
 
 interface DeliveryAddressTabProps {
      selectedAddress: ShippingAddress | undefined;
@@ -30,6 +31,23 @@ interface DeliveryAddressTabProps {
      onSelectDeliveryMethod: (method: DeliveryMethod) => void;
      loadingDeliveryMethods: boolean;
      matchingZone: DeliveryZone | null;
+
+     // Custom delivery closed variables
+     checkoutDeliveryAddress?: 'open' | 'close' | 'null';
+     checkoutPreferredContact?: 'open' | 'close' | 'null';
+     customCustomerName?: string;
+     setCustomCustomerName?: (val: string) => void;
+     customCustomerPhone?: string;
+     setCustomCustomerPhone?: (val: string) => void;
+     customCustomerAddress?: string;
+     setCustomCustomerAddress?: (val: string) => void;
+     customLatitude?: string;
+     setCustomLatitude?: (val: string) => void;
+     customLongitude?: string;
+     setCustomLongitude?: (val: string) => void;
+     customNameRef?: React.RefObject<HTMLInputElement | null>;
+     customPhoneRef?: React.RefObject<HTMLInputElement | null>;
+     customAddressRef?: React.RefObject<HTMLInputElement | null>;
 }
 
 export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
@@ -55,9 +73,27 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
      onSelectDeliveryMethod,
      loadingDeliveryMethods,
      matchingZone,
+     checkoutDeliveryAddress = 'open',
+     checkoutPreferredContact = 'open',
+     customCustomerName = '',
+     setCustomCustomerName,
+     customCustomerPhone = '',
+     setCustomCustomerPhone,
+     customCustomerAddress = '',
+     setCustomCustomerAddress,
+     customLatitude = '',
+     setCustomLatitude,
+     customLongitude = '',
+     setCustomLongitude,
+     customNameRef,
+     customPhoneRef,
+     customAddressRef,
 }) => {
      const hasError = !!(
           validationError?.field === 'address' ||
+          validationError?.field === 'customCustomerName' ||
+          validationError?.field === 'customCustomerPhone' ||
+          validationError?.field === 'customCustomerAddress' ||
           validationError?.field === 'preferredContact' ||
           validationError?.field === 'contactInput' ||
           validationError?.field === 'deliveryMethod'
@@ -77,7 +113,7 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                                         2. Delivery Address & Shipping
                                    </h2>
                                    <p className="text-[11px] text-stone-500 font-bold mt-0.5 animate-fade-in">
-                                        {selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Recipient'} • {selectedAddress?.city_province || 'No Province'}
+                                        {checkoutDeliveryAddress === 'close' ? customCustomerName : (selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Recipient')} • {checkoutDeliveryAddress === 'close' ? customCustomerAddress : (selectedAddress?.city_province || 'No Province')}
                                    </p>
                                    <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider animate-fade-in">
                                         Contact via {preferredContact?.toUpperCase()} ({contactInput})
@@ -118,124 +154,229 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                               <div>
                                    <h3 className="text-xs font-black text-stone-900 uppercase tracking-widest mb-3 flex items-center gap-2">
                                         <FiMapPin className="w-3.5 h-3.5 text-stone-900 stroke-[2.5]" />
-                                        Delivery address
-                                   </h3>                                   <div className="space-y-4">
-                                        {/* Selected address details */}
-                                        <div className={`flex items-start gap-4 p-4 border rounded-xl relative transition-all duration-200 ${validationError?.field === 'address' ? 'border-red-500 bg-red-50/10' : 'border-stone-200 bg-stone-50/50'}`}>
-                                             <div className={`mt-0.5 shrink-0 flex items-center justify-center w-4.5 h-4.5 rounded-full border transition-all duration-200 ${validationError?.field === 'address' ? 'border-red-500 bg-red-500 text-white' : 'border-stone-900 bg-stone-900 text-white shadow-xs'}`}>
-                                                  <FiCheck className="w-2.5 h-2.5 stroke-[4]" />
-                                             </div>
-
-                                             <div className="flex-1 text-xs text-stone-600 space-y-1">
-                                                  <h4 className="font-extrabold text-stone-900 text-sm">
-                                                       {selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'No Recipient Name'}
-                                                  </h4>
-                                                  <p>{selectedAddress ? `${selectedAddress.address}, ${selectedAddress.city_province}, ${selectedAddress.country}` : 'Please select or add a delivery address'}</p>
-                                                  {selectedAddress?.telephone && <p>{selectedAddress.telephone}</p>}
-                                             </div>
-
-                                             <button
-                                                  type="button"
-                                                  ref={addressBtnRef}
-                                                  onClick={showAddressBook}
-                                                  className={`absolute top-4 right-4 text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1 border-none bg-transparent cursor-pointer ${validationError?.field === 'address' ? 'text-red-600 hover:text-red-800' : 'text-stone-400 hover:text-stone-950'}`}
-                                             >
-                                                  {selectedAddress ? 'Change Address' : 'Choose Address'} <FiChevronRight className="w-3.5 h-3.5" />
-                                             </button>
-                                        </div>
-
-                                        {validationError?.field === 'address' && (
-                                             <p className="text-[11px] font-bold text-red-500 animate-fade-in mt-1 flex items-center gap-1">
-                                                  <span>⚠️</span>
-                                                  <span>{validationError.message}</span>
-                                             </p>
-                                        )}
-                                   </div>
-                              </div>
-
-                              {/* Preferred contact line section */}
-                              <div className="border-t border-stone-100 pt-6">
-                                   <h3 className="text-xs font-black text-stone-900 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <FiPhone className="w-3.5 h-3.5 text-stone-900 stroke-[2.5]" />
-                                        Preferred contact line
+                                        {checkoutDeliveryAddress === 'close' ? 'Customer Information' : 'Delivery address'}
                                    </h3>
 
-                                   <div className="space-y-4">
-                                        <div className="grid grid-cols-3 gap-2">
-                                             {[
-                                                  { 
-                                                       key: 'phone', 
-                                                       icon: <FiPhone className="w-3.5 h-3.5 text-blue-600" />, 
-                                                       label: 'Phone call',
-                                                       activeClass: 'bg-blue-50 text-blue-700 border-blue-300'
-                                                  },
-                                                  { 
-                                                       key: 'telegram', 
-                                                       icon: <FaTelegramPlane className="w-3.5 h-3.5 text-[#24A1DE]" />, 
-                                                       label: 'Telegram',
-                                                       activeClass: 'bg-[#24A1DE]/10 text-[#2088b9] border-[#24A1DE]/30'
-                                                  },
-                                                  { 
-                                                       key: 'whatsapp', 
-                                                       icon: <FaWhatsapp className="w-3.5 h-3.5 text-[#25D366]" />, 
-                                                       label: 'WhatsApp',
-                                                       activeClass: 'bg-[#25D366]/10 text-[#128C7E] border-[#25D366]/30'
-                                                  },
-                                             ].map((c, idx) => (
+                                   {checkoutDeliveryAddress === 'close' ? (
+                                        <div className="space-y-3">
+                                             {/* Customer Name */}
+                                             <div className="space-y-1.5 text-left">
+                                                  <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block">
+                                                       Your Name <span className="text-red-500">*</span>
+                                                  </label>
+                                                  <input
+                                                       ref={customNameRef as any}
+                                                       type="text"
+                                                       value={customCustomerName}
+                                                       onChange={(e) => setCustomCustomerName?.(e.target.value)}
+                                                       placeholder="e.g. John Doe"
+                                                       className={`w-full px-3.5 py-2.5 bg-stone-50 border rounded-xl text-xs font-semibold text-stone-850 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-900 transition-all ${validationError?.field === 'customCustomerName' ? 'border-red-500' : 'border-stone-200'}`}
+                                                  />
+                                             </div>
+
+                                             {/* Customer Phone */}
+                                             <div className="space-y-1.5 text-left">
+                                                  <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block">
+                                                       Phone Number <span className="text-red-500">*</span>
+                                                  </label>
+                                                  <input
+                                                       ref={customPhoneRef as any}
+                                                       type="text"
+                                                       value={customCustomerPhone}
+                                                       onChange={(e) => setCustomCustomerPhone?.(e.target.value)}
+                                                       placeholder="e.g. 012345678"
+                                                       className={`w-full px-3.5 py-2.5 bg-stone-50 border rounded-xl text-xs font-semibold text-stone-855 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-900 transition-all ${validationError?.field === 'customCustomerPhone' ? 'border-red-500' : 'border-stone-200'}`}
+                                                  />
+                                             </div>
+
+                                             {/* Customer Address */}
+                                             <div className="space-y-1.5 text-left">
+                                                  <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block">
+                                                       Delivery Address / Note <span className="text-red-500">*</span>
+                                                  </label>
+                                                  <input
+                                                       ref={customAddressRef as any}
+                                                       type="text"
+                                                       value={customCustomerAddress}
+                                                       onChange={(e) => setCustomCustomerAddress?.(e.target.value)}
+                                                       placeholder="e.g. #123, St 456, Phnom Penh"
+                                                       className={`w-full px-3.5 py-2.5 bg-stone-50 border rounded-xl text-xs font-semibold text-stone-850 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-900 transition-all ${validationError?.field === 'customCustomerAddress' ? 'border-red-500' : 'border-stone-200'}`}
+                                                  />
+                                             </div>
+
+                                             {/* Coordinates (Latitude & Longitude) */}
+                                             <div className="grid grid-cols-2 gap-3">
+                                                  <div className="space-y-1.5 text-left">
+                                                       <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block">
+                                                            Latitude <span className="text-stone-450 font-medium lowercase">(optional)</span>
+                                                       </label>
+                                                       <input
+                                                            type="text"
+                                                            value={customLatitude}
+                                                            onChange={(e) => setCustomLatitude?.(e.target.value)}
+                                                            placeholder="e.g. 11.5564"
+                                                            className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-900 transition-all"
+                                                       />
+                                                  </div>
+                                                  <div className="space-y-1.5 text-left">
+                                                       <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block">
+                                                            Longitude <span className="text-stone-400 font-medium lowercase">(optional)</span>
+                                                       </label>
+                                                       <input
+                                                            type="text"
+                                                            value={customLongitude}
+                                                            onChange={(e) => setCustomLongitude?.(e.target.value)}
+                                                            placeholder="e.g. 104.9282"
+                                                            className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-900 transition-all"
+                                                       />
+                                                  </div>
+                                             </div>
+
+                                             {/* Detect Map Button */}
+                                             <div className="pt-2">
                                                   <button
-                                                       key={c.key}
                                                        type="button"
-                                                       ref={idx === 0 ? preferredContactRef : undefined}
-                                                       onClick={() => setPreferredContact(c.key)}
-                                                       className={`flex items-center justify-center gap-1.5 py-2.5 px-3 border rounded-xl text-xs font-bold transition-all cursor-pointer ${preferredContact === c.key
-                                                            ? `${c.activeClass} shadow-xs active:scale-98`
-                                                            : validationError?.field === 'preferredContact'
-                                                                 ? 'bg-white text-red-500 border-red-300 hover:bg-red-50/50 active:scale-98'
-                                                                 : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50 active:scale-98'
-                                                            }`}
+                                                       onClick={async () => {
+                                                            const result = await openLocationMapModal(
+                                                                 customLatitude ? parseFloat(customLatitude) : null,
+                                                                 customLongitude ? parseFloat(customLongitude) : null
+                                                            );
+                                                            if (result) {
+                                                                 setCustomLatitude?.(String(result.latitude));
+                                                                 setCustomLongitude?.(String(result.longitude));
+                                                                 if (setCustomCustomerAddress && result.address) {
+                                                                      setCustomCustomerAddress(result.address);
+                                                                 }
+                                                            }
+                                                       }}
+                                                       className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-black text-[10px] uppercase tracking-widest rounded-xl border-none cursor-pointer transition-colors flex items-center justify-center gap-1.5"
                                                   >
-                                                       {c.icon}
-                                                       {c.label}
+                                                       <FiMapPin className="w-3.5 h-3.5" />
+                                                       Detect & Select Location on Map
                                                   </button>
-                                             ))}
+                                             </div>
                                         </div>
+                                   ) : (
+                                        <div className="space-y-4">
+                                             {/* Selected address details */}
+                                             <div className={`flex items-start gap-4 p-4 border rounded-xl relative transition-all duration-200 ${validationError?.field === 'address' ? 'border-red-500 bg-red-50/10' : 'border-stone-200 bg-stone-50/50'}`}>
+                                                  <div className={`mt-0.5 shrink-0 flex items-center justify-center w-4.5 h-4.5 rounded-full border transition-all duration-200 ${validationError?.field === 'address' ? 'border-red-500 bg-red-500 text-white' : 'border-stone-900 bg-stone-900 text-white shadow-xs'}`}>
+                                                       <FiCheck className="w-2.5 h-2.5 stroke-[4]" />
+                                                  </div>
 
-                                        {validationError?.field === 'preferredContact' && (
-                                             <p className="text-[11px] font-bold text-red-500 animate-fade-in mt-1 flex items-center gap-1">
-                                                  <span>⚠️</span>
-                                                  <span>{validationError.message}</span>
-                                             </p>
-                                        )}
+                                                  <div className="flex-1 text-xs text-stone-600 space-y-1">
+                                                       <h4 className="font-extrabold text-stone-900 text-sm">
+                                                            {selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'No Recipient Name'}
+                                                       </h4>
+                                                       <p>{selectedAddress ? `${selectedAddress.address}, ${selectedAddress.city_province}, ${selectedAddress.country}` : 'Please select or add a delivery address'}</p>
+                                                       {selectedAddress?.telephone && <p>{selectedAddress.telephone}</p>}
+                                                  </div>
 
-                                        <div className="space-y-1.5">
-                                             <input
-                                                  type="text"
-                                                  ref={contactInputRef}
-                                                  value={contactInput}
-                                                  onChange={(e) => setContactInput(e.target.value)}
-                                                  placeholder={
-                                                       preferredContact === 'phone'
-                                                            ? 'Enter phone number (+855...)'
-                                                            : preferredContact === 'telegram'
-                                                                 ? 'Enter Telegram username or phone'
-                                                                 : preferredContact === 'whatsapp'
-                                                                      ? 'Enter WhatsApp number'
-                                                                      : 'Enter contact information'
-                                                  }
-                                                  className={`w-full px-4 py-3 border rounded-xl text-xs font-bold text-stone-850 focus:outline-none transition-all duration-200 ${validationError?.field === 'contactInput'
-                                                       ? 'border-red-500 focus:border-red-600 focus:ring-1 focus:ring-red-500/25 bg-red-50/5'
-                                                       : 'border-stone-200 focus:border-stone-950'
-                                                       }`}
-                                             />
-                                             {validationError?.field === 'contactInput' && (
+                                                  <button
+                                                       type="button"
+                                                       ref={addressBtnRef}
+                                                       onClick={showAddressBook}
+                                                       className={`absolute top-4 right-4 text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1 border-none bg-transparent cursor-pointer ${validationError?.field === 'address' ? 'text-red-600 hover:text-red-800' : 'text-stone-400 hover:text-stone-955'}`}
+                                                  >
+                                                       {selectedAddress ? 'Change Address' : 'Choose Address'} <FiChevronRight className="w-3.5 h-3.5" />
+                                                  </button>
+                                             </div>
+
+                                             {validationError?.field === 'address' && (
                                                   <p className="text-[11px] font-bold text-red-500 animate-fade-in mt-1 flex items-center gap-1">
                                                        <span>⚠️</span>
                                                        <span>{validationError.message}</span>
                                                   </p>
                                              )}
                                         </div>
-                                   </div>
+                                   )}
                               </div>
+
+                              {/* Preferred contact line section */}
+                              {checkoutPreferredContact !== 'close' && (
+                                   <div className="border-t border-stone-100 pt-6">
+                                        <h3 className="text-xs font-black text-stone-900 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                             <FiPhone className="w-3.5 h-3.5 text-stone-900 stroke-[2.5]" />
+                                             Preferred contact line
+                                        </h3>
+
+                                        <div className="space-y-4">
+                                             <div className="grid grid-cols-3 gap-2">
+                                                  {[
+                                                       {
+                                                            key: 'phone',
+                                                            icon: <FiPhone className="w-3.5 h-3.5 text-blue-600" />,
+                                                            label: 'Phone call',
+                                                            activeClass: 'bg-blue-50 text-blue-700 border-blue-300'
+                                                       },
+                                                       {
+                                                            key: 'telegram',
+                                                            icon: <FaTelegramPlane className="w-3.5 h-3.5 text-[#24A1DE]" />,
+                                                            label: 'Telegram',
+                                                            activeClass: 'bg-[#24A1DE]/10 text-[#2088b9] border-[#24A1DE]/30'
+                                                       },
+                                                       {
+                                                            key: 'whatsapp',
+                                                            icon: <FaWhatsapp className="w-3.5 h-3.5 text-[#25D366]" />,
+                                                            label: 'WhatsApp',
+                                                            activeClass: 'bg-[#25D366]/10 text-[#128C7E] border-[#25D366]/30'
+                                                       },
+                                                  ].map((c, idx) => (
+                                                       <button
+                                                            key={c.key}
+                                                            type="button"
+                                                            ref={idx === 0 ? preferredContactRef : undefined}
+                                                            onClick={() => setPreferredContact(c.key)}
+                                                            className={`flex items-center justify-center gap-1.5 py-2.5 px-3 border rounded-xl text-xs font-bold transition-all cursor-pointer ${preferredContact === c.key
+                                                                 ? `${c.activeClass} shadow-xs active:scale-98`
+                                                                 : validationError?.field === 'preferredContact'
+                                                                      ? 'bg-white text-red-500 border-red-300 hover:bg-red-50/50 active:scale-98'
+                                                                      : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50 active:scale-98'
+                                                                 }`}
+                                                       >
+                                                            {c.icon}
+                                                            {c.label}
+                                                       </button>
+                                                  ))}
+                                             </div>
+
+                                             {validationError?.field === 'preferredContact' && (
+                                                  <p className="text-[11px] font-bold text-red-500 animate-fade-in mt-1 flex items-center gap-1">
+                                                       <span>⚠️</span>
+                                                       <span>{validationError.message}</span>
+                                                  </p>
+                                             )}
+
+                                             <div className="space-y-1.5">
+                                                  <input
+                                                       type="text"
+                                                       ref={contactInputRef}
+                                                       value={contactInput}
+                                                       onChange={(e) => setContactInput(e.target.value)}
+                                                       placeholder={
+                                                            preferredContact === 'phone'
+                                                                 ? 'Enter phone number (+855...)'
+                                                                 : preferredContact === 'telegram'
+                                                                      ? 'Enter Telegram username or phone'
+                                                                      : preferredContact === 'whatsapp'
+                                                                           ? 'Enter WhatsApp number'
+                                                                           : 'Enter contact information'
+                                                       }
+                                                       className={`w-full px-4 py-3 border rounded-xl text-xs font-bold text-stone-850 focus:outline-none transition-all duration-200 ${validationError?.field === 'contactInput'
+                                                            ? 'border-red-500 focus:border-red-600 focus:ring-1 focus:ring-red-500/25 bg-red-50/5'
+                                                            : 'border-stone-200 focus:border-stone-950'
+                                                            }`}
+                                                  />
+                                                  {validationError?.field === 'contactInput' && (
+                                                       <p className="text-[11px] font-bold text-red-500 animate-fade-in mt-1 flex items-center gap-1">
+                                                            <span>⚠️</span>
+                                                            <span>{validationError.message}</span>
+                                                       </p>
+                                                  )}
+                                             </div>
+                                        </div>
+                                   </div>
+                              )}
 
                               {/* Delivery Method Selector */}
                               {deliveryMethods && deliveryMethods.length > 0 && (
@@ -265,10 +406,10 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                                                             type="button"
                                                             onClick={() => onSelectDeliveryMethod(method)}
                                                             className={`flex items-start gap-3 p-4 border rounded-xl transition-all duration-200 text-left cursor-pointer bg-white ${isSelected
-                                                                      ? 'border-stone-900 ring-1 ring-stone-900/5 shadow-xs'
-                                                                      : validationError?.field === 'deliveryMethod'
-                                                                           ? 'border-red-300 bg-red-50/5 hover:bg-red-50/10'
-                                                                           : 'border-stone-200 hover:bg-stone-50/50'
+                                                                 ? 'border-stone-900 ring-1 ring-stone-900/5 shadow-xs'
+                                                                 : validationError?.field === 'deliveryMethod'
+                                                                      ? 'border-red-300 bg-red-50/5 hover:bg-red-50/10'
+                                                                      : 'border-stone-200 hover:bg-stone-50/50'
                                                                  }`}
                                                        >
                                                             {/* Icon or Image */}
