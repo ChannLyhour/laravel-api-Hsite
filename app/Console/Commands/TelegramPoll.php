@@ -31,8 +31,9 @@ class TelegramPoll extends Command
         $this->info("Starting Telegram long-polling service...");
         Log::info("Telegram long-polling service started.");
 
-        // Keep track of offsets per bot token
+        // Keep track of offsets and webhook deletion status per bot token
         $offsets = [];
+        $deletedWebhooks = [];
 
         while (true) {
             try {
@@ -53,6 +54,20 @@ class TelegramPoll extends Command
 
                 foreach ($stores as $store) {
                     $botToken = $store->bot_token;
+
+                    // Automatically delete webhook once per bot during this command lifetime
+                    if (!isset($deletedWebhooks[$botToken])) {
+                        $this->info("Deleting webhook for bot to enable long-polling...");
+                        $delUrl = "https://api.telegram.org/bot{$botToken}/deleteWebhook";
+                        $ch = curl_init();
+                        curl_setopt($ch, CURLOPT_URL, $delUrl);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                        curl_exec($ch);
+                        curl_close($ch);
+                        $deletedWebhooks[$botToken] = true;
+                    }
+
                     $offset = $offsets[$botToken] ?? 0;
 
                     $url = "https://api.telegram.org/bot{$botToken}/getUpdates?offset={$offset}&timeout=5";
@@ -79,6 +94,8 @@ class TelegramPoll extends Command
 
                         if (isset($update['callback_query'])) {
                             $this->handleCallbackQuery($botToken, $update['callback_query']);
+                        } elseif (isset($update['message'])) {
+                            $this->handleMessage($botToken, $update['message']);
                         }
                     }
                 }
@@ -198,6 +215,99 @@ class TelegramPoll extends Command
             curl_close($ch);
         } catch (\Exception $e) {
             Log::warning("Telegram command editMessageText failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Process message from polling (commands, contact sharing).
+     */
+    private function handleMessage($botToken, array $message)
+    {
+        $chatId = $message['chat']['id'] ?? null;
+        $text = $message['text'] ?? '';
+
+        if (!$chatId) {
+            return;
+        }
+
+        // Handle contact share
+        if (isset($message['contact'])) {
+            $contact = $message['contact'];
+            $phoneNumber = $contact['phone_number'];
+
+            $normalizedPhone = \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($phoneNumber);
+
+            // Find store owner
+            $storeOwnerId = Store::where('key', 'telegram_bot_token')->where('value', $botToken)->value('created_by');
+
+            if ($storeOwnerId) {
+                Store::updateOrCreate(
+                    ['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $normalizedPhone],
+                    ['value' => $chatId]
+                );
+
+                $replyText = "✅ <b>Account Linked Successfully!</b>\n\nYour phone number <code>" . htmlspecialchars($phoneNumber) . "</code> is now registered to receive verification OTPs directly in this chat. You can proceed to complete your order checkout.";
+                
+                $replyMarkup = json_encode([
+                    'remove_keyboard' => true
+                ]);
+
+                $this->sendMessage($botToken, $chatId, $replyText, $replyMarkup);
+                $this->info("Linked phone {$phoneNumber} to Telegram Chat {$chatId}");
+            }
+            return;
+        }
+
+        // Handle commands
+        if ($text === '/start' || str_starts_with($text, '/start')) {
+            $replyText = "👋 <b>Hello! Welcome to our Store Bot.</b>\n\nTo receive order OTP verification codes directly in this chat, please click the button below to share your phone number:";
+            
+            $replyMarkup = json_encode([
+                'keyboard' => [
+                    [
+                        [
+                            'text' => '📱 Share Phone Number to Verify OTP',
+                            'request_contact' => true
+                        ]
+                    ]
+                ],
+                'one_time_keyboard' => true,
+                'resize_keyboard' => true
+            ]);
+
+            $this->sendMessage($botToken, $chatId, $replyText, $replyMarkup);
+        }
+    }
+
+    /**
+     * Send message helper.
+     */
+    private function sendMessage($botToken, $chatId, $text, $replyMarkup = null)
+    {
+        try {
+            $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            
+            $postFields = [
+                'chat_id' => $chatId,
+                'text' => $text,
+                'parse_mode' => 'HTML'
+            ];
+
+            if ($replyMarkup) {
+                $postFields['reply_markup'] = $replyMarkup;
+            }
+
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postFields));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_exec($ch);
+            curl_close($ch);
+        } catch (\Exception $e) {
+            $this->error("Telegram sendMessage failed: " . $e->getMessage());
         }
     }
 }

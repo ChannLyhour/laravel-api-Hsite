@@ -30,12 +30,20 @@ class TelegramOTPAcc
                $botToken = Store::where('created_by', $storeId)->where('key', 'telegram_bot_token')->value('value');
                $chatId = Store::where('created_by', $storeId)->where('key', 'telegram_chat_id')->value('value');
 
-               if (!$botToken || !$chatId) {
+               if (!$botToken) {
                     return;
                }
 
                $customerName = htmlspecialchars($order->customer_name ?? 'Guest Customer', ENT_QUOTES, 'UTF-8');
                $customerPhone = htmlspecialchars($order->customer_phone ?? '', ENT_QUOTES, 'UTF-8');
+
+               $normalizedPhone = self::normalizeCambodianPhone($customerPhone);
+               $customerChatId = Store::where('created_by', $storeId)->where('key', "tg_chat_" . $normalizedPhone)->value('value');
+               $targetChatId = $customerChatId ?: $chatId;
+
+               if (!$targetChatId) {
+                    return;
+               }
 
                $messageLines = [
                     "🔐 <b>Order OTP Verification</b>",
@@ -53,7 +61,7 @@ class TelegramOTPAcc
 
                $message = implode("\n", $messageLines);
 
-               self::sendMessage($botToken, $chatId, $message);
+               self::sendMessage($botToken, $targetChatId, $message);
           } catch (\Exception $e) {
                Log::error("TelegramOTPAcc sendOTP failed: " . $e->getMessage());
           }

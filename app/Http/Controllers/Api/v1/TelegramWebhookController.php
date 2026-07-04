@@ -23,6 +23,11 @@ class TelegramWebhookController extends Controller
             return $this->handleCallbackQuery($update['callback_query'], $token);
         }
 
+        // Check if update is a message (includes commands and contact sharing)
+        if (isset($update['message'])) {
+            return $this->handleMessage($update['message'], $token);
+        }
+
         return response()->json(['status' => 'ignored']);
     }
 
@@ -159,6 +164,102 @@ class TelegramWebhookController extends Controller
             curl_close($ch);
         } catch (\Exception $e) {
             Log::warning("Telegram editMessageText failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Process plain messages and shared contacts.
+     */
+    private function handleMessage(array $message, $token)
+    {
+        $chatId = $message['chat']['id'] ?? null;
+        $text = $message['text'] ?? '';
+
+        if (!$chatId || !$token) {
+            return response()->json(['status' => 'invalid_message']);
+        }
+
+        // Handle contact share
+        if (isset($message['contact'])) {
+            $contact = $message['contact'];
+            $phoneNumber = $contact['phone_number'];
+
+            $normalizedPhone = \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($phoneNumber);
+
+            // Find store owner who owns this bot token
+            $storeOwnerId = Store::where('key', 'telegram_bot_token')->where('value', $token)->value('created_by');
+
+            if ($storeOwnerId) {
+                Store::updateOrCreate(
+                    ['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $normalizedPhone],
+                    ['value' => $chatId]
+                );
+
+                $replyText = "✅ <b>Account Linked Successfully!</b>\n\nYour phone number <code>" . htmlspecialchars($phoneNumber) . "</code> is now registered to receive verification OTPs directly in this chat. You can proceed to complete your order checkout.";
+                
+                $replyMarkup = json_encode([
+                    'remove_keyboard' => true
+                ]);
+
+                $this->sendMessage($token, $chatId, $replyText, $replyMarkup);
+                return response()->json(['status' => 'contact_linked']);
+            }
+            return response()->json(['status' => 'store_not_found']);
+        }
+
+        // Handle commands
+        if ($text === '/start' || str_starts_with($text, '/start')) {
+            $replyText = "👋 <b>Hello! Welcome to our Store Bot.</b>\n\nTo receive order OTP verification codes directly in this chat, please click the button below to share your phone number:";
+            
+            $replyMarkup = json_encode([
+                'keyboard' => [
+                    [
+                        [
+                            'text' => '📱 Share Phone Number to Verify OTP',
+                            'request_contact' => true
+                        ]
+                    ]
+                ],
+                'one_time_keyboard' => true,
+                'resize_keyboard' => true
+            ]);
+
+            $this->sendMessage($token, $chatId, $replyText, $replyMarkup);
+            return response()->json(['status' => 'start_handled']);
+        }
+
+        return response()->json(['status' => 'message_ignored']);
+    }
+
+    /**
+     * Send message helper.
+     */
+    private function sendMessage($botToken, $chatId, $text, $replyMarkup = null)
+    {
+        try {
+            $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            
+            $postFields = [
+                'chat_id' => $chatId,
+                'text' => $text,
+                'parse_mode' => 'HTML'
+            ];
+
+            if ($replyMarkup) {
+                $postFields['reply_markup'] = $replyMarkup;
+            }
+
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postFields));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_exec($ch);
+            curl_close($ch);
+        } catch (\Exception $e) {
+            Log::warning("Telegram sendMessage failed: " . $e->getMessage());
         }
     }
 }
