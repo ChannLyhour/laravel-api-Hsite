@@ -145,7 +145,10 @@ export const PopOtpVerifyTele: React.FC<PopOtpVerifyTeleProps> = ({
                          {telegramLink && (
                               <div className="pt-1">
                                    <a
-                                        href={telegramLink.includes('?') ? `${telegramLink}&start=true` : `${telegramLink}?start=true`}
+                                        href={(() => {
+                                             const cleanLink = telegramLink.split('?')[0];
+                                             return orderId ? `${cleanLink}?start=verify_${orderId}` : `${cleanLink}?start=true`;
+                                        })()}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#24A1DE] hover:bg-[#208ebd] text-white rounded-[4px] font-black text-2xs uppercase tracking-widest no-underline transition-all shadow-xs hover:shadow-sm"

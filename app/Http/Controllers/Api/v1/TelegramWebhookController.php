@@ -190,10 +190,36 @@ class TelegramWebhookController extends Controller
             $storeOwnerId = Store::where('key', 'telegram_bot_token')->where('value', $token)->value('created_by');
 
             if ($storeOwnerId) {
+                // Link actual Telegram phone number
                 Store::updateOrCreate(
                     ['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $normalizedPhone],
                     ['value' => $chatId]
                 );
+
+                // Check if there was a start parameter stored in Cache for this chat ID
+                $startParam = \Illuminate\Support\Facades\Cache::get("tg_start_param_{$chatId}");
+                $orderPhoneToLink = null;
+
+                if ($startParam && preg_match('/\/start\s+verify_(.+)/', $startParam, $matches)) {
+                    $orderIdentifier = trim($matches[1]);
+                    // Find the order by ID or order number
+                    $order = Order::where('store_id', $storeOwnerId)
+                        ->where(function($q) use ($orderIdentifier) {
+                            $q->where('id', $orderIdentifier)
+                              ->orWhere('order_no', $orderIdentifier);
+                        })
+                        ->first();
+
+                    if ($order && $order->customer_phone) {
+                        $orderPhoneToLink = \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($order->customer_phone);
+                        // Link the checkout phone number to the customer's chat ID too!
+                        Store::updateOrCreate(
+                            ['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $orderPhoneToLink],
+                            ['value' => $chatId]
+                        );
+                        \Illuminate\Support\Facades\Log::info("Webhook: Linked checkout phone {$orderPhoneToLink} to Chat ID {$chatId} via start parameter verify_{$orderIdentifier}");
+                    }
+                }
 
                 $replyText = "✅ <b>Account Linked Successfully!</b>\n\nYour phone number <code>" . htmlspecialchars($phoneNumber) . "</code> is now registered to receive verification OTPs directly in this chat. You can proceed to complete your order checkout.";
 
@@ -205,6 +231,12 @@ class TelegramWebhookController extends Controller
 
                 // Auto-send any pending order OTP now that the chat is linked
                 \App\Helpers\TelegramOTPAcc::checkAndSendPendingOTP($storeOwnerId, $normalizedPhone, $phoneNumber);
+                if ($orderPhoneToLink && $orderPhoneToLink !== $normalizedPhone) {
+                    \App\Helpers\TelegramOTPAcc::checkAndSendPendingOTP($storeOwnerId, $orderPhoneToLink, $orderPhoneToLink);
+                }
+
+                // Clear the temporary cache
+                \Illuminate\Support\Facades\Cache::forget("tg_start_param_{$chatId}");
 
                 return response()->json(['status' => 'contact_linked']);
             }
@@ -213,6 +245,9 @@ class TelegramWebhookController extends Controller
 
         // Handle commands
         if ($text === '/start' || str_starts_with($text, '/start')) {
+            // Save start command in Cache to know if there's an associated verify parameter
+            \Illuminate\Support\Facades\Cache::put("tg_start_param_{$chatId}", $text, 600);
+
             // Check if there is a start parameter (e.g. /start check_ODN12345)
             $param = null;
             if (preg_match('/\/start\s+(.+)/', $text, $matches)) {

@@ -241,10 +241,36 @@ class TelegramPoll extends Command
             $storeOwnerId = Store::where('key', 'telegram_bot_token')->where('value', $botToken)->value('created_by');
 
             if ($storeOwnerId) {
+                // Link actual Telegram phone number
                 Store::updateOrCreate(
                     ['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $normalizedPhone],
                     ['value' => $chatId]
                 );
+
+                // Check if there was a start parameter stored in Cache for this chat ID
+                $startParam = \Illuminate\Support\Facades\Cache::get("tg_start_param_{$chatId}");
+                $orderPhoneToLink = null;
+
+                if ($startParam && preg_match('/\/start\s+verify_(.+)/', $startParam, $matches)) {
+                    $orderIdentifier = trim($matches[1]);
+                    // Find the order by ID or order number
+                    $order = \App\Models\Order::where('store_id', $storeOwnerId)
+                        ->where(function($q) use ($orderIdentifier) {
+                            $q->where('id', $orderIdentifier)
+                              ->orWhere('order_no', $orderIdentifier);
+                        })
+                        ->first();
+
+                    if ($order && $order->customer_phone) {
+                        $orderPhoneToLink = \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($order->customer_phone);
+                        // Link the checkout phone number to the customer's chat ID too!
+                        Store::updateOrCreate(
+                            ['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $orderPhoneToLink],
+                            ['value' => $chatId]
+                        );
+                        Log::info("Linked checkout phone {$orderPhoneToLink} to Chat ID {$chatId} via start parameter verify_{$orderIdentifier}");
+                    }
+                }
 
                 $replyText = "✅ <b>Account Linked Successfully!</b>\n\nYour phone number <code>" . htmlspecialchars($phoneNumber) . "</code> is now registered to receive verification OTPs directly in this chat. You can proceed to complete your order checkout.";
                 
@@ -257,12 +283,21 @@ class TelegramPoll extends Command
 
                 // Auto-send any pending order OTP now that the chat is linked
                 \App\Helpers\TelegramOTPAcc::checkAndSendPendingOTP($storeOwnerId, $normalizedPhone, $phoneNumber);
+                if ($orderPhoneToLink && $orderPhoneToLink !== $normalizedPhone) {
+                    \App\Helpers\TelegramOTPAcc::checkAndSendPendingOTP($storeOwnerId, $orderPhoneToLink, $orderPhoneToLink);
+                }
+
+                // Clear the temporary cache
+                \Illuminate\Support\Facades\Cache::forget("tg_start_param_{$chatId}");
             }
             return;
         }
 
         // Handle commands
         if ($text === '/start' || str_starts_with($text, '/start')) {
+            // Save start command in Cache to know if there's an associated verify parameter
+            \Illuminate\Support\Facades\Cache::put("tg_start_param_{$chatId}", $text, 600);
+
             $replyText = "👋 <b>Hello! Welcome to our Store Bot.</b>\n\nTo receive order OTP verification codes directly in this chat, please click the button below to share your phone number:";
             
             $replyMarkup = json_encode([
