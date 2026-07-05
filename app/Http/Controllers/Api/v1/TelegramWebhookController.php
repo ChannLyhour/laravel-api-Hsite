@@ -202,6 +202,10 @@ class TelegramWebhookController extends Controller
                 ]);
 
                 $this->sendMessage($token, $chatId, $replyText, $replyMarkup);
+
+                // Auto-send any pending order OTP now that the chat is linked
+                \App\Helpers\TelegramOTPAcc::checkAndSendPendingOTP($storeOwnerId, $normalizedPhone, $phoneNumber);
+
                 return response()->json(['status' => 'contact_linked']);
             }
             return response()->json(['status' => 'store_not_found']);

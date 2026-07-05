@@ -108,6 +108,44 @@ class TelegramOTPAcc
      }
 
      /**
+      * Check if there is a pending order for this phone number and store owner, and send the OTP if it exists in cache.
+      *
+      * @param int $storeOwnerId
+      * @param string $normalizedPhone
+      * @param string $rawPhoneNumber
+      * @return void
+      */
+     public static function checkAndSendPendingOTP($storeOwnerId, $normalizedPhone, $rawPhoneNumber)
+     {
+          try {
+               Log::info("checkAndSendPendingOTP: Checking pending orders for storeOwner: {$storeOwnerId}, phone: {$normalizedPhone}");
+               
+               // Find any recent pending orders for this store owner matching either normalized or raw phone
+               $pendingOrder = \App\Models\Order::where('store_id', $storeOwnerId)
+                    ->where(function($q) use ($normalizedPhone, $rawPhoneNumber) {
+                         $cleanRaw = preg_replace('/[^0-9]/', '', $rawPhoneNumber);
+                         $q->where('customer_phone', 'like', '%' . $normalizedPhone . '%')
+                           ->orWhere('customer_phone', 'like', '%' . $cleanRaw . '%')
+                           ->orWhere('customer_phone', 'like', '%' . ltrim($normalizedPhone, '+') . '%');
+                    })
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+               if ($pendingOrder) {
+                    $otpCode = \Illuminate\Support\Facades\Cache::get("order_otp_{$pendingOrder->id}");
+                    Log::info("checkAndSendPendingOTP: Found order ID {$pendingOrder->id}, Cached OTP exists: " . ($otpCode ? 'Yes' : 'No'));
+                    if ($otpCode) {
+                         self::sendOTP($pendingOrder, $otpCode);
+                    }
+               } else {
+                    Log::info("checkAndSendPendingOTP: No pending order found for {$normalizedPhone}");
+               }
+          } catch (\Exception $e) {
+               Log::error("TelegramOTPAcc::checkAndSendPendingOTP failed: " . $e->getMessage());
+          }
+     }
+
+     /**
       * Normalize Cambodian phone number to +855 format.
       *
       * @param string $phone

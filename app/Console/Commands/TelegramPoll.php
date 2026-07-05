@@ -254,6 +254,9 @@ class TelegramPoll extends Command
 
                 $this->sendMessage($botToken, $chatId, $replyText, $replyMarkup);
                 $this->info("Linked phone {$phoneNumber} to Telegram Chat {$chatId}");
+
+                // Auto-send any pending order OTP now that the chat is linked
+                \App\Helpers\TelegramOTPAcc::checkAndSendPendingOTP($storeOwnerId, $normalizedPhone, $phoneNumber);
             }
             return;
         }
