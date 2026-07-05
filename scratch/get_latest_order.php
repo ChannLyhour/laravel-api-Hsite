@@ -14,7 +14,7 @@ if (!$order) {
     exit;
 }
 
-echo "Latest Order Details:\n";
+echo "Latest Orde1r Details:\n";
 echo "- ID: {$order->id}\n";
 echo "- Order No: {$order->order_no}\n";
 echo "- Store ID: {$order->store_id}\n";
