@@ -6,6 +6,7 @@ export interface TelegramBotConfig {
   bot_token: string;
   chat_id: string;
   enabled: boolean;
+  customer_bot_link?: string;
 }
 
 const STORAGE_KEY = "telegram_bot_config";
@@ -26,13 +27,14 @@ export const getTelegramConfig = (): TelegramBotConfig | null => {
     const storeSettingsRaw = localStorage.getItem("store_settings");
     if (storeSettingsRaw) {
       const storeSettings = JSON.parse(storeSettingsRaw);
-      if (storeSettings.telegram_bot_token || storeSettings.telegram_chat_id) {
+      if (storeSettings.telegram_bot_token || storeSettings.telegram_chat_id || storeSettings.telegram_customer_bot_link) {
         return {
           bot_token: storeSettings.telegram_bot_token || "",
           chat_id: storeSettings.telegram_chat_id || "",
           enabled:
             storeSettings.telegram_enabled === "1" ||
             storeSettings.telegram_enabled === true,
+          customer_bot_link: storeSettings.telegram_customer_bot_link || "",
         };
       }
     }
@@ -54,6 +56,7 @@ export const saveTelegramConfig = async (
     storeSettings.telegram_bot_token = config.bot_token;
     storeSettings.telegram_chat_id = config.chat_id;
     storeSettings.telegram_enabled = config.enabled ? "1" : "0";
+    storeSettings.telegram_customer_bot_link = config.customer_bot_link || "";
     localStorage.setItem("store_settings", JSON.stringify(storeSettings));
     window.dispatchEvent(new Event("settings_updated"));
   } catch (e) {
@@ -69,6 +72,7 @@ export const saveTelegramConfig = async (
       telegram_bot_token: config.bot_token,
       telegram_chat_id: config.chat_id,
       telegram_enabled: config.enabled ? "1" : "0",
+      telegram_customer_bot_link: config.customer_bot_link || "",
     });
   } catch (err) {
     console.warn("Failed to persist telegram config to backend:", err);

@@ -163,6 +163,7 @@ class StoreController extends Controller
             'telegram_bot_token',
             'telegram_chat_id',
             'telegram_enabled',
+            'telegram_customer_bot_link',
             'customer_chat',
             'send_chat_order',
             'gmail_enabled',

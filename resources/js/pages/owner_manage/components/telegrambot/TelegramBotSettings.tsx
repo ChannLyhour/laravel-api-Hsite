@@ -13,6 +13,7 @@ import '@/pages/owner_manage/style/font.css';
 export const TelegramBotSettings: React.FC = () => {
   const [botToken, setBotToken] = useState('');
   const [chatId, setChatId] = useState('');
+  const [customerBotLink, setCustomerBotLink] = useState('');
   const [enabled, setEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -26,6 +27,7 @@ export const TelegramBotSettings: React.FC = () => {
       setBotToken(config.bot_token || '');
       setChatId(config.chat_id || '');
       setEnabled(config.enabled ?? false);
+      setCustomerBotLink(config.customer_bot_link || '');
     }
   }, []);
 
@@ -41,6 +43,7 @@ export const TelegramBotSettings: React.FC = () => {
         bot_token: botToken.trim(),
         chat_id: chatId.trim(),
         enabled,
+        customer_bot_link: customerBotLink.trim(),
       });
       toast.success('Telegram bot settings saved!');
     } catch {
@@ -177,6 +180,23 @@ export const TelegramBotSettings: React.FC = () => {
           />
           <p className="text-[10px] text-slate-400 font-medium">
             Your personal chat ID or group chat ID where notifications will be sent
+          </p>
+        </div>
+
+        {/* Customer Bot Username */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-700 block">
+            Customer Telegram Bot Username (Optional)
+          </label>
+          <input
+            type="text"
+            value={customerBotLink}
+            onChange={(e) => setCustomerBotLink(e.target.value)}
+            placeholder="e.g. @Gotfly_bot"
+            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-[6px] text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800 bg-white"
+          />
+          <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+            Enter your Telegram Bot username (e.g. @username or username). If provided, customers will click this link to start/receive order updates on checkout. If empty, the system automatically attempts to resolve it using the Bot Token.
           </p>
         </div>
 

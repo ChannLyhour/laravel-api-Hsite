@@ -265,7 +265,15 @@ class OrderController extends Controller
                     $otpRequired = true;
                     if ($custPhone) {
                         $botToken = Store::where('created_by', $order->store_id)->where('key', 'telegram_bot_token')->value('value');
-                        if ($botToken) {
+                        $customBotLink = Store::where('created_by', $order->store_id)->where('key', 'telegram_customer_bot_link')->value('value');
+                        if ($customBotLink) {
+                            $cleanLink = trim($customBotLink);
+                            if (strpos($cleanLink, 'http') === 0) {
+                                $telegramBotLink = $cleanLink;
+                            } else {
+                                $telegramBotLink = "https://t.me/" . ltrim($cleanLink, '@');
+                            }
+                        } elseif ($botToken) {
                             $cacheKey = "tg_bot_username_" . md5($botToken);
                             $botUsername = \Illuminate\Support\Facades\Cache::get($cacheKey);
                             if ($botUsername === null) {
