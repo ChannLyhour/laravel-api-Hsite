@@ -164,7 +164,18 @@ class StoreController extends Controller
             'telegram_chat_id',
             'telegram_enabled',
             'customer_chat',
-            'send_chat_order'
+            'send_chat_order',
+            'gmail_enabled',
+            'gmail_email',
+            'gmail_password',
+            'mail_mailer',
+            'mail_host',
+            'mail_port',
+            'mail_encryption',
+            'mail_username',
+            'mail_password',
+            'mail_from_address',
+            'mail_from_name'
         ];
 
         if ($request->has('website_theme')) {
@@ -309,7 +320,18 @@ class StoreController extends Controller
             'telegram_chat_id',
             'telegram_enabled',
             'customer_chat',
-            'send_chat_order'
+            'send_chat_order',
+            'gmail_enabled',
+            'gmail_email',
+            'gmail_password',
+            'mail_mailer',
+            'mail_host',
+            'mail_port',
+            'mail_encryption',
+            'mail_username',
+            'mail_password',
+            'mail_from_address',
+            'mail_from_name'
         ];
 
         $ownerId = $request->created_by;
@@ -442,7 +464,18 @@ class StoreController extends Controller
             'telegram_chat_id',
             'telegram_enabled',
             'customer_chat',
-            'send_chat_order'
+            'send_chat_order',
+            'gmail_enabled',
+            'gmail_email',
+            'gmail_password',
+            'mail_mailer',
+            'mail_host',
+            'mail_port',
+            'mail_encryption',
+            'mail_username',
+            'mail_password',
+            'mail_from_address',
+            'mail_from_name'
         ];
 
         $data = $request->all();

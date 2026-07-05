@@ -23,6 +23,7 @@ export interface BackendOrder {
   payment_method: string;
   customer_name: string | null;
   customer_phone: string | null;
+  customer_email?: string | null;
   customer_address: string | null;
   latitude?: number | string | null;
   longitude?: number | string | null;
@@ -64,6 +65,9 @@ export function mapBackendOrder(o: BackendOrder): Order {
     'confirmed': 'confirm',
     'confirm': 'confirm',
     'processing': 'processing',
+    'delivering': 'delivering',
+    'shipped': 'delivering',
+    'out_for_delivery': 'delivering',
     'delivered': 'complete',
     'complete': 'complete',
     'completed': 'complete',
@@ -126,7 +130,8 @@ export function mapBackendOrder(o: BackendOrder): Order {
     userId: o.user_id ? String(o.user_id) : undefined,
     customerId: o.customer_id ? Number(o.customer_id) : undefined,
     customer: o.customer_name || 'Guest User',
-    email: `${(o.customer_name || 'guest').toLowerCase().replace(/\s+/g, '')}@example.com`,
+    email: o.customer_email || `${(o.customer_name || 'guest').toLowerCase().replace(/\s+/g, '')}@example.com`,
+    customer_email: o.customer_email || null,
     phone: o.customer_phone || '',
     address: o.customer_address || 'No address specified',
     items: mappedItems,

@@ -124,10 +124,13 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
      return (
           <div className={`bg-white rounded-2xl border transition-all duration-300 shadow-sm ${!isLocked ? (hasError ? 'border-red-500 ring-1 ring-red-500/20 p-5' : 'border-stone-900 ring-1 ring-stone-900/5 p-5') : 'border-stone-200/50 p-5'}`}>
                {/* Header */}
-               <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+               <div 
+                    onClick={isLocked ? onEdit : undefined}
+                    className={`flex items-center justify-between pb-4 border-b border-stone-100 ${isLocked ? 'cursor-pointer select-none' : ''}`}
+               >
                     {isLocked ? (
                          <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center text-white shrink-0 shadow-xs">
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-250 flex items-center justify-center shrink-0 shadow-2xs">
                                    <FiCheck className="w-4 h-4 stroke-[3]" />
                               </div>
                               <div>
@@ -157,12 +160,20 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                     )}
 
                     {isLocked ? (
-                         <button
-                              onClick={onEdit}
-                              className="text-[10px] font-black text-stone-500 hover:text-stone-900 uppercase tracking-widest border border-stone-200 hover:border-stone-900 px-3.5 py-1.5 rounded-xl bg-transparent cursor-pointer transition-all duration-200"
-                         >
-                              Modify
-                         </button>
+                         <div className="flex items-center gap-2">
+                              <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-xl font-black uppercase tracking-wider border border-emerald-200/50">
+                                   Complete
+                              </span>
+                              <button
+                                   onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit();
+                                   }}
+                                   className="text-[10px] font-black text-stone-500 hover:text-stone-900 uppercase tracking-widest border border-stone-200 hover:border-stone-900 px-3.5 py-1.5 rounded-xl bg-transparent cursor-pointer transition-all duration-200"
+                              >
+                                   Modify
+                              </button>
+                         </div>
                     ) : (
                          <span className="text-[11px] bg-stone-100 text-stone-600 px-3 py-1 rounded-xl font-black uppercase tracking-wider">
                               Step 2 of 3

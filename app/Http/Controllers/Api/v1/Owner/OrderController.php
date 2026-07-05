@@ -168,7 +168,7 @@ class OrderController extends Controller
             return response()->json(['detail' => 'You are not authorized to manage orders for this store.'], 403);
         }
 
-        $validStatuses = ['pending', 'processing', 'completed', 'cancelled', 'complete', 'canceled', 'confirmed'];
+        $validStatuses = ['pending', 'processing', 'completed', 'cancelled', 'complete', 'canceled', 'confirmed', 'delivering', 'shipped', 'out_for_delivery'];
         $newStatus = strtolower(trim($request->status));
 
         if (!in_array($newStatus, $validStatuses)) {
@@ -182,9 +182,12 @@ class OrderController extends Controller
             $newStatus = 'cancelled';
         } elseif ($newStatus === 'confirmed') {
             $newStatus = 'confirmed';
+        } elseif ($newStatus === 'delivering' || $newStatus === 'shipped' || $newStatus === 'out_for_delivery') {
+            $newStatus = 'delivering';
         }
 
         $order->update(['status' => $newStatus]);
+        \App\Helpers\SendStatusTelegramboToCustomers::sendStatus($order, $newStatus);
         return response()->json($order);
     }
 

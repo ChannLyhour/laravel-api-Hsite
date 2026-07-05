@@ -21,6 +21,7 @@
     "all_orders": "ការបញ្ជាទិញទាំងអស់",
     "pending": "រង់ចាំ",
     "processing": "កំពុងដំណើរការ",
+    "delivering": "កំពុងដឹកជញ្ជូន",
     "completed": "បានបញ្ចប់",
     "cancelled": "បានបោះបង់",
     "promotions": "ការផ្សព្វផ្សាយ",

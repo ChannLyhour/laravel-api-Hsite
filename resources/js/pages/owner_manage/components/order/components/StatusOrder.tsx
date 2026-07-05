@@ -1,8 +1,8 @@
 import React from 'react';
-import { FiClock, FiCheck, FiPackage, FiCheckCircle, FiShoppingBag } from 'react-icons/fi';
+import { FiClock, FiCheck, FiPackage, FiCheckCircle, FiShoppingBag, FiTruck } from 'react-icons/fi';
 
 interface StatusOrderProps {
-     status: 'pending' | 'confirm' | 'processing' | 'canceled' | 'cancelled' | 'complete';
+     status: 'pending' | 'confirm' | 'processing' | 'canceled' | 'cancelled' | 'complete' | 'delivering';
      isWalkIn?: boolean;
 }
 
@@ -28,7 +28,8 @@ export const StatusOrder: React.FC<StatusOrderProps> = ({ status, isWalkIn }) =>
      const steps = [
           { key: 'pending', label: 'Order Placed', desc: 'Received & pending', icon: <FiClock className="w-4 h-4" /> },
           { key: 'confirm', label: 'Confirmed', desc: 'Order confirmed', icon: <FiCheck className="w-4 h-4" /> },
-          { key: 'processing', label: 'Processing', desc: 'Preparing your items', icon: <FiPackage className="w-4 h-4" /> },
+          { key: 'processing', label: 'Processing', desc: 'Preparing items', icon: <FiPackage className="w-4 h-4" /> },
+          { key: 'delivering', label: 'Delivering', desc: 'Out for delivery', icon: <FiTruck className="w-4 h-4" /> },
           { key: 'complete', label: 'Delivered', desc: 'Package received', icon: <FiCheckCircle className="w-4 h-4" /> }
      ];
 
@@ -37,7 +38,8 @@ export const StatusOrder: React.FC<StatusOrderProps> = ({ status, isWalkIn }) =>
                case 'pending': return 0;
                case 'confirm': return 1;
                case 'processing': return 2;
-               case 'complete': return 3;
+               case 'delivering': return 3;
+               case 'complete': return 4;
                default: return -1;
           }
      };
@@ -57,8 +59,8 @@ export const StatusOrder: React.FC<StatusOrderProps> = ({ status, isWalkIn }) =>
                     </div>
 
                     {steps.map((step, idx) => {
-                         const isCompleted = idx < activeStep || (activeStep === 3 && idx === 3);
-                         const isCurrent = idx === activeStep && activeStep < 3;
+                         const isCompleted = idx < activeStep || (activeStep === 4 && idx === 4);
+                         const isCurrent = idx === activeStep && activeStep < 4;
                          const isPending = idx > activeStep;
 
                          return (
@@ -73,7 +75,7 @@ export const StatusOrder: React.FC<StatusOrderProps> = ({ status, isWalkIn }) =>
                                              : isCurrent
                                                   ? 'bg-primary/10 border-primary text-primary ring-4 ring-primary/20 shadow-sm scale-105'
                                                   : 'bg-black/[0.03] border-stone-200 text-stone-400'
-                                        }`}>
+                                       }`}>
                                         {isCompleted ? <FiCheck className="w-4 h-4" /> : step.icon}
                                    </div>
 

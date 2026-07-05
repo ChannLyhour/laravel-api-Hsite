@@ -55,9 +55,11 @@
     "orderPlacedDesc": "Received & pending",
     "confirmedDesc": "Order confirmed",
     "processingDesc": "Preparing your items",
+    "deliveringDesc": "Out for delivery",
     "deliveredDesc": "Package received",
     "confirmed": "Confirmed",
     "processing": "Processing",
+    "delivering": "Delivering",
     "delivered": "Delivered",
     "pending": "Pending",
     "cancelled": "Cancelled"

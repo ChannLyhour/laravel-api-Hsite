@@ -44,6 +44,7 @@ import { useCustomerGuestCheckout } from '../hooks/useCustomerGuestCheckout';
 import { List_Order_CheckoutTab } from './Checkout/List_Order_CheckoutTab';
 import { Delivery_addressTab } from './Checkout/Delivery_addressTab';
 import { PaymentTab } from './Checkout/PaymentTab';
+import { SummaryOrder } from './Checkout/summaryorder';
 import { openLocationMapModal } from './helpers/autoLocationCustomer';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -1459,105 +1460,28 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
             <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                {/* LEFT COLUMN: Sticky persistent Subtotal/Summary Card */}
+                {/* LEFT COLUMN: Sticky persistent Subtotal/Summary Card on Desktop / Bottom Sheet + Modal on Mobile */}
                 <section className="lg:col-span-5">
-                    <div className="sticky top-8 space-y-6">
-                        <div className="px-6 py-5 border border-stone-150 bg-stone-50 rounded-sm space-y-4 shadow-2xs">
-                            {/* Claim code inputs inside summary card */}
-                            <div className="space-y-3 pb-4 border-b border-stone-200/60">
-                                <h2 className="text-xs font-black text-stone-900 uppercase tracking-widest">
-                                    Claim code
-                                </h2>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={claimCode}
-                                        onChange={(e) => {
-                                            setClaimCode(e.target.value);
-                                            if (appliedCoupon && appliedCoupon.code !== e.target.value) {
-                                                setAppliedCoupon(null);
-                                            }
-                                        }}
-                                        placeholder="Claim code"
-                                        className="flex-1 px-3 py-2 border border-stone-200 rounded-[3px] text-xs font-bold text-stone-855 uppercase placeholder:text-stone-300 focus:outline-none focus:border-stone-950 bg-white"
-                                    />
-                                    <button
-                                        onClick={handleApplyCode}
-                                        disabled={!claimCode.trim()}
-                                        className="px-4 py-2 bg-white border border-stone-200 hover:bg-stone-950 hover:text-white rounded-[3px] text-xs font-black uppercase tracking-wider text-stone-900 transition-all cursor-pointer disabled:bg-stone-50 disabled:text-stone-300 disabled:border-stone-150"
-                                    >
-                                        Apply
-                                    </button>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setIsVoucherDrawerOpen(true)}
-                                    className="ProductDetailsDescription_apply_voucher_txt__2Iss6 relative flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-stone-100 rounded-[3px] text-[10px] font-black uppercase tracking-wider text-stone-700 hover:text-stone-955 transition-all border border-stone-200 cursor-pointer shrink-0 select-none focus:outline-none w-fit"
-                                >
-                                    <span>{appliedCoupon ? `Code: ${appliedCoupon.code}` : 'Free Voucher'}</span>
-                                    <svg className="w-3.5 h-3.5 text-stone-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-                                        <line x1="13" y1="5" x2="13" y2="19" />
-                                    </svg>
-                                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#E61E25] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white shadow-xs">
-                                        {appliedCoupon ? '✓' : coupons.length}
-                                    </span>
-                                </button>
-                            </div>
-
-                            <div className="space-y-2.5 pt-1">
-                                <div className="flex justify-between items-center text-xs font-semibold text-stone-600">
-                                    <span>Subtotal</span>
-                                    <span className="font-mono font-bold text-stone-900">${subtotal.toFixed(2)}</span>
-                                </div>
-
-                                {totalDiscount > 0 && (
-                                    <div className="flex justify-between items-center text-xs font-bold text-[#E61E25]">
-                                        <span className="flex items-center gap-1">
-                                            <FiTag className="w-3.5 h-3.5" />
-                                            Save
-                                        </span>
-                                        <span className="font-mono">- ${totalDiscount.toFixed(2)}</span>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-between items-center text-xs font-semibold text-stone-600">
-                                    <span className="flex items-center gap-1">
-                                        <span>Delivery fee ({stores?.store_name || storeSettings?.store_name})</span>
-                                        {appliedCoupon?.coupon_type === 'free_delivery' && (
-                                            <span className="text-[9px] bg-green-100 text-green-700 px-1 rounded-sm uppercase font-bold">Coupon</span>
-                                        )}
-                                    </span>
-                                    <span className="font-mono font-bold text-stone-905">{deliveryFee === 0 ? 'FREE' : `US $${deliveryFee.toFixed(2)}`}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between items-center text-sm font-black text-stone-900 border-t border-stone-200/60 pt-3">
-                                <span>Amount to pay</span>
-                                <span className="text-base font-black font-mono">${totalAmount.toFixed(2)}</span>
-                            </div>
-
-                            <button
-                                onClick={handleSubtotalAction}
-                                disabled={isCheckingOut || (currentStep === 1 && displayCartItems.length === 0) || (currentStep === 3 && !selectedPayment)}
-                                className={`w-full py-4 rounded-[3px] font-black text-xs uppercase tracking-widest border-none transition-all shadow-sm mt-2 focus:outline-none ${(isCheckingOut || (currentStep === 1 && displayCartItems.length === 0) || (currentStep === 3 && !selectedPayment))
-                                    ? 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'
-                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'
-                                    }`}
-                            >
-                                {isCheckingOut ? (
-                                    'Processing...'
-                                ) : currentStep === 1 ? (
-                                    'Proceed to Delivery'
-                                ) : currentStep === 2 ? (
-                                    'Proceed to Payment'
-                                ) : (
-                                    'Place Order'
-                                )}
-                            </button>
-                        </div>
-                    </div>
+                    <SummaryOrder
+                        claimCode={claimCode}
+                        setClaimCode={setClaimCode}
+                        appliedCoupon={appliedCoupon}
+                        setAppliedCoupon={setAppliedCoupon}
+                        handleApplyCode={handleApplyCode}
+                        setIsVoucherDrawerOpen={setIsVoucherDrawerOpen}
+                        subtotal={subtotal}
+                        totalDiscount={totalDiscount}
+                        deliveryFee={deliveryFee}
+                        stores={stores}
+                        storeSettings={storeSettings}
+                        totalAmount={totalAmount}
+                        isCheckingOut={isCheckingOut}
+                        currentStep={currentStep}
+                        displayCartItems={displayCartItems}
+                        selectedPayment={selectedPayment}
+                        handleSubtotalAction={handleSubtotalAction}
+                        coupons={coupons}
+                    />
                 </section>
 
                 {/* RIGHT COLUMN: Stepper Tabs */}
@@ -1656,6 +1580,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         validationError={validationError}
                         paymentRef={paymentRef}
                         isActive={currentStep === 3}
+                        onEdit={() => setCurrentStep(3)}
                     />
                 </section>
 

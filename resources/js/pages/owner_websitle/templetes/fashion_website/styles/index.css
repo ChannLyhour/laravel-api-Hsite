@@ -1,0 +1,18 @@
+/* Input, Select, and Textarea Focus Outline Style - Black */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none !important;
+    border-color: #1c1917 !important; /* stone-900 */
+    box-shadow: 0 0 0 1px #1c1917 !important;
+}
+
+/* Chrome/Safari Autofill Focus Border & Outline - Black */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #1c1917 !important;
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+    border-color: #1c1917 !important;
+}

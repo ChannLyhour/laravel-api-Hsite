@@ -49,6 +49,7 @@ class OrderController extends Controller
         $request->validate(['status' => 'required|string']);
         $order = Order::findOrFail($id);
         $order->update(['status' => $request->status]);
+        \App\Helpers\SendStatusTelegramboToCustomers::sendStatus($order, $request->status);
         return response()->json($order);
     }
 }

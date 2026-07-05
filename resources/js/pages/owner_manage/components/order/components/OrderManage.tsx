@@ -1,9 +1,9 @@
 import React from 'react';
-import { FiCheck, FiXCircle, FiPlayCircle } from 'react-icons/fi';
+import { FiCheck, FiXCircle, FiPlayCircle, FiTruck } from 'react-icons/fi';
 
 interface OrderManageProps {
-  status: 'pending' | 'confirm' | 'processing' | 'canceled' | 'cancelled' | 'complete';
-  transitionStatus: (newStatus: 'pending' | 'confirm' | 'processing' | 'canceled' | 'cancelled' | 'complete') => void;
+  status: 'pending' | 'confirm' | 'processing' | 'canceled' | 'cancelled' | 'complete' | 'delivering';
+  transitionStatus: (newStatus: 'pending' | 'confirm' | 'processing' | 'canceled' | 'cancelled' | 'complete' | 'delivering') => void;
   getStatusLabel: (status: any) => string;
 }
 
@@ -54,6 +54,25 @@ export const OrderManage: React.FC<OrderManageProps> = ({
       )}
 
       {status === 'processing' && (
+        <>
+          <button
+            onClick={() => transitionStatus('delivering')}
+            className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-[5px] text-xs font-black transition-all shadow-md shadow-cyan-500/10 hover:shadow-cyan-500/20 flex items-center justify-center space-x-1.5 cursor-pointer active:scale-[0.98]"
+          >
+            <FiTruck className="w-4 h-4" />
+            <span>Ship / Deliver Order</span>
+          </button>
+          <button
+            onClick={() => transitionStatus('canceled')}
+            className="w-full py-2.5 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200/50 hover:border-rose-100 rounded-[5px] text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-[0.98]"
+          >
+            <FiXCircle className="w-4 h-4" />
+            <span>Cancel Order</span>
+          </button>
+        </>
+      )}
+
+      {status === 'delivering' && (
         <>
           <button
             onClick={() => transitionStatus('complete')}

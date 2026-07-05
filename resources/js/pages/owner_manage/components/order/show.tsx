@@ -32,11 +32,12 @@ export interface Order {
   customerId?: number;
   customer: string;
   email: string;
+  customer_email?: string | null;
   phone: string;
   address: string;
   items: OrderItem[];
   total: string;
-  status: 'pending' | 'confirm' | 'processing' | 'canceled' | 'cancelled' | 'complete';
+  status: 'pending' | 'confirm' | 'processing' | 'canceled' | 'cancelled' | 'complete' | 'delivering';
   time: string;
   store: string;
   storePhone?: string;
@@ -91,6 +92,8 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
         return 'bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-[0_1px_2px_rgba(99,102,241,0.05)]';
       case 'processing':
         return 'bg-amber-50 text-amber-700 border border-amber-100 shadow-[0_1px_2px_rgba(245,158,11,0.05)]';
+      case 'delivering':
+        return 'bg-cyan-50 text-cyan-700 border border-cyan-100 shadow-[0_1px_2px_rgba(6,182,212,0.05)]';
       case 'canceled':
         return 'bg-rose-50 text-rose-700 border border-rose-100 shadow-[0_1px_2px_rgba(244,63,94,0.05)]';
       case 'complete':
@@ -105,6 +108,7 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
       case 'pending': return 'bg-blue-500';
       case 'confirm': return 'bg-indigo-500';
       case 'processing': return 'bg-amber-500';
+      case 'delivering': return 'bg-cyan-500';
       case 'canceled': return 'bg-rose-500';
       case 'complete': return 'bg-emerald-500';
       default: return 'bg-slate-400';
@@ -117,6 +121,7 @@ export const ShowOrderPage: React.FC<ShowOrderPageProps> = ({
       case 'pending': return 'Pending';
       case 'confirm': return 'Confirmed';
       case 'processing': return 'Processing';
+      case 'delivering': return 'Delivering';
       case 'canceled': return 'Canceled';
       case 'complete': return 'Complete';
       default: return status;

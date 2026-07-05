@@ -47,7 +47,8 @@ export const resolveItemImage = (item: any): string => {
 
 const getActiveStepIndex = (status: string): number => {
      const s = status.toLowerCase();
-     if (s.includes('complete') || s.includes('deliver')) return 3;
+     if (s.includes('complete')) return 4;
+     if (s.includes('deliver') || s.includes('shipped') || s.includes('out_for_delivery')) return 3;
      if (s.includes('process')) return 2;
      if (s.includes('confirm')) return 1;
      return 0; // Default/pending
@@ -79,6 +80,7 @@ export const OrderHistoryShow: React.FC<OrderHistoryShowProps> = ({ order, local
           { title: t('checkout.orderPlaced').replace('!', ''), desc: t('orders.orderPlacedDesc'), icon: <FiClock className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
           { title: t('orders.confirmed'), desc: t('orders.confirmedDesc'), icon: <FiCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
           { title: t('orders.processing'), desc: t('orders.processingDesc'), icon: <FiPackage className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
+          { title: t('orders.delivering') || 'Delivering', desc: t('orders.deliveringDesc') || 'Out for delivery', icon: <FiTruck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
           { title: t('orders.delivered'), desc: t('orders.deliveredDesc'), icon: <FiCheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> }
      ];
 
@@ -110,8 +112,8 @@ export const OrderHistoryShow: React.FC<OrderHistoryShowProps> = ({ order, local
                               </div>
 
                               {steps.map((step, idx) => {
-                                   const isCompleted = idx < activeStep || (activeStep === 3 && idx === 3);
-                                   const isCurrent = idx === activeStep && activeStep < 3;
+                                   const isCompleted = idx < activeStep || (activeStep === 4 && idx === 4);
+                                   const isCurrent = idx === activeStep && activeStep < 4;
                                    const isPending = idx > activeStep;
 
                                    return (

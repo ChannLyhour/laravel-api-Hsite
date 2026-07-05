@@ -163,6 +163,7 @@ class OrderController extends Controller
                 $isEmail = $loginValue ? filter_var($loginValue, FILTER_VALIDATE_EMAIL) : false;
                 $custPhone = $isEmail ? null : \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($request->customer_phone);
                 $custEmail = $isEmail ? $loginValue : $request->customer_email;
+                $isRealEmail = $custEmail && !str_contains($custEmail, 'temp-customer.com');
 
                 $order = Order::create([
                     'order_no' => OrderNoHelper::generate(),
@@ -177,7 +178,7 @@ class OrderController extends Controller
                     'latitude' => $request->latitude,
                     'longitude' => $request->longitude,
                     'notes' => $request->notes,
-                    'status' => $custPhone ? 'unverified' : 'pending',
+                    'status' => ($custPhone || $isRealEmail) ? 'unverified' : 'pending',
                     'subtotal' => $request->subtotal ?? $request->total_amount,
                     'tax' => $request->tax ?? 0,
                     'shipping_fee' => $request->shipping_fee ?? 0,
@@ -230,8 +231,8 @@ class OrderController extends Controller
                     ]);
                 }
 
-                // Send Telegram notification to the store owner
-                if (!$custPhone) {
+                // Send Telegram notification to the store owner immediately only if no OTP verification is required
+                if (!$custPhone && !$isRealEmail) {
                     try {
                         \App\Helpers\TelegramHelper::sendOrderNotification($order);
                     } catch (\Exception $ex) {
@@ -239,45 +240,53 @@ class OrderController extends Controller
                     }
                 }
 
-                // Send OTP code via Telegram if order was placed using a phone number
-                if ($custPhone) {
+                // Send OTP code via Telegram or Gmail if order requires verification
+                if ($custPhone || $isRealEmail) {
                     try {
                         $otpCode = (string) rand(100000, 999999);
                         \Illuminate\Support\Facades\Cache::put("order_otp_{$order->id}", $otpCode, 3600);
                         
-                        \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
+                        if ($custPhone) {
+                            \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
+                        }
+                        
+                        if ($isRealEmail) {
+                            \App\Helpers\GmailOTPHelper::sendOTP($order, $otpCode);
+                        }
                     } catch (\Exception $ex) {
-                        \Illuminate\Support\Facades\Log::warning("Telegram OTP sending failed: " . $ex->getMessage());
+                        \Illuminate\Support\Facades\Log::warning("OTP sending failed: " . $ex->getMessage());
                     }
                 }
 
                 $token = null;
                 $otpRequired = false;
                 $telegramBotLink = null;
-                if ($custPhone) {
+                if ($custPhone || $isRealEmail) {
                     $otpRequired = true;
-                    $botToken = Store::where('created_by', $order->store_id)->where('key', 'telegram_bot_token')->value('value');
-                    if ($botToken) {
-                        $cacheKey = "tg_bot_username_" . md5($botToken);
-                        $botUsername = \Illuminate\Support\Facades\Cache::get($cacheKey);
-                        if ($botUsername === null) {
-                            \Illuminate\Support\Facades\Cache::forget($cacheKey);
-                            $botUsername = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($botToken) {
-                                try {
-                                    $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(3)->get("https://api.telegram.org/bot" . $botToken . "/getMe");
-                                    if ($response->successful()) {
-                                        $data = $response->json();
-                                        return $data['result']['username'] ?? null;
+                    if ($custPhone) {
+                        $botToken = Store::where('created_by', $order->store_id)->where('key', 'telegram_bot_token')->value('value');
+                        if ($botToken) {
+                            $cacheKey = "tg_bot_username_" . md5($botToken);
+                            $botUsername = \Illuminate\Support\Facades\Cache::get($cacheKey);
+                            if ($botUsername === null) {
+                                \Illuminate\Support\Facades\Cache::forget($cacheKey);
+                                $botUsername = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($botToken) {
+                                    try {
+                                        $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(3)->get("https://api.telegram.org/bot" . $botToken . "/getMe");
+                                        if ($response->successful()) {
+                                            $data = $response->json();
+                                            return $data['result']['username'] ?? null;
+                                        }
+                                    } catch (\Exception $e) {
+                                        \Illuminate\Support\Facades\Log::warning("Failed to fetch Telegram bot info: " . $e->getMessage());
                                     }
-                                } catch (\Exception $e) {
-                                    \Illuminate\Support\Facades\Log::warning("Failed to fetch Telegram bot info: " . $e->getMessage());
-                                }
-                                return null;
-                            });
-                        }
+                                    return null;
+                                });
+                            }
 
-                        if ($botUsername) {
-                            $telegramBotLink = "https://t.me/" . $botUsername;
+                            if ($botUsername) {
+                                $telegramBotLink = "https://t.me/" . $botUsername;
+                            }
                         }
                     }
                 } else {

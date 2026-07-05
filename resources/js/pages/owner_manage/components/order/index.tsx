@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   FiFileText, FiCheckCircle, FiXCircle, FiGift,
-  FiEye, FiDownload, FiCheck
+  FiEye, FiDownload, FiCheck, FiTruck
 } from 'react-icons/fi';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { ShowOrderPage } from './show';
 import type { Order } from './show';
 import { HelperTable } from '../../helper/HelperTable';
 import type { HelperTableColumn } from '../../helper/HelperTable';
+import { HelperFilter } from '../../helper/HelperFilter';
+import type { FilterSection } from '../../helper/HelperFilter';
 import { ordersService } from '@/api/owner/orders';
 import '@/pages/owner_manage/style/font.css';
 
@@ -22,6 +24,34 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({ ownerId, storeId, defaultS
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>(defaultStatusFilter || 'all');
+  const [tempStatusFilter, setTempStatusFilter] = useState<string>(defaultStatusFilter || 'all');
+
+  useEffect(() => {
+    setTempStatusFilter(statusFilter);
+  }, [statusFilter]);
+
+  const handleFilterChange = (sectionId: string, value: any) => {
+    if (sectionId === 'status') {
+      setTempStatusFilter(value);
+    }
+  };
+
+  const handleClearFilters = () => {
+    setTempStatusFilter('all');
+  };
+
+  const handleApplyFilters = () => {
+    setStatusFilter(tempStatusFilter);
+    setShowFilters(false);
+  };
+
+  const handleCloseFilters = () => {
+    setShowFilters(false);
+    setTempStatusFilter(statusFilter);
+  };
+
+  const filterSections: FilterSection[] = [];
+
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   // View swapping 'list' | 'show'
@@ -201,6 +231,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({ ownerId, storeId, defaultS
   const pendingCount = getCountByStatus('pending');
   const confirmCount = getCountByStatus('confirm');
   const processingCount = getCountByStatus('processing');
+  const deliveringCount = getCountByStatus('delivering');
   const canceledCount = getCountByStatus('canceled');
   const completeCount = getCountByStatus('complete');
   const totalCount = orders.length;
@@ -212,11 +243,12 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({ ownerId, storeId, defaultS
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
 
-  const getStatusBadgeClass = (status: Order['status']) => {
+   const getStatusBadgeClass = (status: Order['status']) => {
     switch (status) {
       case 'pending': return 'bg-blue-50 text-blue-600 border border-blue-100';
       case 'confirm': return 'bg-indigo-50 text-indigo-600 border border-indigo-100';
       case 'processing': return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+      case 'delivering': return 'bg-cyan-50 text-cyan-650 border border-cyan-100';
       case 'canceled': return 'bg-rose-50 text-rose-600 border border-rose-100';
       case 'complete': return 'bg-slate-50 text-slate-500 border border-slate-200';
       default: return 'bg-slate-50 text-slate-500 border border-slate-100';
@@ -229,6 +261,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({ ownerId, storeId, defaultS
       case 'pending': return 'Pending';
       case 'confirm': return 'Confirmed';
       case 'processing': return 'Processing';
+      case 'delivering': return 'Delivering';
       case 'canceled':
       case 'cancelled': return 'Canceled';
       case 'complete': return 'Complete';
@@ -270,137 +303,9 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({ ownerId, storeId, defaultS
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in">
 
-      {/* ── All Orders Header ────────────────────────────────── */}
-      <div className="flex items-center justify-between pb-2">
-        <div className="flex items-center space-x-2.5">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            All Orders
-          </h2>
-          <span className="bg-slate-100 border border-slate-200/50 text-slate-600 font-extrabold text-xs px-2.5 py-0.5 rounded-[5px]">
-            {totalCount}
-          </span>
-        </div>
 
-        <button
-          onClick={loadOrders}
-          disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-[5px] text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
-        >
-          <FiDownload className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>{loading ? 'Refreshing...' : 'Refresh List'}</span>
-        </button>
-      </div>
 
-      {/* ── Current Order Summary Dashboard Grid ─────────────── */}
-      <div className="border rounded-[5px] p-5 shadow-xs space-y-4 custom-card-container">
-        <h3 className="font-extrabold text-sm tracking-wide">
-          Current Order Summary
-        </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
-          {/* Card 0: Total */}
-          <div
-            onClick={() => selectStatusCategory('all')}
-            className={`border rounded-[5px] p-4 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${statusFilter === 'all'
-              ? 'bg-black/[0.05] border-slate-400'
-              : 'custom-card-container hover:bg-black/[0.04]'
-              }`}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-full bg-black/[0.03] border flex items-center justify-center text-slate-500">
-                <FiFileText className="w-4.5 h-4.5" />
-              </div>
-              <span className="text-xs sm:text-sm font-extrabold text-slate-700">Total</span>
-            </div>
-            <span className="text-base sm:text-lg font-black text-slate-900 tracking-tight">{totalCount}</span>
-          </div>
-
-          {/* Card 1: Pending */}
-          <div
-            onClick={() => selectStatusCategory('pending')}
-            className={`border rounded-[5px] p-4 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${statusFilter === 'pending'
-              ? 'border-blue-300 bg-blue-50/20'
-              : 'custom-card-container hover:bg-black/[0.04]'
-              }`}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500">
-                <FiFileText className="w-4.5 h-4.5" />
-              </div>
-              <span className="text-xs sm:text-sm font-extrabold text-slate-700">Pending</span>
-            </div>
-            <span className="text-base sm:text-lg font-black text-blue-600 tracking-tight">{pendingCount}</span>
-          </div>
-
-          {/* Card 2: Confirmed */}
-          <div
-            onClick={() => selectStatusCategory('confirm')}
-            className={`border rounded-[5px] p-4 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${statusFilter === 'confirm'
-              ? 'border-indigo-300 bg-indigo-50/20'
-              : 'custom-card-container hover:bg-black/[0.04]'
-              }`}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500">
-                <FiCheck className="w-4.5 h-4.5" />
-              </div>
-              <span className="text-xs sm:text-sm font-extrabold text-slate-700">Confirmed</span>
-            </div>
-            <span className="text-base sm:text-lg font-black text-indigo-600 tracking-tight">{confirmCount}</span>
-          </div>
-
-          {/* Card 3: Processing */}
-          <div
-            onClick={() => selectStatusCategory('processing')}
-            className={`border rounded-[5px] p-4 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${statusFilter === 'processing'
-              ? 'border-emerald-300 bg-emerald-50/20'
-              : 'custom-card-container hover:bg-black/[0.04]'
-              }`}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500">
-                <FiCheckCircle className="w-4.5 h-4.5" />
-              </div>
-              <span className="text-xs sm:text-sm font-extrabold text-slate-700">Processing</span>
-            </div>
-            <span className="text-base sm:text-lg font-black text-emerald-600 tracking-tight">{processingCount}</span>
-          </div>
-
-          {/* Card 4: Canceled */}
-          <div
-            onClick={() => selectStatusCategory('canceled')}
-            className={`border rounded-[5px] p-4 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${statusFilter === 'canceled'
-              ? 'border-rose-300 bg-rose-50/20'
-              : 'custom-card-container hover:bg-black/[0.04]'
-              }`}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500">
-                <FiXCircle className="w-4.5 h-4.5" />
-              </div>
-              <span className="text-xs sm:text-sm font-extrabold text-slate-700">Canceled</span>
-            </div>
-            <span className="text-base sm:text-lg font-black text-red-500 tracking-tight">{canceledCount}</span>
-          </div>
-
-          {/* Card 5: Complete */}
-          <div
-            onClick={() => selectStatusCategory('complete')}
-            className={`border rounded-[5px] p-4 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${statusFilter === 'complete'
-              ? 'border-slate-300 bg-slate-50/20'
-              : 'custom-card-container hover:bg-black/[0.04]'
-              }`}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500">
-                <FiGift className="w-4.5 h-4.5" />
-              </div>
-              <span className="text-xs sm:text-sm font-extrabold text-slate-700">Complete</span>
-            </div>
-            <span className="text-base sm:text-lg font-black text-slate-600 tracking-tight">{completeCount}</span>
-          </div>
-        </div>
-      </div>
 
       {/* ── Order List Sub-header & Filter Options ────────────────── */}
       <div className="flex items-center space-x-2.5 pt-2">
@@ -411,29 +316,6 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({ ownerId, storeId, defaultS
           {filteredOrders.length}
         </span>
       </div>
-
-      {showFilters && (
-        <div className="border rounded-[5px] p-4 shadow-xs animate-slide-up flex flex-wrap items-center gap-3 font-kuntomruy custom-card-container">
-          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0">
-            Quick Filter Status:
-          </label>
-          <div className="flex gap-1.5 flex-wrap">
-            {['all', 'pending', 'confirm', 'processing', 'canceled', 'complete'].map(st => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1.5 rounded-[5px] text-xs font-extrabold cursor-pointer transition-all border ${statusFilter === st
-                  ? 'bg-primary border-primary text-white shadow-sm'
-                  : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
-                  }`}
-              >
-                {getStatusTextLabel(st as any)}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ── HelperTable Listing Grid ─────────────────────────────────── */}
       <HelperTable<Order>
@@ -558,6 +440,144 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({ ownerId, storeId, defaultS
         emptyStateText="No Orders Placed"
         emptyStateSubtext="Check back later for active customer ticket transactions or adjust your search filter criteria."
       />
+
+      <HelperFilter
+        isOpen={showFilters}
+        onClose={handleCloseFilters}
+        sections={filterSections}
+        selectedValues={{ status: tempStatusFilter }}
+        onChange={handleFilterChange}
+        onClear={handleClearFilters}
+        onApply={handleApplyFilters}
+      >
+        {/* Current Order Summary Dashboard Grid */}
+        <div className="bg-white border border-slate-200/80 p-5 rounded-[5px] space-y-4 shadow-2xs text-left">
+          <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">
+            Quick Filter Status
+          </h4>
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            {/* Card 0: Total */}
+            <div
+              onClick={() => setTempStatusFilter('all')}
+              className={`border rounded-[5px] p-3 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${tempStatusFilter === 'all'
+                ? 'bg-black/[0.05] border-slate-400'
+                : 'custom-card-container hover:bg-black/[0.04]'
+                }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-black/[0.03] border flex items-center justify-center text-slate-500 shrink-0">
+                  <FiFileText className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-extrabold text-slate-700">Total</span>
+              </div>
+              <span className="text-sm font-black text-slate-900 tracking-tight">{totalCount}</span>
+            </div>
+
+            {/* Card 1: Pending */}
+            <div
+              onClick={() => setTempStatusFilter('pending')}
+              className={`border rounded-[5px] p-3 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${tempStatusFilter === 'pending'
+                ? 'border-blue-300 bg-blue-50/20'
+                : 'custom-card-container hover:bg-black/[0.04]'
+                }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 shrink-0">
+                  <FiFileText className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-extrabold text-slate-700">Pending</span>
+              </div>
+              <span className="text-sm font-black text-blue-600 tracking-tight">{pendingCount}</span>
+            </div>
+
+            {/* Card 2: Confirmed */}
+            <div
+              onClick={() => setTempStatusFilter('confirm')}
+              className={`border rounded-[5px] p-3 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${tempStatusFilter === 'confirm'
+                ? 'border-indigo-300 bg-indigo-50/20'
+                : 'custom-card-container hover:bg-black/[0.04]'
+                }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shrink-0">
+                  <FiCheck className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-extrabold text-slate-700">Confirmed</span>
+              </div>
+              <span className="text-sm font-black text-indigo-600 tracking-tight">{confirmCount}</span>
+            </div>
+
+            {/* Card 3: Processing */}
+            <div
+              onClick={() => setTempStatusFilter('processing')}
+              className={`border rounded-[5px] p-3 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${tempStatusFilter === 'processing'
+                ? 'border-emerald-300 bg-emerald-50/20'
+                : 'custom-card-container hover:bg-black/[0.04]'
+                }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 shrink-0">
+                  <FiCheckCircle className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-extrabold text-slate-700">Processing</span>
+              </div>
+              <span className="text-sm font-black text-emerald-600 tracking-tight">{processingCount}</span>
+            </div>
+
+            {/* Card 4: Delivering */}
+            <div
+              onClick={() => setTempStatusFilter('delivering')}
+              className={`border rounded-[5px] p-3 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${tempStatusFilter === 'delivering'
+                ? 'border-cyan-300 bg-cyan-50/20'
+                : 'custom-card-container hover:bg-black/[0.04]'
+                }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 shrink-0">
+                  <FiTruck className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-extrabold text-slate-700">Delivering</span>
+              </div>
+              <span className="text-sm font-black text-cyan-650 tracking-tight">{deliveringCount}</span>
+            </div>
+
+            {/* Card 5: Complete */}
+            <div
+              onClick={() => setTempStatusFilter('complete')}
+              className={`border rounded-[5px] p-3 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${tempStatusFilter === 'complete'
+                ? 'border-slate-300 bg-slate-50/20'
+                : 'custom-card-container hover:bg-black/[0.04]'
+                }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
+                  <FiGift className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-extrabold text-slate-700">Complete</span>
+              </div>
+              <span className="text-sm font-black text-slate-600 tracking-tight">{completeCount}</span>
+            </div>
+
+            {/* Card 6: Canceled */}
+            <div
+              onClick={() => setTempStatusFilter('canceled')}
+              className={`border rounded-[5px] p-3 flex items-center justify-between transition-all cursor-pointer shadow-3xs active:scale-98 ${tempStatusFilter === 'canceled'
+                ? 'border-rose-300 bg-rose-50/20'
+                : 'custom-card-container hover:bg-black/[0.04]'
+                }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 shrink-0">
+                  <FiXCircle className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-extrabold text-slate-700">Canceled</span>
+              </div>
+              <span className="text-sm font-black text-red-500 tracking-tight">{canceledCount}</span>
+            </div>
+          </div>
+        </div>
+      </HelperFilter>
     </div>
   );
 };

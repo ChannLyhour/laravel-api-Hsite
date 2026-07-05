@@ -20,6 +20,7 @@
         "all_orders": "All Orders",
         "pending": "Pending",
         "processing": "Processing",
+        "delivering": "Delivering",
         "completed": "Completed",
         "cancelled": "Cancelled",
         "promotions": "Promotions",

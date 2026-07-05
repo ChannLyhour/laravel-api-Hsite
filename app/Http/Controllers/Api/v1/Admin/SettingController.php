@@ -118,7 +118,18 @@ class SettingController extends Controller
             'google_enabled',
             'facebook_app_id',
             'facebook_app_secret',
-            'facebook_enabled'
+            'facebook_enabled',
+            'gmail_enabled',
+            'gmail_email',
+            'gmail_password',
+            'mail_mailer',
+            'mail_host',
+            'mail_port',
+            'mail_encryption',
+            'mail_username',
+            'mail_password',
+            'mail_from_address',
+            'mail_from_name'
         ];
 
         foreach ($settingsDict as $key => $value) {

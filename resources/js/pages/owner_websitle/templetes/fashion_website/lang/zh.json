@@ -55,9 +55,11 @@
     "orderPlacedDesc": "已收到并待处理",
     "confirmedDesc": "订单已确认",
     "processingDesc": "正在准备您的商品",
+    "deliveringDesc": "包裹派送中",
     "deliveredDesc": "包裹已送达",
     "confirmed": "已确认",
     "processing": "处理中",
+    "delivering": "派送中",
     "delivered": "已送达",
     "pending": "等待中",
     "cancelled": "已取消"

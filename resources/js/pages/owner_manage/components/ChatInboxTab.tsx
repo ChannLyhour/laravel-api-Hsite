@@ -20,10 +20,12 @@ import {
   FiX,
   FiMic,
   FiTrash2,
+  FiSettings,
 } from 'react-icons/fi';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { resolveImageUrl } from '@/api/imageUtils';
 import { authService, type User } from '@/api/auth';
+import { Store_setting } from '@/api/owner/stores';
 
 const FiPin = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -1384,6 +1386,10 @@ export const ChatInboxTab: React.FC<ChatInboxTabProps> = ({ ownerId, storeId }) 
 
   const stats = calculateCustomerStats();
 
+  // ── Check if Customer Live Chat Widget is enabled ──────────────────
+  const storeSettings = Store_setting();
+  const isChatWidgetEnabled = storeSettings?.customer_chat !== 'false' && storeSettings?.customer_chat !== false;
+
   const filteredConvos = conversations.filter(c => {
     // 1. Search text filter
     const term = searchText.toLowerCase();
@@ -1404,6 +1410,45 @@ export const ChatInboxTab: React.FC<ChatInboxTabProps> = ({ ownerId, storeId }) 
     }
     return true; // 'all'
   });
+
+  // ── Locked Overlay when Customer Live Chat Widget is disabled ──────
+  if (!isChatWidgetEnabled) {
+    return (
+      <div className="h-[calc(100vh-140px)] flex items-center justify-center overflow-hidden shadow-sm animate-fade-in font-sans border rounded-[5px] custom-card-container relative">
+        {/* Blurred background placeholder */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100 opacity-80" />
+        <div className="absolute inset-0 backdrop-blur-[2px]" />
+
+        {/* Overlay content */}
+        <div className="relative z-10 flex flex-col items-center gap-5 text-center max-w-sm px-6">
+          <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center">
+            <FiMessageSquare className="w-9 h-9 text-slate-400" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-black text-slate-800 tracking-tight">Customer Live Chat is Disabled</h3>
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              The live chat widget is currently turned off for your storefront. Customers cannot send you messages until you re-enable it.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent('change_admin_tab', { detail: 'settings' })
+              );
+            }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-[5px] transition-all cursor-pointer border-none shadow-sm active:scale-95"
+          >
+            <FiSettings className="w-4 h-4" />
+            Open Store Settings
+          </button>
+          <span className="text-[10px] text-slate-400 font-semibold">
+            Go to Store Settings → Customer Live Chat Widget → Enable
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[calc(100vh-140px)] flex overflow-hidden shadow-sm animate-fade-in font-sans border rounded-[5px] custom-card-container">

@@ -34,7 +34,7 @@ import { ordersService } from '@/api/owner/orders';
 import { useTranslation } from '../lang/i18n';
 import { getStoreUrl, slugifyStoreName } from '@Security/Owner/configUrl';
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
 
 interface SidebarProps {
   activeTab: TabId;
@@ -70,6 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [orderCounts, setOrderCounts] = useState({
     pending: 0,
     processing: 0,
+    delivering: 0,
     complete: 0,
     canceled: 0,
   });
@@ -221,8 +222,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           setOrderCounts({
             pending: res.filter(o => o.status === 'pending').length,
             processing: res.filter(o => o.status === 'processing').length,
+            delivering: res.filter(o => o.status === 'delivering').length,
             complete: res.filter(o => o.status === 'complete').length,
-            canceled: res.filter(o => o.status === 'canceled').length,
+            canceled: res.filter(o => o.status === 'canceled' || o.status === 'cancelled').length,
           });
         }
       })
@@ -240,7 +242,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (activeTab.startsWith('marketing')) return 'marketing';
     if (['customers', 'customer-reviews', 'partner-stores'].includes(activeTab)) return 'people';
     if (['pages', 'posts', 'pages-builder'].includes(activeTab)) return 'content';
-    if (['theme', 'settings', 'social-media', 'settings-delivery-methods', 'settings-delivery-zones', 'settings-thirdparty-payment', 'settings-thirdparty-firebase', 'settings-thirdparty-pusher', 'settings-thirdparty-marketing', 'settings-thirdparty-oauth', 'settings-thirdparty-telegram', 'customize-system'].includes(activeTab)) return 'settings';
+    if (['theme', 'settings', 'social-media', 'settings-delivery-methods', 'settings-delivery-zones', 'settings-thirdparty-payment', 'settings-thirdparty-firebase', 'settings-thirdparty-pusher', 'settings-thirdparty-marketing', 'settings-thirdparty-oauth', 'settings-thirdparty-telegram', 'settings-thirdparty-gmailotp', 'customize-system'].includes(activeTab)) return 'settings';
     return 'dashboard';
   };
 
@@ -686,6 +688,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {orderCounts.processing}
                   </span>
                 </button>
+
+                <button
+                  onClick={() => handleOrderTabClick('orders-delivering')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'orders-delivering'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FiTruck className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                    <span>{t('sidebar.delivering')}</span>
+                  </div>
+                  <span className="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
+                    {orderCounts.delivering}
+                  </span>
+                </button>
  
                 <button
                   onClick={() => handleOrderTabClick('orders-completed')}
@@ -1052,6 +1070,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <FiSettings className="w-4 h-4 text-indigo-200/80 shrink-0" />
                   <span>Telegram Bot</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('settings-thirdparty-gmailotp'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'settings-thirdparty-gmailotp'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiSettings className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>OTP Gmail / SMTP</span>
                 </button>
               </div>
             )}

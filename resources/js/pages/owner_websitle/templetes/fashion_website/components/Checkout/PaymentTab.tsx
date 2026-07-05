@@ -13,6 +13,7 @@ interface PaymentTabProps {
      validationError: CheckoutValidationError | null;
      paymentRef: React.RefObject<HTMLInputElement | null>;
      isActive: boolean;
+     onEdit?: () => void;
 }
 
 export const PaymentTab: React.FC<PaymentTabProps> = ({
@@ -26,33 +27,53 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
      validationError,
      paymentRef,
      isActive,
+     onEdit,
 }) => {
      const hasError = !!(validationError?.field === 'payment');
+     const isCompleted = !isActive && !!selectedPayment;
 
      return (
-          <div className={`bg-white rounded-2xl border transition-all duration-300 shadow-sm ${isActive ? (hasError ? 'border-red-500 ring-1 ring-red-500/20 p-5' : 'border-stone-900 ring-1 ring-stone-900/5 p-5') : 'border-stone-200/50 p-5 opacity-60'}`}>
+          <div className={`bg-white rounded-2xl border transition-all duration-300 shadow-sm ${isActive ? (hasError ? 'border-red-500 ring-1 ring-red-500/20 p-5' : 'border-stone-900 ring-1 ring-stone-900/5 p-5') : 'border-stone-200/50 p-5'}`}>
                {/* Header */}
-               <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+               <div 
+                    onClick={isCompleted && onEdit ? onEdit : undefined}
+                    className={`flex items-center justify-between pb-4 border-b border-stone-100 ${isCompleted ? 'cursor-pointer select-none' : ''}`}
+               >
                     <div className="flex items-center gap-3">
-                         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs transition-colors duration-300 shadow-xs ${isActive ? 'bg-stone-900 text-white' : 'bg-stone-200 text-stone-500'}`}>
-                              3
+                         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs transition-colors duration-300 shadow-xs ${isActive ? 'bg-stone-900 text-white' : isCompleted ? 'bg-emerald-100 text-emerald-700 border border-emerald-250' : 'bg-stone-200 text-stone-500'}`}>
+                              {isCompleted ? <FiCheck className="w-4 h-4 stroke-[3]" /> : '3'}
                          </div>
                          <div>
-                              <h2 className={`text-xs font-black uppercase tracking-widest transition-colors duration-300 ${isActive ? 'text-stone-900' : 'text-stone-400'}`}>
+                              <h2 className={`text-xs font-black uppercase tracking-widest transition-colors duration-300 ${isActive || isCompleted ? 'text-stone-900' : 'text-stone-400'}`}>
                                    3. Payment & Notes
                               </h2>
                               {!isActive && (
                                    <p className="text-[11px] text-stone-400 font-bold mt-0.5 animate-fade-in">
-                                        Select payment method and enter order notes
+                                        {isCompleted ? `Method: ${paymentMethods.find(m => m.key === selectedPayment)?.name || selectedPayment}` : 'Select payment method and enter order notes'}
                                    </p>
                               )}
                          </div>
                     </div>
-                    {isActive && (
+                    {isActive ? (
                          <span className="text-[11px] bg-stone-100 text-stone-600 px-3 py-1 rounded-xl font-black uppercase tracking-wider">
                               Step 3 of 3
                          </span>
-                    )}
+                    ) : isCompleted ? (
+                         <div className="flex items-center gap-2">
+                              <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-xl font-black uppercase tracking-wider border border-emerald-200/50">
+                                   Complete
+                              </span>
+                              <button
+                                   onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit?.();
+                                   }}
+                                   className="text-[10px] font-black text-stone-500 hover:text-stone-900 uppercase tracking-widest border border-stone-200 hover:border-stone-900 px-3.5 py-1.5 rounded-xl bg-transparent cursor-pointer transition-all duration-200"
+                              >
+                                   Modify
+                              </button>
+                         </div>
+                    ) : null}
                </div>
 
                {/* Content with smooth slide-down dropdown transition */}

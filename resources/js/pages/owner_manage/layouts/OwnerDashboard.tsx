@@ -66,6 +66,7 @@ import { ProfileOwnerTab } from '../components/ProfileOwnerTab';
 import { CustomizeSystemTab } from '../components/Store_Settings/CustomizeSystemTab';
 import { DeliveryMethodsTab } from '../components/Delivery_Methods';
 import { DeliveryZonesTab } from '../components/Delivery_Zones';
+import { ConfigOTPGmailTab } from '../components/gmailotp/configotpGmail';
 
 interface AdminDashboardProps {
   token: string | null;
@@ -74,7 +75,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
 
 interface NotificationItem {
   id: string;
@@ -693,6 +694,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
         { id: 'settings-thirdparty-marketing', label: t('sidebar.marketing_tools'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-oauth', label: 'Social Login (OAuth)', icon: <FiSettings className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-telegram', label: 'Telegram Bot', icon: <FiSettings className="w-[18px] h-[18px]" /> },
+        { id: 'settings-thirdparty-gmailotp', label: 'OTP Gmail / SMTP', icon: <FiSettings className="w-[18px] h-[18px]" /> },
       ]
     }
   ];
@@ -731,6 +733,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'orders': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'orders-pending': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="pending" />;
       case 'orders-processing': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="processing" />;
+      case 'orders-delivering': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="delivering" />;
       case 'orders-completed': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="complete" />;
       case 'orders-cancelled': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="canceled" />;
       case 'posts': return <PostsTab ownerId={activeOwnerId} />;
@@ -750,6 +753,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'settings-thirdparty-marketing': return <ThirdPartyMarketingTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-oauth': return <Social_Login_SetupTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-telegram': return <TelegramBotSettings />;
+      case 'settings-thirdparty-gmailotp': return <ConfigOTPGmailTab ownerId={activeOwnerId} profile={profile} />;
       case 'marketing-banners': return <BannersTab ownerId={activeOwnerId} />;
       case 'marketing-coupons': return <CouponsTab ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'marketing-flash-deals': return <FlashDealsTab ownerId={activeOwnerId} storeId={settings?.id} />;

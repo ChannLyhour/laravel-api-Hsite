@@ -13,7 +13,7 @@ class TelegramWebhookController extends Controller
     /**
      * Handle incoming Telegram webhook updates (Callback Queries).
      */
-    public function handle(Request $request)
+    public function handle (Request $request)
     {
         $update = $request->all();
         $token = $request->query('token') ?? $request->token;
@@ -34,7 +34,7 @@ class TelegramWebhookController extends Controller
     /**
      * Process inline keyboard button click callback.
      */
-    private function handleCallbackQuery(array $callbackQuery, $tokenFromUrl = null)
+    private function handleCallbackQuery (array $callbackQuery, $tokenFromUrl = null)
     {
         $callbackId = $callbackQuery['id'];
         $data = $callbackQuery['data'] ?? ''; // e.g. "confirm_90151" or "cancel_90151"
@@ -118,7 +118,7 @@ class TelegramWebhookController extends Controller
     /**
      * Answer callback query to dismiss loading state on button.
      */
-    private function answerCallbackQuery($botToken, $callbackQueryId, $text, $showAlert = false)
+    private function answerCallbackQuery ($botToken, $callbackQueryId, $text, $showAlert = false)
     {
         try {
             $url = "https://api.telegram.org/bot{$botToken}/answerCallbackQuery";
@@ -143,7 +143,7 @@ class TelegramWebhookController extends Controller
     /**
      * Edit Telegram message text and remove the inline keyboard.
      */
-    private function editMessageText($botToken, $chatId, $messageId, $text)
+    private function editMessageText ($botToken, $chatId, $messageId, $text)
     {
         try {
             $url = "https://api.telegram.org/bot{$botToken}/editMessageText";
@@ -170,7 +170,7 @@ class TelegramWebhookController extends Controller
     /**
      * Process plain messages and shared contacts.
      */
-    private function handleMessage(array $message, $token)
+    private function handleMessage (array $message, $token)
     {
         $chatId = $message['chat']['id'] ?? null;
         $text = $message['text'] ?? '';
@@ -196,7 +196,7 @@ class TelegramWebhookController extends Controller
                 );
 
                 $replyText = "✅ <b>Account Linked Successfully!</b>\n\nYour phone number <code>" . htmlspecialchars($phoneNumber) . "</code> is now registered to receive verification OTPs directly in this chat. You can proceed to complete your order checkout.";
-                
+
                 $replyMarkup = json_encode([
                     'remove_keyboard' => true
                 ]);
@@ -209,8 +209,80 @@ class TelegramWebhookController extends Controller
 
         // Handle commands
         if ($text === '/start' || str_starts_with($text, '/start')) {
+            // Check if there is a start parameter (e.g. /start check_ODN12345)
+            $param = null;
+            if (preg_match('/\/start\s+(.+)/', $text, $matches)) {
+                $param = trim($matches[1]);
+            }
+
+            if ($param && str_starts_with($param, 'check_')) {
+                $orderNo = substr($param, 6); // Extract the order number after "check_"
+
+                // Find store owner who owns this bot token
+                $storeOwnerId = Store::where('key', 'telegram_bot_token')->where('value', $token)->value('created_by');
+
+                // Look up order status
+                $order = Order::where('store_id', $storeOwnerId)
+                    ->where(function ($q) use ($orderNo) {
+                        $q->where('order_no', $orderNo)
+                            ->orWhere('id', $orderNo);
+                    })
+                    ->first();
+
+                if ($order) {
+                    $statusText = strtoupper($order->status);
+                    $totalAmount = number_format($order->total_amount, 2);
+                    $customerName = htmlspecialchars($order->customer_name ?? 'Valued Customer', ENT_QUOTES, 'UTF-8');
+
+                    $statusEmoji = 'ℹ️';
+                    switch (strtolower($order->status)) {
+                        case 'pending':
+                            $statusEmoji = '⏳';
+                            break;
+                        case 'confirmed':
+                            $statusEmoji = '✅';
+                            break;
+                        case 'processing':
+                            $statusEmoji = '👨‍🍳';
+                            break;
+                        case 'delivering':
+                        case 'shipped':
+                        case 'out_for_delivery':
+                            $statusEmoji = '🚚';
+                            break;
+                        case 'completed':
+                            $statusEmoji = '🎉';
+                            break;
+                        case 'cancelled':
+                            $statusEmoji = '❌';
+                            break;
+                    }
+
+                    $replyLines = [
+                        "📦 <b>Order Status Check</b>",
+                        "",
+                        "Hello <b>{$customerName}</b>,",
+                        "Here is the current status of your order:",
+                        "",
+                        "📋 <b>Order Number:</b> #{$order->order_no}",
+                        "💰 <b>Total Amount:</b> \${$totalAmount}",
+                        "{$statusEmoji} <b>Current Status:</b> <code>{$statusText}</code>",
+                        "",
+                        "⏰ Checked at: " . now()->format('M d, Y, h:i A')
+                    ];
+                    $replyText = implode("\n", $replyLines);
+
+                    $this->sendMessage($token, $chatId, $replyText);
+                    return response()->json(['status' => 'status_checked']);
+                } else {
+                    $replyText = "❌ <b>Order Not Found</b>\n\nWe couldn't find order #<code>" . htmlspecialchars($orderNo) . "</code> in our system. Please check your order number and try again.";
+                    $this->sendMessage($token, $chatId, $replyText);
+                    return response()->json(['status' => 'order_not_found']);
+                }
+            }
+
             $replyText = "👋 <b>Hello! Welcome to our Store Bot.</b>\n\nTo receive order OTP verification codes directly in this chat, please click the button below to share your phone number:";
-            
+
             $replyMarkup = json_encode([
                 'keyboard' => [
                     [
@@ -234,7 +306,7 @@ class TelegramWebhookController extends Controller
     /**
      * Send message helper.
      */
-    private function sendMessage($botToken, $chatId, $text, $replyMarkup = null)
+    private function sendMessage ($botToken, $chatId, $text, $replyMarkup = null)
     {
         try {
             $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
@@ -242,7 +314,7 @@ class TelegramWebhookController extends Controller
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            
+
             $postFields = [
                 'chat_id' => $chatId,
                 'text' => $text,

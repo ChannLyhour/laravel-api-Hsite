@@ -25,6 +25,7 @@ import { SocialMediaGrid } from './components/SocialMediaGrid';
 import { ProductOffersDeals } from './components/ProductOffersDeals';
 import { LineLoading } from './components/helpers/SkeletonSt';
 import './styles/animation.css';
+import './styles/index.css';
 
 import type { FashionPageProps } from './types';
 import { useCart } from './hooks/useCart';

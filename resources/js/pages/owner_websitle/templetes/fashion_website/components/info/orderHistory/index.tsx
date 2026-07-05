@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
      FiShoppingBag,
      FiChevronRight,
+     FiChevronLeft,
      FiArrowLeft,
      FiPackage,
      FiCreditCard,
@@ -77,6 +78,19 @@ export const OrderHistoryIndex: React.FC<OrderHistoryIndexProps> = ({ user, owne
      const [orders, setOrders] = useState<Order[]>([]);
      const [isLoadingOrders, setIsLoadingOrders] = useState(false);
      const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+     const [currentPage, setCurrentPage] = useState(1);
+     const itemsPerPage = 5;
+
+     useEffect(() => {
+          setCurrentPage(1);
+     }, [user?.id]);
+
+     useEffect(() => {
+          const totalPages = Math.ceil(orders.length / itemsPerPage);
+          if (totalPages > 0 && currentPage > totalPages) {
+               setCurrentPage(totalPages);
+          }
+     }, [orders.length, currentPage]);
 
      useEffect(() => {
           if (orders.length > 0) {
@@ -247,6 +261,43 @@ export const OrderHistoryIndex: React.FC<OrderHistoryIndexProps> = ({ user, owne
           return { color: 'bg-stone-100 text-stone-800', icon: <FiPackage className="w-3 h-3" />, label: status };
      };
 
+     const totalPages = Math.ceil(orders.length / itemsPerPage);
+     const paginatedOrders = orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+     const getPageNumbers = () => {
+          const pageNumbers: (number | string)[] = [];
+          if (totalPages <= 7) {
+               for (let i = 1; i <= totalPages; i++) {
+                    pageNumbers.push(i);
+               }
+          } else {
+               pageNumbers.push(1);
+               let start = Math.max(2, currentPage - 1);
+               let end = Math.min(totalPages - 1, currentPage + 1);
+
+               if (currentPage <= 3) {
+                    end = 4;
+               } else if (currentPage >= totalPages - 2) {
+                    start = totalPages - 3;
+               }
+
+               if (start > 2) {
+                    pageNumbers.push('...');
+               }
+
+               for (let i = start; i <= end; i++) {
+                    pageNumbers.push(i);
+               }
+
+               if (end < totalPages - 1) {
+                    pageNumbers.push('...');
+               }
+
+               pageNumbers.push(totalPages);
+          }
+          return pageNumbers;
+     };
+
      if (selectedOrderId) {
           const selectedOrder = orders.find(o => String(o.id) === String(selectedOrderId));
           if (selectedOrder) {
@@ -302,7 +353,7 @@ export const OrderHistoryIndex: React.FC<OrderHistoryIndexProps> = ({ user, owne
                     </div>
                ) : (
                     <div className="space-y-4">
-                         {orders.map(order => {
+                         {paginatedOrders.map(order => {
                               const statusConfig = getStatusConfig(order.status);
                               const totalItemsCount = order.items.reduce((acc, item) => acc + (parseInt(item.qty as any) || 1), 0);
 
@@ -368,6 +419,55 @@ export const OrderHistoryIndex: React.FC<OrderHistoryIndexProps> = ({ user, owne
                                    </div>
                               );
                          })}
+
+                         {/* Pagination Controls */}
+                         {totalPages > 1 && (
+                              <div className="flex items-center justify-center space-x-2 pt-6 select-none animate-fade-in">
+                                   <button
+                                        onClick={() => {
+                                             setCurrentPage(prev => Math.max(1, prev - 1));
+                                        }}
+                                        disabled={currentPage === 1}
+                                        className="w-9 h-9 rounded-full border border-stone-200 bg-white flex items-center justify-center text-stone-600 hover:border-stone-400 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                   >
+                                        <FiChevronLeft className="w-4 h-4" />
+                                   </button>
+
+                                   {getPageNumbers().map((pageNum, idx) => {
+                                        const isEllipsis = pageNum === '...';
+                                        const isActive = currentPage === pageNum;
+                                        return isEllipsis ? (
+                                             <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-xs font-bold text-stone-400 select-none">
+                                                  ...
+                                             </span>
+                                        ) : (
+                                             <button
+                                                  key={`page-${pageNum}`}
+                                                  onClick={() => {
+                                                       setCurrentPage(pageNum as number);
+                                                  }}
+                                                  className={`w-9 h-9 rounded-full border font-bold text-xs transition-colors cursor-pointer ${
+                                                       isActive
+                                                            ? 'bg-stone-950 text-white border-stone-950 shadow-sm'
+                                                            : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:text-stone-900'
+                                                  }`}
+                                             >
+                                                  {pageNum}
+                                             </button>
+                                        );
+                                   })}
+
+                                   <button
+                                        onClick={() => {
+                                             setCurrentPage(prev => Math.min(totalPages, prev + 1));
+                                        }}
+                                        disabled={currentPage === totalPages}
+                                        className="w-9 h-9 rounded-full border border-stone-200 bg-white flex items-center justify-center text-stone-600 hover:border-stone-400 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                   >
+                                        <FiChevronRight className="w-4 h-4" />
+                                   </button>
+                              </div>
+                         )}
                     </div>
                )}
           </div>

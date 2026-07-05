@@ -1,23 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiX, FiShield, FiLock, FiCheck } from 'react-icons/fi';
-import { FaTelegramPlane } from 'react-icons/fa';
+import { FiX, FiMail } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { client } from '@/api/client';
 
-interface PopOtpVerifyTeleProps {
+interface PopVerifyOTPGmailProps {
      isOpen: boolean;
      onClose: () => void;
      orderId: number | string | null;
      onSuccess: (token: string | null) => void;
-     telegramLink?: string | null;
+     email?: string | null;
 }
 
-export const PopOtpVerifyTele: React.FC<PopOtpVerifyTeleProps> = ({
+export const PopVerifyOTPGmail: React.FC<PopVerifyOTPGmailProps> = ({
      isOpen,
      onClose,
      orderId,
      onSuccess,
-     telegramLink
+     email
 }) => {
      const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
      const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +34,17 @@ export const PopOtpVerifyTele: React.FC<PopOtpVerifyTeleProps> = ({
      }, [isOpen]);
 
      if (!isOpen) return null;
+
+     const maskEmail = (emailStr: string | null | undefined) => {
+          if (!emailStr) return 'your email';
+          const parts = emailStr.split('@');
+          if (parts.length !== 2) return emailStr;
+          const [local, domain] = parts;
+          if (local.length <= 3) {
+               return `${local.substring(0, 1)}***@${domain}`;
+          }
+          return `${local.substring(0, 3)}***@${domain}`;
+     };
 
      const handleChange = (element: HTMLInputElement, index: number) => {
           if (hasError) setHasError(false);
@@ -102,7 +112,7 @@ export const PopOtpVerifyTele: React.FC<PopOtpVerifyTeleProps> = ({
                toast.dismiss(loadingToast);
 
                if (res.success) {
-                    toast.success('Phone verified successfully!');
+                    toast.success('Email verified successfully!');
                     onSuccess(res.token);
                } else {
                     setHasError(true);
@@ -130,31 +140,18 @@ export const PopOtpVerifyTele: React.FC<PopOtpVerifyTeleProps> = ({
                          <FiX className="w-5 h-5" />
                     </button>
 
-                    {/* Telegram / Verification Icon */}
-                    <div className="w-16 h-16 bg-[#24A1DE]/10 text-[#24A1DE] rounded-full flex items-center justify-center mx-auto shadow-sm">
-                         <FaTelegramPlane className="w-8 h-8 ml-[-2px]" />
+                    {/* Email / Verification Icon */}
+                    <div className="w-16 h-16 bg-[#EA4335]/10 text-[#EA4335] rounded-full flex items-center justify-center mx-auto shadow-sm">
+                         <FiMail className="w-8 h-8" />
                     </div>
 
                     <div className="space-y-3">
                          <h2 className="text-lg font-black text-stone-900 uppercase tracking-widest">
-                              Telegram OTP Verification
+                              Gmail OTP Verification
                          </h2>
                          <p className="text-xs text-stone-500 leading-relaxed max-w-sm mx-auto">
-                              We have sent a <strong className="font-extrabold text-stone-800">6-digit verification code</strong> to the Telegram Bot. Please enter the code below to complete your checkout.
+                              We have sent a <strong className="font-extrabold text-stone-800">6-digit verification code</strong> to <strong className="text-[#EA4335] font-extrabold">{maskEmail(email)}</strong>. Please enter the code below to complete your checkout.
                          </p>
-                         {telegramLink && (
-                              <div className="pt-1">
-                                   <a
-                                        href={telegramLink.includes('?') ? `${telegramLink}&start=true` : `${telegramLink}?start=true`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#24A1DE] hover:bg-[#208ebd] text-white rounded-[4px] font-black text-2xs uppercase tracking-widest no-underline transition-all shadow-xs hover:shadow-sm"
-                                   >
-                                        <FaTelegramPlane className="w-3.5 h-3.5 shrink-0" />
-                                        Start Bot Telegram
-                                   </a>
-                              </div>
-                         )}
                     </div>
 
                     {/* Form Inputs */}

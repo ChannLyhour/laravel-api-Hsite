@@ -28,6 +28,7 @@ interface HelperFilterProps {
   onChange: (sectionId: string, value: any) => void;
   onClear: () => void;
   onApply: () => void;
+  children?: React.ReactNode;
 }
 
 export const HelperFilter: React.FC<HelperFilterProps> = ({
@@ -38,6 +39,7 @@ export const HelperFilter: React.FC<HelperFilterProps> = ({
   onChange,
   onClear,
   onApply,
+  children,
 }) => {
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -88,6 +90,7 @@ export const HelperFilter: React.FC<HelperFilterProps> = ({
 
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          {children}
           {sections.map((section) => {
             const isRadio = section.type === 'radio';
             const val = selectedValues[section.id];

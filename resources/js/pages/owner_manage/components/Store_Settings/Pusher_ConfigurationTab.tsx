@@ -28,8 +28,9 @@ const saveSettingsToStore = async (newSettings: Record<string, any>, ownerId?: n
      localStorage.setItem('store_settings', JSON.stringify(merged));
      window.dispatchEvent(new Event('settings_updated'));
 
-     // Update API — pass ownerId directly
-     const targetOwnerId = ownerId;
+     // Update API — pass ownerId only if user role is admin to hit PUT /stores/{id}
+     const isAdmin = profile?.user?.role === 'admin';
+     const targetOwnerId = isAdmin ? ownerId : undefined;
 
      try {
           await storesService.updateStore(merged, targetOwnerId);
