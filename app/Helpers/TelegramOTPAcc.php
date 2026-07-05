@@ -45,7 +45,15 @@ class TelegramOTPAcc
                $customerPhone = htmlspecialchars($order->customer_phone ?? '', ENT_QUOTES, 'UTF-8');
 
                $normalizedPhone = self::normalizeCambodianPhone($customerPhone);
-               $customerChatId = Store::where('created_by', $storeId)->where('key', "tg_chat_" . $normalizedPhone)->value('value');
+               $lastDigits = self::extractLastDigits($customerPhone);
+               $customerChatId = Store::where('created_by', $storeId)
+                    ->whereIn('key', [
+                         "tg_chat_" . $normalizedPhone,
+                         "tg_chat_" . ltrim($normalizedPhone, '+'),
+                         "tg_chat_" . $lastDigits,
+                         "tg_chat_" . preg_replace('/[^0-9]/', '', $customerPhone)
+                    ])
+                    ->value('value');
                $targetChatId = $customerChatId ?: $chatId;
                Log::info("TelegramOTPAcc::sendOTP - normalizedPhone: {$normalizedPhone}, customerChatId: " . ($customerChatId ?? 'NULL') . ", targetChatId: {$targetChatId}");
 
@@ -115,18 +123,21 @@ class TelegramOTPAcc
       * @param string $rawPhoneNumber
       * @return void
       */
-     public static function checkAndSendPendingOTP($storeOwnerId, $normalizedPhone, $rawPhoneNumber)
+     public static function checkAndSendPendingOTP ($storeOwnerId, $normalizedPhone, $rawPhoneNumber)
      {
           try {
                Log::info("checkAndSendPendingOTP: Checking pending orders for storeOwner: {$storeOwnerId}, phone: {$normalizedPhone}");
-               
-               // Find any recent pending orders for this store owner matching either normalized or raw phone
+
+               $lastDigits = self::extractLastDigits($rawPhoneNumber);
+
+               // Find any recent pending orders for this store owner matching either normalized, raw, or last digits of phone
                $pendingOrder = \App\Models\Order::where('store_id', $storeOwnerId)
-                    ->where(function($q) use ($normalizedPhone, $rawPhoneNumber) {
+                    ->where(function ($q) use ($normalizedPhone, $rawPhoneNumber, $lastDigits) {
                          $cleanRaw = preg_replace('/[^0-9]/', '', $rawPhoneNumber);
                          $q->where('customer_phone', 'like', '%' . $normalizedPhone . '%')
-                           ->orWhere('customer_phone', 'like', '%' . $cleanRaw . '%')
-                           ->orWhere('customer_phone', 'like', '%' . ltrim($normalizedPhone, '+') . '%');
+                              ->orWhere('customer_phone', 'like', '%' . $cleanRaw . '%')
+                              ->orWhere('customer_phone', 'like', '%' . $lastDigits . '%')
+                              ->orWhere('customer_phone', 'like', '%' . ltrim($normalizedPhone, '+') . '%');
                     })
                     ->orderBy('created_at', 'desc')
                     ->first();
@@ -146,12 +157,30 @@ class TelegramOTPAcc
      }
 
      /**
+      * Extract last digits of Cambodian phone number for prefix-independent matching.
+      *
+      * @param string $phone
+      * @return string
+      */
+     public static function extractLastDigits ($phone)
+     {
+          $phoneClean = preg_replace('/[^0-9]/', '', $phone);
+          if (str_starts_with($phoneClean, '855')) {
+               return substr($phoneClean, 3);
+          }
+          if (str_starts_with($phoneClean, '0')) {
+               return substr($phoneClean, 1);
+          }
+          return $phoneClean;
+     }
+
+     /**
       * Normalize Cambodian phone number to +855 format.
       *
       * @param string $phone
       * @return string
       */
-     public static function normalizeCambodianPhone($phone)
+     public static function normalizeCambodianPhone ($phone)
      {
           $phoneClean = preg_replace('/[^0-9]/', '', $phone);
           if (str_starts_with($phoneClean, '855')) {
