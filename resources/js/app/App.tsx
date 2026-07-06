@@ -8,7 +8,7 @@ import { CustomerDisplayPage } from '@/pages/owner_websitle/templetes_menu/compo
 import { client } from '@/api/client';
 import { LoginPage as LoginPageLocal } from '@/pages/owner_websitle/templetes_menu/LoginPage';
 import { LoginPage as LoginPageOnline } from '@/pages/owner_websitle/templetes_menu copy/LoginPage';
-import { AdminLoginPage } from '@/pages/owner_manage/OwnerLoginPage';
+import { StoreLogin } from '@/pages/main_website/auth/StoreLogin';
 import { AdminDashboard } from '@/pages/owner_manage/layouts/OwnerDashboard';
 import { CompanyWebsite } from '@/pages/main_website/CompanyWebsite';
 import { AdminLoginPage as MasterLoginPage } from '@/pages/admin_manage/AdminLoginPage';
@@ -1174,7 +1174,7 @@ function App() {
     if (!adminToken) {
       return (
         <>
-          <AdminLoginPage
+          <StoreLogin
             onLoginSuccess={handleAdminLoginSuccess}
             onNavigate={navigate}
           />

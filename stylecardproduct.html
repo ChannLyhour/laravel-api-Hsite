@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Card - Tailwind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Khmer&display=swap');
+    
+    .product-card {
+      border-radius: 5px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .product-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
+    
+    .product-img {
+      border-radius: 5px 5px 0 0;
+    }
+    
+    .variant-chip {
+      border-radius: 5px;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      transition: all 0.2s;
+    }
+    
+    .variant-chip.active {
+      background-color: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 py-12 px-4">
+  <div class="max-w-xs mx-auto">
+    <!-- Reusable Product Card -->
+    <div class="product-card bg-white shadow-md border border-gray-200 w-full">
+      
+      <!-- Image -->
+      <div class="relative">
+        <img 
+          src="https://picsum.photos/id/1015/400/300" 
+          alt="Product Image" 
+          class="product-img w-full h-56 object-cover">
+        
+        <!-- Badge -->
+        <div class="absolute top-3 left-3 bg-white text-xs font-semibold px-2.5 py-1 rounded-[5px] shadow-sm flex items-center gap-1">
+          <i class="fa-solid fa-fire text-orange-500"></i>
+          <span class="text-orange-600">Hot</span>
+        </div>
+        
+        <!-- Wishlist -->
+        <button onclick="this.classList.toggle('text-red-500')" 
+                class="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-gray-100 transition-colors">
+          <i class="fa-solid fa-heart text-gray-400 hover:text-red-500"></i>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="p-4">
+        <!-- Category & Brand -->
+        <div class="flex justify-between items-start mb-1">
+          <span class="text-xs font-medium text-blue-600 tracking-wider">GADGETS • ELECTRONICS</span>
+          <span class="text-xs text-gray-500">Apple</span>
+        </div>
+        
+        <!-- Product Name -->
+        <h3 class="font-semibold text-lg leading-tight text-gray-900 mb-2 line-clamp-2">
+          iPhone 16 Pro Max Titanium
+        </h3>
+
+        <!-- Price -->
+        <div class="flex items-baseline gap-2 mb-4">
+          <span class="text-2xl font-bold text-gray-900">1,599$</span>
+          <span class="text-sm text-gray-400 line-through">1,799$</span>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-[5px] font-medium">-11%</span>
+        </div>
+
+        <!-- Variants Section -->
+        <div class="space-y-4">
+          
+          <!-- Storage -->
+          <div>
+            <p class="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
+              <i class="fa-solid fa-hard-drive"></i>
+              ទំហំផ្ទុក (Storage)
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700 active">128GB</button>
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700">256GB</button>
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700">512GB</button>
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700">1TB</button>
+            </div>
+          </div>
+
+          <!-- RAM -->
+          <div>
+            <p class="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
+              <i class="fa-solid fa-memory"></i>
+              មេម៉ូរី (RAM)
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700">8GB</button>
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700 active">12GB</button>
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700">16GB</button>
+            </div>
+          </div>
+
+          <!-- Color -->
+          <div>
+            <p class="text-xs font-medium text-gray-500 mb-2">ពណ៌ (Color)</p>
+            <div class="flex gap-3">
+              <button onclick="toggleActive(this)" class="w-7 h-7 rounded-full bg-gray-700 border-2 border-white shadow-sm active ring-2 ring-blue-500"></button>
+              <button onclick="toggleActive(this)" class="w-7 h-7 rounded-full bg-black border-2 border-white shadow-sm"></button>
+              <button onclick="toggleActive(this)" class="w-7 h-7 rounded-full bg-amber-400 border-2 border-white shadow-sm"></button>
+            </div>
+          </div>
+
+          <!-- Plug Type (for electronics) -->
+          <div class="hidden" id="plug-section">
+            <p class="text-xs font-medium text-gray-500 mb-2">ប្រភេទជើងដោត (Plug Type)</p>
+            <div class="flex gap-2">
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700">US</button>
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700 active">UK</button>
+              <button onclick="toggleActive(this)" class="variant-chip border border-gray-300 text-gray-700">EU</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="mt-5 pt-4 border-t border-gray-100 text-xs text-gray-500 space-y-1">
+          <div class="flex justify-between">
+            <span>Stock:</span>
+            <span class="text-green-600 font-medium">In Stock</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Delivery:</span>
+            <span>2-3 days in Phnom Penh</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-6 flex gap-3">
+          <button onclick="addToCart()" 
+                  class="flex-1 bg-blue-600 hover:bg-blue-700 transition-colors text-white font-semibold py-3 rounded-[5px] text-sm flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cart-plus"></i>
+            បញ្ចូលកន្ត្រក
+          </button>
+          
+          <button class="flex-1 border border-gray-300 hover:bg-gray-50 font-semibold py-3 rounded-[5px] text-sm transition-colors">
+            ទិញឥឡូវ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleActive(el) {
+      const parent = el.parentElement;
+      Array.from(parent.children).forEach(child => {
+        child.classList.remove('active');
+      });
+      el.classList.add('active');
+    }
+
+    function addToCart() {
+      const notif = document.createElement('div');
+      notif.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-600 text-white text-sm px-6 py-3 rounded-[5px] shadow-xl flex items-center gap-2';
+      notif.innerHTML = `
+        <i class="fa-solid fa-check"></i>
+        <span>Added to cart!</span>
+      `;
+      document.body.appendChild(notif);
+      
+      setTimeout(() => {
+        notif.style.transition = 'all 0.3s';
+        notif.style.opacity = '0';
+        notif.style.transform = 'translate(-50%, 20px)';
+        setTimeout(() => notif.remove(), 300);
+      }, 2000);
+    }
+
+    // Tailwind script already loaded via CDN
+    console.log('%cProduct Card Ready - Supports all categories (Electronics, Coffee, Grocery, Beauty)', 'color: #3b82f6; font-weight: 600');
+  </script>
+</body>
+</html>

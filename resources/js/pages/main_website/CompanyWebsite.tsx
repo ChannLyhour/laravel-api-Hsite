@@ -5,7 +5,7 @@ import { StoresComponent } from './components/StoresComponent';
 import { FeaturesComponent } from './components/FeaturesComponent';
 import { PricingComponent } from './components/PricingComponent';
 import { JoinComponent } from './components/JoinComponent';
-import { OwnerRegisterComponent } from './components/OwnerRegisterComponent';
+import { StoreRegister } from './auth/StoreRegister';
 import { SettingService } from '../admin_manage/services/SettingService';
 import type { PlatformFooterSettings } from '../admin_manage/services/SettingService';
 
@@ -93,10 +93,10 @@ export const CompanyWebsite: React.FC<CompanyWebsiteProps> = ({
             <span>MERCHANT LOGIN</span>
           </button>
           <button
-            onClick={() => onNavigate('/owner')}
+            onClick={() => onNavigate('/register-owner')}
             className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 py-3.5 px-4 rounded-[5px] font-black text-xs transition-all cursor-pointer shadow-sm active:scale-[0.98] duration-200 flex items-center justify-center space-x-2 tracking-widest border-none hover:shadow-lg hover:shadow-amber-500/15"
           >
-            <span>JOIN AS STORE</span>
+            <span>STORE REGISTER</span>
             <FiArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -167,7 +167,7 @@ export const CompanyWebsite: React.FC<CompanyWebsiteProps> = ({
             {currentPath === '/features' && <FeaturesComponent />}
             {currentPath === '/pricing' && <PricingComponent onNavigate={onNavigate} />}
             {currentPath === '/join' && <JoinComponent onNavigate={onNavigate} />}
-            {currentPath === '/register-owner' && <OwnerRegisterComponent onNavigate={onNavigate} />}
+            {currentPath === '/register-owner' && <StoreRegister onNavigate={onNavigate} />}
 
             {/* ── HOME: Show all sections when on / ───────── */}
             {(currentPath === '/' || (!navLinks.some(l => l.path === currentPath) && currentPath !== '/register-owner')) && (
