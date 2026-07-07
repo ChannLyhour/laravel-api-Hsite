@@ -1,46 +1,49 @@
 import React from 'react';
 import { FiPlusCircle, FiLink, FiSmartphone, FiShoppingCart, FiSliders, FiGrid } from 'react-icons/fi';
+import { useTranslation } from '../lang/i18n';
 
 export const FeaturesComponent: React.FC = () => {
+  const { t } = useTranslation();
+
   const capabilities = [
     {
-      title: 'Easy Product Management',
-      desc: 'Add products with images, prices, descriptions, and categories. Organize exactly how you want.',
+      title: t('features.step1_title'),
+      desc: t('features.step1_desc'),
       icon: <FiPlusCircle className="w-6 h-6 text-rose-500" />,
       bg: 'bg-rose-50 dark:bg-rose-500/10',
       step: '01'
     },
     {
-      title: 'Personal Menu Link',
-      desc: 'Get a unique URL for your menu. Share on social media, print as QR code, or send directly.',
+      title: t('features.step2_title'),
+      desc: t('features.step2_desc'),
       icon: <FiLink className="w-6 h-6 text-sky-500" />,
       bg: 'bg-sky-50 dark:bg-sky-500/10',
       step: '02'
     },
     {
-      title: 'Mobile Friendly',
-      desc: 'Your menu looks perfect on any device. Phone, tablet, or desktop - always beautiful.',
+      title: t('features.step3_title'),
+      desc: t('features.step3_desc'),
       icon: <FiSmartphone className="w-6 h-6 text-emerald-500" />,
       bg: 'bg-emerald-50 dark:bg-emerald-500/10',
       step: '03'
     },
     {
-      title: 'Online Ordering',
-      desc: 'Accept orders directly from your menu. Customers can add items to cart and checkout easily.',
+      title: t('features.step4_title'),
+      desc: t('features.step4_desc'),
       icon: <FiShoppingCart className="w-6 h-6 text-amber-500" />,
       bg: 'bg-amber-50 dark:bg-amber-500/10',
       step: '04'
     },
     {
-      title: 'Custom Branding',
-      desc: 'Upload your logo, cover image, and choose your theme color to match your brand.',
+      title: t('features.step5_title'),
+      desc: t('features.step5_desc'),
       icon: <FiSliders className="w-6 h-6 text-purple-500" />,
       bg: 'bg-purple-50 dark:bg-purple-500/10',
       step: '05'
     },
     {
-      title: 'QR Code Generator',
-      desc: 'Generate beautiful QR codes for your menu. Print and place on tables for contactless access.',
+      title: t('features.step6_title'),
+      desc: t('features.step6_desc'),
       icon: <FiGrid className="w-6 h-6 text-teal-500" />,
       bg: 'bg-teal-50 dark:bg-teal-500/10',
       step: '06'
@@ -57,15 +60,15 @@ export const FeaturesComponent: React.FC = () => {
         
         {/* Header Section */}
         <div className="text-center space-y-4 max-w-3xl mx-auto mb-24">
-          <span className="inline-flex items-center space-x-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-[10px] sm:text-xs font-black text-amber-500 uppercase tracking-widest">
+          <span className="inline-flex items-center space-x-2 px-3 py-1 bg-amber-500/10 border border-amber-500/25 rounded-full text-[10px] sm:text-xs font-bold text-amber-500 uppercase tracking-wider">
             ⚡
-            <span>Everything You Need</span>
+            <span>{t('features.badge')}</span>
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-            Simple, powerful tools to launch your store
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+            {t('features.headline')}
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base font-semibold leading-relaxed">
-            No complex setups, just clean, high-performance features designed to run your business operations smoothly.
+          <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base font-medium leading-relaxed">
+            {t('features.desc')}
           </p>
         </div>
 
@@ -84,6 +87,8 @@ export const FeaturesComponent: React.FC = () => {
               return (
                 <div
                   key={idx}
+                  data-aos="fade-up"
+                  data-aos-anchor-placement="center-center"
                   className="relative flex flex-col md:flex-row items-stretch group"
                 >
                   {/* Left Column (Alternates Card or Space) */}
@@ -112,7 +117,7 @@ export const FeaturesComponent: React.FC = () => {
                     <div className="absolute w-10 h-10 rounded-full bg-amber-500/10 dark:bg-amber-500/20 scale-0 group-hover:scale-125 transition-transform duration-300" />
                     
                     {/* Circle Node Badge */}
-                    <div className="w-8 h-8 rounded-full border-4 border-slate-50 dark:border-[#020617] bg-slate-200 text-slate-600 dark:text-slate-400 group-hover:bg-amber-500 group-hover:text-white group-hover:border-amber-100 dark:group-hover:border-amber-950 flex items-center justify-center text-[10px] font-black transition-all duration-300 shadow-sm z-10">
+                    <div className="w-8 h-8 rounded-full border-4 border-slate-50 dark:border-[#020617] bg-slate-200 text-slate-600 dark:text-slate-400 group-hover:bg-amber-500 group-hover:text-white group-hover:border-amber-100 dark:group-hover:border-amber-950 flex items-center justify-center text-[10px] font-bold transition-all duration-300 shadow-sm z-10">
                       {item.step}
                     </div>
                   </div>

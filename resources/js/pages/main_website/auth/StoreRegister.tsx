@@ -3,12 +3,14 @@ import { FiUser, FiMail, FiLock, FiMapPin, FiShoppingBag, FiArrowRight, FiArrowL
 import { client } from '@/api/client';
 import { toast } from 'react-hot-toast';
 import { TypeStore } from '../typeStore/typeStore';
+import { useTranslation } from '../lang/i18n';
 
 interface StoreRegisterProps {
      onNavigate: (to: string) => void;
 }
 
 export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
+     const { t } = useTranslation();
      const [step, setStep] = useState(1);
      const [loading, setLoading] = useState(false);
      const [registeredUser, setRegisteredUser] = useState<{ id: number | string; token: string } | null>(null);
@@ -118,31 +120,31 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px] -z-10" />
                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] -z-10" />
 
-               <div className="w-full max-w-2xl bg-white/80 backdrop-blur-2xl rounded-[5px] border border-slate-200 p-8 sm:p-14 shadow-2xl z-10">
+               <div className="w-full max-w-2xl bg-white/80 backdrop-blur-2xl rounded-2xl border border-slate-200 p-8 sm:p-14 shadow-2xl z-10">
 
                     {/* Progress Tracker */}
                     <div className="flex items-center justify-between mb-12 pb-6 border-b border-slate-200">
                          <div className="flex items-center space-x-4">
-                              <span className={`w-9 h-9 rounded-[5px] flex items-center justify-center text-xs font-black transition-all ${step === 1 ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-emerald-500 text-slate-950'
+                              <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${step === 1 ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-emerald-500 text-slate-955'
                                    }`}>
                                    {step > 1 ? <FiCheck className="w-5 h-5" /> : '1'}
                               </span>
-                              <span className={`text-xs font-black tracking-widest uppercase transition-colors ${step === 1 ? 'text-slate-900' : 'text-slate-500'
+                              <span className={`text-xs font-bold tracking-wider uppercase transition-colors ${step === 1 ? 'text-slate-900' : 'text-slate-500'
                                    }`}>
-                                   Owner Profile
+                                   {t('register.profile')}
                               </span>
                          </div>
 
                          <div className="h-px flex-1 bg-slate-200 mx-6" />
 
                          <div className="flex items-center space-x-4">
-                              <span className={`w-9 h-9 rounded-[5px] flex items-center justify-center text-xs font-black transition-all ${step === 2 ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-slate-200 text-slate-500'
+                              <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${step === 2 ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-slate-200 text-slate-500'
                                    }`}>
                                    2
                               </span>
-                              <span className={`text-xs font-black tracking-widest uppercase transition-colors ${step === 2 ? 'text-slate-900' : 'text-slate-500'
+                              <span className={`text-xs font-bold tracking-wider uppercase transition-colors ${step === 2 ? 'text-slate-900' : 'text-slate-500'
                                    }`}>
-                                   Store Outlet
+                                   {t('register.outlet')}
                               </span>
                          </div>
                     </div>
@@ -150,12 +152,10 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                     {/* Section Header */}
                     <div className="mb-10">
                          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none">
-                              {step === 1 ? 'Elite Registration' : 'Configure Outlet'}
+                              {step === 1 ? t('register.title_profile') : t('register.title_outlet')}
                          </h2>
                          <p className="text-slate-600 text-sm mt-3 font-medium">
-                              {step === 1
-                                   ? 'Create your administrative credentials for the Prime Website ecosystem.'
-                                   : 'Setup the storefront details that will represent your brand on the Prime platform.'}
+                              {step === 1 ? t('register.desc_profile') : t('register.desc_outlet')}
                          </p>
                     </div>
 
@@ -169,25 +169,7 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                    <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
-                                                  First Name <span className="text-amber-500">*</span>
-                                             </label>
-                                             <div className="relative group">
-                                                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
-                                                       <FiUser className="w-4 h-4" />
-                                                  </div>
-                                                  <input
-                                                       type="text"
-                                                       required
-                                                       placeholder="e.g. Chann"
-                                                       value={firstName}
-                                                       onChange={(e) => setFirstName(e.target.value)}
-                                                       className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-[5px] text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
-                                                  />
-                                             </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
-                                                  Last Name <span className="text-amber-500">*</span>
+                                                  {t('register.first_name')} <span className="text-amber-500">*</span>
                                              </label>
                                              <div className="relative group">
                                                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-550 transition-colors">
@@ -196,21 +178,39 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                                   <input
                                                        type="text"
                                                        required
-                                                       placeholder="e.g. Lyhour"
-                                                       value={lastName}
-                                                       onChange={(e) => setLastName(e.target.value)}
-                                                       className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-[5px] text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
+                                                       placeholder="e.g. Chann"
+                                                       value={firstName}
+                                                       onChange={(e) => setFirstName(e.target.value)}
+                                                       className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-450 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
                                                   />
                                              </div>
                                         </div>
-                                   </div>
+                                        <div className="space-y-2">
+                                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
+                                                  {t('register.last_name')} <span className="text-amber-500">*</span>
+                                             </label>
+                                             <div className="relative group">
+                                                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
+                                                       <FiUser className="w-4 h-4" />
+                                                  </div>
+                                                  <input
+                                                       type="text"
+                                                       required
+                                                       placeholder="e.g. Lyhour"
+                                                       value={lastName}
+                                                       onChange={(e) => setLastName(e.target.value)}
+                                                       className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
+                                                  />
+                                             </div>
+                                        </div>
+                                     </div>
 
                                    <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
-                                             Email Address
+                                             {t('register.email')}
                                         </label>
                                         <div className="relative group">
-                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
+                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-550 transition-colors">
                                                   <FiMail className="w-4 h-4" />
                                              </div>
                                              <input
@@ -219,14 +219,14 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                                   placeholder="owner@prime-website.com"
                                                   value={email}
                                                   onChange={(e) => setEmail(e.target.value)}
-                                                  className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-[5px] text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
+                                                  className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
                                              />
                                         </div>
                                    </div>
 
                                    <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
-                                             Secure Password
+                                             {t('register.password')}
                                         </label>
                                         <div className="relative group">
                                              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
@@ -238,26 +238,27 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                                   placeholder="••••••••••••"
                                                   value={password}
                                                   onChange={(e) => setPassword(e.target.value)}
-                                                  className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-[5px] text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
+                                                  className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
                                              />
                                         </div>
                                    </div>
 
                                    <button
                                         type="submit"
-                                        className="w-full mt-8 py-4 bg-amber-500 hover:bg-amber-400 text-slate-955 font-black text-sm rounded-[5px] transition-all shadow-lg shadow-amber-500/10 active:scale-[0.98] duration-150 flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-widest"
+                                        className="w-full mt-8 py-4 bg-[#FFAD21] hover:bg-[#FFAD21]/90 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-md shadow-[#FFAD21]/20 active:scale-[0.98] flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-wider"
                                    >
-                                        <span>Continue Configuration</span>
+                                        <span>{t('register.continue')}</span>
                                         <FiArrowRight className="w-5 h-5" />
                                    </button>
 
                               </div>
                          ) : (
+                              /* ================= STEP 2: STORE OUTLET CONFIG ================= */
                               <div className="space-y-5 animate-fade-in">
 
                                    <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
-                                             Brand / Store Name
+                                             {t('register.store_name')}
                                         </label>
                                         <div className="relative group">
                                              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-550 transition-colors">
@@ -269,14 +270,14 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                                   placeholder="e.g. Prime Gourmet"
                                                   value={storeName}
                                                   onChange={(e) => setStoreName(e.target.value)}
-                                                  className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-[5px] text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
+                                                  className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
                                              />
                                         </div>
                                    </div>
 
                                    <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
-                                             Physical Location
+                                             {t('register.address')}
                                         </label>
                                         <div className="relative group">
                                              <div className="absolute top-4 left-4 pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
@@ -287,24 +288,24 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                                   placeholder="Full street address..."
                                                   value={storeAddress}
                                                   onChange={(e) => setStoreAddress(e.target.value)}
-                                                  className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-[5px] text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none resize-none transition-all"
+                                                  className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none resize-none transition-all"
                                              />
                                         </div>
                                    </div>
 
                                    <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">
-                                             Subscription Tier
+                                             {t('register.tier')}
                                         </label>
                                         <select
                                              value={selectedTier}
                                              onChange={(e) => setSelectedTier(e.target.value)}
-                                             className="w-full px-4 py-3.5 bg-slate-100 border border-slate-200 rounded-[5px] text-sm font-bold text-slate-900 focus:border-amber-500/50 focus:bg-white focus:outline-none appearance-none cursor-pointer transition-all"
+                                             className="w-full px-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:border-amber-500/50 focus:bg-white focus:outline-none appearance-none cursor-pointer transition-all"
                                         >
-                                             <option value="free" className="bg-white text-slate-900">Free Tier (Standard features)</option>
-                                             <option value="basic" className="bg-white text-slate-900">Basic Tier ($3.99/mo)</option>
-                                             <option value="standard" className="bg-white text-slate-900">Standard Tier ($5.99/mo)</option>
-                                             <option value="premium" className="bg-white text-slate-900">Premium Tier ($9.99/mo - Custom Domain)</option>
+                                             <option value="free" className="bg-white text-slate-900">{t('register.tier_free')}</option>
+                                             <option value="basic" className="bg-white text-slate-900">{t('register.tier_basic')}</option>
+                                             <option value="standard" className="bg-white text-slate-900">{t('register.tier_standard')}</option>
+                                             <option value="premium" className="bg-white text-slate-900">{t('register.tier_premium')}</option>
                                         </select>
                                    </div>
 
@@ -312,22 +313,22 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                         <button
                                              type="button"
                                              onClick={() => setStep(1)}
-                                             className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs rounded-[5px] transition-all active:scale-[0.98] duration-150 flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-widest"
+                                             className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all active:scale-[0.98] flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-wider"
                                         >
                                              <FiArrowLeft className="w-4 h-4" />
-                                             <span>Back</span>
+                                             <span>{t('register.back')}</span>
                                         </button>
 
                                         <button
                                              type="submit"
                                              disabled={loading}
-                                             className="flex-[2] py-4 bg-amber-500 hover:bg-amber-400 text-slate-955 font-black text-xs rounded-[5px] transition-all shadow-lg shadow-amber-500/20 active:scale-[0.98] duration-150 flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                                             className="flex-[2] py-4 bg-[#FFAD21] hover:bg-[#FFAD21]/90 text-slate-955 font-bold text-xs rounded-xl transition-all shadow-md shadow-[#FFAD21]/20 active:scale-[0.98] flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                              {loading ? (
                                                   <span className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
                                              ) : (
                                                   <>
-                                                       <span>Finalize Onboarding</span>
+                                                       <span>{t('register.finalize')}</span>
                                                        <FiCheck className="w-5 h-5" />
                                                   </>
                                              )}
@@ -341,12 +342,12 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
 
                     <div className="mt-12 pt-8 border-t border-slate-200 text-center">
                          <p className="text-sm font-bold text-slate-500">
-                              Already registered?{' '}
+                              {t('register.already_registered')}{' '}
                               <button
                                    onClick={() => onNavigate('/owner/login')}
-                                   className="text-amber-500 hover:text-amber-400 font-black transition-colors border-none bg-transparent cursor-pointer ml-1"
+                                   className="text-[#FFAD21] hover:text-[#FFAD21]/90 font-bold transition-colors border-none bg-transparent cursor-pointer ml-1"
                               >
-                                   Sign In to Workspace
+                                   {t('register.signin')}
                               </button>
                          </p>
                     </div>

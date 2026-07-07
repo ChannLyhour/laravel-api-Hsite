@@ -3,6 +3,7 @@ import { FiCoffee, FiStar, FiArrowRight, FiShoppingBag, FiAlertCircle } from 're
 import { client, API_BASE_URL } from '@/api/client';
 import { getAdminUsers } from '@/api/auth';
 import type { AdminUser } from '@/api/auth';
+import { useTranslation } from '../lang/i18n';
 
 interface StoresComponentProps {
   onNavigate: (to: string) => void;
@@ -137,6 +138,7 @@ async function fetchStoreData(user: AdminUser, themeIndex: number): Promise<Stor
 }
 
 export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) => {
+  const { t } = useTranslation();
   const [stores, setStores] = useState<StoreCard[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -154,7 +156,7 @@ export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) 
           return;
         }
         const results = await Promise.all(
-          adminUsers.map((user, idx) => fetchStoreData(user, idx))
+          adminUsers.map((user, idx) => fetchStoreData(user, idx % THEMES.length))
         );
         if (!cancelled) {
           setStores(results.filter((s): s is StoreCard => s !== null));
@@ -185,13 +187,13 @@ export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) 
         <div className="text-center space-y-6 mb-20">
           <span className="inline-flex items-center space-x-2 px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-[5px] text-[10px] sm:text-xs font-black text-amber-500 uppercase tracking-widest">
             <FiCoffee className="w-3.5 h-3.5" />
-            <span>Prime Partner Network</span>
+            <span>{t('stores.badge')}</span>
           </span>
           <h2 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-            Featured Prime Outlets
+            {t('stores.headline')}
           </h2>
           <p className="text-slate-655 dark:text-slate-400 text-base sm:text-lg max-w-2xl mx-auto font-medium leading-relaxed">
-            Directly access elite store storefronts powered by Prime technology. Seamlessly order from the city's finest establishments.
+            {t('stores.desc')}
           </p>
         </div>
 
@@ -278,7 +280,7 @@ export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) 
                           {store.rating.toFixed(1)}
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500">{store.reviews} Reviews</span>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500">{store.reviews} {t('stores.reviews')}</span>
                     </div>
                   </div>
                 </div>
@@ -290,7 +292,7 @@ export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) 
                       <FiShoppingBag className="w-4 h-4 text-amber-500 shrink-0" />
                       <div className="flex items-baseline space-x-1">
                         <span className="font-black text-slate-900 dark:text-white text-sm">{store.products}</span>
-                        <span className="text-slate-500 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider">Items</span>
+                        <span className="text-slate-500 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider">{t('stores.items')}</span>
                       </div>
                     </div>
                     <div className="w-11 h-11 shrink-0 rounded-[5px] bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-500 flex items-center justify-center transition-all duration-300 shadow-lg group-hover:shadow-amber-500/20">
@@ -308,8 +310,8 @@ export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) 
         {!loading && stores.length === 0 && (
           <div className="text-center py-24 text-slate-500">
             <FiAlertCircle className="w-10 h-10 mx-auto mb-4 opacity-20" />
-            <p className="font-black text-base text-slate-800 dark:text-white opacity-40 uppercase tracking-widest">No Establishments Active</p>
-            <p className="text-sm mt-2 opacity-50">New elite partners are joining the network daily.</p>
+            <p className="font-black text-base text-slate-800 dark:text-white opacity-40 uppercase tracking-widest">{t('stores.empty_title')}</p>
+            <p className="text-sm mt-2 opacity-50">{t('stores.empty_desc')}</p>
           </div>
         )}
 

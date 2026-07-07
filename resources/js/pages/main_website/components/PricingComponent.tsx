@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../lang/i18n';
 
 interface PricingFeature {
   label: string;
@@ -14,41 +15,43 @@ interface PricingComponentProps {
 }
 
 export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }) => {
+  const { t } = useTranslation();
+
   const plans = [
     {
       id: 'free' as const,
-      name: 'FREE',
+      name: t('pricing.free'),
       price: 'Free',
-      period: 'forever',
-      cta: 'Register',
+      period: t('pricing.period_free'),
+      cta: t('pricing.cta_register'),
       badge: null,
       highlight: false,
     },
     {
       id: 'basic' as const,
-      name: 'BASIC',
+      name: t('pricing.basic'),
       price: '$3.99',
-      period: '/ month',
-      cta: 'Get Started',
+      period: t('pricing.period_mo'),
+      cta: t('pricing.cta_get_started'),
       badge: null,
       highlight: false,
     },
     {
       id: 'standard' as const,
-      name: 'STANDARD',
+      name: t('pricing.standard'),
       price: '$5.99',
-      period: '/ month',
-      cta: 'Get Started',
-      badge: 'MOST POPULAR',
+      period: t('pricing.period_mo'),
+      cta: t('pricing.cta_get_started'),
+      badge: t('pricing.popular'),
       highlight: true,
       highlightClass: 'border-2 border-amber-500 shadow-[0_0_30px_-5px_rgba(245,158,11,0.2)] scale-[1.05] z-10',
     },
     {
       id: 'premium' as const,
-      name: 'PREMIUM',
+      name: t('pricing.premium'),
       price: '$9.99',
-      period: '/ month',
-      cta: 'Get Started',
+      period: t('pricing.period_mo'),
+      cta: t('pricing.cta_get_started'),
       badge: null,
       highlight: false,
     },
@@ -56,7 +59,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
 
   const features: PricingFeature[] = [
     {
-      label: 'Products Limit',
+      label: t('pricing.feature_products'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -64,14 +67,14 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       ),
       availableIn: ['free', 'basic', 'standard', 'premium'],
       labelOverrides: {
-        free: '10 Products',
-        basic: '35 Products',
-        standard: '150 Products',
-        premium: 'Unlimited Products',
+        free: `10 ${t('about.products')}`,
+        basic: `35 ${t('about.products')}`,
+        standard: `150 ${t('about.products')}`,
+        premium: `Unlimited ${t('about.products')}`,
       }
     },
     {
-      label: 'Categories Limit',
+      label: t('pricing.feature_categories'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -86,7 +89,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       }
     },
     {
-      label: 'Orders Limit',
+      label: t('pricing.feature_orders'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -101,7 +104,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       }
     },
     {
-      label: 'Staff Limit',
+      label: t('pricing.feature_staff'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -116,7 +119,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       }
     },
     {
-      label: 'Online Ordering',
+      label: t('pricing.feature_ordering'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -125,7 +128,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       availableIn: ['free', 'basic', 'standard', 'premium'],
     },
     {
-      label: 'Customer Reviews',
+      label: t('pricing.feature_reviews'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.906a1 1 0 00.95-.69l1.519-4.674z" />
@@ -134,7 +137,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       availableIn: ['free', 'basic', 'standard', 'premium'],
     },
     {
-      label: 'Reservations',
+      label: t('pricing.feature_reservations'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -143,7 +146,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       availableIn: ['basic', 'standard', 'premium'],
     },
     {
-      label: 'Analytics & Reports',
+      label: t('pricing.feature_analytics'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -152,7 +155,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       availableIn: ['basic', 'standard', 'premium'],
     },
     {
-      label: 'Delivery Zones',
+      label: t('pricing.feature_delivery'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -162,7 +165,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       availableIn: ['standard', 'premium'],
     },
     {
-      label: 'Coupons & Discounts',
+      label: t('pricing.feature_coupons'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -171,7 +174,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       availableIn: ['standard', 'premium'],
     },
     {
-      label: 'QR Payment',
+      label: t('pricing.feature_qr'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m0 11v1m4-6h1m-9 0h1m4-4h.01M9 16h.01M5 5h4v4H5V5zm0 10h4v4H5v-4zm10-10h4v4h-4V5z" />
@@ -180,7 +183,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       availableIn: ['free', 'basic', 'standard', 'premium'],
     },
     {
-      label: 'Custom Domain',
+      label: t('pricing.feature_domain'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
@@ -189,7 +192,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       availableIn: ['premium'],
     },
     {
-      label: 'AI Features',
+      label: t('pricing.feature_ai'),
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -205,14 +208,14 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto text-center mb-20">
-        <span className="inline-flex items-center px-4 py-1.5 rounded-[5px] text-[10px] sm:text-xs font-black text-amber-500 bg-amber-500/10 uppercase tracking-widest border border-amber-500/20 mb-6">
-          ⚙️ Elite Economics
+        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-bold text-amber-500 bg-amber-500/10 uppercase tracking-wider border border-amber-500/25 mb-6">
+          {t('pricing.badge')}
         </span>
-        <h2 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-4">
-          Start free and upgrade as you grow.
+        <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none mb-4">
+          {t('pricing.headline')}
         </h2>
-        <p className="text-lg font-bold text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
-          No hidden fees, no surprises. Pure performance pricing.
+        <p className="text-lg font-medium text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+          {t('pricing.desc')}
         </p>
       </div>
 
@@ -221,14 +224,16 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
           return (
             <div
               key={plan.id}
-              className={`relative bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-[5px] flex flex-col transition-all duration-500 transition-colors duration-300 ${
+              data-aos="fade-up"
+              data-aos-anchor-placement="center-center"
+              className={`relative bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-xl flex flex-col transition-all duration-500 transition-colors duration-300 ${
                 plan.highlight
                   ? 'border-2 border-amber-500 shadow-[0_0_40px_-10px_rgba(245,158,11,0.15)] dark:shadow-[0_0_40px_-10px_rgba(245,158,11,0.3)] scale-[1.05] z-10'
                   : 'border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50 dark:hover:bg-slate-900/80'
               }`}
             >
               {plan.badge && (
-                <span className="absolute -top-4 left-1/2 -translate-x-1/2 inline-flex items-center px-4 py-1.5 rounded-[5px] text-[10px] font-black text-slate-950 bg-amber-500 tracking-widest shadow-lg shadow-amber-500/30 uppercase">
+                <span className="absolute -top-4 left-1/2 -translate-x-1/2 inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-bold text-slate-955 bg-amber-500 tracking-wider shadow-lg shadow-amber-500/30 uppercase">
                   {plan.badge}
                 </span>
               )}
@@ -261,10 +266,9 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
                         isAvailable ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-600'
                       }`}
                     >
-                      {/* Check/X marker */}
                       {isAvailable ? (
                         <span
-                          className={`w-6 h-6 rounded-[5px] inline-flex items-center justify-center shrink-0 mr-4 ${
+                          className={`w-6 h-6 rounded-lg inline-flex items-center justify-center shrink-0 mr-4 ${
                             plan.highlight
                               ? 'bg-amber-500 text-slate-950'
                               : 'bg-slate-100 dark:bg-white/5 text-amber-500'
@@ -275,7 +279,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
                           </svg>
                         </span>
                       ) : (
-                        <span className="w-6 h-6 rounded-[5px] bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-700 inline-flex items-center justify-center shrink-0 mr-4">
+                        <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-700 inline-flex items-center justify-center shrink-0 mr-4">
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                           </svg>
@@ -290,15 +294,15 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
               </div>
 
               {/* Card Footer */}
-              <div className="p-8 border-t border-slate-200 dark:border-white/5 mt-auto bg-slate-50 dark:bg-black/20 rounded-b-[5px]">
+              <div className="p-8 border-t border-slate-200 dark:border-white/5 mt-auto bg-slate-50 dark:bg-black/20 rounded-b-xl">
                 <button
                   onClick={() => {
                     onNavigate?.(`/register-owner?tier=${plan.id}`);
                   }}
-                  className={`w-full py-4 px-6 rounded-[5px] text-[11px] font-black transition-all duration-300 cursor-pointer border-none uppercase tracking-widest ${
+                  className={`w-full py-3.5 px-6 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer border-none uppercase tracking-wider ${
                     plan.highlight
-                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20 active:scale-[0.98] duration-150'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white active:scale-[0.98] duration-150'
+                      ? 'bg-[#FFAD21] hover:bg-[#FFAD21]/90 text-slate-950 shadow-md shadow-[#FFAD21]/15 active:scale-[0.98]'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white active:scale-[0.98]'
                   }`}
                 >
                   {plan.cta}
