@@ -217,22 +217,40 @@ class khqrConfig
                if ($paymentMethodsRow) {
                     $methods = json_decode($paymentMethodsRow->value, true) ?: [];
                     if (isset($methods['aba'])) {
-                         $abaConfig = $methods['aba'];
-                         $abaValues = $abaConfig['values'] ?? [];
+                         $abaConfigData = $methods['aba'];
+                         $abaValues = $abaConfigData['values'] ?? [];
 
+                         // ── NEW: Check for PayWay Link-based config ──────────
+                         $paywayLink = $abaValues['payway_link'] ?? '';
+                         if (!empty($paywayLink) && str_contains($paywayLink, 'link.payway.com.kh')) {
+                              return abaConfig::generate(
+                                   $request,
+                                   $ownerId,
+                                   $orderId,
+                                   (float) $amount,
+                                   $currency,
+                                   $customerName ?: 'Guest User',
+                                   $customerEmail ?: 'customer@example.com',
+                                   $customerPhone ?: '012345678',
+                                   $items,
+                                   $paywayLink
+                              );
+                         }
+
+                         // ── Legacy: API credential-based config (backward compat) ──
                          if (!empty($abaValues['merchantId'])) {
                               $merchantId = $abaValues['merchantId'];
-                         } elseif (!empty($abaConfig['merchantId'])) {
-                              $merchantId = $abaConfig['merchantId'];
+                         } elseif (!empty($abaConfigData['merchantId'])) {
+                              $merchantId = $abaConfigData['merchantId'];
                          }
 
                          if (!empty($abaValues['apiKey'])) {
                               $apiKey = $abaValues['apiKey'];
-                         } elseif (!empty($abaConfig['apiKey'])) {
-                              $apiKey = $abaConfig['apiKey'];
+                         } elseif (!empty($abaConfigData['apiKey'])) {
+                              $apiKey = $abaConfigData['apiKey'];
                          }
 
-                         $rawUrl = $abaValues['apiUrl'] ?? $abaConfig['apiUrl'] ?? null;
+                         $rawUrl = $abaValues['apiUrl'] ?? $abaConfigData['apiUrl'] ?? null;
                          if (!empty($rawUrl)) {
                               $url = trim($rawUrl);
                               if (str_contains($url, 'link.payway.com.kh')) {

@@ -200,6 +200,7 @@ class PaymentController extends Controller
             $merchantId = 'ec454848';
             $apiKey = 'ec454848b598b9e6e00ea3535cf04b122f87a875';
             $apiUrl = 'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction';
+            $isPaywayLinkMode = false;
 
             $paymentMethodsRow = Store::where('created_by', $ownerId)
                 ->where('key', 'payment_methods')
@@ -211,29 +212,64 @@ class PaymentController extends Controller
                     $abaConfig = $methods['aba'];
                     $abaValues = $abaConfig['values'] ?? [];
 
-                    if (!empty($abaValues['merchantId'])) {
-                        $merchantId = $abaValues['merchantId'];
-                    } elseif (!empty($abaConfig['merchantId'])) {
-                        $merchantId = $abaConfig['merchantId'];
+                    // ── NEW: Check for PayWay Link-based config ──────────
+                    $paywayLink = $abaValues['payway_link'] ?? '';
+                    if (!empty($paywayLink) && str_contains($paywayLink, 'link.payway.com.kh')) {
+                        $isPaywayLinkMode = true;
                     }
 
-                    if (!empty($abaValues['apiKey'])) {
-                        $apiKey = $abaValues['apiKey'];
-                    } elseif (!empty($abaConfig['apiKey'])) {
-                        $apiKey = $abaConfig['apiKey'];
-                    }
-
-                    $rawUrl = $abaValues['apiUrl'] ?? $abaConfig['apiUrl'] ?? null;
-                    if (!empty($rawUrl)) {
-                        $url = trim($rawUrl);
-                        if (!str_contains($url, '/payments/check-transaction') && !str_contains($url, '/payments/purchase')) {
-                            $url = rtrim($url, '/') . '/api/payment-gateway/v1/payments/check-transaction';
-                        } else {
-                            $url = str_replace('/payments/purchase', '/payments/check-transaction', $url);
+                    // ── Legacy: API credential-based config ──────────
+                    if (!$isPaywayLinkMode) {
+                        if (!empty($abaValues['merchantId'])) {
+                            $merchantId = $abaValues['merchantId'];
+                        } elseif (!empty($abaConfig['merchantId'])) {
+                            $merchantId = $abaConfig['merchantId'];
                         }
-                        $apiUrl = $url;
+
+                        if (!empty($abaValues['apiKey'])) {
+                            $apiKey = $abaValues['apiKey'];
+                        } elseif (!empty($abaConfig['apiKey'])) {
+                            $apiKey = $abaConfig['apiKey'];
+                        }
+
+                        $rawUrl = $abaValues['apiUrl'] ?? $abaConfig['apiUrl'] ?? null;
+                        if (!empty($rawUrl)) {
+                            $url = trim($rawUrl);
+                            if (!str_contains($url, '/payments/check-transaction') && !str_contains($url, '/payments/purchase')) {
+                                $url = rtrim($url, '/') . '/api/payment-gateway/v1/payments/check-transaction';
+                            } else {
+                                $url = str_replace('/payments/purchase', '/payments/check-transaction', $url);
+                            }
+                            $apiUrl = $url;
+                        }
                     }
                 }
+            }
+
+            // ── PayWay Link mode: use confirm-based flow ──────────
+            if ($isPaywayLinkMode) {
+                $wantsConfirm = $request->input('confirm') === true || $request->input('confirm') === 'true' || $request->input('confirm') == 1;
+
+                if ($wantsConfirm) {
+                    if ($txn) {
+                        $txn->update(['status' => 'success']);
+                        if ($order) {
+                            $order->update(['payment_status' => 'Paid']);
+                        }
+                    }
+
+                    return response()->json([
+                        'success' => true,
+                        'payment_status' => 'Paid',
+                        'message' => 'Payment completed successfully!',
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'payment_status' => 'Unpaid',
+                    'message' => 'Payment is still pending. Please confirm after paying via ABA.',
+                ]);
             }
 
             $req_time = date('YmdHis');

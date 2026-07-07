@@ -159,10 +159,11 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
      };
 
      const methodKey = paymentMethod?.toLowerCase() || 'aba';
+     const isHttpUrl = qrString && (qrString.startsWith('http://') || qrString.startsWith('https://'));
      
      let themeColor = '#0B3B5B'; // ABA default dark blue
      let buttonBg = 'bg-[#005D7E] hover:bg-[#004b66]';
-     let titleText = 'ABA KHQR';
+     let titleText = isHttpUrl ? 'ABA PAY' : 'ABA KHQR';
      let payButtonText = 'Pay in ABA Mobile';
      
      if (methodKey === 'bakong') {
@@ -197,7 +198,9 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
           payButtonText = 'Confirm COD';
      }
 
-     const scanInstructionText = 'Scan with any Mobile Banking App supporting KHQR to pay';
+     const scanInstructionText = isHttpUrl
+          ? 'Scan with your Phone Camera or Google Lens to pay'
+          : 'Scan with any Mobile Banking App supporting KHQR to pay';
 
      if (!isOpen) return null;
 

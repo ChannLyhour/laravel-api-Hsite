@@ -20,6 +20,8 @@ interface PaymentField {
      label: string;
      type: 'text' | 'password' | 'textarea' | 'image';
      required?: boolean;
+     placeholder?: string;
+     hint?: string;
 }
 
 interface PaymentGateway {
@@ -186,9 +188,16 @@ export const EditPage: React.FC<EditPageProps> = ({
                                                                  ...prev,
                                                                  [field.key]: e.target.value
                                                             }))}
+                                                            placeholder={field.placeholder || ''}
                                                             className="w-full px-3 py-2 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                                                             required={field.required !== false}
                                                        />
+                                                  )}
+                                                  {field.hint && (
+                                                       <p className="text-[10px] text-slate-400 mt-1 leading-relaxed flex items-start gap-1">
+                                                            <FiInfo className="w-3 h-3 mt-0.5 shrink-0 text-blue-400" />
+                                                            <span>{field.hint}</span>
+                                                       </p>
                                                   )}
                                              </div>
                                         ))}

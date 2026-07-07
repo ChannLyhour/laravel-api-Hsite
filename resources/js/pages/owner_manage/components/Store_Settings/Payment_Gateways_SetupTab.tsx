@@ -60,7 +60,7 @@ interface PaymentGateway {
      logoColor: string;
      textColor: string;
      logoText: string;
-     fields: { key: string; label: string; type: 'text' | 'password' | 'textarea' | 'image'; required?: boolean }[];
+     fields: { key: string; label: string; type: 'text' | 'password' | 'textarea' | 'image'; required?: boolean; placeholder?: string; hint?: string }[];
      defaultValues?: Record<string, string>;
 }
 
