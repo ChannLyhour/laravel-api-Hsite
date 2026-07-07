@@ -82,6 +82,7 @@ Route::post('/customer/login', [AuthController::class, 'loginCustomer']);
 Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
 Route::post('/owner/login', [AuthController::class, 'loginOwner']);
 Route::post('/social-login', [AuthController::class, 'socialLogin']);
+Route::post('/register-owner', [AuthController::class, 'registerOwner']);
 
 // Telegram Bot Webhook
 Route::post('/telegram/webhook', [\App\Http\Controllers\Api\v1\TelegramWebhookController::class, 'handle']);
@@ -182,6 +183,7 @@ Route::middleware(['identify-store'])->group(function () {
     // ABA PayWay integration routes
     Route::post('/payments/generate-qr', [PaymentController::class, 'generateQr']);
     Route::post('/payments/check-transaction', [PaymentController::class, 'checkTransaction']);
+    Route::get('/payments/active-methods', [PaymentController::class, 'getActiveMethods']);
 
     // Paid Templates Routes (Public)
     Route::get('/templates', [TemplateController::class, 'index']);
@@ -207,6 +209,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/users/heartbeat', [AuthController::class, 'heartbeat']);
     Route::post('/users/offline', [AuthController::class, 'markOffline']);
+    Route::delete('/users/me', [AuthController::class, 'deleteAccount']);
 
     // Global Order Retrieval (Unified for Admin, Owner, Customer)
     Route::get('/orders', [OwnerOrderController::class, 'index']);

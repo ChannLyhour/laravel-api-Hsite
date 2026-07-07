@@ -16,7 +16,21 @@ export interface CheckTransactionResponse {
     raw?: any;
 }
 
+export interface PaymentMethodItem {
+    key: string;
+    logo: string;
+    name: string;
+    desc: string;
+}
+
 export const paymentsService = {
+    /**
+     * Fetch active payment methods configured on backend for this store owner.
+     */
+    async getActiveMethods(ownerId: number | string): Promise<PaymentMethodItem[]> {
+        return client.get<PaymentMethodItem[]>(`/payments/active-methods?owner_id=${ownerId}`);
+    },
+
     /**
      * Generate PayWay KHQR / Bakong payment credentials.
      */

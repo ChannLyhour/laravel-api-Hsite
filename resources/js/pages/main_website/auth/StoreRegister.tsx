@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FiUser, FiMail, FiLock, FiMapPin, FiShoppingBag, FiArrowRight, FiArrowLeft, FiCheck } from 'react-icons/fi';
 import { client } from '@/api/client';
 import { toast } from 'react-hot-toast';
+import { TypeStore } from '../typeStore/typeStore';
 
 interface StoreRegisterProps {
      onNavigate: (to: string) => void;
@@ -10,6 +11,7 @@ interface StoreRegisterProps {
 export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
      const [step, setStep] = useState(1);
      const [loading, setLoading] = useState(false);
+     const [registeredUser, setRegisteredUser] = useState<{ id: number | string; token: string } | null>(null);
 
      // Form Fields
      const [firstName, setFirstName] = useState('');
@@ -64,21 +66,20 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
           setLoading(true);
 
           try {
-               // 1. Create owner user
-               const regRes = await client.post<any>('/register', {
-                    name: `${firstName.trim()} ${lastName.trim()}`,
+               // Single atomic endpoint: creates owner user + store settings together
+               const res = await client.post<any>('/register-owner', {
                     first_name: firstName.trim(),
                     last_name: lastName.trim(),
-                    country: 'Cambodia',
                     email,
                     password,
-                    role_id: 30003, // Owner
-                    phone: null,
-                    state: 'active',
+                    store_name: storeName.trim(),
+                    store_address: storeAddress.trim() || null,
+                    subscription_tier: selectedTier,
+                    country: 'Cambodia',
                });
 
-               const token = regRes?.token;
-               const newUserId = regRes?.user?.id;
+               const token = res?.token;
+               const newUserId = res?.user?.id;
                if (!token || !newUserId) {
                     throw new Error('Registration succeeded, but token or user details were missing.');
                }
@@ -87,32 +88,29 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                localStorage.setItem('admin_token', token);
                localStorage.setItem('selected_owner_id', String(newUserId));
 
-               // 2. Create the associated store record
-               await client.post<any>('/stores', {
-                    created_by: newUserId,
-                    store_name: storeName,
-                    store_phone: null,
-                    store_email: email,
-                    store_address: storeAddress || null,
-                    subscription_tier: selectedTier,
-                    custom_domain: null,
-                    tax_percentage: 10.0,
-               });
-
-               toast.success('Registration successful! Launching your Prime workspace...');
-
-               setTimeout(() => {
-                    window.location.href = '/owner';
-               }, 1200);
+               toast.success('Registration successful! Now select your store type.');
+               setRegisteredUser({ id: newUserId, token: token });
 
           } catch (err: any) {
                localStorage.removeItem('admin_token');
-               const errMsg = err.response?.data?.detail || err.message || 'Failed to complete registration.';
+               const errMsg = err.response?.data?.message || err.response?.data?.detail || err.message || 'Failed to complete registration.';
                toast.error(errMsg);
           } finally {
                setLoading(false);
           }
      };
+
+     if (registeredUser) {
+          return (
+               <TypeStore
+                    ownerId={registeredUser.id}
+                    token={registeredUser.token}
+                    onComplete={() => {
+                         window.location.href = '/owner';
+                    }}
+               />
+          );
+     }
 
      return (
           <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 lg:p-12 bg-slate-50 relative overflow-hidden">

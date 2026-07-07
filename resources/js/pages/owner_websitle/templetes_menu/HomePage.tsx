@@ -5,13 +5,10 @@ import { ApiError } from '@/api/client';
 import { NavbarPage } from './NavbarPage';
 import { MenuItemPage } from './MenuItemPage';
 import { CheckoutPage } from './components/CheckoutPage';
-import { ListProdoct } from './components/ListProdoct';
 import { useCart } from './hooks/useCart';
-import { useFashionItems } from './hooks/useFashionItems';
 import { ModelCartSelection } from './components/helpers/ModelCartSelection';
-import { PopupDetailProduct } from './components/helpers/popupDetailProduct';
+import { ProductDetailBottomCenterPage } from './components/Use_Defult_Product/Product_Detail_buttom_center_page';
 import { menuItemsService } from '@/api/owner/categories';
-import { likesService } from '@/api/owner/likes';
 import { CafeShopPage } from '../templetes/cafeShop_website/CafeShopPage';
 import { ElectronicPage } from '../templetes/Electronic_website/ElectronicPage';
 import { FashionPage } from '../templetes/fashion_website/FashionPage';
@@ -23,6 +20,9 @@ import { TabletAppView } from '../mobile/tablet/TabletAppView';
 import { storeBrandingService } from '@/api/created_by/getFaviconById';
 import { getLightTheme } from './utils/themeHelper';
 import { useOwnerURL } from '@/app/OwnerURL';
+import { PageRenderer } from './components/PageRenderer';
+import { WishlistPage } from './components/wishlistPage';
+import { FooterPage } from './components/footerPage';
 
 
 interface HomePageProps {
@@ -52,6 +52,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onOwnerChange,
   storeName = '',
 }) => {
+  console.log('HomePageOnline Render Props:', { settingsTheme: settings?.website_theme, storeInfoTheme: storeInfo?.website_theme, currentPath });
   const [profile, setProfile] = useState<UserResponse | null>(null);
   const [locale, setLocale] = useState<'en' | 'km'>(() => {
     if (typeof window !== 'undefined') {
@@ -65,101 +66,6 @@ export const HomePage: React.FC<HomePageProps> = ({
     setLocale(newLocale);
     localStorage.setItem('store_locale', newLocale);
   };
-
-  const [searchQuery, setSearchQuery] = useState(() => {
-    const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-    return params.get('search') || '';
-  });
-
-  const {
-    items,
-    categories,
-    activeCategoryHash
-  } = useFashionItems(ownerUserId, searchQuery);
-
-  const [favorites, setFavorites] = useState<Record<string, boolean>>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('aura_favorites');
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          return {};
-        }
-      }
-    }
-    return {};
-  });
-
-  // Sync guest favorites to localStorage
-  useEffect(() => {
-    if (!profile?.user && typeof window !== 'undefined') {
-      localStorage.setItem('aura_favorites', JSON.stringify(favorites));
-    }
-  }, [favorites, profile?.user]);
-
-  // Fetch user favorites (likes) on mount or when user changes
-  useEffect(() => {
-    if (profile?.user) {
-      likesService.getMyLikedProductIds()
-        .then(ids => {
-          const favs: Record<string, boolean> = {};
-          ids.forEach(id => {
-            favs[String(id)] = true;
-          });
-          setFavorites(favs);
-        })
-        .catch(err => console.warn('Failed to load favorites', err));
-    }
-  }, [profile?.user]);
-
-  const toggleFavorite = async (id: string, _name: string) => {
-    const isGuestCheckoutEnabled = settings?.guest_checkout !== false && settings?.guest_checkout !== 'false';
-
-    if (!profile?.user && !isGuestCheckoutEnabled) {
-      window.dispatchEvent(new CustomEvent('request_login'));
-      return;
-    }
-
-    if (!profile?.user) {
-      setFavorites(prev => ({
-        ...prev,
-        [id]: !prev[id]
-      }));
-      return;
-    }
-
-    const productId = parseInt(id);
-    if (isNaN(productId)) return;
-
-    try {
-      const res = await likesService.toggleProductLike(productId);
-      setFavorites(prev => ({
-        ...prev,
-        [id]: res.is_liked
-      }));
-    } catch (err) {
-      console.warn('Failed to toggle like', err);
-    }
-  };
-
-  useEffect(() => {
-    const handleUrlChange = (e?: Event) => {
-      const customEvent = e as CustomEvent;
-      const urlStr = customEvent?.detail?.to || (typeof window !== 'undefined' ? window.location.href : '');
-      const url = urlStr.startsWith('http') ? new URL(urlStr) : new URL(urlStr, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
-      const params = url.searchParams;
-      const q = params.get('search') || '';
-      setSearchQuery(q);
-    };
-
-    window.addEventListener('popstate', handleUrlChange);
-    window.addEventListener('navigation_changed', handleUrlChange);
-    return () => {
-      window.removeEventListener('popstate', handleUrlChange);
-      window.removeEventListener('navigation_changed', handleUrlChange);
-    };
-  }, []);
 
   const {
     cart,
@@ -177,9 +83,9 @@ export const HomePage: React.FC<HomePageProps> = ({
   } = useCart(settings, profile?.user);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [popupProductId, setPopupProductId] = useState<string | null>(null);
-  const [popupProduct, setPopupProduct] = useState<any>(null);
-  const [popupLoading, setPopupLoading] = useState(false);
+  const [dragProductId, setDragProductId] = useState<string | null>(null);
+  const [dragProduct, setDragProduct] = useState<any>(null);
+  const [dragLoading, setDragLoading] = useState(false);
 
   // Dynamically update favicon for this specific store
   useEffect(() => {
@@ -195,7 +101,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   useEffect(() => {
     const handleOpenPopup = (e: Event) => {
       const productId = (e as CustomEvent).detail?.productId;
-      if (productId) setPopupProductId(productId);
+      if (productId) setDragProductId(productId);
     };
 
     window.addEventListener('open_product_popup', handleOpenPopup);
@@ -204,22 +110,22 @@ export const HomePage: React.FC<HomePageProps> = ({
     };
   }, []);
 
-  // Fetch popup product when popupProductId changes
+  // Fetch popup product when dragProductId changes
   useEffect(() => {
-    if (!popupProductId) {
-      setPopupProduct(null);
+    if (!dragProductId) {
+      setDragProduct(null);
       return;
     }
-    setPopupLoading(true);
-    menuItemsService.getMenuItem(Number(popupProductId))
+    setDragLoading(true);
+    menuItemsService.getMenuItem(Number(dragProductId))
       .then(res => {
         if (res) {
-          setPopupProduct(res);
+          setDragProduct(res);
         }
       })
       .catch(err => console.warn('Failed to fetch popup product', err))
-      .finally(() => setPopupLoading(false));
-  }, [popupProductId]);
+      .finally(() => setDragLoading(false));
+  }, [dragProductId]);
 
   // Load profile when authenticated
   useEffect(() => {
@@ -274,20 +180,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const isMenuView = currentPath.endsWith('/menu');
   const isCheckoutView = currentPath.endsWith('/checkout');
-
-  // Sync browsing state to localStorage for customer walk-in display
-  useEffect(() => {
-    if (!isCheckoutView) {
-      localStorage.setItem('walkin_checkout_state', JSON.stringify({
-        activeStep: 'browsing',
-        totalAmount: total,
-        subtotal: subtotal,
-        deliveryFee: deliveryFee,
-        totalDiscount: discount,
-        currency: 'USD',
-      }));
-    }
-  }, [isCheckoutView, total, subtotal, deliveryFee, discount]);
+  const isWishlistView = currentPath.endsWith('/wishlist');
 
   const activeTheme = getLightTheme(themes[settings?.website_theme || 'default'] || themes.default);
   const { buildLink: buildStoreLink } = useOwnerURL(
@@ -327,7 +220,46 @@ export const HomePage: React.FC<HomePageProps> = ({
   // }
 
   // Intercept and render dynamic niche template builder storefronts
-  if (settings?.website_theme === 'cafe_shop') {
+  const theme = storeInfo?.website_theme || settings?.website_theme;
+  if (theme === 'custom_builder') {
+    return (
+      <div className={`min-h-screen flex flex-col transition-all duration-300 ${activeTheme.bgClass} animate-fade-in`}>
+        <NavbarPage
+          token={token}
+          profile={profile}
+          onNavigateLogin={onNavigateLogin}
+          onLogout={onLogout}
+          onNavigate={onNavigate}
+          currentPath={currentPath}
+          stores={settings}
+          onOwnerChange={onOwnerChange}
+          storeName={storeInfo?.store_name || storeName || settings?.store_name || ''}
+          ownerUserId={ownerUserId}
+          locale={locale}
+          setLocale={handleLocaleChange}
+          onCartClick={() => setIsCartOpen(true)}
+        />
+
+        {/* Main Custom Layout Content */}
+        <main className="flex-grow pt-24 px-4">
+          <PageRenderer
+            ownerUserId={ownerUserId || storeInfo?.created_by || storeInfo?.owner_id || storeInfo?.hashid || (settings as any)?.created_by || (settings as any)?.owner_id}
+            slug={currentPath && currentPath !== '/' ? currentPath.replace(/^\//, '') : 'home'}
+            storeName={storeInfo?.store_name || storeName || settings?.store_name || ''}
+            onNavigate={(to) => {
+              if (to && !to.startsWith('http') && !to.startsWith('#') && !to.startsWith('mailto:') && !to.startsWith('tel:')) {
+                onNavigate(buildStoreLink(to));
+              } else {
+                onNavigate(to);
+              }
+            }}
+            addToCart={addToCart}
+          />
+        </main>
+      </div>
+    );
+  }
+  if (theme === 'cafe_shop') {
     return (
       <CafeShopPage
         ownerUserId={ownerUserId}
@@ -339,7 +271,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       />
     );
   }
-  if (settings?.website_theme === 'electronic') {
+  if (theme === 'electronic') {
     return (
       <ElectronicPage
         ownerUserId={ownerUserId}
@@ -351,7 +283,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       />
     );
   }
-  if (settings?.website_theme === 'fashion' || settings?.website_theme === 'fashion_website') {
+  if (theme === 'fashion' || theme === 'fashion_website') {
     return (
       <FashionPage
         ownerUserId={ownerUserId}
@@ -399,27 +331,25 @@ export const HomePage: React.FC<HomePageProps> = ({
             onNavigate={onNavigate}
             clearCart={clearCart}
           />
+        ) : isWishlistView ? (
+          <WishlistPage
+            ownerUserId={ownerUserId}
+            storeName={storeName || settings?.store_name}
+            stores={storeInfo as any}
+            addToCart={addToCart}
+            onNavigate={onNavigate}
+          />
         ) : isMenuView ? (
           /* Dedicated Standalone Menu Page View (Not using section) */
           <div className="animate-fade-in">
-            <ListProdoct
-              items={items}
-              categories={categories}
-              onNavigate={onNavigate}
-              addToCart={addToCart}
-              favorites={favorites}
-              toggleFavorite={toggleFavorite}
-              storeName={storeName || settings?.store_name}
-              stores={{ ...settings, ...storeInfo } as any}
+            <MenuItemPage
               ownerUserId={ownerUserId}
-              selectedCategoryHash={activeCategoryHash}
-              onCategoryChange={hash => {
-                if (onNavigate) {
-                  onNavigate(buildStoreLink('/menu' + hash));
-                }
-              }}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
+              profile={profile}
+              onNavigate={onNavigate}
+              storeName={storeName || settings?.store_name || 'Food'}
+              locale={locale}
+              settings={settings}
+              addToCart={addToCart}
             />
           </div>
         ) : (
@@ -446,7 +376,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </>
         )}
       </main>
-      {/* <FooterPage token={token} stores={settings as any} onNavigate={onNavigate} storeName={storeName} ownerUserId={ownerUserId} /> */}
+      <FooterPage stores={{ ...settings, ...storeInfo } as any} storeName={storeName || settings?.store_name} />
 
       {/* Floating segment button allowing user to switch back to premium mobile app preview viewports */}
       {forceDesktop && (
@@ -479,60 +409,53 @@ export const HomePage: React.FC<HomePageProps> = ({
       />
 
       {/* Product Detail Modal */}
-      {popupProductId && (
+      {dragProductId && (
         <>
-          {popupProduct ? (
-            <PopupDetailProduct
-              product={popupProduct}
+          {dragProduct ? (
+            <ProductDetailBottomCenterPage
+              product={dragProduct}
               addToCart={addToCart}
               favorites={{}}
-              toggleFavorite={() => {}}
+              toggleFavorite={() => { }}
               storeName={storeName || settings?.store_name}
               stores={settings}
               user={profile?.user}
               onClose={() => {
-                setPopupProductId(null);
+                setDragProductId(null);
               }}
+              onNavigate={onNavigate}
+              buildStoreLink={buildStoreLink}
             />
           ) : (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/40 backdrop-blur-2xs">
-              <div
-                className="fixed inset-0"
-                onClick={() => {
-                  setPopupProductId(null);
-                }}
-              />
-              <div className="bg-white p-8 rounded-[20px] shadow-2xl max-w-sm w-full text-center space-y-4 relative animate-fade-in z-10">
-                <button
+            !dragLoading && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/40 backdrop-blur-2xs">
+                <div
+                  className="fixed inset-0"
                   onClick={() => {
-                    setPopupProductId(null);
+                    setDragProductId(null);
                   }}
-                  className="absolute top-4 right-4 text-stone-500 hover:text-stone-900 border-none bg-transparent cursor-pointer text-sm"
-                >
-                  ✕
-                </button>
-                {popupLoading ? (
-                  <>
-                    <div className="animate-spin h-9 w-9 border-4 border-stone-900 border-t-transparent rounded-full mx-auto" />
-                    <p className="text-stone-600 text-xs font-bold uppercase tracking-widest">
-                      Loading item details...
+                />
+                <div className="bg-white p-8 rounded-[20px] shadow-2xl max-w-sm w-full text-center space-y-4 relative animate-fade-in z-10">
+                  <button
+                    onClick={() => {
+                      setDragProductId(null);
+                    }}
+                    className="absolute top-4 right-4 text-stone-500 hover:text-stone-900 border-none bg-transparent cursor-pointer text-sm"
+                  >
+                    ✕
+                  </button>
+                  <span className="text-4xl">🥗</span>
+                  <div>
+                    <h4 className="font-extrabold text-stone-850 text-sm uppercase tracking-wider">
+                      Product not found
+                    </h4>
+                    <p className="text-stone-400 text-2xs font-semibold mt-1">
+                      We couldn't retrieve this item from the kitchen.
                     </p>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-4xl">🥗</span>
-                    <div>
-                      <h4 className="font-extrabold text-stone-850 text-sm uppercase tracking-wider">
-                        Product not found
-                      </h4>
-                      <p className="text-stone-400 text-2xs font-semibold mt-1">
-                        We couldn't retrieve this item from the kitchen.
-                      </p>
-                    </div>
-                  </>
-                )}
+                  </div>
+                </div>
               </div>
-            </div>
+            )
           )}
         </>
       )}

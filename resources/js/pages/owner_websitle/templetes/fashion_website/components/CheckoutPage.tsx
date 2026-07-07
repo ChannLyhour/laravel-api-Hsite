@@ -33,6 +33,11 @@ import { deliveryMethodsService, type DeliveryMethod } from '@/api/owner/deliver
 import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
 import { socialMediaService } from '@/api/owner/socialMedia';
 import { FaTelegramPlane } from 'react-icons/fa';
+import { paymentsService } from '@/api/owner/method/payments';
+
+import abaLogo from '@/pages/main_website/Company_bank/aba.png';
+import bakongLogo from '@/pages/main_website/Company_bank/bakong.png';
+import acledaLogo from '@/pages/main_website/Company_bank/acleda.png';
 
 import { useTranslation } from '../utils/translate';
 import { ModelCoupon } from './helpers/ModelCoupon';
@@ -886,73 +891,88 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }, [propDeliveryFee, stores, subtotal, appliedCoupon, selectedDeliveryMethod, matchingZone]);
 
     // ── Payment & Contact state ──
-    const paymentMethods = React.useMemo(() => {
-        const methodsBase = [
-            {
-                key: 'aba',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center shadow-3xs bg-[#005D7E] text-white font-sans font-black text-[13px] tracking-tight relative">ABA<div className="absolute top-0 right-0 w-2 h-2 bg-[#E61E25]" /></div>,
-                name: 'ABA PAY',
-                desc: 'Scan to pay with ABA Mobile',
-            },
-            {
-                key: 'bakong',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#b30006] text-white font-sans font-black text-[9px] tracking-tight relative">Bakong</div>,
-                name: 'Bakong KHQR',
-                desc: 'Scan to pay with Bakong App or any KHQR supported bank',
-            },
-            {
-                key: 'card',
-                logo: <div className="w-10 h-7 rounded shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200/80"><div className="grid grid-cols-2 gap-[2px] p-[2px]"><span className="text-[6px] font-black text-blue-800">VISA</span><span className="text-[6px] font-black text-red-500">MC</span><span className="text-[6px] font-black text-green-700">JCB</span><span className="text-[6px] font-black text-blue-900">UP</span></div></div>,
-                name: 'Credit/Debit Card',
-                desc: <div className="flex items-center gap-1.5 mt-0.5"><span className="text-[8px] bg-blue-50 text-blue-700 font-bold px-0.5 rounded">VISA</span><span className="text-[8px] bg-red-50 text-red-700 font-bold px-0.5 rounded">MC</span><span className="text-[8px] bg-green-50 text-green-700 font-bold px-0.5 rounded">JCB</span></div>,
-            },
-            {
-                key: 'acleda',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#0d3b66] text-amber-400 font-bold text-[8px]">ACLEDA</div>,
-                name: 'ACLEDA PAY',
-                desc: 'Pay securely with ACLEDA.',
-            },
-            {
-                key: 'wing',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#84bd00] text-blue-900 font-black text-[10px]">Wing</div>,
-                name: 'Wing Bank',
-                desc: 'Pay securely with WingPay',
-            },
-            {
-                key: 'chipmong',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#009b72] text-white font-bold text-[8px]">CMB</div>,
-                name: 'CHIP MONG BANK',
-                desc: 'Tab to pay with CHIP MONG',
-            },
-            {
-                key: 'transfer',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200"><span className="text-[14px]">🏦</span></div>,
-                name: 'Bank Transfer',
-                desc: <span className="font-kuntomruy">ទូទាត់តាមគណនីធនាគារ</span>,
-            },
-            {
-                key: 'cod',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200"><span className="text-[14px]">💵</span></div>,
-                name: 'Cash on Delivery',
-                desc: <span className="font-kuntomruy">បង់ប្រាក់នៅពេលទទួលបានទំនិញ</span>,
-            },
-        ];
+    const [rawPaymentMethods, setRawPaymentMethods] = useState<any[]>([]);
 
-        return methodsBase.filter(p => {
-            const methods = storeSettings.payment_methods || {};
-            const config = methods[p.key];
-            if (config) return config.enabled;
+    useEffect(() => {
+        if (ownerUserId) {
+            paymentsService.getActiveMethods(ownerUserId)
+                .then(setRawPaymentMethods)
+                .catch(err => console.error('Failed to fetch payment methods:', err));
+        }
+    }, [ownerUserId]);
 
-            const legacyConfig = storeSettings[`payment_gw_${p.key}`];
-            if (legacyConfig) {
-                try {
-                    const parsed = typeof legacyConfig === 'string' ? JSON.parse(legacyConfig) : legacyConfig;
-                    return parsed.enabled;
-                } catch { return false; }
+    const paymentMethods = useMemo(() => {
+        return rawPaymentMethods.map(p => {
+            let logoEl = null;
+            if (p.key === 'aba') {
+                logoEl = (
+                    <img
+                        src={abaLogo}
+                        alt="ABA Bank"
+                        className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]"
+                    />
+                );
+            } else if (p.key === 'bakong') {
+                logoEl = (
+                    <img
+                        src={bakongLogo}
+                        alt="Bakong KHQR"
+                        className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]"
+                    />
+                );
+            } else if (p.key === 'acleda') {
+                logoEl = (
+                    <img
+                        src={acledaLogo}
+                        alt="ACLEDA PAY"
+                        className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]"
+                    />
+                );
+            } else if (p.logo && p.logo.startsWith('emoji:')) {
+                logoEl = (
+                    <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200">
+                        <span className="text-[14px]">{p.logo.substring(6)}</span>
+                    </div>
+                );
+            } else if (p.logo) {
+                logoEl = (
+                    <img
+                        src={p.logo}
+                        alt={p.name}
+                        className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]"
+                    />
+                );
+            } else {
+                logoEl = (
+                    <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200">
+                        <span className="text-[10px] font-bold">{p.name.charAt(0)}</span>
+                    </div>
+                );
             }
-            return p.key === 'cod' || p.key === 'transfer';
+
+            let descEl = p.desc;
+            if (p.key === 'card') {
+                descEl = (
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[8px] bg-blue-50 text-blue-700 font-bold px-0.5 rounded">VISA</span>
+                        <span className="text-[8px] bg-red-50 text-red-700 font-bold px-0.5 rounded">MC</span>
+                        <span className="text-[8px] bg-green-50 text-green-700 font-bold px-0.5 rounded">JCB</span>
+                    </div>
+                );
+            } else if (p.key === 'transfer') {
+                descEl = <span className="font-kuntomruy">ទូទាត់តាមគណនីធនាគារ</span>;
+            } else if (p.key === 'cod') {
+                descEl = <span className="font-kuntomruy">បង់ប្រាក់នៅពេលទទួលបានទំនិញ</span>;
+            }
+
+            return {
+                key: p.key,
+                logo: logoEl,
+                name: p.name,
+                desc: descEl
+            };
         });
-    }, [storeSettings]);
+    }, [rawPaymentMethods]);
 
     const [selectedPayment, setSelectedPayment] = useState<string>('');
     const [preferredContact, setPreferredContact] = useState<string>('');

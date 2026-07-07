@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fa';
 import '@/pages/owner_manage/style/font.css';
 import { GroupDiv } from '@/pages/owner_manage/helper/GroupDiv';
+import { useTranslation } from '../../lang/i18n';
 
 interface SocialMediaTabProps {
   ownerId?: number | string;
@@ -120,6 +121,7 @@ const getPlatformConfig = (platform: string) => {
 };
 
 export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
+  const { t } = useTranslation();
   const [socials, setSocials] = useState<SocialMediaRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -255,7 +257,7 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
     return (
       <div className="border p-12 rounded-[5px] shadow-xs flex flex-col items-center justify-center space-y-3 font-kuntomruy custom-card-container">
         <FiLoader className="w-8 h-8 text-primary animate-spin" />
-        <span className="text-xs font-bold text-slate-400">Loading social media settings...</span>
+        <span className="text-xs font-bold text-slate-400">{t('social.loading')}</span>
       </div>
     );
   }
@@ -267,16 +269,16 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
       <div>
         <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
           <FiShare2 className="text-orange-500 w-5 h-5" />
-          <span>Social media</span>
+          <span>{t('social.title')}</span>
         </h2>
       </div>
 
       {/* Setup Form Card */}
       <GroupDiv className="space-y-6">
         <div>
-          <h4 className="text-sm font-black text-slate-800 tracking-tight">Setup Social Media Link</h4>
+          <h4 className="text-sm font-black text-slate-800 tracking-tight">{t('social.setup_title')}</h4>
           <p className="text-slate-400 text-[11px] sm:text-xs mt-1">
-            Here you can add your social media links this will help you to show your social activity to the customers.
+            {t('social.setup_subtitle')}
           </p>
         </div>
 
@@ -285,13 +287,13 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
 
             {/* Select Social Media */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block">Select Social Media <span className="text-slate-300">🛈</span></label>
+              <label className="text-xs font-bold text-slate-700 block">{t('social.select_platform')} <span className="text-slate-300">🛈</span></label>
               <select
                 value={selectedPlatform}
                 onChange={(e) => setSelectedPlatform(e.target.value)}
                 className="w-full px-3.5 py-2.5 border rounded-[5px] text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
               >
-                <option value="">Select social media</option>
+                <option value="">{t('social.select_placeholder')}</option>
                 {AVAILABLE_PLATFORMS.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.label}
@@ -302,12 +304,12 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
 
             {/* Social Media Link */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block">Social Media Link <span className="text-slate-300">🛈</span></label>
+              <label className="text-xs font-bold text-slate-700 block">{t('social.link_label')} <span className="text-slate-300">🛈</span></label>
               <input
                 type="text"
                 value={mediaLink}
                 onChange={(e) => setMediaLink(e.target.value)}
-                placeholder="Enter Social Media Link"
+                placeholder={t('social.link_placeholder')}
                 className="w-full px-4 py-2.5 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
               />
             </div>
@@ -321,7 +323,7 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
               onClick={handleReset}
               className="px-5 py-2 bg-black/[0.04] hover:bg-black/[0.08] text-inherit rounded-[5px] text-xs font-extrabold transition-all cursor-pointer border-none"
             >
-              Reset
+              {t('social.reset')}
             </button>
             <button
               type="submit"
@@ -329,7 +331,7 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
               className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-[5px] text-xs font-extrabold transition-all shadow-2xs hover:shadow-xs active:scale-98 cursor-pointer disabled:opacity-60 border-none flex items-center space-x-1.5"
             >
               {submitting && <FiLoader className="w-3 h-3 animate-spin" />}
-              <span>{editingId !== null ? 'Update' : 'Save'}</span>
+              <span>{editingId !== null ? t('social.update') : t('social.save')}</span>
             </button>
           </div>
         </form>
@@ -339,7 +341,7 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-black text-slate-800 tracking-tight">Social Media Link List</h4>
+          <h4 className="text-sm font-black text-slate-800 tracking-tight">{t('social.list_title')}</h4>
           <span className="text-[11px] opacity-65 font-bold bg-black/[0.04] px-2 py-0.5 rounded-full">
             {socials.length} Configured
           </span>
@@ -348,7 +350,7 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
         {/* Grid Content */}
         {socials.length === 0 ? (
           <div className="p-12 text-center text-slate-400 border rounded-[5px] shadow-xs custom-card-container">
-            No social media links configured yet. Setup a link above!
+            {t('social.no_links')}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -370,7 +372,7 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
                           {config.label}
                         </h4>
                         <span className="text-[10px] text-slate-400 font-semibold">
-                          Platform Link
+                          {t('social.platform_link')}
                         </span>
                       </div>
                     </div>
@@ -408,7 +410,7 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
                       title="Edit social link"
                     >
                       <FiEdit className="w-3.5 h-3.5" />
-                      <span>Edit</span>
+                      <span>{t('social.edit')}</span>
                     </button>
                     <button
                       onClick={() => handleDeleteClick(social.id)}
@@ -416,7 +418,7 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = () => {
                       title="Delete social link"
                     >
                       <FiTrash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
+                      <span>{t('social.delete')}</span>
                     </button>
                   </div>
                 </div>

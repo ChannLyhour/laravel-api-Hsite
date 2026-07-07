@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiSend, FiCheck, FiAlertCircle, FiToggleLeft, FiToggleRight, FiEye, FiEyeOff, FiInfo } from 'react-icons/fi';
+import { FiSend, FiCheck, FiAlertCircle, FiToggleLeft, FiToggleRight, FiEye, FiEyeOff, FiInfo, FiLoader } from 'react-icons/fi';
 import { FaTelegramPlane } from 'react-icons/fa';
 import {
   getTelegramConfig,
@@ -7,10 +7,18 @@ import {
   sendTestMessage,
   type TelegramBotConfig,
 } from '@/api/owner/telegramService';
+import { storesService } from '@/api/owner/stores';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import '@/pages/owner_manage/style/font.css';
+import { useTranslation } from '../../lang/i18n';
 
-export const TelegramBotSettings: React.FC = () => {
+interface TelegramBotSettingsProps {
+  ownerId?: number | string;
+}
+
+export const TelegramBotSettings: React.FC<TelegramBotSettingsProps> = ({ ownerId }) => {
+  const { t } = useTranslation();
+  const activeOwnerId = ownerId ?? localStorage.getItem('selected_owner_id');
   const [botToken, setBotToken] = useState('');
   const [chatId, setChatId] = useState('');
   const [customerBotLink, setCustomerBotLink] = useState('');
@@ -19,17 +27,52 @@ export const TelegramBotSettings: React.FC = () => {
   const [testing, setTesting] = useState(false);
   const [showToken, setShowToken] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [loadingConfig, setLoadingConfig] = useState(true);
 
-  // Load saved config on mount
+  // Load saved config on mount from API
   useEffect(() => {
-    const config = getTelegramConfig();
-    if (config) {
-      setBotToken(config.bot_token || '');
-      setChatId(config.chat_id || '');
-      setEnabled(config.enabled ?? false);
-      setCustomerBotLink(config.customer_bot_link || '');
-    }
-  }, []);
+    const loadConfig = async () => {
+      setLoadingConfig(true);
+      try {
+        const store = await storesService.getStore(activeOwnerId);
+        if (store) {
+          setBotToken(store.telegram_bot_token || '');
+          setChatId(store.telegram_chat_id || '');
+          setEnabled(store.telegram_enabled === '1' || store.telegram_enabled === true);
+          setCustomerBotLink(store.telegram_customer_bot_link || '');
+
+          // Update local cache
+          const config = {
+            bot_token: store.telegram_bot_token || '',
+            chat_id: store.telegram_chat_id || '',
+            enabled: store.telegram_enabled === '1' || store.telegram_enabled === true,
+            customer_bot_link: store.telegram_customer_bot_link || '',
+          };
+          localStorage.setItem(`telegram_bot_config_owner_${activeOwnerId}`, JSON.stringify(config));
+
+          const storeSettingsRaw = localStorage.getItem(`store_settings_owner_${activeOwnerId}`);
+          const storeSettings = storeSettingsRaw ? JSON.parse(storeSettingsRaw) : {};
+          storeSettings.telegram_bot_token = store.telegram_bot_token;
+          storeSettings.telegram_chat_id = store.telegram_chat_id;
+          storeSettings.telegram_enabled = store.telegram_enabled;
+          storeSettings.telegram_customer_bot_link = store.telegram_customer_bot_link;
+          localStorage.setItem(`store_settings_owner_${activeOwnerId}`, JSON.stringify(storeSettings));
+        }
+      } catch (err) {
+        console.warn('Failed to load telegram config from API, loading local backup.', err);
+        const config = getTelegramConfig(activeOwnerId);
+        if (config) {
+          setBotToken(config.bot_token || '');
+          setChatId(config.chat_id || '');
+          setEnabled(config.enabled ?? false);
+          setCustomerBotLink(config.customer_bot_link || '');
+        }
+      } finally {
+        setLoadingConfig(false);
+      }
+    };
+    loadConfig();
+  }, [activeOwnerId]);
 
   const handleSave = async () => {
     if (!botToken.trim() || !chatId.trim()) {
@@ -44,7 +87,7 @@ export const TelegramBotSettings: React.FC = () => {
         chat_id: chatId.trim(),
         enabled,
         customer_bot_link: customerBotLink.trim(),
-      });
+      }, activeOwnerId);
       toast.success('Telegram bot settings saved!');
     } catch {
       toast.error('Failed to save settings.');
@@ -82,6 +125,15 @@ export const TelegramBotSettings: React.FC = () => {
     ? botToken.substring(0, 8) + '•'.repeat(Math.max(0, botToken.length - 12)) + botToken.substring(botToken.length - 4)
     : '';
 
+  if (loadingConfig) {
+    return (
+      <div className="bg-white border border-slate-100 p-12 rounded-[5px] shadow-xs flex flex-col items-center justify-center space-y-3 font-kuntomruy">
+        <FiLoader className="w-8 h-8 text-primary animate-spin" />
+        <span className="text-xs font-bold text-slate-400">{t('telegram.loading')}</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in">
       {/* Header */}
@@ -91,10 +143,10 @@ export const TelegramBotSettings: React.FC = () => {
         </div>
         <div>
           <h2 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
-            Telegram Bot Notifications
+            {t('telegram.title')}
           </h2>
           <p className="text-xs text-slate-400 font-medium mt-0.5">
-            Get instant order alerts on your Telegram when customers place new orders.
+            {t('telegram.subtitle')}
           </p>
         </div>
       </div>
@@ -103,28 +155,28 @@ export const TelegramBotSettings: React.FC = () => {
       <div className="bg-blue-50/50 border border-blue-100 rounded-[8px] p-4 text-xs text-blue-800 space-y-2">
         <div className="flex items-start gap-2">
           <FiInfo className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-          <div className="space-y-1.5 font-medium leading-relaxed">
-            <p className="font-bold">How to set up:</p>
+          <div className="space-y-1.5 font-medium leading-relaxed text-left">
+            <p className="font-bold">{t('telegram.guide_title')}</p>
             <ol className="list-decimal pl-4 space-y-1">
-              <li>Open Telegram and search for <span className="font-bold">@BotFather</span></li>
-              <li>Send <code className="bg-blue-100 px-1 rounded text-[11px]">/newbot</code> and follow the prompts to create your bot</li>
-              <li>Copy the <span className="font-bold">Bot Token</span> and paste it below</li>
-              <li>Send a message to your bot, then visit <code className="bg-blue-100 px-1 rounded text-[11px]">https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code> to find your <span className="font-bold">Chat ID</span></li>
-              <li>Or add the bot to a <span className="font-bold">group chat</span> and use the group's Chat ID</li>
+              <li>{t('telegram.guide_step1')}</li>
+              <li>{t('telegram.guide_step2')}</li>
+              <li>{t('telegram.guide_step3')}</li>
+              <li>{t('telegram.guide_step4')}</li>
+              <li>{t('telegram.guide_step5')}</li>
             </ol>
           </div>
         </div>
       </div>
 
       {/* Main Settings Card */}
-      <div className="bg-white border border-slate-100 rounded-[8px] p-6 shadow-xs space-y-5">
+      <div className="bg-white border border-slate-100 rounded-[8px] p-6 shadow-xs space-y-5 text-left">
 
         {/* Enable/Disable Toggle */}
         <div className="flex items-center justify-between p-3.5 rounded-[8px] bg-slate-50/80 border border-slate-100">
           <div>
-            <p className="text-sm font-bold text-slate-800">Order Notifications</p>
+            <p className="text-sm font-bold text-slate-800">{t('telegram.notif_title')}</p>
             <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-              {enabled ? 'New orders will be sent to your Telegram' : 'Telegram notifications are currently off'}
+              {enabled ? t('telegram.notif_enabled') : t('telegram.notif_disabled')}
             </p>
           </div>
           <button
@@ -141,9 +193,9 @@ export const TelegramBotSettings: React.FC = () => {
         </div>
 
         {/* Bot Token */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 text-left">
           <label className="text-xs font-bold text-slate-700 block">
-            Bot Token <span className="text-rose-500">*</span>
+            {t('telegram.bot_token')}
           </label>
           <div className="relative">
             <input
@@ -162,14 +214,14 @@ export const TelegramBotSettings: React.FC = () => {
             </button>
           </div>
           <p className="text-[10px] text-slate-400 font-medium">
-            Get this from <span className="font-bold">@BotFather</span> on Telegram
+            {t('telegram.bot_token_helper')}
           </p>
         </div>
 
         {/* Chat ID */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 text-left">
           <label className="text-xs font-bold text-slate-700 block">
-            Chat ID <span className="text-rose-500">*</span>
+            {t('telegram.chat_id')}
           </label>
           <input
             type="text"
@@ -179,14 +231,14 @@ export const TelegramBotSettings: React.FC = () => {
             className="w-full px-3.5 py-2.5 border border-slate-200 rounded-[6px] text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800 bg-white"
           />
           <p className="text-[10px] text-slate-400 font-medium">
-            Your personal chat ID or group chat ID where notifications will be sent
+            {t('telegram.chat_id_helper')}
           </p>
         </div>
 
         {/* Customer Bot Username */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 text-left">
           <label className="text-xs font-bold text-slate-700 block">
-            Customer Telegram Bot Username (Optional)
+            {t('telegram.customer_bot')}
           </label>
           <input
             type="text"
@@ -196,17 +248,16 @@ export const TelegramBotSettings: React.FC = () => {
             className="w-full px-3.5 py-2.5 border border-slate-200 rounded-[6px] text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800 bg-white"
           />
           <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-            Enter your Telegram Bot username (e.g. @username or username). If provided, customers will click this link to start/receive order updates on checkout. If empty, the system automatically attempts to resolve it using the Bot Token.
+            {t('telegram.customer_bot_helper')}
           </p>
         </div>
 
         {/* Test Result */}
         {testResult && (
-          <div className={`flex items-center gap-2.5 p-3 rounded-[6px] border text-xs font-bold ${
-            testResult.ok
+          <div className={`flex items-center gap-2.5 p-3 rounded-[6px] border text-xs font-bold ${testResult.ok
               ? 'bg-emerald-50/50 border-emerald-100 text-emerald-700'
               : 'bg-rose-50/50 border-rose-100 text-rose-700'
-          }`}>
+            }`}>
             {testResult.ok
               ? <FiCheck className="w-4 h-4 shrink-0" />
               : <FiAlertCircle className="w-4 h-4 shrink-0" />
@@ -225,12 +276,12 @@ export const TelegramBotSettings: React.FC = () => {
             {testing ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-                <span>Sending...</span>
+                <span>{t('telegram.sending')}</span>
               </>
             ) : (
               <>
                 <FiSend className="w-3.5 h-3.5" />
-                <span>Send Test Message</span>
+                <span>{t('telegram.send_test')}</span>
               </>
             )}
           </button>
@@ -243,12 +294,12 @@ export const TelegramBotSettings: React.FC = () => {
             {saving ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Saving...</span>
+                <span>{t('telegram.saving')}</span>
               </>
             ) : (
               <>
                 <FiCheck className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Save Settings</span>
+                <span>{t('telegram.save_settings')}</span>
               </>
             )}
           </button>
@@ -257,10 +308,10 @@ export const TelegramBotSettings: React.FC = () => {
 
       {/* Preview Card */}
       {botToken && chatId && (
-        <div className="bg-white border border-slate-100 rounded-[8px] p-5 shadow-xs space-y-3">
-          <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">Message Preview</h4>
+        <div className="bg-white border border-slate-100 rounded-[8px] p-5 shadow-xs space-y-3 text-left">
+          <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">{t('telegram.preview_title')}</h4>
           <div className="bg-slate-50 border border-slate-200/60 rounded-[6px] p-4 text-xs font-mono text-slate-700 leading-relaxed whitespace-pre-line">
-{`🛒 New Order Received!
+            {`🛒 New Order Received!
 
 📋 Order: #ORD-001
 👤 Customer: John Doe
@@ -277,7 +328,7 @@ export const TelegramBotSettings: React.FC = () => {
 ⏰ Jun 29, 2026, 11:00 AM`}
           </div>
           <p className="text-[10px] text-slate-400 font-medium">
-            This is an example of what the Telegram message will look like.
+            {t('telegram.preview_helper')}
           </p>
         </div>
       )}

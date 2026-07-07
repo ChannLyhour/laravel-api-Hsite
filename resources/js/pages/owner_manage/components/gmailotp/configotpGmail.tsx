@@ -4,15 +4,17 @@ import { toast } from '@/pages/owner_manage/utils/toast';
 import { storesService } from '@/api/owner/stores';
 import '@/pages/owner_manage/style/font.css';
 import { GroupDiv } from '@/pages/owner_manage/helper/GroupDiv';
+import { useTranslation } from '../../lang/i18n';
 
 interface TabProps {
      ownerId?: number | string;
      profile?: any;
 }
 
-const getStoredSettings = () => {
+const getStoredSettings = (ownerId?: number | string) => {
      try {
-          const saved = localStorage.getItem('store_settings');
+          const activeOwnerId = ownerId || localStorage.getItem('selected_owner_id') || 'global';
+          const saved = localStorage.getItem(`store_settings_owner_${activeOwnerId}`) || localStorage.getItem('store_settings');
           return saved ? JSON.parse(saved) : {};
      } catch (e) {
           return {};
@@ -20,8 +22,10 @@ const getStoredSettings = () => {
 };
 
 const saveSettingsToStore = async (newSettings: Record<string, any>, ownerId?: number | string, profile?: any) => {
-     const current = getStoredSettings();
+     const activeOwnerId = ownerId || localStorage.getItem('selected_owner_id') || 'global';
+     const current = getStoredSettings(activeOwnerId);
      const merged = { ...current, ...newSettings };
+     localStorage.setItem(`store_settings_owner_${activeOwnerId}`, JSON.stringify(merged));
      localStorage.setItem('store_settings', JSON.stringify(merged));
      window.dispatchEvent(new Event('settings_updated'));
 
@@ -41,6 +45,8 @@ const saveSettingsToStore = async (newSettings: Record<string, any>, ownerId?: n
 };
 
 export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
+     const { t } = useTranslation();
+     const activeOwnerId = ownerId ?? profile?.user?.id ?? localStorage.getItem('selected_owner_id');
      const [loading, setLoading] = useState(true);
      const [saving, setSaving] = useState(false);
 
@@ -61,29 +67,61 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
      const [gmailPassword, setGmailPassword] = useState('');
 
      useEffect(() => {
-          const settings = getStoredSettings();
-          
-          setGmailEnabled(
-               settings.gmail_enabled === '1' || 
-               settings.gmail_enabled === 1 || 
-               settings.gmail_enabled === 'true' || 
-               settings.gmail_enabled === true
-          );
-          setMailMailer(settings.mail_mailer || 'smtp');
-          setMailHost(settings.mail_host || '');
-          setMailPort(settings.mail_port || '587');
-          setMailEncryption(settings.mail_encryption || 'tls');
-          setMailUsername(settings.mail_username || '');
-          setMailPassword(settings.mail_password || '');
-          setMailFromAddress(settings.mail_from_address || '');
-          setMailFromName(settings.mail_from_name || '');
+          const loadConfig = async () => {
+               setLoading(true);
+               try {
+                    const store = await storesService.getStore(activeOwnerId);
+                    if (store) {
+                         setGmailEnabled(
+                              store.gmail_enabled === '1' || 
+                              store.gmail_enabled === 1 || 
+                              store.gmail_enabled === 'true' || 
+                              store.gmail_enabled === true
+                         );
+                         setMailMailer(store.mail_mailer || 'smtp');
+                         setMailHost(store.mail_host || '');
+                         setMailPort(store.mail_port || '587');
+                         setMailEncryption(store.mail_encryption || 'tls');
+                         setMailUsername(store.mail_username || '');
+                         setMailPassword(store.mail_password || '');
+                         setMailFromAddress(store.mail_from_address || '');
+                         setMailFromName(store.mail_from_name || '');
 
-          // Fallbacks for legacy keys
-          setGmailEmail(settings.gmail_email || '');
-          setGmailPassword(settings.gmail_password || '');
+                         // Fallbacks for legacy keys
+                         setGmailEmail(store.gmail_email || '');
+                         setGmailPassword(store.gmail_password || '');
 
-          setLoading(false);
-     }, []);
+                         // Update local cache
+                         localStorage.setItem(`store_settings_owner_${activeOwnerId}`, JSON.stringify(store));
+                         localStorage.setItem('store_settings', JSON.stringify(store));
+                    }
+               } catch (err) {
+                    console.warn('Failed to load SMTP config from API, loading local backup.', err);
+                    const settings = getStoredSettings(activeOwnerId);
+                    setGmailEnabled(
+                         settings.gmail_enabled === '1' || 
+                         settings.gmail_enabled === 1 || 
+                         settings.gmail_enabled === 'true' || 
+                         settings.gmail_enabled === true
+                    );
+                    setMailMailer(settings.mail_mailer || 'smtp');
+                    setMailHost(settings.mail_host || '');
+                    setMailPort(settings.mail_port || '587');
+                    setMailEncryption(settings.mail_encryption || 'tls');
+                    setMailUsername(settings.mail_username || '');
+                    setMailPassword(settings.mail_password || '');
+                    setMailFromAddress(settings.mail_from_address || '');
+                    setMailFromName(settings.mail_from_name || '');
+
+                    // Fallbacks for legacy keys
+                    setGmailEmail(settings.gmail_email || '');
+                    setGmailPassword(settings.gmail_password || '');
+               } finally {
+                    setLoading(false);
+               }
+          };
+          loadConfig();
+     }, [activeOwnerId]);
 
      // Auto-presets helper
      const applyPreset = (preset: 'gmail' | 'log' | 'custom') => {
@@ -130,7 +168,7 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                // Sync legacy keys
                gmail_email: resolvedGmailEmail.trim(),
                gmail_password: resolvedGmailPassword,
-          }, ownerId, profile);
+          }, activeOwnerId, profile);
 
           setSaving(false);
           if (result.success) {
@@ -144,7 +182,7 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
           return (
                <div className="border p-12 rounded-[5px] shadow-xs flex flex-col items-center justify-center space-y-3 font-kuntomruy custom-card-container">
                     <FiLoader className="w-8 h-8 text-primary animate-spin" />
-                    <span className="text-xs font-bold text-slate-400">Loading SMTP Settings...</span>
+                    <span className="text-xs font-bold text-slate-400">{t('smtp.loading')}</span>
                </div>
           );
      }
@@ -153,12 +191,12 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
           <div className="border p-6 sm:p-8 rounded-[5px] shadow-xs space-y-8 animate-fade-in font-kuntomruy custom-card-container text-left">
                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                         <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
+                         <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2 text-left">
                               <FiMail className="text-orange-500 w-6 h-6" />
-                              <span>OTP Email Configuration</span>
+                              <span>{t('smtp.title')}</span>
                          </h2>
-                         <p className="text-slate-400 text-xs sm:text-sm mt-1 font-semibold">
-                              Configure SMTP mail details or Gmail credentials to send OTP codes and order verification logs to customers.
+                         <p className="text-slate-400 text-xs sm:text-sm mt-1 font-semibold text-left">
+                              {t('smtp.subtitle')}
                          </p>
                     </div>
 
@@ -179,42 +217,42 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                               />
                          </button>
                          <span className={`text-xs font-black uppercase ${gmailEnabled ? 'text-emerald-500' : 'text-slate-400'}`}>
-                              {gmailEnabled ? 'Enabled' : 'Disabled'}
+                              {gmailEnabled ? t('smtp.enabled') : t('smtp.disabled')}
                          </span>
                     </div>
                </div>
 
                <div className="bg-black/[0.02] border border-black/10 rounded-[8px] p-5 flex items-start gap-3">
                     <FiInfo className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                    <div className="text-xs text-slate-500 leading-relaxed font-semibold">
-                         When enabled, the checkout screen will request guest customers to verify their identities via OTP code before creating orders. The mailer configurations set below will be instantiated dynamically to send the verification invoice template.
+                    <div className="text-xs text-slate-500 leading-relaxed font-semibold text-left">
+                         {t('smtp.info')}
                     </div>
                </div>
 
                {/* Quick Configuration Presets */}
-               <div className="border border-slate-200/60 rounded-[8px] p-4 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <span className="text-xs font-bold text-slate-700">Quick Config Presets:</span>
+               <div className="border border-slate-200/60 rounded-[8px] p-4 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                    <span className="text-xs font-bold text-slate-700">{t('smtp.preset_title')}</span>
                     <div className="flex flex-wrap items-center gap-2">
                          <button
                               type="button"
                               onClick={() => applyPreset('gmail')}
                               className="px-3.5 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 font-extrabold text-[11px] rounded-[4px] border-none cursor-pointer transition-all active:scale-98"
                          >
-                              Google Gmail SMTP
+                              {t('smtp.preset_gmail')}
                          </button>
                          <button
                               type="button"
                               onClick={() => applyPreset('log')}
                               className="px-3.5 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 font-extrabold text-[11px] rounded-[4px] border-none cursor-pointer transition-all active:scale-98"
                          >
-                              Laravel Log Driver
+                              {t('smtp.preset_log')}
                          </button>
                          <button
                               type="button"
                               onClick={() => applyPreset('custom')}
-                              className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-350 text-slate-700 font-extrabold text-[11px] rounded-[4px] border-none cursor-pointer transition-all active:scale-98"
+                              className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-355 text-slate-700 font-extrabold text-[11px] rounded-[4px] border-none cursor-pointer transition-all active:scale-98"
                          >
-                              Custom SMTP
+                              {t('smtp.preset_custom')}
                          </button>
                     </div>
                </div>
@@ -223,21 +261,21 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                     {/* Form Column */}
                     <form onSubmit={handleSave} className="lg:col-span-7 space-y-5 text-left">
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                              <div className="space-y-1.5">
-                                   <label className="text-xs font-bold text-slate-755 block">Mail Mailer *</label>
+                              <div className="space-y-1.5 text-left">
+                                   <label className="text-xs font-bold text-slate-755 block">{t('smtp.mailer')}</label>
                                    <select
                                         value={mailMailer}
                                         onChange={e => setMailMailer(e.target.value)}
                                         className="w-full px-4 py-2.5 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                                         required
                                    >
-                                        <option value="smtp">SMTP (Normal Web Mails)</option>
-                                        <option value="log">Local Log file (Testing)</option>
+                                        <option value="smtp">{t('smtp.mailer_smtp')}</option>
+                                        <option value="log">{t('smtp.mailer_log')}</option>
                                    </select>
                               </div>
 
-                              <div className="space-y-1.5">
-                                   <label className="text-xs font-bold text-slate-755 block">SMTP Host *</label>
+                              <div className="space-y-1.5 text-left">
+                                   <label className="text-xs font-bold text-slate-755 block">{t('smtp.host')}</label>
                                    <input
                                         type="text"
                                         value={mailHost}
@@ -249,8 +287,8 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                    />
                               </div>
 
-                              <div className="space-y-1.5">
-                                   <label className="text-xs font-bold text-slate-755 block">SMTP Port *</label>
+                              <div className="space-y-1.5 text-left">
+                                   <label className="text-xs font-bold text-slate-755 block">{t('smtp.port')}</label>
                                    <input
                                         type="text"
                                         value={mailPort}
@@ -262,8 +300,8 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                    />
                               </div>
 
-                              <div className="space-y-1.5">
-                                   <label className="text-xs font-bold text-slate-755 block">Mail Encryption *</label>
+                              <div className="space-y-1.5 text-left">
+                                   <label className="text-xs font-bold text-slate-755 block">{t('smtp.encryption')}</label>
                                    <select
                                         value={mailEncryption}
                                         onChange={e => setMailEncryption(e.target.value)}
@@ -271,14 +309,14 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                         required={mailMailer === 'smtp'}
                                         disabled={mailMailer === 'log'}
                                    >
-                                        <option value="tls">TLS (Standard Encryption)</option>
-                                        <option value="ssl">SSL (Implicit Encryption)</option>
-                                        <option value="none">None (Plaintext SMTP)</option>
+                                        <option value="tls">{t('smtp.encryption_tls')}</option>
+                                        <option value="ssl">{t('smtp.encryption_ssl')}</option>
+                                        <option value="none">{t('smtp.encryption_none')}</option>
                                    </select>
                               </div>
 
-                              <div className="space-y-1.5 sm:col-span-2">
-                                   <label className="text-xs font-bold text-slate-755 block">SMTP Username (Email) *</label>
+                              <div className="space-y-1.5 sm:col-span-2 text-left">
+                                   <label className="text-xs font-bold text-slate-755 block">{t('smtp.username')}</label>
                                    <input
                                         type="text"
                                         value={mailUsername}
@@ -290,8 +328,8 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                    />
                               </div>
 
-                              <div className="space-y-1.5 sm:col-span-2">
-                                   <label className="text-xs font-bold text-slate-755 block">SMTP Password (App Password) *</label>
+                              <div className="space-y-1.5 sm:col-span-2 text-left">
+                                   <label className="text-xs font-bold text-slate-755 block">{t('smtp.password')}</label>
                                    <div className="relative">
                                         <input
                                              type={showPassword ? 'text' : 'password'}
@@ -313,8 +351,8 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                    </div>
                               </div>
 
-                              <div className="space-y-1.5">
-                                   <label className="text-xs font-bold text-slate-755 block">Mail From Address</label>
+                              <div className="space-y-1.5 text-left">
+                                   <label className="text-xs font-bold text-slate-755 block">{t('smtp.from_address')}</label>
                                    <input
                                         type="email"
                                         value={mailFromAddress}
@@ -325,8 +363,8 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                    />
                               </div>
 
-                              <div className="space-y-1.5">
-                                   <label className="text-xs font-bold text-slate-755 block">Mail From Name</label>
+                              <div className="space-y-1.5 text-left">
+                                   <label className="text-xs font-bold text-slate-755 block">{t('smtp.from_name')}</label>
                                    <input
                                         type="text"
                                         value={mailFromName}
@@ -345,7 +383,7 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                    className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-[5px] text-xs font-extrabold transition-all border-none cursor-pointer flex items-center space-x-1.5 shadow-2xs active:scale-98"
                               >
                                    {saving ? <FiLoader className="w-3.5 h-3.5 animate-spin" /> : <FiCheck className="w-3.5 h-3.5" />}
-                                   <span>Save Configuration</span>
+                                   <span>{t('smtp.save_config')}</span>
                               </button>
                          </div>
                     </form>
@@ -353,21 +391,21 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                     {/* Instructions Column */}
                     <GroupDiv className="lg:col-span-5 space-y-6 text-left">
                          <h4 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2 border-b border-slate-200/80 pb-3">
-                              <FiInfo className="text-orange-500 w-4 h-4" /> Google App Password Guide
+                              <FiInfo className="text-orange-500 w-4 h-4" /> {t('smtp.guide_title')}
                          </h4>
 
                          <div className="space-y-4">
-                              <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                                   To use Google SMTP with your personal Gmail address, Google requires creating an **App Password** for security.
+                              <p className="text-xs text-slate-500 font-semibold leading-relaxed text-left">
+                                   {t('smtp.guide_desc')}
                               </p>
-                              <ol className="list-decimal pl-4 text-[11px] text-slate-550 font-semibold space-y-2 leading-relaxed">
-                                   <li>Go to your <a href="https://myaccount.google.com/" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">Google Account Settings</a>.</li>
-                                   <li>Navigate to the **Security** tab.</li>
-                                   <li>Enable **2-Step Verification** if you haven't already.</li>
-                                   <li>Once 2-Step Verification is active, search for **App Passwords** or click <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">this link</a>.</li>
-                                   <li>Enter an app name (e.g. <code>My Store Manager</code>) and click **Create**.</li>
-                                   <li>Google will generate a 16-character security key (e.g. <code>abcd efgh ijkl mnop</code>).</li>
-                                   <li>Copy the code and paste it into the **SMTP Password** field in this form.</li>
+                              <ol className="list-decimal pl-4 text-[11px] text-slate-550 font-semibold space-y-2 leading-relaxed text-left">
+                                   <li>{t('smtp.step1')}</li>
+                                   <li>{t('smtp.step2')}</li>
+                                   <li>{t('smtp.step3')}</li>
+                                   <li>{t('smtp.step4')}</li>
+                                   <li>{t('smtp.step5')}</li>
+                                   <li>{t('smtp.step6')}</li>
+                                   <li>{t('smtp.step7')}</li>
                               </ol>
                          </div>
                     </GroupDiv>

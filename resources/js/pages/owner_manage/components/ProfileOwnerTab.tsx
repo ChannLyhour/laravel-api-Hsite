@@ -47,6 +47,11 @@ export const ProfileOwnerTab: React.FC<ProfileOwnerTabProps> = ({ profile, onPro
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState('');
   const [avatarError, setAvatarError] = useState(false);
+
+  // Delete Account States
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -186,6 +191,34 @@ export const ProfileOwnerTab: React.FC<ProfileOwnerTabProps> = ({ profile, onPro
       toast.error(msg);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmationText !== 'DELETE') {
+      toast.error("Please type 'DELETE' in uppercase to confirm account deletion.");
+      return;
+    }
+    
+    setDeletingAccount(true);
+    try {
+      const res = await authService.deleteAccount();
+      if (res.success) {
+        toast.success("Account and store data deleted successfully.");
+        // Clear all token/auth info from storage
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        localStorage.removeItem('selected_owner_id');
+        window.location.href = '/login'; // Redirect to login page
+      } else {
+        toast.error(res.message || "Failed to delete account.");
+      }
+    } catch (err: any) {
+      console.error('Account delete error:', err);
+      toast.error(err?.message || "An error occurred during account deletion.");
+    } finally {
+      setDeletingAccount(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -505,6 +538,82 @@ export const ProfileOwnerTab: React.FC<ProfileOwnerTabProps> = ({ profile, onPro
         </div>
 
       </form>
+
+      {/* Danger Zone: Delete Account */}
+      <div className="pt-8 border-t border-slate-100 space-y-4">
+        <div className="bg-red-50/50 border border-red-100 rounded-[8px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h4 className="text-sm font-extrabold text-red-600 uppercase tracking-wider flex items-center gap-2">
+              <FiTrash2 className="w-4 h-4 shrink-0" />
+              <span>Danger Zone: Delete Account</span>
+            </h4>
+            <p className="text-slate-500 text-xs sm:text-sm">
+              Permanently delete your owner profile, your store configuration, and all associated items (products, menus, sales data). This action is irreversible.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-[5px] text-xs font-extrabold shadow-sm active:scale-98 transition-all cursor-pointer border-none shrink-0"
+          >
+            Delete Account & Store
+          </button>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-[8px] border border-slate-200 shadow-xl max-w-md w-full overflow-hidden animate-scale-up">
+            <div className="p-6 space-y-4">
+              <div className="flex items-center space-x-3 text-red-600">
+                <FiTrash2 className="w-6 h-6" />
+                <h3 className="text-lg font-black uppercase tracking-wider">Confirm Account Deletion</h3>
+              </div>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                This action is <span className="font-bold text-red-600">permanently destructive</span>. It will delete your owner profile, your store key-value settings, products, menus, categories, order logs, and chat histories.
+              </p>
+              <div className="bg-red-50 text-red-700 text-xs p-3 rounded-[5px] border border-red-100/50 leading-relaxed font-semibold">
+                Please type <span className="font-extrabold text-red-800">DELETE</span> below to confirm that you understand and wish to proceed.
+              </div>
+              <div className="space-y-1.5">
+                <input
+                  type="text"
+                  placeholder="Type DELETE to confirm"
+                  value={deleteConfirmationText}
+                  onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-700 font-bold tracking-wider"
+                />
+              </div>
+            </div>
+            <div className="bg-slate-50 px-6 py-4 flex justify-end space-x-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => { setShowDeleteModal(false); setDeleteConfirmationText(''); }}
+                className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-[5px] text-xs font-extrabold transition-all cursor-pointer"
+                disabled={deletingAccount}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmationText !== 'DELETE' || deletingAccount}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-[5px] text-xs font-extrabold shadow-sm active:scale-98 transition-all cursor-pointer border-none flex items-center space-x-1.5"
+              >
+                {deletingAccount ? (
+                  <>
+                    <FiLoader className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Permanently Delete</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

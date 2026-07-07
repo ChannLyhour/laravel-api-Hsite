@@ -40,6 +40,83 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
      const [deliveryMethods, setDeliveryMethods] = React.useState<DeliveryMethod[]>([]);
      const [loadingMethods, setLoadingMethods] = React.useState(false);
 
+     // Bottom Sheet slide up / drag-to-dismiss states
+     const [active, setActive] = React.useState(false);
+     const [dragY, setDragY] = React.useState(0);
+     const [isDragging, setIsDragging] = React.useState(false);
+     const startY = React.useRef(0);
+
+     React.useEffect(() => {
+          const timer = setTimeout(() => setActive(true), 10);
+          return () => clearTimeout(timer);
+     }, []);
+
+     const handleClose = () => {
+          setActive(false);
+          setTimeout(() => {
+               onClose();
+          }, 300);
+     };
+
+     const handleTouchStart = (e: React.TouchEvent) => {
+          startY.current = e.touches[0].clientY;
+          setIsDragging(true);
+     };
+
+     const handleTouchMove = (e: React.TouchEvent) => {
+          if (!isDragging) return;
+          const currentY = e.touches[0].clientY;
+          const deltaY = currentY - startY.current;
+          if (deltaY > 0) {
+               setDragY(deltaY);
+          }
+     };
+
+     const handleTouchEnd = () => {
+          setIsDragging(false);
+          if (dragY > 150) {
+               handleClose();
+          } else {
+               setDragY(0);
+          }
+     };
+
+     const handleMouseDown = (e: React.MouseEvent) => {
+          startY.current = e.clientY;
+          setIsDragging(true);
+     };
+
+     React.useEffect(() => {
+          const handleMouseMove = (e: MouseEvent) => {
+               if (!isDragging) return;
+               const deltaY = e.clientY - startY.current;
+               if (deltaY > 0) {
+                    setDragY(deltaY);
+               }
+          };
+
+          const handleMouseUp = () => {
+               if (isDragging) {
+                    setIsDragging(false);
+                    if (dragY > 150) {
+                         handleClose();
+                    } else {
+                         setDragY(0);
+                    }
+               }
+          };
+
+          if (isDragging) {
+               window.addEventListener('mousemove', handleMouseMove);
+               window.addEventListener('mouseup', handleMouseUp);
+          }
+
+          return () => {
+               window.removeEventListener('mousemove', handleMouseMove);
+               window.removeEventListener('mouseup', handleMouseUp);
+          };
+     }, [isDragging, dragY]);
+
      const hasCoordinates = latitude && longitude;
      const latVal = parseFloat(String(latitude));
      const lngVal = parseFloat(String(longitude));
@@ -359,17 +436,33 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
      };
 
      return createPortal(
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[10000] flex items-end justify-center">
                {/* Backdrop */}
                <div
-                    className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300"
-                    onClick={onClose}
+                    className={`absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300 ease-in-out ${active ? 'opacity-100' : 'opacity-0'}`}
+                    onClick={handleClose}
                />
 
-               {/* Dialog Container - Styled with rounded-[5px] to match order show.tsx invoice containers */}
-               <div className="relative z-10 bg-white w-full max-w-[95vw] xl:max-w-[90vw] h-[90vh] rounded-[5px] shadow-2xl overflow-hidden flex flex-col animate-scale-up">
+               {/* Dialog Bottom Sheet Container */}
+               <div 
+                    className={`relative z-10 bg-white w-full max-w-[95vw] xl:max-w-[90vw] h-[88vh] rounded-t-[16px] shadow-2xl overflow-hidden flex flex-col ${isDragging ? '' : 'transition-transform duration-300 ease-out'}`}
+                    style={{ transform: active ? `translateY(${dragY}px)` : 'translateY(100%)' }}
+               >
+                    {/* Drag Handle to Top */}
+                    <div 
+                         className="w-full pt-3 pb-2 flex justify-center bg-white cursor-pointer select-none shrink-0"
+                         onTouchStart={handleTouchStart}
+                         onTouchMove={handleTouchMove}
+                         onTouchEnd={handleTouchEnd}
+                         onMouseDown={handleMouseDown}
+                         onClick={handleClose}
+                         title="Drag down or click to close"
+                    >
+                         <div className="w-12 h-1.5 bg-slate-200 rounded-full hover:bg-slate-300 transition-colors" />
+                    </div>
+
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-100 shrink-0">
+                    <div className="flex items-center justify-between px-6 pb-4.5 border-b border-slate-100 shrink-0">
                          <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-[5px] bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
                                    <FiMapPin className="w-4.5 h-4.5 stroke-[2.2]" />
@@ -381,7 +474,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                               </div>
                          </div>
                          <button
-                              onClick={onClose}
+                              onClick={handleClose}
                               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer"
                          >
                               <FiX className="w-4 h-4 stroke-[2.5]" />
@@ -389,7 +482,7 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                     </div>
 
                     {/* Two-Column Content Layout */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-y-auto md:overflow-hidden w-full h-full custom-scrollbar">
+                    <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden w-full h-full">
                          {/* Left Column: Map Frame */}
                          <div className="w-full h-80 md:h-full relative bg-slate-50 border-b md:border-b-0 md:border-r border-slate-150 min-h-[300px] md:min-h-0 flex flex-col">
                               {/* Map View Toggle Overlay - styled with rounded-[5px] */}
@@ -453,8 +546,9 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                          </div>
 
                          {/* Right Column: Details and Actions */}
-                         <div className="p-8 space-y-6 overflow-visible md:overflow-y-auto flex flex-col justify-between h-auto md:h-full custom-scrollbar">
-                              <div className="space-y-6 text-left">
+                         <div className="flex flex-col h-full overflow-hidden md:h-full relative">
+                              {/* Scrollable details content */}
+                              <div className="flex-1 overflow-y-auto p-8 space-y-6 text-left custom-scrollbar">
                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {/* Customer / Recipient Card - Styled to match show.tsx custom-card-container */}
                                         <div className="border rounded-[5px] p-6 shadow-sm space-y-4 custom-card-container bg-white">
@@ -624,19 +718,19 @@ export const PopupDetailLocation: React.FC<PopupDetailLocationProps> = ({
                                    </div>
                               </div>
 
-                              {/* Action buttons - styled with rounded-[5px] */}
-                              <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">
+                              {/* Sticky Action buttons - modern styling */}
+                              <div className="sticky bottom-0 bg-white border-t border-slate-100 px-8 py-4.5 flex flex-col sm:flex-row gap-3 shrink-0 z-10">
                                    <a
                                         href={externalMapUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-stone-900 hover:bg-stone-800 active:scale-[0.98] text-white text-[11px] font-black uppercase tracking-widest rounded-[5px] transition-all shadow-md decoration-none border-none cursor-pointer text-center"
+                                        className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white text-xs font-extrabold uppercase tracking-wider rounded-[8px] transition-all shadow-2xs hover:shadow-xs decoration-none border-none cursor-pointer text-center"
                                    >
                                         <FiExternalLink className="w-4 h-4 shrink-0" /> Open in Google Maps
                                    </a>
                                    <button
-                                        onClick={onClose}
-                                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-800 text-[11px] font-black uppercase tracking-widest rounded-[5px] border-none cursor-pointer transition-all"
+                                        onClick={handleClose}
+                                        className="px-6 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 active:scale-98 text-slate-700 text-xs font-extrabold uppercase tracking-wider rounded-[8px] cursor-pointer transition-all"
                                    >
                                         Close Details
                                    </button>

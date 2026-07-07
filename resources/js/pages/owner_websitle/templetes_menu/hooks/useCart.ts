@@ -17,18 +17,17 @@ import { nullOrRequest } from '../nullOrRequest';
 // --------------- variant meta helpers ---------------
 const VARIANT_META_KEY = 'aura_variant_meta';
 
-function loadVariantMeta(): Record<string, { size?: string; color?: string; addonsPrice?: number }> {
+function loadVariantMeta(): Record<number, { size?: string; color?: string }> {
   try {
     const raw = localStorage.getItem(VARIANT_META_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }
 
-function saveVariantMeta(productId: number, variantId: number | null, size: string | undefined, color: string | undefined, addonsPrice?: number) {
+function saveVariantMeta(id: number, size: string | undefined, color: string | undefined) {
   try {
     const meta = loadVariantMeta();
-    const key = `${productId}-${variantId || 'null'}`;
-    meta[key] = { size: size || undefined, color: color || undefined, addonsPrice: addonsPrice || undefined };
+    meta[id] = { size: size || undefined, color: color || undefined };
     localStorage.setItem(VARIANT_META_KEY, JSON.stringify(meta));
   } catch { /* ignore */ }
 }
@@ -69,14 +68,14 @@ export const useCart = (initialSettings?: any, user?: any) => {
       // 2. Fall back to attribute_values returned by the server (if backend eager-loads them)
       let selectedSize: string | undefined;
       let selectedColor: string | undefined;
-      let addonsPrice = 0;
 
-      const meta = loadVariantMeta();
-      const cached = meta[`${row.product_id}-${row.product_variant_id || 'null'}`];
-      if (cached) {
-        selectedSize = cached.size;
-        selectedColor = cached.color;
-        addonsPrice = cached.addonsPrice || 0;
+      if (row.product_variant_id) {
+        const meta = loadVariantMeta();
+        const cached = meta[row.product_variant_id];
+        if (cached) {
+          selectedSize = cached.size;
+          selectedColor = cached.color;
+        }
       }
 
       if (!selectedSize && !selectedColor) {
@@ -94,16 +93,13 @@ export const useCart = (initialSettings?: any, user?: any) => {
         });
       }
 
-      const baseItemPrice = parseFloat(row.variant?.retail_price || row.variant?.price || item.price || '0');
-      const finalPrice = String(baseItemPrice + addonsPrice);
-
       return {
         id: cartItemId,
         dbId: row.id,
         item: {
           ...item,
           id: row.product_id,
-          price: finalPrice,
+          price: row.variant?.retail_price || row.variant?.price || item.price || '0',
         } as Root2,
         qty: row.quantity,
         selectedImage: resolveImageUrl(selectedImage) || undefined,
@@ -192,7 +188,7 @@ export const useCart = (initialSettings?: any, user?: any) => {
     }
   }, [orderMethod]);
 
-  const addToCart = async (item: Root2, qtyToAdd = 1, size?: string, color?: string, addonsPrice?: number) => {
+  const addToCart = async (item: Root2, qtyToAdd = 1, size?: string, color?: string) => {
     const isGuestCheckoutEnabled = initialSettings?.guest_checkout !== false && initialSettings?.guest_checkout !== 'false';
     
     if (!resolvedUser && !isGuestCheckoutEnabled) {
@@ -246,13 +242,12 @@ export const useCart = (initialSettings?: any, user?: any) => {
       }
     }
 
-    // Persist size/color meta so mapDbCartToLocal can restore them after re-fetching from server
-    if (sizeVal || colorVal) {
-      saveVariantMeta(item.id, variantId, sizeVal || undefined, colorVal || undefined, addonsPrice);
-    }
-
     if (resolvedUser) {
       try {
+        // Persist size/color meta so mapDbCartToLocal can restore them after re-fetching from server
+        if (variantId && (sizeVal || colorVal)) {
+          saveVariantMeta(variantId, sizeVal || undefined, colorVal || undefined);
+        }
         await cartService.addToCart({
           product_id: item.id,
           product_variant_id: variantId,

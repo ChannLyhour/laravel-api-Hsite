@@ -27,7 +27,9 @@ import {
   FiMapPin,
 } from 'react-icons/fi';
 import { OverviewTab } from '../components/OverviewTab';
-import { CategoriesTab } from '../components/CategoriesTab';
+import { CategoriesTab } from '../components/categories/categories';
+import { SubcategoriesTab } from '../components/categories/Subcategories';
+import { SubSubcategoriesTab } from '../components/categories/SubSubcategories';
 import { MenuItemsTab } from '../components/MenuItemsTab';
 import { OrdersTab } from '../components/OrdersTab';
 import { PostsTab } from '../components/PostsTab';
@@ -681,13 +683,18 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       ]
     },
     {
+      section: 'DELIVERY',
+      items: [
+        { id: 'settings-delivery-methods', label: 'Delivery Methods', icon: <FiTruck className="w-[18px] h-[18px]" /> },
+        { id: 'settings-delivery-zones', label: 'Delivery Zones', icon: <FiMapPin className="w-[18px] h-[18px]" /> },
+      ]
+    },
+    {
       section: 'SYSTEM',
       items: [
         { id: 'theme', label: t('sidebar.storefront_themes'), icon: <FiLayout className="w-[18px] h-[18px]" /> },
         { id: 'settings', label: t('sidebar.store_settings'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
         { id: 'social-media', label: t('sidebar.social_media'), icon: <FiShare2 className="w-[18px] h-[18px]" /> },
-        { id: 'settings-delivery-methods', label: 'Delivery Methods', icon: <FiTruck className="w-[18px] h-[18px]" /> },
-        { id: 'settings-delivery-zones', label: 'Delivery Zones', icon: <FiMapPin className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-payment', label: t('sidebar.payment_methods'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-firebase', label: t('sidebar.firebase'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-pusher', label: t('sidebar.pusher_config'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
@@ -724,9 +731,9 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
     switch (activeTab) {
       case 'overview': return <OverviewTab ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'pos': return <PosTab ownerId={activeOwnerId} storeId={settings?.id} />;
-      case 'categories': return <CategoriesTab ownerId={activeOwnerId} storeId={settings?.id} levelFilter={0} />;
-      case 'sub-categories': return <CategoriesTab ownerId={activeOwnerId} storeId={settings?.id} levelFilter={1} />;
-      case 'sub-sub-categories': return <CategoriesTab ownerId={activeOwnerId} storeId={settings?.id} levelFilter={2} />;
+      case 'categories': return <CategoriesTab ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'sub-categories': return <SubcategoriesTab ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'sub-sub-categories': return <SubSubcategoriesTab ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'menu-items': return <MenuItemsTab ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'brands': return <BrandsTab ownerId={activeOwnerId} />;
       case 'product-badges': return <ProductBadgesTab ownerId={activeOwnerId} />;
@@ -752,7 +759,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'settings-thirdparty-pusher': return <Pusher_ConfigurationTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-marketing': return <ThirdPartyMarketingTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-oauth': return <Social_Login_SetupTab ownerId={activeOwnerId} profile={profile} />;
-      case 'settings-thirdparty-telegram': return <TelegramBotSettings />;
+      case 'settings-thirdparty-telegram': return <TelegramBotSettings ownerId={activeOwnerId} />;
       case 'settings-thirdparty-gmailotp': return <ConfigOTPGmailTab ownerId={activeOwnerId} profile={profile} />;
       case 'marketing-banners': return <BannersTab ownerId={activeOwnerId} />;
       case 'marketing-coupons': return <CouponsTab ownerId={activeOwnerId} storeId={settings?.id} />;

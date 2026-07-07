@@ -74,6 +74,27 @@ export const ModelCartSelection: React.FC<ModelCartSelectionProps> = ({
 
             {/* Drawer Content */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+              <div className="flex p-1 bg-[#F9F9F9] rounded-[5px] border border-stone-200/60">
+                <button
+                  onClick={() => setOrderMethod('delivery')}
+                  className={`flex-1 py-2 text-center text-xs font-extrabold rounded-[5px] transition-all cursor-pointer border-none ${orderMethod === 'delivery'
+                    ? 'bg-stone-900 text-white shadow-3xs'
+                    : 'text-stone-500 hover:text-stone-900'
+                    }`}
+                >
+                  Shipping
+                </button>
+                <button
+                  onClick={() => setOrderMethod('pickup')}
+                  className={`flex-1 py-2 text-center text-xs font-extrabold rounded-[5px] transition-all cursor-pointer border-none ${orderMethod === 'pickup'
+                    ? 'bg-stone-900 text-white shadow-3xs'
+                    : 'text-stone-500 hover:text-stone-900'
+                    }`}
+                >
+                    Pickup
+                </button>
+              </div>
+
               {cart.length > 0 ? (
                 <div className="divide-y divide-stone-100">
                   {cart.map(ci => (
@@ -98,7 +119,7 @@ export const ModelCartSelection: React.FC<ModelCartSelectionProps> = ({
                           {ci.selectedSize && <span>Size: {ci.selectedSize}</span>}
                           {ci.selectedColor && (
                             <span className="flex items-center gap-1">
-                              {!(ci.selectedColor.includes('Ice') || ci.selectedColor.includes('Sugar') || ci.selectedColor.includes('Note') || ci.selectedColor.includes(':') || ci.selectedColor.includes('Plug') || ci.selectedColor.includes('Pack') || ci.selectedColor.includes('Case') || ci.selectedColor.includes('Can') || ci.selectedColor.includes('Shade')) && (
+                              {!(ci.selectedColor.includes('Ice') || ci.selectedColor.includes('Sugar') || ci.selectedColor.includes('Note')) && (
                                 <span
                                     className="w-2.5 h-2.5 rounded-full border border-stone-200"
                                     style={{ backgroundColor: resolveColorHex(ci.item, ci.selectedColor) }}

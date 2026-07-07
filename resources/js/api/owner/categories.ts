@@ -108,6 +108,7 @@ export interface MenuItem {
   compare_at_price?: string | null;
   addons?: ProductAddon[];
   is_special?: boolean;
+  category?: Category | null;
 }
 
 // Top Selling Types requested by user
@@ -144,6 +145,7 @@ export interface Root2 {
   code?: string | null;
   addons?: ProductAddon[];
   is_special?: boolean;
+  category?: Category | null;
 }
 
 // Shared raw API shape returned by backend CategoryResponse
@@ -356,6 +358,7 @@ export interface ProductsResponse {
   multiply_qty_shipping?: boolean;
   addons?: ProductAddon[];
   is_special?: boolean;
+  category?: any;
 }
 
 /** Map image paths/JSON to absolute URL string based on server base */
@@ -441,6 +444,7 @@ function mapProducts(item: ProductsResponse): MenuItem {
     multiply_qty_shipping: !!item.multiply_qty_shipping,
     addons: item.addons || [],
     is_special: !!item.is_special,
+    category: item.category,
   };
 }
 

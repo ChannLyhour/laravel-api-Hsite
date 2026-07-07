@@ -88,5 +88,13 @@ export function validateCheckoutForm(input: CheckoutValidationInput): CheckoutVa
         }
     }
 
+    // 4. Validate Payment Method selection
+    if (!input.selectedPayment) {
+        return {
+            field: 'payment',
+            message: 'Please select a payment method.'
+        };
+    }
+
     return null;
 }

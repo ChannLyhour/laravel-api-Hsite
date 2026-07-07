@@ -3,11 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { HomePage as HomePageLocal } from '@/pages/owner_websitle/templetes_menu/HomePage';
-import { HomePage as HomePageOnline } from '@/pages/owner_websitle/templetes_menu copy/HomePage';
+import { HomePage as HomePageOnline } from '@/pages/owner_websitle/templetes_menu/HomePage';
 import { CustomerDisplayPage } from '@/pages/owner_websitle/templetes_menu/components/CustomerDisplayPage';
 import { client } from '@/api/client';
 import { LoginPage as LoginPageLocal } from '@/pages/owner_websitle/templetes_menu/LoginPage';
-import { LoginPage as LoginPageOnline } from '@/pages/owner_websitle/templetes_menu copy/LoginPage';
+import { LoginPage as LoginPageOnline } from '@/pages/owner_websitle/templetes_menu/LoginPage';
 import { StoreLogin } from '@/pages/main_website/auth/StoreLogin';
 import { AdminDashboard } from '@/pages/owner_manage/layouts/OwnerDashboard';
 import { CompanyWebsite } from '@/pages/main_website/CompanyWebsite';
@@ -260,16 +260,6 @@ function App() {
           setOwnerUserIdState(expectedId);
         }
         setHasOwnerParam(true);
-        // Sync URL parameters if they mismatch
-        const urlId = params.get('id') || params.get('owner');
-        if (urlId && String(urlId) !== String(expectedId)) {
-          params.set('id', String(expectedId));
-          if (storeInfo?.store_name) {
-            params.set('store', storeInfo.store_name.replace(/\s+/g, '_'));
-          }
-          const newSearch = params.toString() ? `?${params.toString()}` : '';
-          routerNavigate(`/owner${newSearch}`, { replace: true });
-        }
       }
       return;
     }
@@ -449,7 +439,7 @@ function App() {
       setOwnerUserIdState(parsedId);
       localStorage.setItem('selected_owner_id', String(parsedId));
       setHasOwnerParam(true);
-    } else if (!isProductPage && getTenantDomain() === null && parseStorePath(currentPath) === null) {
+    } else if (!isProductPage && getTenantDomain() === null && parseStorePath(currentPath) === null && !newPath.startsWith('/owner') && !newPath.startsWith('/admin')) {
       // No ?owner or ?id in URL (e.g. back to /) → reset to default owner
       setOwnerUserIdState(OWNER_USER_ID);
       setHasOwnerParam(false);
@@ -457,7 +447,7 @@ function App() {
 
     if (urlStoreName) {
       setStoreNameState(urlStoreName.replace(/_/g, ' '));
-    } else if (!isProductPage && getTenantDomain() === null && parseStorePath(currentPath) === null) {
+    } else if (!isProductPage && getTenantDomain() === null && parseStorePath(currentPath) === null && !newPath.startsWith('/owner') && !newPath.startsWith('/admin')) {
       setStoreNameState('');
     }
   }, [location, adminProfile, settings, resolvedStores]);
@@ -600,32 +590,18 @@ function App() {
   }, [adminToken, adminProfile, currentPath, storeInfo]);
 
   // Dashboard URL Sync:
-  // When in the /owner control panel, map dashboard path from /owner to /owner?id=...&store=...
+  // When in the /owner control panel, map dashboard path to clean /owner/StoreName URL
   useEffect(() => {
     if (!currentPath.startsWith('/owner') || currentPath === '/owner/menu') return;
     if (!adminToken || !adminProfile || !storeInfo?.store_name) return;
 
-    const params = new URLSearchParams(location.search);
     const storeSlug = storeInfo.store_name.replace(/\s+/g, '_');
-    const urlStore = params.get('store');
-    const urlId = params.get('id') || params.get('owner');
+    const expectedPath = `/owner/${storeSlug}`;
 
-    let needsUpdate = false;
-    if (urlStore !== storeSlug) {
-      params.set('store', storeSlug);
-      needsUpdate = true;
+    if (currentPath !== expectedPath) {
+      routerNavigate(expectedPath, { replace: true });
     }
-    if (String(urlId) !== String(ownerUserId)) {
-      params.set('id', String(ownerUserId));
-      needsUpdate = true;
-    }
-
-    if (needsUpdate || currentPath.includes('=')) {
-      const newSearch = params.toString() ? `?${params.toString()}` : '';
-      const finalUrl = `/owner${newSearch}`;
-      routerNavigate(finalUrl, { replace: true });
-    }
-  }, [adminToken, adminProfile, currentPath, storeInfo, ownerUserId]);
+  }, [adminToken, adminProfile, currentPath, storeInfo]);
 
   // Swap active settings when owner changes to prevent bleeding
   const prevOwnerIdRef = useRef<number | string | null>(null);
@@ -817,44 +793,7 @@ function App() {
     }
   }, [storeInfo, currentPath, hasOwnerParam, ownerUserId]);
 
-  // Dynamically update document title & favicon based on store configuration
-  useEffect(() => {
-    const activeStoreName = storeInfo?.store_name || settings?.store_name;
-    if (activeStoreName) {
-      document.title = activeStoreName;
-    } else {
-      document.title = ' Store';
-    }
-
-    const updateFavicon = async () => {
-      // 1. Check if favicon URL is already in current store/settings objects
-      const settingsFavicon = settings?.favicon_url || storeInfo?.favicon_url;
-
-      if (settingsFavicon) {
-        const resolvedUrl = resolveImageUrl(settingsFavicon);
-        storeBrandingService.applyFavicon(`${resolvedUrl}?v=${Date.now()}`);
-        return;
-      }
-
-      // 2. If not found in memory, attempt a specialized fetch for this owner ID
-      if (ownerUserId && ownerUserId !== OWNER_USER_ID) {
-        try {
-          const remoteFavicon = await storeBrandingService.getFaviconByOwnerId(ownerUserId);
-          if (remoteFavicon) {
-            storeBrandingService.applyFavicon(`${remoteFavicon}?v=${Date.now()}`);
-            return;
-          }
-        } catch (err) {
-          console.warn('Failed to fetch remote favicon', err);
-        }
-      }
-
-      // 3. Fallback to default
-      storeBrandingService.applyFavicon('/favicon.svg');
-    };
-
-    updateFavicon();
-  }, [settings, storeInfo, ownerUserId]);
+  // Note: Document title and favicon are updated dynamically in a single unified useEffect hook below.
 
   // Programmatic single-page navigation helper (delegates to React Router)
   const navigate = useCallback((to: string) => {
@@ -997,7 +936,12 @@ function App() {
       console.warn('Backend admin logout failed:', err);
     }
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('store_settings');
+    localStorage.removeItem('selected_owner_id');
     setAdminToken(null);
+    setAdminProfile(null);
+    setStoreInfo(null);
+    setSettings(null);
     navigate('/owner/login');
   };
 
@@ -1019,6 +963,7 @@ function App() {
   };
 
   // Update document title based on current route context
+  // Update document title and favicon based on current route and store context
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const isProductPage = currentPath.startsWith('/product');
@@ -1027,26 +972,29 @@ function App() {
     const updateTitleAndFavicon = async () => {
       // Fetch platform settings for base branding
       let platformName = 'BiteFlow';
+      let platformFavicon = '/favicon.svg';
       try {
         const platformSettings = await adminSettingApi.getSettings();
         if (platformSettings.platform_name) {
           platformName = platformSettings.platform_name;
         }
-
-        // Apply platform favicon for non-owner routes
-        if (!hasOwner && platformSettings.favicon_url) {
-          storeBrandingService.applyFavicon(resolveImageUrl(platformSettings.favicon_url));
-        } else if (!hasOwner) {
-          storeBrandingService.applyFavicon('/favicon.svg');
+        if (platformSettings.favicon_url) {
+          platformFavicon = resolveImageUrl(platformSettings.favicon_url);
         }
       } catch (err) {
         console.warn('Failed to load platform settings for branding', err);
       }
 
-      if (!hasOwner) {
+      // Check route contexts
+      const isOwnerPanel = currentPath.startsWith('/owner') && currentPath !== '/owner/menu';
+      const isStorefront = hasOwner || isProductPage;
+
+      if (!isOwnerPanel && !isStorefront) {
+        // SCENARIO 1: Central Platform Website
         if (currentPath.startsWith('/auth/')) {
           const providerName = currentPath.includes('google') ? 'Google' : 'Facebook';
           document.title = `${providerName} Login`;
+          storeBrandingService.applyFavicon(platformFavicon);
           return;
         }
 
@@ -1058,44 +1006,58 @@ function App() {
           '/join': `Become a Partner | ${platformName}`,
           '/admin': `Platform Admin | ${platformName}`,
         };
-        if (pageTitles[currentPath]) {
-          document.title = pageTitles[currentPath];
-        } else {
-          document.title = platformName;
-        }
+        document.title = pageTitles[currentPath] || platformName;
+        storeBrandingService.applyFavicon(platformFavicon);
         return;
       }
 
-      // 1. Priority: Authoritative storeInfo from state
-      if (storeInfo?.store_name) {
-        document.title = storeInfo.store_name;
-        return;
+      // SCENARIO 2 & 3: Store context (Dashboard or Customer Storefront)
+      // Resolve store name
+      let storeNameValue = storeInfo?.store_name || settings?.store_name;
+      if (!storeNameValue && storeName && storeName !== 'Food') {
+        storeNameValue = storeName;
       }
 
-      // 2. Secondary: Name from ?store= URL param
-      if (storeName && storeName !== 'Food') {
-        document.title = storeName;
-        return;
-      }
-
-      // 3. Fallback: Specialized fetch for the current owner context
-      if (ownerUserId && ownerUserId !== OWNER_USER_ID) {
+      // If name is still empty and we have an owner ID, try to get it
+      if (!storeNameValue && ownerUserId && ownerUserId !== OWNER_USER_ID) {
         try {
           const remoteTitle = await storeTitleService.getStoreTitleByOwnerId(ownerUserId);
           if (remoteTitle) {
-            document.title = remoteTitle;
-            return;
+            storeNameValue = remoteTitle;
           }
-        } catch (err) {
-          console.warn('Failed to fetch remote store title', err);
-        }
+        } catch (_) {}
       }
 
-      document.title = `${platformName} Store`;
+      // Set Document Title
+      if (isOwnerPanel) {
+        document.title = storeNameValue ? `${storeNameValue} | Owner` : `Owner Dashboard`;
+      } else {
+        document.title = storeNameValue || `${platformName} Store`;
+      }
+
+      // Resolve store favicon
+      const storeFaviconValue = settings?.favicon_url || storeInfo?.favicon_url;
+      if (storeFaviconValue) {
+        const resolvedUrl = resolveImageUrl(storeFaviconValue);
+        storeBrandingService.applyFavicon(`${resolvedUrl}?v=${Date.now()}`);
+      } else if (ownerUserId && ownerUserId !== OWNER_USER_ID) {
+        try {
+          const remoteFavicon = await storeBrandingService.getFaviconByOwnerId(ownerUserId);
+          if (remoteFavicon) {
+            storeBrandingService.applyFavicon(`${remoteFavicon}?v=${Date.now()}`);
+          } else {
+            storeBrandingService.applyFavicon('/favicon.svg');
+          }
+        } catch (_) {
+          storeBrandingService.applyFavicon('/favicon.svg');
+        }
+      } else {
+        storeBrandingService.applyFavicon('/favicon.svg');
+      }
     };
 
     updateTitleAndFavicon();
-  }, [ownerUserId, storeName, storeInfo, currentPath]);
+  }, [ownerUserId, storeName, storeInfo, settings, currentPath]);
 
   const storeRouteInfo = parseStorePath(currentPath);
 

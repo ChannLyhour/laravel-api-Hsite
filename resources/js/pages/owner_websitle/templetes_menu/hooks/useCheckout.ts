@@ -71,7 +71,7 @@ export const useCheckout = ({
         }
     }, [stores]);
 
-    const [selectedPayment, setSelectedPayment] = useState<string>('cod');
+    const [selectedPayment, setSelectedPayment] = useState<string>('');
     const [preferredContact, setPreferredContact] = useState<string>('');
     const [contactInput, setContactInput] = useState<string>('');
     const [note, setNote] = useState<string>('');
@@ -150,10 +150,6 @@ export const useCheckout = ({
     }, [appliedCoupon, subtotal, propDiscount]);
 
     const deliveryFee = useMemo(() => {
-        const queryParams = new URLSearchParams(window.location.search);
-        const isLocal = queryParams.get('local') === 'true';
-        if (isLocal) return 0;
-
         if (propDeliveryFee !== undefined) return propDeliveryFee;
         if (appliedCoupon?.coupon_type === 'free_delivery') {
             const minPurchase = appliedCoupon.minimum_purchase ? parseFloat(String(appliedCoupon.minimum_purchase)) : 0;
@@ -249,18 +245,15 @@ export const useCheckout = ({
     // ─── Continuous Form Validation Effect ───
     useEffect(() => {
         if (validationError) {
-            const queryParams = new URLSearchParams(window.location.search);
-            const isLocal = queryParams.get('local') === 'true';
-
-            const checkoutDeliveryAddress = isLocal ? 'close' : (storeSettings?.checkout_delivery_address || 'open');
-            const checkoutPreferredContact = isLocal ? 'close' : (storeSettings?.checkout_preferred_contact || 'open');
+            const checkoutDeliveryAddress = storeSettings?.checkout_delivery_address || 'open';
+            const checkoutPreferredContact = storeSettings?.checkout_preferred_contact || 'open';
             const checkoutNote = storeSettings?.checkout_note || 'open';
             const checkoutClaimCode = storeSettings?.checkout_claim_code || 'open';
 
             const currentErr = validateCheckoutForm({
-                hasSelectedAddress: isLocal ? true : !!selectedAddress,
-                preferredContact: isLocal ? 'none' : preferredContact,
-                contactInput: isLocal ? 'none' : contactInput,
+                hasSelectedAddress: !!selectedAddress,
+                preferredContact,
+                contactInput,
                 selectedPayment,
                 isGuestCheckoutEnabled,
                 checkoutDeliveryAddress,
@@ -422,49 +415,38 @@ export const useCheckout = ({
         }
 
         const resolvedStoreId = Number(stores?.id || storeSettings?.id || nullOrRequest(ownerUserId));
-        
-        const queryParams = new URLSearchParams(window.location.search);
-        const isLocal = queryParams.get('local') === 'true';
-        const checkoutDeliveryAddress = isLocal ? 'close' : (storeSettings?.checkout_delivery_address || 'open');
+        const checkoutDeliveryAddress = storeSettings?.checkout_delivery_address || 'open';
 
         const orderData = {
             store_id: resolvedStoreId,
             customer_id: isLoggedIn && user?.id ? Number(user.id) : null,
             subtotal: Number(subtotal.toFixed(2)),
             total_amount: Number(totalAmount.toFixed(2)),
-            customer_name: isLocal 
-                ? (user?.name || 'Walk In')
-                : (checkoutDeliveryAddress === 'close'
-                    ? customCustomerName
-                    : (selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Customer')),
-            customer_phone: isLocal 
-                ? (user?.phone || '') 
-                : (checkoutDeliveryAddress === 'close'
-                    ? customCustomerPhone
-                    : contactInput),
-            customer_address: isLocal
-                ? 'Walk-in'
-                : (checkoutDeliveryAddress === 'close'
-                    ? customCustomerAddress
-                    : (selectedAddress
-                        ? `${selectedAddress.address}, ${selectedAddress.city_province}, ${selectedAddress.country}`
-                        : 'Guest Address')),
+            customer_name: checkoutDeliveryAddress === 'close'
+                ? customCustomerName
+                : (selectedAddress ? `${selectedAddress.first_name} ${selectedAddress.last_name}` : 'Guest Customer'),
+            customer_phone: checkoutDeliveryAddress === 'close'
+                ? customCustomerPhone
+                : contactInput,
+            customer_address: checkoutDeliveryAddress === 'close'
+                ? customCustomerAddress
+                : (selectedAddress
+                    ? `${selectedAddress.address}, ${selectedAddress.city_province}, ${selectedAddress.country}`
+                    : 'Guest Address'),
             latitude: checkoutDeliveryAddress === 'close' ? (customLatitude ? parseFloat(customLatitude) : null) : (selectedAddress?.latitude || null),
             longitude: checkoutDeliveryAddress === 'close' ? (customLongitude ? parseFloat(customLongitude) : null) : (selectedAddress?.longitude || null),
             payment_method: selectedPayment || 'cod',
             notes: note || '',
             items: validItems,
-            delivery_fee: isLocal ? 0 : Number(deliveryFee.toFixed(2)),
+            delivery_fee: Number(deliveryFee.toFixed(2)),
             discount_amount: Number(totalDiscount.toFixed(2)),
             coupon_code: appliedCoupon?.code || '',
-            order_type: isLocal ? 'walk_in' : 'delivery',
         };
 
         console.log('[useCheckout] Submitting Order Data:', orderData);
 
-        const isGateway = selectedPayment !== 'cod' && selectedPayment !== 'card';
         await submitOrder(orderData as any, (order) => {
-            if (isGateway) {
+            if (selectedPayment === 'aba' || selectedPayment === 'bakong') {
                 setPendingOrderId(order.id);
                 setPendingOrderNo(order.order_no || null);
                 setIsKHQROpen(true);
@@ -486,18 +468,15 @@ export const useCheckout = ({
     };
 
     const handleCheckout = async () => {
-        const queryParams = new URLSearchParams(window.location.search);
-        const isLocal = queryParams.get('local') === 'true';
-
-        const checkoutDeliveryAddress = isLocal ? 'close' : (storeSettings?.checkout_delivery_address || 'open');
-        const checkoutPreferredContact = isLocal ? 'close' : (storeSettings?.checkout_preferred_contact || 'open');
+        const checkoutDeliveryAddress = storeSettings?.checkout_delivery_address || 'open';
+        const checkoutPreferredContact = storeSettings?.checkout_preferred_contact || 'open';
         const checkoutNote = storeSettings?.checkout_note || 'open';
         const checkoutClaimCode = storeSettings?.checkout_claim_code || 'open';
 
         const err = validateCheckoutForm({
-            hasSelectedAddress: isLocal ? true : !!selectedAddress,
-            preferredContact: isLocal ? 'none' : preferredContact,
-            contactInput: isLocal ? 'none' : contactInput,
+            hasSelectedAddress: !!selectedAddress,
+            preferredContact,
+            contactInput,
             selectedPayment,
             isGuestCheckoutEnabled,
             checkoutDeliveryAddress,

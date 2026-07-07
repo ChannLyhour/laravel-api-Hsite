@@ -12,7 +12,7 @@ export const OwnerURL = {
      getHome: (storeName: string, ownerId: number | string): string => {
           const slug = slugifyStoreName(storeName);
           if (!slug) return '/';
-          return `/?id=${ownerId}&store=${slug}`;
+          return `/${slug}`;
      },
 
      /**
@@ -21,7 +21,7 @@ export const OwnerURL = {
      getMenu: (storeName: string, ownerId: number | string): string => {
           const slug = slugifyStoreName(storeName);
           if (!slug) return '/menu';
-          return `/menu?id=${ownerId}&store=${slug}`;
+          return `/${slug}/menu`;
      },
 
      /**
@@ -29,7 +29,7 @@ export const OwnerURL = {
       */
      getProduct: (productId: number | string, storeName: string, ownerId: number | string): string => {
           const slug = slugifyStoreName(storeName);
-          return `/product?id=${productId}&owner=${ownerId}&store=${slug}`;
+          return `/${slug}/product?id=${productId}`;
      },
 
      /**
@@ -37,14 +37,15 @@ export const OwnerURL = {
       */
      getShop: (storeName: string, ownerId: number | string, options?: { search?: string; categoryId?: number | string }): string => {
           const slug = slugifyStoreName(storeName);
-          let url = `/shop?id=${ownerId}&store=${slug}`;
+          let url = `/${slug}/shop`;
+          let query = '';
           if (options?.search) {
-               url += `&search=${encodeURIComponent(options.search)}`;
+               query += `${query ? '&' : '?'}search=${encodeURIComponent(options.search)}`;
           }
           if (options?.categoryId) {
-               url += `&category=${options.categoryId}`;
+               query += `${query ? '&' : '?'}category=${options.categoryId}`;
           }
-          return url;
+          return `${url}${query}`;
      },
 
      /**
@@ -52,7 +53,7 @@ export const OwnerURL = {
       */
      getCheckout: (storeName: string, ownerId: number | string): string => {
           const slug = slugifyStoreName(storeName);
-          return `/checkout?owner=${ownerId}&store=${slug}`;
+          return `/${slug}/checkout`;
      },
 
      /**
@@ -60,7 +61,7 @@ export const OwnerURL = {
       */
      getWishlist: (storeName: string, ownerId: number | string): string => {
           const slug = slugifyStoreName(storeName);
-          return `/wishlist?id=${ownerId}&store=${slug}`;
+          return `/${slug}/wishlist`;
      },
 
      /**
@@ -68,9 +69,9 @@ export const OwnerURL = {
       */
      getProfile: (storeName: string, ownerId: number | string, tab?: 'profile' | 'orders' | 'giftcard' | 'address' | 'chat'): string => {
           const slug = slugifyStoreName(storeName);
-          let url = `/profile?id=${ownerId}&store=${slug}`;
+          let url = `/${slug}/profile`;
           if (tab) {
-               url += `&tab=${tab}`;
+               url += `?tab=${tab}`;
           }
           return url;
      },
@@ -87,7 +88,7 @@ export const OwnerURL = {
       */
      getShareLink: (storeName: string, ownerId: number | string): string => {
           const slug = slugifyStoreName(storeName);
-          return `/share?owner_id=${ownerId}&store=${slug}`;
+          return `/${slug}/share`;
      }
 };
 
@@ -120,21 +121,28 @@ export function useOwnerURL(overrideOwnerId?: number | string, overrideStoreName
                     if (!storeName) return appendLocal(path);
                     const cleanPath = path.split('?')[0].split('#')[0];
                     const hash = path.includes('#') ? `#${path.split('#')[1]}` : '';
+                    const search = path.includes('?') ? `?${path.split('?')[1].split('#')[0]}` : '';
 
                     let result = path;
                     if (cleanPath === '/' || cleanPath === '/home' || cleanPath === '') {
-                         result = `/?id=${ownerId}&store=${slug}${hash}`;
+                         result = `/${slug}${search}${hash}`;
                     } else if (cleanPath === '/menu') {
-                         result = `/menu?id=${ownerId}&store=${slug}${hash}`;
+                         result = `/${slug}/menu${search}${hash}`;
                     } else if (cleanPath === '/checkout') {
-                         result = `/checkout?owner=${ownerId}&store=${slug}${hash}`;
+                         result = `/${slug}/checkout${search}${hash}`;
                     } else if (cleanPath === '/wishlist') {
-                         result = `/wishlist?id=${ownerId}&store=${slug}${hash}`;
+                         result = `/${slug}/wishlist${search}${hash}`;
                     } else if (cleanPath === '/profile') {
-                         result = `/profile?id=${ownerId}&store=${slug}${hash}`;
+                         result = `/${slug}/profile${search}${hash}`;
+                    } else if (cleanPath === '/shop') {
+                         result = `/${slug}/shop${search}${hash}`;
+                    } else if (cleanPath === '/product') {
+                         result = `/${slug}/product${search}${hash}`;
+                    } else if (cleanPath === '/categories') {
+                         result = `/${slug}/categories${search}${hash}`;
                     } else {
-                         const separator = path.includes('?') ? '&' : '?';
-                         result = `${path}${separator}id=${ownerId}&store=${slug}`;
+                         const cleanSubPath = cleanPath.startsWith('/') ? cleanPath.substring(1) : cleanPath;
+                         result = `/${slug}/${cleanSubPath}${search}${hash}`;
                     }
                     return appendLocal(result);
                },

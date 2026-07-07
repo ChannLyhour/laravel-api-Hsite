@@ -10,6 +10,7 @@ import '@/pages/owner_manage/style/font.css';
 import { HelperTable } from '../../helper/HelperTable';
 import type { HelperTableColumn } from '../../helper/HelperTable';
 import { resolveImageUrl } from '@/api/imageUtils';
+import { useTranslation } from '../../lang/i18n';
 
 // Import subcomponents
 import { DeliveryMethodCreatePage } from './create';
@@ -17,6 +18,7 @@ import { DeliveryMethodEditPage } from './edit';
 import { DeliveryMethodShowPage } from './show';
 
 export const DeliveryMethodsTab: React.FC = () => {
+  const { t } = useTranslation();
   const [methods, setMethods] = useState<DeliveryMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,12 +126,12 @@ export const DeliveryMethodsTab: React.FC = () => {
   const currentMethods = filteredMethods.slice(indexOfFirstItem, indexOfLastItem);
 
   const columns: HelperTableColumn[] = [
-    { key: 'sl', label: 'SL', align: 'left', className: 'w-16' },
-    { key: 'name', label: 'Delivery Method', align: 'left' },
-    { key: 'cost', label: 'Cost / Shipping Fee', align: 'left' },
-    { key: 'estimates', label: 'Estimated Days', align: 'left', className: 'hidden md:table-cell' },
-    { key: 'status', label: 'Status', align: 'center' },
-    { key: 'action', label: 'Action', align: 'right', className: 'text-right' }
+    { key: 'sl', label: t('categories.sl'), align: 'left', className: 'w-16' },
+    { key: 'name', label: t('delivery_methods.name_col'), align: 'left' },
+    { key: 'cost', label: t('delivery_methods.cost_col'), align: 'left' },
+    { key: 'estimates', label: t('delivery_methods.estimates_col'), align: 'left', className: 'hidden md:table-cell' },
+    { key: 'status', label: t('delivery_methods.status_col'), align: 'center' },
+    { key: 'action', label: t('delivery_methods.action_col'), align: 'right', className: 'text-right' }
   ];
 
   if (view === 'create') {
@@ -176,10 +178,10 @@ export const DeliveryMethodsTab: React.FC = () => {
       <div className="flex items-center space-x-3 pb-2 border-b border-slate-100">
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
-            <span>Delivery Method Setup</span>
+            <span>{t('delivery_methods.title')}</span>
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-            Configure various shipping and delivery options for your store's checkouts.
+            {t('delivery_methods.subtitle')}
           </p>
         </div>
       </div>
@@ -198,9 +200,9 @@ export const DeliveryMethodsTab: React.FC = () => {
           columns={columns}
           data={currentMethods}
           loading={loading}
-          title="Delivery Options"
+          title={t('delivery_methods.table_title')}
           count={totalItems}
-          searchPlaceholder="Search by method name, code, description..."
+          searchPlaceholder={t('delivery_methods.search_placeholder')}
           searchValue={searchQuery}
           onSearchChange={setSearchQuery}
           selectedIds={selectedIds}
@@ -225,7 +227,7 @@ export const DeliveryMethodsTab: React.FC = () => {
             }
           ]}
           addButton={{
-            label: 'Add Method',
+            label: t('delivery_methods.add_method'),
             onClick: handleOpenCreatePage,
           }}
           renderRow={(method, idx) => {
@@ -270,7 +272,7 @@ export const DeliveryMethodsTab: React.FC = () => {
                 <td className="py-3.5 px-5 hidden md:table-cell">
                   <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
                     <FiClock className="w-3.5 h-3.5 text-slate-450 shrink-0" />
-                    <span>{method.estimated_days_min} - {method.estimated_days_max} Days</span>
+                    <span>{method.estimated_days_min} - {method.estimated_days_max} {t('delivery_methods.days')}</span>
                   </div>
                 </td>
                 <td className="py-3.5 px-5 text-center">
@@ -282,7 +284,7 @@ export const DeliveryMethodsTab: React.FC = () => {
                         : 'bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100/50'
                     }`}
                   >
-                    {method.is_active ? 'Active' : 'Disabled'}
+                    {method.is_active ? t('delivery_methods.active') : t('delivery_methods.disabled')}
                   </button>
                 </td>
                 <td className="py-3.5 px-5 text-right">

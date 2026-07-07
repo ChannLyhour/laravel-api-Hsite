@@ -29,10 +29,47 @@ class StoreController extends Controller
             ];
             foreach ($items as $item) {
                 $value = $item->value;
-                if ($item->key === 'payment_methods') {
+                if (
+                    in_array($item->key, [
+                        'payment_methods',
+                        'brand_identity_operations',
+                        'financial_configurations',
+                        'store_operations_content',
+                        'checkout_form_visibility',
+                        'firebase_setup',
+                        'pusher_configuration',
+                        'marketing_tools_setup',
+                        'social_login_setup',
+                        'social_login_setup_oauth',
+                        'telegram_bot_notifications',
+                        'otp_email_configuration',
+                        'location_store'
+                    ])
+                ) {
                     $value = json_decode($value, true) ?: [];
                 }
                 $dict[$item->key] = $value;
+                $dict[$this->toSnakeCase($item->key)] = $value;
+                if (in_array($item->key, [
+                    'brand_identity_operations',
+                    'financial_configurations',
+                    'store_operations_content',
+                    'checkout_form_visibility',
+                    'location_store'
+                ]) && is_array($value)) {
+                    foreach ($value as $subKey => $subVal) {
+                        $dict[$subKey] = $subVal;
+                        $dict[$this->toSnakeCase($subKey)] = $subVal;
+                    }
+                }
+            }
+            if (!isset($dict['location_store']) || empty($dict['location_store'])) {
+                $loc = [
+                    'store_address' => $dict['store_address'] ?? '',
+                    'store_latitude' => $dict['store_latitude'] ?? '',
+                    'store_longitude' => $dict['store_longitude'] ?? '',
+                ];
+                $dict['location_store'] = $loc;
             }
             $owner = \App\Models\User::find($ownerId);
             if ($owner) {
@@ -67,6 +104,13 @@ class StoreController extends Controller
                 'store_email' => $user ? $user->email : '',
                 'store_phone' => '',
                 'store_address' => '',
+                'store_latitude' => '',
+                'store_longitude' => '',
+                'location_store' => [
+                    'store_address' => '',
+                    'store_latitude' => '',
+                    'store_longitude' => '',
+                ],
                 'guest_checkout' => true,
                 'payment_methods' => [],
             ]);
@@ -79,11 +123,50 @@ class StoreController extends Controller
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
-            if ($item->key === 'payment_methods') {
+            if (
+                in_array($item->key, [
+                    'payment_methods',
+                    'brand_identity_operations',
+                    'financial_configurations',
+                    'store_operations_content',
+                    'checkout_form_visibility',
+                    'firebase_setup',
+                    'pusher_configuration',
+                    'marketing_tools_setup',
+                    'social_login_setup',
+                    'social_login_setup_oauth',
+                    'telegram_bot_notifications',
+                    'otp_email_configuration',
+                    'location_store'
+                ])
+            ) {
                 $value = json_decode($value, true) ?: [];
             }
             $dict[$item->key] = $value;
+            $dict[$this->toSnakeCase($item->key)] = $value;
+            if (in_array($item->key, [
+                'brand_identity_operations',
+                'financial_configurations',
+                'store_operations_content',
+                'checkout_form_visibility',
+                'location_store'
+            ]) && is_array($value)) {
+                foreach ($value as $subKey => $subVal) {
+                    $dict[$subKey] = $subVal;
+                    $dict[$this->toSnakeCase($subKey)] = $subVal;
+                }
+            }
         }
+
+        if (!isset($dict['location_store']) || empty($dict['location_store'])) {
+            $loc = [
+                'store_address' => $dict['store_address'] ?? '',
+                'store_latitude' => $dict['store_latitude'] ?? '',
+                'store_longitude' => $dict['store_longitude'] ?? '',
+            ];
+            $dict['location_store'] = $loc;
+        }
+
         return response()->json($dict);
     }
 
@@ -106,11 +189,50 @@ class StoreController extends Controller
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
-            if ($item->key === 'payment_methods') {
+            if (
+                in_array($item->key, [
+                    'payment_methods',
+                    'brand_identity_operations',
+                    'financial_configurations',
+                    'store_operations_content',
+                    'checkout_form_visibility',
+                    'firebase_setup',
+                    'pusher_configuration',
+                    'marketing_tools_setup',
+                    'social_login_setup',
+                    'social_login_setup_oauth',
+                    'telegram_bot_notifications',
+                    'otp_email_configuration',
+                    'location_store'
+                ])
+            ) {
                 $value = json_decode($value, true) ?: [];
             }
             $dict[$item->key] = $value;
+            $dict[$this->toSnakeCase($item->key)] = $value;
+            if (in_array($item->key, [
+                'brand_identity_operations',
+                'financial_configurations',
+                'store_operations_content',
+                'checkout_form_visibility',
+                'location_store'
+            ]) && is_array($value)) {
+                foreach ($value as $subKey => $subVal) {
+                    $dict[$subKey] = $subVal;
+                    $dict[$this->toSnakeCase($subKey)] = $subVal;
+                }
+            }
         }
+
+        if (!isset($dict['location_store']) || empty($dict['location_store'])) {
+            $loc = [
+                'store_address' => $dict['store_address'] ?? '',
+                'store_latitude' => $dict['store_latitude'] ?? '',
+                'store_longitude' => $dict['store_longitude'] ?? '',
+            ];
+            $dict['location_store'] = $loc;
+        }
+
         return response()->json($dict);
     }
 
@@ -125,9 +247,10 @@ class StoreController extends Controller
             'store_name',
             'store_phone',
             'store_email',
-            'store_address',
+            'location_store',
             'tax_percentage',
             'subscription_tier',
+            'store_type',
             'custom_domain',
             'logo_url',
             'favicon_url',
@@ -142,6 +265,17 @@ class StoreController extends Controller
             'announcement_text',
             'footer_text',
             'payment_methods',
+            'brand_identity_operations',
+            'financial_configurations',
+            'store_operations_content',
+            'checkout_form_visibility',
+            'firebase_setup',
+            'pusher_configuration',
+            'marketing_tools_setup',
+            'social_login_setup',
+            'social_login_setup_oauth',
+            'telegram_bot_notifications',
+            'otp_email_configuration',
             'guest_checkout',
             'pusher_app_id',
             'pusher_app_key',
@@ -199,19 +333,67 @@ class StoreController extends Controller
             $val = $value;
             if (in_array($key, ['logo_url', 'favicon_url'])) {
                 $val = UploadHelper::normalizePath($value);
-            } elseif ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
+            } elseif (
+                in_array($key, [
+                    'payment_methods',
+                    'brand_identity_operations',
+                    'financial_configurations',
+                    'store_operations_content',
+                    'checkout_form_visibility',
+                    'firebase_setup',
+                    'pusher_configuration',
+                    'marketing_tools_setup',
+                    'social_login_setup',
+                    'social_login_setup_oauth',
+                    'telegram_bot_notifications',
+                    'otp_email_configuration',
+                    'location_store'
+                ]) && (is_array($value) || is_object($value))
+            ) {
                 $val = json_encode($value);
+            }
+
+            if ($val === null || $val === '' || $val === 'null' || $val === 'undefined') {
+                Store::where('created_by', $user->id)->where('key', $key)->delete();
+                continue;
             }
 
             Store::updateOrCreate(
                 ['created_by' => $user->id, 'key' => $key],
                 ['value' => $val]
             );
+
+            // Auto-extract and save nested keys as flat rows in the database for backend compatibility
+            if (in_array($key, [
+                'brand_identity_operations',
+                'financial_configurations',
+                'store_operations_content',
+                'checkout_form_visibility',
+                'location_store'
+            ]) && (is_array($value) || is_object($value))) {
+                foreach ($value as $subKey => $subVal) {
+                    if ($subVal === null || $subVal === '' || $subVal === 'null' || $subVal === 'undefined') {
+                        Store::where('created_by', $user->id)->where('key', $subKey)->delete();
+                    } else {
+                        Store::updateOrCreate(
+                            ['created_by' => $user->id, 'key' => $subKey],
+                            ['value' => $subVal]
+                        );
+                    }
+                }
+            }
         }
 
         // Auto-sync domain setting with store_domains table
+        $customDomainVal = null;
         if ($request->has('custom_domain')) {
-            $domainVal = strtolower(trim($request->custom_domain));
+            $customDomainVal = $request->custom_domain;
+        } elseif ($request->has('brand_identity_operations') && is_array($request->brand_identity_operations) && isset($request->brand_identity_operations['custom_domain'])) {
+            $customDomainVal = $request->brand_identity_operations['custom_domain'];
+        }
+
+        if ($customDomainVal !== null) {
+            $domainVal = strtolower(trim($customDomainVal));
             if ($domainVal) {
                 $type = 'custom';
                 $platformDomain = config('app.platform_domain', 'yourplatform.com');
@@ -223,6 +405,17 @@ class StoreController extends Controller
                 $fullDomain = $domainVal;
                 if ($type === 'subdomain' && !str_contains($domainVal, '.')) {
                     $fullDomain = $domainVal . '.' . $platformDomain;
+                }
+
+                // Check if this domain is already registered to a different owner
+                $exists = \App\Models\StoreDomain::where('domain', $fullDomain)
+                    ->where('owner_id', '!=', $user->id)
+                    ->exists();
+
+                if ($exists) {
+                    return response()->json([
+                        'detail' => "The domain or subdomain '{$fullDomain}' is already taken by another store."
+                    ], 422);
                 }
 
                 \App\Models\StoreDomain::updateOrCreate(
@@ -238,8 +431,15 @@ class StoreController extends Controller
             }
         }
 
+        $guestCheckoutVal = null;
         if ($request->has('guest_checkout')) {
-            Store::where('created_by', $user->id)->update(['guest_checkout' => (bool) $request->guest_checkout]);
+            $guestCheckoutVal = $request->guest_checkout;
+        } elseif ($request->has('store_operations_content') && is_array($request->store_operations_content) && isset($request->store_operations_content['guest_checkout'])) {
+            $guestCheckoutVal = $request->store_operations_content['guest_checkout'];
+        }
+
+        if ($guestCheckoutVal !== null) {
+            Store::where('created_by', $user->id)->update(['guest_checkout' => (bool) $guestCheckoutVal]);
         }
 
         // Clear cached settings for owner
@@ -282,9 +482,10 @@ class StoreController extends Controller
             'store_name',
             'store_phone',
             'store_email',
-            'store_address',
+            'location_store',
             'tax_percentage',
             'subscription_tier',
+            'store_type',
             'custom_domain',
             'logo_url',
             'favicon_url',
@@ -356,14 +557,39 @@ class StoreController extends Controller
             $val = $value;
             if (in_array($key, ['logo_url', 'favicon_url'])) {
                 $val = UploadHelper::normalizePath($value);
-            } elseif ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
+            } elseif (in_array($key, ['payment_methods', 'location_store']) && (is_array($value) || is_object($value))) {
                 $val = json_encode($value);
+            }
+
+            if ($val === null) {
+                Store::where('created_by', $ownerId)->where('key', $key)->delete();
+                continue;
             }
 
             Store::updateOrCreate(
                 ['created_by' => $ownerId, 'key' => $key],
                 ['value' => $val]
             );
+
+            // Auto-extract and save nested keys as flat rows in the database for backend compatibility
+            if (in_array($key, [
+                'brand_identity_operations',
+                'financial_configurations',
+                'store_operations_content',
+                'checkout_form_visibility',
+                'location_store'
+            ]) && (is_array($value) || is_object($value))) {
+                foreach ($value as $subKey => $subVal) {
+                    if ($subVal === null || $subVal === '' || $subVal === 'null' || $subVal === 'undefined') {
+                        Store::where('created_by', $ownerId)->where('key', $subKey)->delete();
+                    } else {
+                        Store::updateOrCreate(
+                            ['created_by' => $ownerId, 'key' => $subKey],
+                            ['value' => $subVal]
+                        );
+                    }
+                }
+            }
         }
 
         if ($request->has('guest_checkout')) {
@@ -382,10 +608,19 @@ class StoreController extends Controller
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
-            if ($item->key === 'payment_methods') {
+            if (in_array($item->key, ['payment_methods', 'location_store'])) {
                 $value = json_decode($value, true) ?: [];
             }
             $dict[$item->key] = $value;
+            $dict[$this->toSnakeCase($item->key)] = $value;
+        }
+        if (!isset($dict['location_store']) || empty($dict['location_store'])) {
+            $loc = [
+                'store_address' => $dict['store_address'] ?? '',
+                'store_latitude' => $dict['store_latitude'] ?? '',
+                'store_longitude' => $dict['store_longitude'] ?? '',
+            ];
+            $dict['location_store'] = $loc;
         }
         return response()->json($dict, 201);
     }
@@ -414,21 +649,21 @@ class StoreController extends Controller
         $ownerId = $realOwnerId;
         $storeSettingsExists = Store::where('created_by', $ownerId)->exists();
         if (!$storeSettingsExists) {
-            $single = Store::find($realOwnerId);
-            if ($single) {
-                $ownerId = $single->created_by;
-            } else {
+            $ownerUser = \App\Models\User::find($realOwnerId);
+            if (!$ownerUser) {
                 return response()->json(['detail' => 'Store profile not found.'], 404);
             }
+            $ownerId = $ownerUser->id;
         }
 
         $storeKeys = [
             'store_name',
             'store_phone',
             'store_email',
-            'store_address',
+            'location_store',
             'tax_percentage',
             'subscription_tier',
+            'store_type',
             'custom_domain',
             'logo_url',
             'favicon_url',
@@ -488,18 +723,97 @@ class StoreController extends Controller
             $val = $value;
             if (in_array($key, ['logo_url', 'favicon_url'])) {
                 $val = UploadHelper::normalizePath($value);
-            } elseif ($key === 'payment_methods' && (is_array($value) || is_object($value))) {
+            } elseif (in_array($key, ['payment_methods', 'location_store']) && (is_array($value) || is_object($value))) {
                 $val = json_encode($value);
+            }
+
+            if ($val === null || $val === '' || $val === 'null' || $val === 'undefined') {
+                Store::where('created_by', $ownerId)->where('key', $key)->delete();
+                continue;
             }
 
             Store::updateOrCreate(
                 ['created_by' => $ownerId, 'key' => $key],
                 ['value' => $val]
             );
+
+            // Auto-extract and save nested keys as flat rows in the database for backend compatibility
+            if (in_array($key, [
+                'brand_identity_operations',
+                'financial_configurations',
+                'store_operations_content',
+                'checkout_form_visibility',
+                'location_store'
+            ]) && (is_array($value) || is_object($value))) {
+                foreach ($value as $subKey => $subVal) {
+                    if ($subVal === null || $subVal === '' || $subVal === 'null' || $subVal === 'undefined') {
+                        Store::where('created_by', $ownerId)->where('key', $subKey)->delete();
+                    } else {
+                        Store::updateOrCreate(
+                            ['created_by' => $ownerId, 'key' => $subKey],
+                            ['value' => $subVal]
+                        );
+                    }
+                }
+            }
         }
 
+        // Auto-sync domain setting with store_domains table
+        $customDomainVal = null;
+        if ($request->has('custom_domain')) {
+            $customDomainVal = $request->custom_domain;
+        } elseif ($request->has('brand_identity_operations') && is_array($request->brand_identity_operations) && isset($request->brand_identity_operations['custom_domain'])) {
+            $customDomainVal = $request->brand_identity_operations['custom_domain'];
+        }
+
+        if ($customDomainVal !== null) {
+            $domainVal = strtolower(trim($customDomainVal));
+            if ($domainVal) {
+                $type = 'custom';
+                $platformDomain = config('app.platform_domain', 'yourplatform.com');
+
+                if (!str_contains($domainVal, '.') || str_ends_with($domainVal, '.' . $platformDomain) || str_ends_with($domainVal, '.lvh.me') || str_ends_with($domainVal, '.vercel.app')) {
+                    $type = 'subdomain';
+                }
+
+                $fullDomain = $domainVal;
+                if ($type === 'subdomain' && !str_contains($domainVal, '.')) {
+                    $fullDomain = $domainVal . '.' . $platformDomain;
+                }
+
+                // Check if this domain is already registered to a different owner
+                $exists = \App\Models\StoreDomain::where('domain', $fullDomain)
+                    ->where('owner_id', '!=', $ownerId)
+                    ->exists();
+
+                if ($exists) {
+                    return response()->json([
+                        'detail' => "The domain or subdomain '{$fullDomain}' is already taken by another store."
+                    ], 422);
+                }
+
+                \App\Models\StoreDomain::updateOrCreate(
+                    ['owner_id' => $ownerId, 'type' => $type],
+                    [
+                        'domain' => $fullDomain,
+                        'is_verified' => true,
+                        'is_primary' => true
+                    ]
+                );
+            } else {
+                \App\Models\StoreDomain::where('owner_id', $ownerId)->delete();
+            }
+        }
+
+        $guestCheckoutVal = null;
         if ($request->has('guest_checkout')) {
-            Store::where('created_by', $ownerId)->update(['guest_checkout' => (bool) $request->guest_checkout]);
+            $guestCheckoutVal = $request->guest_checkout;
+        } elseif ($request->has('store_operations_content') && is_array($request->store_operations_content) && isset($request->store_operations_content['guest_checkout'])) {
+            $guestCheckoutVal = $request->store_operations_content['guest_checkout'];
+        }
+
+        if ($guestCheckoutVal !== null) {
+            Store::where('created_by', $ownerId)->update(['guest_checkout' => (bool) $guestCheckoutVal]);
         }
 
         // Clear cached settings for owner
@@ -519,10 +833,19 @@ class StoreController extends Controller
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
-            if ($item->key === 'payment_methods') {
+            if (in_array($item->key, ['payment_methods', 'location_store'])) {
                 $value = json_decode($value, true) ?: [];
             }
             $dict[$item->key] = $value;
+            $dict[$this->toSnakeCase($item->key)] = $value;
+        }
+        if (!isset($dict['location_store']) || empty($dict['location_store'])) {
+            $loc = [
+                'store_address' => $dict['store_address'] ?? '',
+                'store_latitude' => $dict['store_latitude'] ?? '',
+                'store_longitude' => $dict['store_longitude'] ?? '',
+            ];
+            $dict['location_store'] = $loc;
         }
         return response()->json($dict);
     }
@@ -587,7 +910,6 @@ class StoreController extends Controller
                     ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text'],
                     ['key' => 'rsaPublicKey', 'label' => 'RSA Public Key', 'type' => 'textarea', 'required' => false],
                     ['key' => 'rsaPrivateKey', 'label' => 'RSA Private Key', 'type' => 'textarea', 'required' => false],
-                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ],
                 'defaultValues' => [
                     'merchantId' => 'ec475602',
@@ -610,26 +932,12 @@ class StoreController extends Controller
                     ['key' => 'merchantCity', 'label' => 'Merchant City', 'type' => 'text'],
                     ['key' => 'apiKey', 'label' => 'API Token / Secret Key', 'type' => 'password', 'required' => false],
                     ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text', 'required' => false],
-                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ],
                 'defaultValues' => [
                     'bakongAccountId' => '',
                     'merchantName' => '',
                     'merchantCity' => '',
                     'apiKey' => '',
-                ]
-            ],
-            [
-                'id' => 'card',
-                'name' => 'Credit/Debit Card',
-                'description' => 'Accept Visa, Mastercard, JCB, and UnionPay payments.',
-                'logoColor' => 'bg-slate-100 border border-slate-200',
-                'textColor' => 'text-slate-800',
-                'logoText' => '💳',
-                'fields' => [
-                    ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
-                    ['key' => 'secretKey', 'label' => 'Secret Key', 'type' => 'password'],
-                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ]
             ],
             [
@@ -643,47 +951,6 @@ class StoreController extends Controller
                     ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
                     ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
                     ['key' => 'apiUrl', 'label' => 'API Base URL', 'type' => 'text'],
-                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
-                ]
-            ],
-            [
-                'id' => 'wing',
-                'name' => 'Wing Bank',
-                'description' => 'Pay securely with WingPay',
-                'logoColor' => 'bg-[#84bd00]',
-                'textColor' => 'text-blue-900',
-                'logoText' => 'Wing',
-                'fields' => [
-                    ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
-                    ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
-                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
-                ]
-            ],
-            [
-                'id' => 'chipmong',
-                'name' => 'CHIP MONG BANK',
-                'description' => 'Tab to pay with CHIP MONG',
-                'logoColor' => 'bg-[#009b72]',
-                'textColor' => 'text-white',
-                'logoText' => 'CMB',
-                'fields' => [
-                    ['key' => 'merchantId', 'label' => 'Merchant ID', 'type' => 'text'],
-                    ['key' => 'apiKey', 'label' => 'API Key', 'type' => 'password'],
-                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
-                ]
-            ],
-            [
-                'id' => 'transfer',
-                'name' => 'Bank Transfer',
-                'description' => 'ទូទាត់តាមគណនីធនាគារ',
-                'logoColor' => 'bg-slate-50 border border-slate-200',
-                'textColor' => 'text-slate-700',
-                'logoText' => '🏦',
-                'fields' => [
-                    ['key' => 'bankName', 'label' => 'Bank Name', 'type' => 'text'],
-                    ['key' => 'accountName', 'label' => 'Account Name', 'type' => 'text'],
-                    ['key' => 'accountNumber', 'label' => 'Account Number', 'type' => 'text'],
-                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ]
             ],
             [
@@ -695,7 +962,6 @@ class StoreController extends Controller
                 'logoText' => '💵',
                 'fields' => [
                     ['key' => 'notes', 'label' => 'Delivery Policy / Instructions', 'type' => 'text'],
-                    ['key' => 'logo_url', 'label' => 'Payment Gateway Logo', 'type' => 'image', 'required' => false],
                 ]
             ]
         ];
@@ -834,6 +1100,14 @@ class StoreController extends Controller
 
         $settings = Store::where('created_by', $ownerId)->get()->pluck('value', 'key');
 
+        $location = $settings->has('location_store')
+            ? json_decode($settings->get('location_store'), true)
+            : [
+                'store_address' => $settings->get('store_address'),
+                'store_latitude' => $settings->get('store_latitude'),
+                'store_longitude' => $settings->get('store_longitude'),
+            ];
+
         return response()->json([
             'found' => true,
             'owner_id' => $ownerId,
@@ -846,6 +1120,7 @@ class StoreController extends Controller
             'store_email' => $settings->get('store_email'),
             'store_phone' => $settings->get('store_phone'),
             'store_address' => $settings->get('store_address'),
+            'location_store' => $location,
             'domain_type' => $domainType,
             'is_verified' => $isVerified,
         ]);
@@ -970,5 +1245,12 @@ class StoreController extends Controller
         );
 
         return response()->json($domain);
+    }
+
+    private function toSnakeCase ($string)
+    {
+        $str = preg_replace('/[^a-zA-Z0-9\s_]/', '', $string);
+        $str = preg_replace('/\s+/', '_', trim($str));
+        return strtolower($str);
     }
 }

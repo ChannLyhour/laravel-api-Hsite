@@ -13,6 +13,19 @@ export interface StoreRow {
   created_at?: string;
   updated_at?: string;
   guest_checkout?: string | boolean;
+  payment_methods?: any;
+  brand_identity_operations?: any;
+  financial_configurations?: any;
+  store_operations_content?: any;
+  checkout_form_visibility?: any;
+  firebase_setup?: any;
+  pusher_configuration?: any;
+  marketing_tools_setup?: any;
+  social_login_setup?: any;
+  social_login_setup_oauth?: any;
+  telegram_bot_notifications?: any;
+  otp_email_configuration?: any;
+  location_store?: any;
   [key: string]: any;
 }
 

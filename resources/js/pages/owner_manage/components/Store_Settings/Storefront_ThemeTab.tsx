@@ -4,6 +4,7 @@ import { storesService } from '@/api/owner/stores';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { FiLoader, FiMonitor } from 'react-icons/fi';
 import '@/pages/owner_manage/style/font.css';
+import { useTranslation } from '../../lang/i18n';
 
 interface ThemeTabProps {
   ownerId?: number | string;
@@ -11,6 +12,7 @@ interface ThemeTabProps {
 }
 
 export const Storefront_ThemeTab: React.FC<ThemeTabProps> = ({ ownerId, profile }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [currentTheme, setCurrentTheme] = useState('default');
   const [allSettings, setAllSettings] = useState<Record<string, any>>({});
@@ -80,7 +82,7 @@ export const Storefront_ThemeTab: React.FC<ThemeTabProps> = ({ ownerId, profile 
     return (
       <div className="border p-12 rounded-[5px] shadow-xs flex flex-col items-center justify-center space-y-3 font-kuntomruy custom-card-container">
         <FiLoader className="w-8 h-8 text-primary animate-spin" />
-        <span className="text-xs font-bold text-slate-400">Loading storefront details...</span>
+        <span className="text-xs font-bold text-slate-400">{t('settings.loading_storefront')}</span>
       </div>
     );
   }
@@ -90,10 +92,10 @@ export const Storefront_ThemeTab: React.FC<ThemeTabProps> = ({ ownerId, profile 
       <div>
         <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
           <FiMonitor className="text-orange-500" />
-          <span>Storefront Theme Selection</span>
+          <span>{t('settings.theme_title')}</span>
         </h2>
         <p className="text-slate-400 text-xs sm:text-sm mt-1">
-          Select a visually stunning responsive theme template for your public digital restaurant menu storefront.
+          {t('settings.theme_subtitle')}
         </p>
       </div>
 

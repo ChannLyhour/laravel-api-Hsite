@@ -13,6 +13,8 @@ import {
   FiMessageSquare,
   FiChevronRight,
   FiTrendingUp,
+  FiMapPin,
+  FiTruck,
 } from 'react-icons/fi';
 import { categoriesService } from '@/api/owner/categories';
 import { ordersService } from '@/api/owner/orders';
@@ -21,62 +23,15 @@ import { storesService } from '@/api/owner/stores';
 import { chatService } from '@/api/owner/chat';
 import { resolveImageUrl } from '@/api/imageUtils';
 import { customersService } from '@/api/owner/customers';
+import { useTranslation } from '../lang/i18n';
 
 interface OverviewTabProps {
   ownerId?: number | string;
   storeId?: number;
 }
 
-const mockRecentOrders = [
-  { id: '1001', order_no: 'ORD-9843', customer: 'Hour ChannLy', items: [{ name: 'Spicy Salmon Sushi' }], total: '24.99', status: 'processing', time: '10 mins ago' },
-  { id: '1002', order_no: 'ORD-9842', customer: 'Sophea Rattanak', items: [{ name: 'Double Cheese Burger' }], total: '12.50', status: 'pending', time: '45 mins ago' },
-  { id: '1003', order_no: 'ORD-9840', customer: 'John Doe', items: [{ name: 'Chicken Alfredo Pasta' }], total: '18.99', status: 'complete', time: '2 hours ago' },
-  { id: '1004', order_no: 'ORD-9839', customer: 'Jane Smith', items: [{ name: 'Vegan Avocado Salad' }], total: '11.00', status: 'complete', time: '4 hours ago' },
-  { id: '1005', order_no: 'ORD-9838', customer: 'Kiri Vong', items: [{ name: 'Iced Matcha Latte' }], total: '9.00', status: 'canceled', time: '1 day ago' },
-];
-
-const mockRecentMessages = [
-  {
-    id: 1,
-    other_user: { name: 'Chann Lyhour', first_name: 'Chann', last_name: 'Lyhour', image_url: null },
-    last_message: { body: 'Hello, is my order already out for delivery?', created_at: new Date().toISOString() },
-    unread_count: 1
-  },
-  {
-    id: 2,
-    other_user: { name: 'Jane Doe', first_name: 'Jane', last_name: 'Doe', image_url: null },
-    last_message: { body: 'Thank you for the delicious burger! Five stars!', created_at: new Date(Date.now() - 3600000).toISOString() },
-    unread_count: 0
-  },
-  {
-    id: 3,
-    other_user: { name: 'Kiri Vong', first_name: 'Kiri', last_name: 'Vong', image_url: null },
-    last_message: { body: 'Can I change my payment method to KHQR?', created_at: new Date(Date.now() - 7200000).toISOString() },
-    unread_count: 0
-  },
-  {
-    id: 4,
-    other_user: { name: 'Voan Chivorn', first_name: 'Voan', last_name: 'Chivorn', image_url: null },
-    last_message: { body: 'Let me know when the shop opens tomorrow.', created_at: new Date(Date.now() - 86400000).toISOString() },
-    unread_count: 0
-  },
-  {
-    id: 5,
-    other_user: { name: 'Sophea Rattanak', first_name: 'Sophea', last_name: 'Rattanak', image_url: null },
-    last_message: { body: 'Order was perfect, thanks again.', created_at: new Date(Date.now() - 172800000).toISOString() },
-    unread_count: 0
-  }
-];
-
-const mockTopProducts = [
-  { name: 'Spicy Salmon Sushi', qty: 145, totalSales: 3623.55, image: null },
-  { name: 'Double Cheese Burger', qty: 120, totalSales: 1500.00, image: null },
-  { name: 'Chicken Alfredo Pasta', qty: 98, totalSales: 1861.02, image: null },
-  { name: 'Vegan Avocado Salad', qty: 75, totalSales: 825.00, image: null },
-  { name: 'Iced Matcha Latte', qty: 60, totalSales: 540.00, image: null },
-];
-
 export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) => {
+  const { t } = useTranslation();
   const [menuItemCount, setMenuItemCount] = useState<number>(0);
   const [categoryCount, setCategoryCount] = useState<number>(0);
   const [customerCount, setCustomerCount] = useState<number>(0);
@@ -235,7 +190,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
     if (s.includes('process')) {
       return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-blue-50 text-blue-600 border border-blue-100">Processing</span>;
     }
-    if (s.includes('complete') || s.includes('deliver')) {
+    if (s.includes('deliver')) {
+      return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-cyan-50 text-cyan-600 border border-cyan-100">Delivering</span>;
+    }
+    if (s.includes('complete')) {
       return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-50 text-emerald-600 border border-emerald-100">Complete</span>;
     }
     return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-rose-50 text-rose-600 border border-rose-100">Cancelled</span>;
@@ -271,22 +229,60 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
     }
   };
 
-  const finalRecentOrders = recentOrders.length > 0 ? recentOrders.slice(0, 5) : mockRecentOrders;
-  const finalRecentMessages = recentMessages.length > 0 ? recentMessages.slice(0, 5) : mockRecentMessages;
-  const finalTopProducts = topProducts.length > 0 ? topProducts.slice(0, 5) : mockTopProducts;
+  const finalRecentOrders = recentOrders.slice(0, 5);
+  const finalRecentMessages = recentMessages.slice(0, 5);
+  const finalTopProducts = topProducts.slice(0, 5);
 
   return (
     <div className="space-y-8 animate-fade-in font-sans text-slate-700">
 
-      {/* ── Page Title Banner with Premium Gradient ──────────────── */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-800 text-white rounded-[5px] p-6 shadow-sm overflow-hidden relative group">
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial-gradient from-primary/10 via-transparent to-transparent opacity-50 group-hover:opacity-75 transition-opacity pointer-events-none" />
-        <div className="relative z-10 flex flex-col justify-center">
-          <span className="text-[10px] font-black text-primary uppercase tracking-widest leading-none mb-2">Workspace Dashboard</span>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight leading-none text-white">Welcome back, {storeName}!</h1>
-          <p className="text-[13px] text-slate-300 mt-1.5 font-medium leading-relaxed max-w-xl">
-            Monitor orders, messages, and key business analytics metrics for your online store in real-time.
-          </p>
+      {/* ── Page Title Quick link Action  ──────────────── */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 border-b border-slate-200/60 pb-2 text-slate-800">
+          <FiActivity className="w-4 h-4 text-primary" />
+          <h2 className="text-sm font-black uppercase tracking-wider">{t('overview.quick_actions')}</h2>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('change_admin_tab', { detail: 'menu-items' }))}
+            className="flex flex-col items-center justify-center p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-[5px] shadow-sm transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-blue-50 group-hover:bg-blue-100 text-blue-600 flex items-center justify-center mb-3 transition-colors">
+              <FiBox className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-slate-800">{t('overview.create_products')}</span>
+          </button>
+
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('change_admin_tab', { detail: 'customers' }))}
+            className="flex flex-col items-center justify-center p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-[5px] shadow-sm transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-emerald-50 group-hover:bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3 transition-colors">
+              <FiUsers className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-slate-800">{t('overview.create_customer')}</span>
+          </button>
+
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('change_admin_tab', { detail: 'settings-delivery-zones' }))}
+            className="flex flex-col items-center justify-center p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-[5px] shadow-sm transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-purple-50 group-hover:bg-purple-100 text-purple-600 flex items-center justify-center mb-3 transition-colors">
+              <FiMapPin className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-slate-800">{t('overview.create_delivery_zones')}</span>
+          </button>
+
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('change_admin_tab', { detail: 'settings-delivery-methods' }))}
+            className="flex flex-col items-center justify-center p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-[5px] shadow-sm transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-amber-50 group-hover:bg-amber-100 text-amber-600 flex items-center justify-center mb-3 transition-colors">
+              <FiTruck className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-slate-800">{t('overview.delivery_method')}</span>
+          </button>
         </div>
       </div>
 
@@ -294,16 +290,16 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-b border-slate-250/20 pb-2">
           <FiActivity className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-black uppercase tracking-wider">Business Analytics</h2>
+          <h2 className="text-sm font-black uppercase tracking-wider">{t('overview.business_analytics')}</h2>
         </div>
 
         {/* Top KPI Cards Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Total Order', value: loading ? '—' : orderStats.total, icon: <FiShoppingCart className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
-            { label: 'Total Products', value: loading ? '—' : menuItemCount, icon: <FiBox className="w-4.5 h-4.5" />, color: 'bg-purple-500/10 text-purple-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-purple-500' },
-            { label: 'Total Categories', value: loading ? '—' : categoryCount, icon: <FiPackage className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
-            { label: 'Total Customers', value: loading ? '—' : customerCount, icon: <FiUsers className="w-4.5 h-4.5" />, color: 'bg-emerald-500/10 text-emerald-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-emerald-500' },
+            { label: t('overview.total_order'), value: loading ? '—' : orderStats.total, icon: <FiShoppingCart className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
+            { label: t('overview.total_products'), value: loading ? '—' : menuItemCount, icon: <FiBox className="w-4.5 h-4.5" />, color: 'bg-purple-500/10 text-purple-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-purple-500' },
+            { label: t('overview.total_categories'), value: loading ? '—' : categoryCount, icon: <FiPackage className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
+            { label: t('overview.total_customers'), value: loading ? '—' : customerCount, icon: <FiUsers className="w-4.5 h-4.5" />, color: 'bg-emerald-500/10 text-emerald-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-emerald-500' },
           ].map((card, i) => (
             <div key={i} className={`rounded-[5px] border p-5 shadow-2xs hover:shadow-xs transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-between ${card.bgClass}`}>
               <div>
@@ -320,10 +316,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
         {/* Order Status Cards Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: 'Pending Orders', value: orderStats.pending, icon: <FiClock className="w-4 h-4" />, color: 'text-white bg-amber-500 border-transparent' },
-            { label: 'Confirmed Orders', value: orderStats.confirmed, icon: <FiCheckCircle className="w-4 h-4" />, color: 'text-white bg-blue-500 border-transparent' },
-            { label: 'Canceled Orders', value: orderStats.cancelled, icon: <FiXCircle className="w-4 h-4" />, color: 'text-white bg-rose-500 border-transparent' },
-            { label: 'Complete Orders', value: orderStats.complete, icon: <FiCheckCircle className="w-4 h-4" />, color: 'text-white bg-emerald-500 border-transparent' },
+            { label: t('overview.pending_orders'), value: orderStats.pending, icon: <FiClock className="w-4 h-4" />, color: 'text-white bg-amber-500 border-transparent' },
+            { label: t('overview.confirmed_orders'), value: orderStats.confirmed, icon: <FiCheckCircle className="w-4 h-4" />, color: 'text-white bg-blue-500 border-transparent' },
+            { label: t('overview.canceled_orders'), value: orderStats.cancelled, icon: <FiXCircle className="w-4 h-4" />, color: 'text-white bg-rose-500 border-transparent' },
+            { label: t('overview.complete_orders'), value: orderStats.complete, icon: <FiCheckCircle className="w-4 h-4" />, color: 'text-white bg-emerald-500 border-transparent' },
           ].map((s, i) => (
             <div key={i} className="rounded-[5px] border p-4 shadow-3xs flex items-center gap-3.5 hover:shadow-2xs transition-shadow custom-card-container">
               <div className={`w-9 h-9 rounded-[8px] border flex items-center justify-center shrink-0 ${s.color}`}>
@@ -342,15 +338,15 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-b border-slate-250/20 pb-2">
           <FiDollarSign className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-black uppercase tracking-wider">Revenue Overview</h2>
+          <h2 className="text-sm font-black uppercase tracking-wider">{t('overview.revenue_overview')}</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Total Revenue', value: loading ? '$0.00' : revenueStats.revenue, sub: 'All completed sales earnings', icon: <FiTrendingUp className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
-            { label: 'Commission (10%)', value: loading ? '$0.00' : revenueStats.commission, sub: 'Platform commission estimation', icon: <FiDollarSign className="w-4.5 h-4.5" />, color: 'bg-amber-500/10 text-amber-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-amber-500' },
-            { label: 'Delivery Fees', value: loading ? '$0.00' : revenueStats.delivery, sub: 'Delivery charge revenues ($2/ord)', icon: <FiPackage className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
-            { label: 'Tax Collected', value: loading ? '$0.00' : revenueStats.tax, sub: 'Total VAT revenue recorded', icon: <FiCheckCircle className="w-4.5 h-4.5" />, color: 'bg-emerald-500/10 text-emerald-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-emerald-500' },
+            { label: t('overview.total_revenue'), value: loading ? '$0.00' : revenueStats.revenue, sub: t('overview.revenue_sub'), icon: <FiTrendingUp className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
+            { label: t('overview.commission'), value: loading ? '$0.00' : revenueStats.commission, sub: t('overview.commission_sub'), icon: <FiDollarSign className="w-4.5 h-4.5" />, color: 'bg-amber-500/10 text-amber-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-amber-500' },
+            { label: t('overview.delivery_fees'), value: loading ? '$0.00' : revenueStats.delivery, sub: t('overview.delivery_sub'), icon: <FiPackage className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
+            { label: t('overview.tax_collected'), value: loading ? '$0.00' : revenueStats.tax, sub: t('overview.tax_sub'), icon: <FiCheckCircle className="w-4.5 h-4.5" />, color: 'bg-emerald-500/10 text-emerald-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-emerald-500' },
           ].map((card, i) => (
             <div key={i} className={`rounded-[5px] border p-5 shadow-2xs hover:shadow-xs transition-all duration-300 hover:-translate-y-0.5 flex flex-col justify-between min-h-[120px] ${card.bgClass}`}>
               <div className="flex items-start justify-between w-full">
@@ -375,18 +371,18 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
         <div className="lg:col-span-2 rounded-[5px] border overflow-hidden shadow-2xs flex flex-col justify-between custom-card-container">
           <div>
             <div className="flex items-center justify-between px-5 py-4 border-b custom-card-header-bar">
-              <h3 className="text-sm font-black uppercase tracking-wider">Recent Orders</h3>
+              <h3 className="text-sm font-black uppercase tracking-wider">{t('overview.recent_orders')}</h3>
               <span className="text-[10px] font-extrabold text-slate-400 tracking-wider bg-slate-100 px-2 py-0.5 rounded-full">5 latest orders</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-slate-100 text-[10px] font-black text-slate-450 uppercase tracking-wider bg-slate-50/50">
-                    <th className="py-3 px-5">Order No</th>
-                    <th className="py-3 px-3">Customer</th>
-                    <th className="py-3 px-3">First Product</th>
-                    <th className="py-3 px-3">Price</th>
-                    <th className="py-3 px-5 text-right">Status</th>
+                    <th className="py-3 px-5">{t('overview.order_no')}</th>
+                    <th className="py-3 px-3">{t('overview.customer')}</th>
+                    <th className="py-3 px-3">{t('overview.product_name')}</th>
+                    <th className="py-3 px-3">{t('overview.total')}</th>
+                    <th className="py-3 px-5 text-right">{t('overview.status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-xs">
@@ -418,7 +414,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
             </div>
           </div>
           <div className="border-t p-3 bg-black/[0.015] text-center">
-            <p className="text-[11px] text-slate-400 font-bold">Real-time orders synchronized dynamically from store records.</p>
+            <p className="text-[11px] text-slate-400 font-bold">{t('overview.recent_orders_subtitle')}</p>
           </div>
         </div>
 
@@ -426,7 +422,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
         <div className="bg-white rounded-[5px] border overflow-hidden shadow-2xs flex flex-col justify-between custom-card-container">
           <div>
             <div className="flex items-center justify-between px-5 py-4 border-b custom-card-header-bar">
-              <h3 className="text-sm font-black uppercase tracking-wider">Recent Chats</h3>
+              <h3 className="text-sm font-black uppercase tracking-wider">{t('overview.recent_messages')}</h3>
               <span className="text-[10px] font-extrabold text-slate-400 tracking-wider bg-slate-100 px-2 py-0.5 rounded-full">5 latest messages</span>
             </div>
             <div className="divide-y divide-slate-50">
@@ -472,7 +468,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
             </div>
           </div>
           <div className="border-t border-slate-100 p-3 bg-slate-50/20 text-center">
-            <p className="text-[11px] text-slate-400 font-bold">Synchronized in real-time with customer chat inbox.</p>
+            <p className="text-[11px] text-slate-400 font-bold">{t('overview.recent_messages_subtitle')}</p>
           </div>
         </div>
       </div>

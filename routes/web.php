@@ -129,7 +129,11 @@ Route::get('/categories', function () { return view('app'); });
 Route::get('/walkin', function () { return view('app'); });
 
 
-// Route Menu Website Defult all Store
+Route::get('/{any}', function () {
+    return view('app');
+})->where('any', '^(?!api|admin|uploads|static|build).*$');
+
+// Routr Template_menu Defual all Store 
 Route::get('/{storeSlug}/shop', function () { return view('app'); });
 Route::get('/{storeSlug}/product', function () { return view('app'); });
 Route::get('/{storeSlug}/checkout', function () { return view('app'); });
@@ -138,6 +142,4 @@ Route::get('/{storeSlug}/wishlist', function () { return view('app'); });
 Route::get('/{storeSlug}/categories', function () { return view('app'); });
 Route::get('/{storeSlug}/menu', function () { return view('app'); });
 
-Route::get('/{any}', function () {
-    return view('app');
-})->where('any', '^(?!api|admin|uploads|static|build).*$');
+

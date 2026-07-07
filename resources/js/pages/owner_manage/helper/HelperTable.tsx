@@ -7,6 +7,7 @@ export interface HelperTableColumn {
   label: string;
   className?: string;
   align?: 'left' | 'center' | 'right';
+  filterable?: boolean;
 }
 
 interface HelperTableProps<T> {
@@ -19,6 +20,10 @@ interface HelperTableProps<T> {
   title?: string;
   count?: number;
   
+  // Column specific filters
+  columnFilters?: Record<string, string>;
+  onColumnFilterChange?: (key: string, value: string) => void;
+
   // Top header action buttons
   exportButton?: {
     label: string;
@@ -69,6 +74,8 @@ export function HelperTable<T>({
   onSearchChange,
   title,
   count,
+  columnFilters,
+  onColumnFilterChange,
   exportButton,
   filterButton,
   addButton,
@@ -259,6 +266,7 @@ export function HelperTable<T>({
                       const alignClass = 
                         col.align === 'center' ? 'text-center' :
                         col.align === 'right' ? 'text-right' : 'text-left';
+                      const hasFilter = col.filterable && onColumnFilterChange;
                       return (
                         <th
                           key={col.key}
@@ -270,7 +278,7 @@ export function HelperTable<T>({
                     })}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-600 text-xs sm:text-sm">
+                <tbody className="divide-y divide-slate-100 text-slate-900 text-[12px] sm:text-[14px]">
                   {data.map((item, index) => {
                     const rowElement = renderRow(item, index);
                     if (selectedIds && onSelectionChange && getRowId && React.isValidElement(rowElement)) {

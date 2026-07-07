@@ -13,6 +13,9 @@ import { FASHION_ROUTES } from '../routes';
 import { client } from '@/api/client';
 import { publicFlashDealsService } from '@/api/created_by/getFlashDealsOwnerByid';
 import { resolveImageUrl } from '../utils/imageUtils';
+import abaLogo from '@/pages/main_website/Company_bank/aba.png';
+import bakongLogo from '@/pages/main_website/Company_bank/bakong.png';
+import acledaLogo from '@/pages/main_website/Company_bank/acleda.png';
 
 
 
@@ -161,11 +164,7 @@ export const FooterPage: React.FC<FooterPageProps> = ({
     const methodsBase = [
       { key: 'aba', name: 'ABA PAY', bg: 'bg-[#005D7E]' },
       { key: 'bakong', name: 'Bakong KHQR', bg: 'bg-[#b30006]' },
-      { key: 'card', name: 'Credit/Debit Card' },
       { key: 'acleda', name: 'ACLEDA PAY', bg: 'bg-[#0d3b66]' },
-      { key: 'wing', name: 'Wing Bank', bg: 'bg-[#84bd00]' },
-      { key: 'chipmong', name: 'CHIP MONG BANK', bg: 'bg-[#009b72]' },
-      { key: 'transfer', name: 'Bank Transfer' },
       { key: 'cod', name: 'Cash on Delivery' }
     ];
 
@@ -208,16 +207,11 @@ export const FooterPage: React.FC<FooterPageProps> = ({
       let fallbackLogo = null;
       if (p.key === 'aba') {
         fallbackLogo = (
-          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center shadow-3xs bg-[#005D7E] text-white font-sans font-black text-[11px] tracking-tight relative select-none">
-            ABA
-            <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#E61E25]" />
-          </div>
+          <img src={abaLogo} alt="ABA Bank" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
         );
       } else if (p.key === 'bakong') {
         fallbackLogo = (
-          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#b30006] text-white font-sans font-black text-[9px] tracking-tight relative select-none">
-            Bakong
-          </div>
+          <img src={bakongLogo} alt="Bakong KHQR" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
         );
       } else if (p.key === 'card') {
         fallbackLogo = (
@@ -232,21 +226,15 @@ export const FooterPage: React.FC<FooterPageProps> = ({
         );
       } else if (p.key === 'acleda') {
         fallbackLogo = (
-          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#0d3b66] text-amber-400 font-bold text-[8px] select-none">
-            ACLEDA
-          </div>
+          <img src={acledaLogo} alt="ACLEDA Bank" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
         );
       } else if (p.key === 'wing') {
         fallbackLogo = (
-          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#84bd00] text-blue-900 font-black text-[9px] select-none">
-            Wing
-          </div>
+          <img src="https://www.wingbank.com.kh/wp-content/uploads/2021/11/Wing-Bank-Logo-Vertical.png" alt="Wing Bank" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
         );
       } else if (p.key === 'chipmong') {
         fallbackLogo = (
-          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#009b72] text-white font-bold text-[8px] select-none">
-            CMB
-          </div>
+          <img src="https://www.chipmongbank.com/assets/img/logo.png" alt="Chip Mong Bank" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
         );
       } else if (p.key === 'transfer') {
         fallbackLogo = (

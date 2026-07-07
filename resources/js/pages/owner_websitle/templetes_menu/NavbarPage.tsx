@@ -4,7 +4,7 @@ import { themes } from '@/pages/owner_manage/templete_website/themes';
 import { Store_setting } from '@/api/owner/stores';
 import { useOwnerURL } from '@/app/OwnerURL';
 import { getLightTheme } from './utils/themeHelper';
-import { FiMenu, FiX, FiShoppingCart, FiHome, FiBookOpen } from 'react-icons/fi';
+import { FiChevronDown, FiMenu, FiX, FiShoppingCart, FiHeart, FiBell, FiHome, FiBookOpen } from 'react-icons/fi';
 import { resolveImageUrl } from '@/api/imageUtils';
 
 interface NavbarPageProps {
@@ -40,12 +40,14 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
 }) => {
     // Local state to track dynamic settings for real-time updates
     const [dynamicStores, setDynamicStores] = useState<any>(() => stores || Store_setting());
+    const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [cartCount, setCartCount] = useState(0);
+    const [favoritesCount, setFavoritesCount] = useState(0);
 
-    // Sync cart count from localStorage
+    // Sync cart and wishlist counts from localStorage
     useEffect(() => {
         const updateCounts = () => {
             try {
@@ -59,6 +61,18 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
             } catch {
                 setCartCount(0);
             }
+
+            try {
+                const wishData = localStorage.getItem('aura_wishlist');
+                if (wishData) {
+                    const parsed = JSON.parse(wishData);
+                    setFavoritesCount(Array.isArray(parsed) ? parsed.length : 0);
+                } else {
+                    setFavoritesCount(0);
+                }
+            } catch {
+                setFavoritesCount(0);
+            }
         };
 
         updateCounts();
@@ -66,12 +80,14 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
         // Listen for storage changes and custom events
         window.addEventListener('storage', updateCounts);
         window.addEventListener('aura_cart_updated', updateCounts);
+        window.addEventListener('aura_wishlist_updated', updateCounts);
 
         const interval = setInterval(updateCounts, 1000);
 
         return () => {
             window.removeEventListener('storage', updateCounts);
             window.removeEventListener('aura_cart_updated', updateCounts);
+            window.removeEventListener('aura_wishlist_updated', updateCounts);
             clearInterval(interval);
         };
     }, []);
@@ -95,6 +111,7 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
     useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
+            setIsProfileDropdownOpen(false);
 
             if (currentScrollY > 100) {
                 if (currentScrollY > lastScrollY) {
@@ -112,7 +129,13 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
         return () => window.removeEventListener('scroll', handleScroll);
     }, [lastScrollY]);
 
-
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setIsProfileDropdownOpen(false);
+        };
+        window.addEventListener('click', handleClickOutside);
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, []);
 
     const settings = dynamicStores || stores;
     const activeTheme = getLightTheme(themes[settings?.website_theme || 'default'] || themes.default);
@@ -169,34 +192,27 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                     </a>
                 </div>
 
-                {/* Center: Navigation Links */}
-                <nav className="hidden md:flex space-x-8 items-center h-full">
-                    <a
-                        href={buildStoreLink('/')}
-                        onClick={(e) => { e.preventDefault(); onNavigate(buildStoreLink('/')); }}
-                        className={getLinkClass('/')}
-                    >
-                        <span className="flex items-center gap-1.5">
-                            <FiHome className="w-3.5 h-3.5" />
-                            <span>Home</span>
-                        </span>
-                        <span className={`absolute bottom-0 left-0 w-full h-[2px] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left ${activeTheme.primaryBg} ${isActive('/') ? 'scale-x-100' : ''}`} />
-                    </a>
-                    <a
-                        href={buildStoreLink('/menu')}
-                        onClick={(e) => { e.preventDefault(); onNavigate(buildStoreLink('/menu')); }}
-                        className={getLinkClass('/menu')}
-                    >
-                        <span className="flex items-center gap-1.5">
-                            <FiBookOpen className="w-3.5 h-3.5" />
-                            <span>Menu</span>
-                        </span>
-                        <span className={`absolute bottom-0 left-0 w-full h-[2px] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left ${activeTheme.primaryBg} ${isActive('/menu') ? 'scale-x-100' : ''}`} />
-                    </a>
-                </nav>
+
 
                 {/* Right: Auth Action Buttons / User Dropdown */}
                 <div className="flex items-center space-x-4">
+
+                    {/* Favorites/Like Icon */}
+                    <button
+                        onClick={() => {
+                            onNavigate(buildStoreLink('/wishlist'));
+                        }}
+                        className="relative p-2 text-stone-850 hover:text-[#E61E25] bg-transparent border-none cursor-pointer transition-all duration-300 hover:scale-105 flex items-center justify-center focus:outline-none"
+                        title="Wishlist"
+                    >
+                        <FiHeart className={`w-5 h-5 text-stone-800 ${favoritesCount > 0 ? 'text-[#E61E25] fill-[#E61E25]' : ''}`} />
+                        {favoritesCount > 0 && (
+                            <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-[#E61E25] text-white text-[8px] font-bold rounded-full flex items-center justify-center border border-white shadow-xs">
+                                {favoritesCount}
+                            </span>
+                        )}
+                    </button>
+
                     {/* Shopping Bag Icon */}
                     <button
                         onClick={() => {
@@ -217,7 +233,48 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                         )}
                     </button>
 
+                    {/* Vertical Divider */}
+                    <span className="h-5 w-px bg-stone-200 hidden sm:block" />
 
+                    <div className="hidden sm:flex items-center space-x-3 text-3xs font-black tracking-widest text-stone-600 uppercase">
+                        {user ? (
+                            <div className="relative">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsProfileDropdownOpen(prev => !prev);
+                                    }}
+                                    className="flex items-center gap-2 hover:text-stone-900 bg-transparent border-none cursor-pointer transition-colors font-bold focus:outline-none"
+                                >
+                                    {user.image_url ? (
+                                        <img src={user.image_url} alt={user.name} className="w-5 h-5 rounded-full object-cover border border-stone-200" />
+                                    ) : (
+                                        <div className="w-5 h-5 rounded-full bg-stone-900 text-white flex items-center justify-center text-[8px] font-black">
+                                            {user.name.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                    <span className="max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
+                                    <FiChevronDown className={`w-3 h-3 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={onNavigateLogin}
+                                    className="hover:text-stone-900 bg-transparent border-none cursor-pointer transition-colors font-bold focus:outline-none"
+                                >
+                                    Login
+                                </button>
+                                <span className="text-stone-300 font-normal">|</span>
+                                <button
+                                    onClick={onNavigateLogin}
+                                    className="hover:text-stone-900 bg-transparent border-none cursor-pointer transition-colors font-bold focus:outline-none"
+                                >
+                                    Register
+                                </button>
+                            </>
+                        )}
+                    </div>
 
                     {/* Mobile Menu Toggle */}
                     <button
@@ -248,7 +305,41 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
                         <FiBookOpen className="w-3.5 h-3.5" />
                         Menu
                     </a>
-
+                    <div className="pt-4 border-t border-stone-100 flex flex-col space-y-3">
+                        {user ? (
+                            <>
+                                <span className="text-xs font-bold text-stone-500">Hello, {user.name}</span>
+                                {(user.role === 'owner' || user.role === 'admin' || user.role === 'staff') && (
+                                    <button
+                                        onClick={() => {
+                                            onNavigate('/owner');
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className="text-left text-xs font-black uppercase tracking-widest text-stone-700 bg-transparent border-none cursor-pointer"
+                                    >
+                                        Dashboard
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        onLogout();
+                                        onNavigate(buildStoreLink('/'));
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="text-left text-xs font-black uppercase tracking-widest text-red-500 bg-transparent border-none cursor-pointer"
+                                >
+                                    Sign out
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={() => { onNavigateLogin(); setIsMobileMenuOpen(false); }}
+                                className="text-left text-xs font-black uppercase tracking-widest text-stone-700 bg-transparent border-none cursor-pointer"
+                            >
+                                Login / Register
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
         </header>

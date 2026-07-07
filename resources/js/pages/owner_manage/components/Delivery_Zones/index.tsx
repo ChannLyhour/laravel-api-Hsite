@@ -9,6 +9,7 @@ import {
 import '@/pages/owner_manage/style/font.css';
 import { HelperTable } from '../../helper/HelperTable';
 import type { HelperTableColumn } from '../../helper/HelperTable';
+import { useTranslation } from '../../lang/i18n';
 
 // Import subcomponents
 import { DeliveryZoneCreatePage } from './create';
@@ -16,6 +17,7 @@ import { DeliveryZoneEditPage } from './edit';
 import { DeliveryZoneShowPage } from './show';
 
 export const DeliveryZonesTab: React.FC = () => {
+  const { t } = useTranslation();
   const [zones, setZones] = useState<DeliveryZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,12 +125,12 @@ export const DeliveryZonesTab: React.FC = () => {
   const currentZones = filteredZones.slice(indexOfFirstItem, indexOfLastItem);
 
   const columns: HelperTableColumn[] = [
-    { key: 'sl', label: 'SL', align: 'left', className: 'w-16' },
-    { key: 'name', label: 'Delivery Zone', align: 'left' },
-    { key: 'delivery_fee', label: 'Delivery Fee', align: 'left' },
-    { key: 'estimates', label: 'Timeline', align: 'left', className: 'hidden md:table-cell' },
-    { key: 'status', label: 'Status', align: 'center' },
-    { key: 'action', label: 'Action', align: 'right', className: 'text-right' }
+    { key: 'sl', label: t('categories.sl'), align: 'left', className: 'w-16' },
+    { key: 'name', label: t('delivery_zones.name_col'), align: 'left' },
+    { key: 'delivery_fee', label: t('delivery_zones.fee_col'), align: 'left' },
+    { key: 'estimates', label: t('delivery_zones.timeline_col'), align: 'left', className: 'hidden md:table-cell' },
+    { key: 'status', label: t('delivery_zones.status_col'), align: 'center' },
+    { key: 'action', label: t('delivery_zones.action_col'), align: 'right', className: 'text-right' }
   ];
 
   if (view === 'create') {
@@ -175,10 +177,10 @@ export const DeliveryZonesTab: React.FC = () => {
       <div className="flex items-center space-x-3 pb-2 border-b border-slate-100">
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
-            <span>Delivery Zones Setup</span>
+            <span>{t('delivery_zones.title')}</span>
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-            Configure regional delivery zones and customize pricing schedules.
+            {t('delivery_zones.subtitle')}
           </p>
         </div>
       </div>
@@ -197,9 +199,9 @@ export const DeliveryZonesTab: React.FC = () => {
           columns={columns}
           data={currentZones}
           loading={loading}
-          title="Delivery Zones"
+          title={t('delivery_zones.table_title')}
           count={totalItems}
-          searchPlaceholder="Search by zone name, code, description..."
+          searchPlaceholder={t('delivery_zones.search_placeholder')}
           searchValue={searchQuery}
           onSearchChange={setSearchQuery}
           selectedIds={selectedIds}
@@ -224,7 +226,7 @@ export const DeliveryZonesTab: React.FC = () => {
             }
           ]}
           addButton={{
-            label: 'Add Zone',
+            label: t('delivery_zones.add_zone'),
             onClick: handleOpenCreatePage,
           }}
           renderRow={(zone, idx) => {
@@ -266,7 +268,7 @@ export const DeliveryZonesTab: React.FC = () => {
                         : 'bg-rose-50 text-rose-650 border-rose-100 hover:bg-rose-100/50'
                     }`}
                   >
-                    {zone.is_active ? 'Active' : 'Disabled'}
+                    {zone.is_active ? t('delivery_zones.active') : t('delivery_zones.disabled')}
                   </button>
                 </td>
                 <td className="py-3.5 px-5 text-right">

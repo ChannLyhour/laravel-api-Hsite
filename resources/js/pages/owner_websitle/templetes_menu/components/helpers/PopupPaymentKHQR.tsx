@@ -3,8 +3,6 @@ import { createPortal } from 'react-dom';
 import { FiX, FiCheck, FiLoader, FiSmartphone } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { client } from '@/api/client';
-import { useComplatePaid } from '../../hooks/useComplatePaid';
-import { QRCodeSVG } from 'qrcode.react';
 
 interface PopupPaymentKHQRProps {
      isOpen: boolean;
@@ -22,10 +20,10 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
      onClose,
      onConfirmPayment,
      amount,
-     merchantName,
-     currency,
+     merchantName = 'Our20s Collection',
+     currency = 'USD',
      orderId,
-     paymentMethod,
+     paymentMethod = 'aba',
 }) => {
      const [isVerifying, setIsVerifying] = useState(false);
 
@@ -67,10 +65,7 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                // Always clear stale QR before fetching fresh one
                localStorage.removeItem('walkin_payment_qr');
                try {
-                    const isBakong = paymentMethod?.toLowerCase() === 'bakong';
-                    const url = isBakong ? '/owner/khqr-bakong/generate' : '/payments/generate-qr';
-                    
-                    const response = await client.post<any>(url, {
+                    const response = await client.post<any>('/payments/generate-qr', {
                          order_id: Number(orderId),
                          currency: currency,
                     });
@@ -105,8 +100,32 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
           fetchQrCode();
      }, [isOpen, orderId, currency, paymentMethod, refreshKey]);
 
-     // Poll ABA Transaction Status via custom hook
-     useComplatePaid(transactionId, isOpen, onConfirmPayment, paymentMethod);
+     // Poll transaction status to auto-detect payment completion
+     useEffect(() => {
+          if (!isOpen || !transactionId) return;
+
+          const checkStatus = async () => {
+               try {
+                    const response = await client.post<any>('/payments/check-transaction', {
+                         transaction_id: transactionId,
+                    });
+                    const isPaid = response.success && (
+                         response.status === 'PAID' ||
+                         response.payment_status === 'Paid' ||
+                         response.payment_status === 'PAID'
+                    );
+                    if (isPaid) {
+                         toast.success('Payment Received Successfully!');
+                         onConfirmPayment();
+                    }
+               } catch (err) {
+                    console.error('Error checking transaction status:', err);
+               }
+          };
+
+          const interval = setInterval(checkStatus, 3000);
+          return () => clearInterval(interval);
+     }, [isOpen, transactionId, onConfirmPayment]);
 
 
      const handleVerify = async () => {
@@ -114,10 +133,7 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
           try {
                if (transactionId) {
                     try {
-                         const isBakong = paymentMethod?.toLowerCase() === 'bakong';
-                         const url = isBakong ? '/owner/khqr-bakong/check' : '/payments/check-transaction';
-                         
-                         const response = await client.post<any>(url, {
+                         const response = await client.post<any>('/payments/check-transaction', {
                               transaction_id: transactionId,
                               confirm: true,
                          });
@@ -260,31 +276,19 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                                         >Retry</button>
                                    </div>
                               ) : (qrImage || qrString) ? (
-                                   <>
-                                        <div className="relative w-full h-full flex items-center justify-center bg-white p-2">
-                                             {qrImage ? (
-                                                  <img
-                                                       src={qrImage}
-                                                       alt="Payment QR Code"
-                                                       className="w-[200px] h-[200px] max-w-full max-h-full object-contain select-none pointer-events-none"
-                                                  />
-                                             ) : (
-                                                  <QRCodeSVG
-                                                       value={qrString || ''}
-                                                       size={200}
-                                                       className="w-full h-full max-w-full max-h-full object-contain"
-                                                       level="M"
-                                                       includeMargin={false}
-                                                  />
-                                             )}
-                                        </div>
+                                   <div className="relative w-full h-full select-none">
+                                        <img
+                                             src={qrImage || `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrString || '')}`}
+                                             alt={titleText}
+                                             className="w-full h-full object-contain pointer-events-none"
+                                        />
                                         <button
                                              onClick={refreshQr}
                                              title="Generate new QR"
-                                             className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:border-blue-400 transition-colors cursor-pointer shadow-md z-10"
-                                             style={{ fontSize: 14 }}
+                                             className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:border-blue-400 transition-colors cursor-pointer shadow-sm"
+                                             style={{ fontSize: 12 }}
                                         >↻</button>
-                                   </>
+                                   </div>
                               ) : (
                                    <div className="text-slate-400 text-2xs uppercase tracking-wider font-bold">No QR Code</div>
                               )}

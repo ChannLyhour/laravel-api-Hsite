@@ -231,6 +231,13 @@ export const authService = {
   updateProfile: async (formData: FormData): Promise<{ success: boolean; message: string; user: User }> => {
     return client.postFormData<{ success: boolean; message: string; user: User }>('/users/me', formData);
   },
+
+  /**
+   * Permanently delete the active user account and all associated store data.
+   */
+  deleteAccount: async (): Promise<{ success: boolean; message: string }> => {
+    return client.delete<{ success: boolean; message: string }>('/users/me');
+  },
 };
 
 // ─── Restaurant Owner / Admin Picker ────────────────────────────────────────

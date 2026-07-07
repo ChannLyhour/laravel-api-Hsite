@@ -4,6 +4,7 @@ import { toast } from '@/pages/owner_manage/utils/toast';
 import { storesService } from '@/api/owner/stores';
 import '@/pages/owner_manage/style/font.css';
 import { GroupDiv } from '@/pages/owner_manage/helper/GroupDiv';
+import { useTranslation } from '../../lang/i18n';
 
 interface TabProps {
      ownerId?: number | string;
@@ -42,6 +43,7 @@ const saveSettingsToStore = async (newSettings: Record<string, any>, ownerId?: n
 };
 
 export const Pusher_ConfigurationTab: React.FC<TabProps> = ({ ownerId, profile }) => {
+     const { t } = useTranslation();
      const [loading, setLoading] = useState(true);
      const [appId, setAppId] = useState('');
      const [key, setKey] = useState('');
@@ -82,7 +84,7 @@ export const Pusher_ConfigurationTab: React.FC<TabProps> = ({ ownerId, profile }
           return (
                <div className="border p-12 rounded-[5px] shadow-xs flex flex-col items-center justify-center space-y-3 font-kuntomruy custom-card-container">
                     <FiLoader className="w-8 h-8 text-primary animate-spin" />
-                    <span className="text-xs font-bold text-slate-400">Loading Pusher Settings...</span>
+                    <span className="text-xs font-bold text-slate-400">{t('pusher.loading')}</span>
                </div>
           );
      }
@@ -92,17 +94,17 @@ export const Pusher_ConfigurationTab: React.FC<TabProps> = ({ ownerId, profile }
                <div>
                     <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
                          <FiSettings className="text-orange-500" />
-                         <span>Pusher Configuration</span>
+                         <span>{t('pusher.title')}</span>
                     </h2>
                     <p className="text-slate-400 text-xs sm:text-sm mt-1">
-                         Configure Pusher channel settings to power real-time messaging, order notifications, and chat triggers instantly.
+                         {t('pusher.subtitle')}
                     </p>
                </div>
 
                <div className="bg-black/[0.02] border border-black/10 rounded-[8px] p-5 flex items-start gap-3">
                     <FiInfo className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                     <div className="text-xs text-slate-500 leading-relaxed font-semibold">
-                         Providing these credentials connects your boutique to a private Pusher app cluster. Real-time customer chats, inbox replies, and status notifications will update instantly on all devices without manual page reloads.
+                         {t('pusher.info')}
                     </div>
                </div>
 
@@ -111,7 +113,7 @@ export const Pusher_ConfigurationTab: React.FC<TabProps> = ({ ownerId, profile }
                     <form onSubmit={handleSave} className="lg:col-span-7 space-y-5">
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-left">
                               <div className="space-y-1.5 sm:col-span-2">
-                                   <label className="text-xs font-bold text-slate-755 block">Pusher App ID *</label>
+                                   <label className="text-xs font-bold text-slate-755 block">{t('pusher.app_id')}</label>
                                    <input
                                         type="text"
                                         value={appId}
@@ -123,7 +125,7 @@ export const Pusher_ConfigurationTab: React.FC<TabProps> = ({ ownerId, profile }
                               </div>
 
                               <div className="space-y-1.5">
-                                   <label className="text-xs font-bold text-slate-755 block">Pusher App Key *</label>
+                                   <label className="text-xs font-bold text-slate-755 block">{t('pusher.app_key')}</label>
                                    <input
                                         type="text"
                                         value={key}
@@ -135,7 +137,7 @@ export const Pusher_ConfigurationTab: React.FC<TabProps> = ({ ownerId, profile }
                               </div>
 
                               <div className="space-y-1.5">
-                                   <label className="text-xs font-bold text-slate-755 block">Pusher App Secret *</label>
+                                   <label className="text-xs font-bold text-slate-755 block">{t('pusher.app_secret')}</label>
                                    <div className="relative">
                                         <input
                                              type={showSecret ? 'text' : 'password'}
@@ -156,7 +158,7 @@ export const Pusher_ConfigurationTab: React.FC<TabProps> = ({ ownerId, profile }
                               </div>
 
                               <div className="space-y-1.5 sm:col-span-2">
-                                   <label className="text-xs font-bold text-slate-755 block">Pusher App Cluster *</label>
+                                   <label className="text-xs font-bold text-slate-755 block">{t('pusher.cluster')}</label>
                                    <input
                                         type="text"
                                         value={cluster}
@@ -175,7 +177,7 @@ export const Pusher_ConfigurationTab: React.FC<TabProps> = ({ ownerId, profile }
                                    className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-[5px] text-xs font-extrabold transition-all border-none cursor-pointer flex items-center space-x-1.5 shadow-2xs active:scale-98"
                               >
                                    {saving ? <FiLoader className="w-3.5 h-3.5 animate-spin" /> : <FiCheck className="w-3.5 h-3.5" />}
-                                   <span>Save Configuration</span>
+                                   <span>{t('pusher.save_config')}</span>
                               </button>
                          </div>
                     </form>
@@ -183,31 +185,31 @@ export const Pusher_ConfigurationTab: React.FC<TabProps> = ({ ownerId, profile }
                     {/* Setup Instructions Column */}
                     <GroupDiv className="lg:col-span-5 space-y-6 text-left">
                          <h4 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2 border-b border-slate-200/80 pb-3">
-                              <FiInfo className="text-orange-500 w-4 h-4" /> Pusher Setup Guide
+                              <FiInfo className="text-orange-500 w-4 h-4" /> {t('pusher.guide_title')}
                          </h4>
 
                          <div className="space-y-4">
                               <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                                   Pusher Channels provides real-time communication infrastructure. Follow these steps to generate your credentials:
+                                   {t('pusher.guide_desc')}
                               </p>
                               <ol className="list-decimal pl-4 text-[11px] text-slate-550 font-semibold space-y-2 leading-relaxed">
-                                   <li>Sign up or log in to the <a href="https://dashboard.pusher.com/" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">Pusher Channels Dashboard</a>.</li>
-                                   <li>Click <strong>Create App</strong> on your dashboard.</li>
-                                   <li>Fill in your app details:
+                                   <li>{t('pusher.step1')}</li>
+                                   <li>{t('pusher.step2')}</li>
+                                   <li>{t('pusher.step3')}
                                         <ul className="list-disc pl-4 mt-1 space-y-1">
-                                             <li><strong>Name:</strong> e.g., <em>My VHsite Store</em></li>
-                                             <li><strong>Select a cluster:</strong> Choose the closest cluster location (e.g., <code>ap1</code> for Asia Pacific / Singapore).</li>
+                                             <li><strong>{t('pusher.step3_name')}</strong></li>
+                                             <li><strong>{t('pusher.step3_cluster')}</strong></li>
                                         </ul>
                                    </li>
-                                   <li>Under "Choose tech stack", select <em>React</em> for front-end and <em>Laravel</em> for back-end (optional).</li>
-                                   <li>Click <strong>Create App</strong>.</li>
-                                   <li>Once created, navigate to the <strong>App Keys</strong> tab from the left sidebar navigation menu.</li>
-                                   <li>Copy and paste the credentials into the fields on the left:
+                                   <li>{t('pusher.step4')}</li>
+                                   <li>{t('pusher.step5')}</li>
+                                   <li>{t('pusher.step6')}</li>
+                                   <li>{t('pusher.step7')}
                                         <ul className="list-disc pl-4 mt-1.5 space-y-1.5">
-                                             <li><code>app_id</code> &rarr; <strong>Pusher App ID</strong></li>
-                                             <li><code>key</code> &rarr; <strong>Pusher App Key</strong></li>
-                                             <li><code>secret</code> &rarr; <strong>Pusher App Secret</strong></li>
-                                             <li><code>cluster</code> &rarr; <strong>Pusher App Cluster</strong></li>
+                                             <li><code>app_id</code> &rarr; <strong>{t('pusher.app_id')}</strong></li>
+                                             <li><code>key</code> &rarr; <strong>{t('pusher.app_key')}</strong></li>
+                                             <li><code>secret</code> &rarr; <strong>{t('pusher.app_secret')}</strong></li>
+                                             <li><code>cluster</code> &rarr; <strong>{t('pusher.cluster')}</strong></li>
                                         </ul>
                                    </li>
                               </ol>

@@ -14,6 +14,11 @@ import { CreatePage } from './create';
 import { EditPage } from './edit';
 import { ShowPage } from './show';
 
+const strLimit = (str: string, limit: number = 25): string => {
+  if (!str) return '';
+  return str.length > limit ? `${str.substring(0, limit)}...` : str;
+};
+
 
 interface MenuItemsTabProps {
   ownerId?: number | string;
@@ -26,6 +31,10 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [colFilters, setColFilters] = useState<Record<string, string>>({
+    name: '',
+    price: '',
+  });
 
   interface FiltersState {
     sorting: string;
@@ -110,7 +119,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (_) {}
+      } catch (_) { }
     }
     return null;
   });
@@ -119,7 +128,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (_) {}
+      } catch (_) { }
     }
     return null;
   });
@@ -236,7 +245,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
         setItems(prev => prev.filter(i => i.id !== id));
         toast.success('Dish removed successfully!');
         window.dispatchEvent(new CustomEvent('data_updated'));
-      new BroadcastChannel('data_updates').postMessage('refresh');
+        new BroadcastChannel('data_updates').postMessage('refresh');
       } catch (err) {
         console.error('Failed to delete menu item:', err);
         toast.error('Failed to remove dish.');
@@ -260,7 +269,15 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
         appliedFilters.status.length === 0 ||
         appliedFilters.status.includes(item.status);
 
-      return matchesSearch && matchesCategory && matchesStatus;
+      const matchesColName =
+        !colFilters.name ||
+        item.name.toLowerCase().includes(colFilters.name.toLowerCase());
+
+      const matchesColPrice =
+        !colFilters.price ||
+        item.price.toString().toLowerCase().includes(colFilters.price.toLowerCase());
+
+      return matchesSearch && matchesCategory && matchesStatus && matchesColName && matchesColPrice;
     });
 
     // 2. Sorting
@@ -278,7 +295,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
     });
 
     return result;
-  }, [items, searchQuery, appliedFilters]);
+  }, [items, searchQuery, appliedFilters, colFilters]);
 
   // Pagination calculations
   const totalItems = filteredItems.length;
@@ -294,9 +311,9 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
   // Table columns definition
   const columns: HelperTableColumn[] = [
     { key: 'sl', label: 'SL', align: 'center', className: 'w-12' },
-    { key: 'name', label: 'Product Name', align: 'left', className: 'w-1/3' },
+    { key: 'name', label: 'Product Name', align: 'left', className: 'w-1/3', filterable: true },
     { key: 'type', label: 'Product Type', align: 'left' },
-    { key: 'price', label: 'Unit Price', align: 'left' },
+    { key: 'price', label: 'Unit Price', align: 'left', filterable: true },
     { key: 'stock', label: 'Stock', align: 'center' },
     { key: 'status', label: 'Status', align: 'center' },
     { key: 'action', label: 'Action', align: 'right', className: 'w-36' }
@@ -377,6 +394,14 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
         searchPlaceholder="Search by Name Products..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
+        columnFilters={colFilters}
+        onColumnFilterChange={(key, value) => {
+          setColFilters(prev => ({
+            ...prev,
+            [key]: value
+          }));
+          setCurrentPage(1);
+        }}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         getRowId={(item) => item.id}
@@ -639,7 +664,9 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                     />
                   </div>
                   <div>
-                    <div className="font-extrabold text-slate-900 text-sm sm:text-base leading-tight">{item.name}</div>
+                    <div className="text-slate-900 text-[12px] sm:text-[14px]" title={item.name}>
+                      {strLimit(item.name, 25)}
+                    </div>
                     {/* <div className="text-slate-400 text-2xs font-semibold mt-0.5">Id # {item.id}</div> */}
                     {/* Render variant options preview */}
                     {hasVariants && (

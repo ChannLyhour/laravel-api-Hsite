@@ -326,7 +326,7 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
 
     return (
         <div className="bg-[#F9F9F9] min-h-screen pb-24 font-sans animate-fade-in text-stone-900">
-            <div className="max-w-4xl mx-auto px-4 pt-10">
+            <div className="max-w-4xl mx-auto px-1.5 pt-10">
 
                 {/* Header Bar */}
                 <div className="flex items-center justify-between border-b border-stone-200 pb-4 mb-6 relative">

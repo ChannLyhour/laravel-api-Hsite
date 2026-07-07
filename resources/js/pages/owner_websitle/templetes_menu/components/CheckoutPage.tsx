@@ -12,15 +12,21 @@ import {
     FiChevronLeft,
     FiMapPin,
     FiTag,
+    FiCreditCard,
     FiShoppingBag,
 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { shippingAddressesService } from '@/api/owner/shippingAddresses';
 import type { ShippingAddress } from '@/api/owner/shippingAddresses';
+import type { CouponRow } from '@/api/owner/coupons';
 import { useCheckout } from '../hooks/useCheckout';
 import { PopupPaymentKHQR } from './helpers/PopupPaymentKHQR';
-import type { CouponRow } from '@/api/owner/coupons';
 import { ordersService } from '@/api/owner/orders';
+import { paymentsService } from '@/api/owner/method/payments';
+
+import abaLogo from '@/pages/main_website/Company_bank/aba.png';
+import acledaLogo from '@/pages/main_website/Company_bank/acleda.png';
+import bakongLogo from '@/pages/main_website/Company_bank/bakong.png';
 
 import { ModelCoupon } from './helpers/ModelCoupon';
 import { FASHION_ROUTES } from '../routes';
@@ -45,8 +51,7 @@ const CAMBODIA_CITIES = [
     'Kampong Cham', 'Koh Kong', 'Kratie', 'Takéo', 'Kampot',
     'Pursat', 'Prey Veng', 'Svay Rieng', 'Kandal', 'Mondulkiri',
     'Ratanakiri', 'Stung Treng', 'Preah Vihear', 'Oddar Meanchey',
-    'Pailin', 'Kep', 'Tbong Khmum', 'Banteay Meanchey',
-    'Kampong Chhnang', 'Kampong Speu', 'Kampong Thom'
+    'Pailin', 'Kep', 'Tbong Khmum',
 ];
 
 // ─── Add New Address Modal ──────────────────────────────────────────────────────
@@ -537,100 +542,95 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         onNavigate,
     });
 
-    // Sync checkout state to localStorage for customer walk-in display
-    useEffect(() => {
-        const payload = {
-            activeStep: orderSuccess ? 'completed' : 'checkout',
-            selectedPayment,
-            totalAmount,
-            subtotal,
-            deliveryFee,
-            totalDiscount,
-            isKHQROpen,
-            pendingOrderId,
-            pendingOrderNo,
-            currency: 'USD',
-        };
-        localStorage.setItem('walkin_checkout_state', JSON.stringify(payload));
-    }, [orderSuccess, selectedPayment, totalAmount, subtotal, deliveryFee, totalDiscount, isKHQROpen, pendingOrderId, pendingOrderNo]);
-
     const [isVoucherDrawerOpen, setIsVoucherDrawerOpen] = useState(false);
 
-    const queryParams = new URLSearchParams(window.location.search);
-    const isLocal = queryParams.get('local') === 'true';
-
-    const checkoutDeliveryAddress = isLocal ? 'close' : (storeSettings?.checkout_delivery_address || 'open');
-    const checkoutPreferredContact = isLocal ? 'close' : (storeSettings?.checkout_preferred_contact || 'open');
+    const checkoutDeliveryAddress = storeSettings?.checkout_delivery_address || 'open';
+    const checkoutPreferredContact = storeSettings?.checkout_preferred_contact || 'open';
     const checkoutNote = storeSettings?.checkout_note || 'open';
     const checkoutClaimCode = storeSettings?.checkout_claim_code || 'open';
 
+    const [rawPaymentMethods, setRawPaymentMethods] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (ownerUserId) {
+            paymentsService.getActiveMethods(ownerUserId)
+                .then(setRawPaymentMethods)
+                .catch(err => console.error('Failed to fetch payment methods:', err));
+        }
+    }, [ownerUserId]);
+
     const paymentMethods = React.useMemo(() => {
-        const methodsBase = [
-            {
-                key: 'aba',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center shadow-3xs bg-[#005D7E] text-white font-sans font-black text-[13px] tracking-tight relative">ABA<div className="absolute top-0 right-0 w-2 h-2 bg-[#E61E25]" /></div>,
-                name: 'ABA PAY',
-                desc: 'Scan to pay with ABA Mobile',
-            },
-            {
-                key: 'bakong',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#b30006] text-white font-sans font-black text-[9px] tracking-tight relative">Bakong</div>,
-                name: 'Bakong KHQR',
-                desc: 'Scan to pay with Bakong App or any KHQR supported bank',
-            },
-            {
-                key: 'card',
-                logo: <div className="w-10 h-7 rounded shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200/80"><div className="grid grid-cols-2 gap-[2px] p-[2px]"><span className="text-[6px] font-black text-blue-800">VISA</span><span className="text-[6px] font-black text-red-500">MC</span><span className="text-[6px] font-black text-green-700">JCB</span><span className="text-[6px] font-black text-blue-900">UP</span></div></div>,
-                name: 'Credit/Debit Card',
-                desc: <div className="flex items-center gap-1.5 mt-0.5"><span className="text-[8px] bg-blue-50 text-blue-700 font-bold px-0.5 rounded">VISA</span><span className="text-[8px] bg-red-50 text-red-700 font-bold px-0.5 rounded">MC</span><span className="text-[8px] bg-green-50 text-green-700 font-bold px-0.5 rounded">JCB</span></div>,
-            },
-            {
-                key: 'acleda',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#0d3b66] text-amber-400 font-bold text-[8px]">ACLEDA</div>,
-                name: 'ACLEDA PAY',
-                desc: 'Pay securely with ACLEDA.',
-            },
-            {
-                key: 'wing',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#84bd00] text-blue-900 font-black text-[10px]">Wing</div>,
-                name: 'Wing Bank',
-                desc: 'Pay securely with WingPay',
-            },
-            {
-                key: 'chipmong',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-[#009b72] text-white font-bold text-[8px]">CMB</div>,
-                name: 'CHIP MONG BANK',
-                desc: 'Tab to pay with CHIP MONG',
-            },
-            {
-                key: 'transfer',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200"><span className="text-[14px]">🏦</span></div>,
-                name: 'Bank Transfer',
-                desc: <span className="font-kuntomruy">ទូទាត់តាមគណនីធនាគារ</span>,
-            },
-            {
-                key: 'cod',
-                logo: <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200"><span className="text-[14px]">💵</span></div>,
-                name: 'Cash on Delivery',
-                desc: <span className="font-kuntomruy">បង់ប្រាក់នៅពេលទទួលបានទំនិញ</span>,
-            },
-        ];
-
-        return methodsBase.filter(p => {
-            const methods = storeSettings.payment_methods || {};
-            const config = methods[p.key];
-            if (config) return config.enabled;
-
-            const legacyConfig = storeSettings[`payment_gw_${p.key}`];
-            if (legacyConfig) {
-                try {
-                    const parsed = typeof legacyConfig === 'string' ? JSON.parse(legacyConfig) : legacyConfig;
-                    return parsed.enabled;
-                } catch { return false; }
+        return rawPaymentMethods.map(p => {
+            let logoEl = null;
+            if (p.key === 'aba') {
+                logoEl = (
+                    <img
+                        src={abaLogo}
+                        alt="ABA Bank"
+                        className="w-10 h-7 rounded object-cover object-top bg-white border border-stone-200 p-[2px]"
+                    />
+                );
+            } else if (p.key === 'bakong') {
+                logoEl = (
+                    <img
+                        src={bakongLogo}
+                        alt="Bakong KHQR"
+                        className="w-14 h-12 rounded object-contain bg-white border border-stone-200 p-[2px]"
+                    />
+                );
+            } else if (p.key === 'acleda') {
+                logoEl = (
+                    <img
+                        src={acledaLogo}
+                        alt="ACLEDA PAY"
+                        className="w-14 h-12 rounded object-contain bg-white border border-stone-200 p-[2px]"
+                    />
+                );
+            } else if (p.logo && p.logo.startsWith('emoji:')) {
+                logoEl = (
+                    <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200">
+                        <span className="text-[14px]">{p.logo.substring(6)}</span>
+                    </div>
+                );
+            } else if (p.logo) {
+                logoEl = (
+                    <img
+                        src={p.logo}
+                        alt={p.name}
+                        className="w-14 h-12 rounded object-contain bg-white border border-stone-200 p-[2px]"
+                    />
+                );
+            } else {
+                logoEl = (
+                    <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200">
+                        <span className="text-[10px] font-bold">{p.name.charAt(0)}</span>
+                    </div>
+                );
             }
-            return p.key === 'cod' || p.key === 'transfer';
+
+            let descEl = p.desc;
+            if (p.key === 'card') {
+                descEl = (
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[8px] bg-blue-50 text-blue-700 font-bold px-0.5 rounded">VISA</span>
+                        <span className="text-[8px] bg-red-50 text-red-700 font-bold px-0.5 rounded">MC</span>
+                        <span className="text-[8px] bg-green-50 text-green-700 font-bold px-0.5 rounded">JCB</span>
+                    </div>
+                );
+            } else if (p.key === 'transfer') {
+                descEl = <span className="font-kuntomruy">ទូទាត់តាមគណនីធនាគារ</span>;
+            } else if (p.key === 'cod') {
+                descEl = <span className="font-kuntomruy">បង់ប្រាក់នៅពេលទទួលបានទំនិញ</span>;
+            }
+
+            return {
+                key: p.key,
+                logo: logoEl,
+                name: p.name,
+                desc: descEl
+            };
         });
-    }, [storeSettings]);
+    }, [rawPaymentMethods]);
 
     // Sync selected payment if list changes (only clear if selected method is no longer available)
     useEffect(() => {
@@ -663,7 +663,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         return (
             <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-4 font-kuntomruy animate-fade-in">
                 <div className="bg-white p-8 sm:p-12 rounded-sm border border-stone-200/60 shadow-2xl max-w-md w-full text-center space-y-6">
-                    <div className="w-20 h-20 bg-stone-900 rounded-full flex items-center justify-center mx-auto text-white shadow-lg ">
+                    <div className="w-20 h-20 bg-stone-900 rounded-full flex items-center justify-center mx-auto text-white shadow-lg">
                         <FiCheck className="w-10 h-10 stroke-[3]" />
                     </div>
 
@@ -950,12 +950,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     <div className="bg-white p-5 rounded-sm border border-stone-200/60 shadow-2xs">
                         <h2 className="text-sm font-black text-stone-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <FiShoppingBag className="w-4 h-4 text-stone-900 stroke-[2.5]" />
-                            My Cart ({displayCartItems.length})
+                            My shopping bag ({displayCartItems.length})
                         </h2>
 
                         <div className="divide-y divide-stone-100">
                             {displayCartItems.length === 0 ? (
                                 <div className="text-center py-12 flex flex-col items-center justify-center gap-4 animate-fade-in">
+                                    <span className="text-3xl text-stone-300">🛍️</span>
                                     <p className="text-stone-500 text-xs font-bold uppercase tracking-wider">Your shopping bag is empty</p>
                                     <button
                                         onClick={() => {
@@ -990,12 +991,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                                         {item.variant}
                                                     </p>
                                                 )}
-                                                <p className="text-[16px] font-bold text-stone-900 text-right">x {item.qty}</p>
+                                                <p className="text-[10px] font-medium">Quantity x {item.qty}</p>
                                             </div>
 
-                                            <div className="text-right text-[10px] uppercase font-bold text-stone-400">
-                                                <span className="text-[16px] font-bold text-stone-900">
-                                                    ${item.price.toFixed(2)}
+                                            <div className="flex justify-between items-baseline mt-2">
+                                                <span className="text-xs font-black text-stone-900">
+                                                    US ${item.price.toFixed(2)}
                                                 </span>
                                             </div>
                                         </div>
@@ -1008,7 +1009,56 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </section>
 
                 {/* RIGHT COLUMN */}
-                <section className="lg:col-span-5 space-y-6 lg:sticky lg:top-12 self-start">
+                <section className="lg:col-span-5 space-y-6">
+
+                    {/* Payment Card */}
+                    <div className={`bg-white p-5 rounded-sm border shadow-2xs transition-all duration-200 ${validationError?.field === 'payment' ? 'border-red-500 ring-1 ring-red-500/20' : 'border-stone-200/60'}`}>
+                        <h2 className="text-sm font-black text-stone-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <FiCreditCard className="w-4 h-4 text-stone-900 stroke-[2.5]" />
+                            Payment
+                        </h2>
+
+                        <div className="space-y-3">
+                            {paymentMethods.length === 0 ? (
+                                <div className="text-center py-6 text-stone-400 text-xs font-bold uppercase tracking-wider">
+                                    No payment methods available
+                                </div>
+                            ) : paymentMethods.map((p, idx) => (
+                                <label
+                                    key={p.key}
+                                    className={`flex items-center gap-4 p-3 border rounded-sm cursor-pointer transition-colors ${selectedPayment === p.key
+                                        ? 'border-stone-900 bg-stone-50/40'
+                                        : validationError?.field === 'payment'
+                                            ? 'border-red-300 hover:border-red-400 hover:bg-stone-50'
+                                            : 'border-stone-150 hover:bg-stone-50'
+                                        }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="payment"
+                                        ref={idx === 0 ? paymentRef : undefined}
+                                        checked={selectedPayment === p.key}
+                                        onChange={() => setSelectedPayment(p.key)}
+                                        className={`w-4 h-4 text-stone-900 border-stone-300 focus:ring-0 cursor-pointer shrink-0 ${validationError?.field === 'payment' ? 'accent-red-500 text-red-500' : ''}`}
+                                    />
+                                    {p.logo}
+                                    <div className="text-xs">
+                                        <p className="font-bold text-stone-900">{p.name}</p>
+                                        <p className="text-[10px] text-stone-400 font-medium">{p.desc}</p>
+                                    </div>
+                                </label>
+                            ))}
+                            {validationError?.field === 'payment' && (
+                                <p className="text-[11px] font-bold text-red-500 animate-fade-in mt-1 flex items-center gap-1">
+                                    <span>⚠️</span>
+                                    <span>{validationError.message}</span>
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+
+
 
                     {/* Note */}
                     {checkoutNote !== 'close' && (
@@ -1105,6 +1155,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             <span>Amount to pay</span>
                             <span className="text-base font-black">US ${totalAmount.toFixed(2)}</span>
                         </div>
+
+                        <button
+                            onClick={handleCheckout}
+                            disabled={isCheckingOut}
+                            className={`w-full py-4 bg-stone-900 hover:bg-stone-850 text-white rounded-[3px] font-black text-xs uppercase tracking-widest border-none transition-all cursor-pointer shadow-sm mt-2 focus:outline-none ${isCheckingOut ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                            {isCheckingOut ? 'Processing...' : 'Checkout'}
+                        </button>
                     </div>
 
                 </section>

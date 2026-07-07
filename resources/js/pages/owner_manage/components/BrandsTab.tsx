@@ -9,12 +9,15 @@ import { toast } from '@/pages/owner_manage/utils/toast';
 import '@/pages/owner_manage/style/font.css';
 import { HelperTable } from '../helper/HelperTable';
 import type { HelperTableColumn } from '../helper/HelperTable';
+import { ButtonToggleStatus } from '../helper/buttonToggleStatus';
+import { useTranslation } from '../lang/i18n';
 
 interface BrandsTabProps {
   ownerId?: number | string;
 }
 
 export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -256,13 +259,13 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
   };
 
   const columns: HelperTableColumn[] = [
-    { key: 'sl', label: 'SL', align: 'left', className: 'w-16' },
-    { key: 'name', label: 'Brand Name', align: 'left', className: 'w-[30%]' },
-    { key: 'alt_text', label: 'Image Alt Text', align: 'left', className: 'w-[15%]' },
-    { key: 'total_product', label: 'Total Product', align: 'left', className: 'w-[15%]' },
-    { key: 'total_order', label: 'Total Order', align: 'left', className: 'w-[15%]' },
-    { key: 'status', label: 'Status', align: 'center', className: 'w-[15%]' },
-    { key: 'action', label: 'Action', align: 'center', className: 'w-[15%]' }
+    { key: 'sl', label: t('categories.sl'), align: 'left', className: 'w-16' },
+    { key: 'name', label: t('brands.brand_name'), align: 'left', className: 'w-[30%]' },
+    { key: 'alt_text', label: t('brands.alt_text'), align: 'left', className: 'w-[15%]' },
+    { key: 'total_product', label: t('brands.total_product'), align: 'left', className: 'w-[15%]' },
+    { key: 'total_order', label: t('brands.total_order'), align: 'left', className: 'w-[15%]' },
+    { key: 'status', label: t('categories.status'), align: 'center', className: 'w-[15%]' },
+    { key: 'action', label: t('categories.action'), align: 'center', className: 'w-[15%]' }
   ];
 
   return (
@@ -277,7 +280,7 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
               <div className="bg-[#ffb300] rounded-[1.5px]"></div>
               <div className="bg-[#03a9f4] rounded-[1.5px]"></div>
             </div>
-            <span>Brand Setup</span>
+            <span>{t('brands.brand_setup')}</span>
           </h2>
         </div>
       </div>
@@ -313,9 +316,9 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
         columns={columns}
         data={currentBrands}
         loading={loading}
-        title="Brand list"
+        title={t('brands.brand_list')}
         count={totalItems}
-        searchPlaceholder="Search by brand name"
+        searchPlaceholder={t('brands.search_placeholder')}
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         selectedIds={selectedIds}
@@ -358,7 +361,7 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
           onClick: () => setShowFilters(p => !p)
         }}
         addButton={{
-          label: 'Add New',
+          label: t('brands.add_brand'),
           onClick: handleOpenCreateModal
         }}
         renderRow={(brand, index) => {
@@ -411,17 +414,10 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
 
               {/* Status Switch Toggle */}
               <td className="py-3.5 px-5 text-center">
-                <button
-                  type="button"
-                  onClick={() => handleToggleStatus(brand)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mx-auto ${brand.status ? 'bg-[#0f53a1] shadow-2xs' : 'bg-slate-200'
-                    }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${brand.status ? 'translate-x-4' : 'translate-x-0'
-                      }`}
-                  />
-                </button>
+                <ButtonToggleStatus
+                  status={brand.status}
+                  onToggle={() => handleToggleStatus(brand)}
+                />
               </td>
 
               {/* Action Buttons */}
@@ -491,7 +487,7 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
                   <div className="bg-[#03a9f4] rounded-[1px]"></div>
                 </div>
                 <span>
-                  {editingBrand ? 'Modify Brand' : 'Create Brand'}
+                  {editingBrand ? t('brands.modify_brand') : t('brands.create_brand')}
                 </span>
               </h3>
               <p className="text-slate-500 text-xs font-semibold mt-1">
@@ -503,7 +499,7 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
               {/* Brand Name */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Brand Name <span className="text-rose-500">*</span>
+                  {t('brands.brand_name')} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -518,7 +514,7 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
               {/* Image Alt Text */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Image Alt Text <span className="text-slate-400 font-normal">(SEO optimization)</span>
+                  {t('brands.alt_text')} <span className="text-slate-400 font-normal">(SEO optimization)</span>
                 </label>
                 <input
                   type="text"
@@ -589,35 +585,14 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({ ownerId }) => {
                 />
               </div>
 
-              {/* Publishing Status */}
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Publishing Status
-                </label>
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setBrandStatus(true)}
-                    className={`flex-1 py-2 px-2 border rounded-[5px] text-[10px] font-extrabold flex items-center justify-center space-x-1 transition-all cursor-pointer ${brandStatus
-                      ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-xs'
-                      : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
-                      }`}
-                  >
-                    <FiCheck className="w-3 h-3 stroke-[3]" />
-                    <span>Active</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBrandStatus(false)}
-                    className={`flex-1 py-2 px-2 border rounded-[5px] text-[10px] font-extrabold flex items-center justify-center space-x-1 transition-all cursor-pointer ${!brandStatus
-                      ? 'bg-slate-100 border-slate-400 text-slate-700 shadow-xs'
-                      : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
-                      }`}
-                  >
-                    <FiX className="w-3 h-3 stroke-[3]" />
-                    <span>Inactive</span>
-                  </button>
-                </div>
+              {/* Publishing Status Toggle Switch */}
+              <div className="flex items-center space-x-3 pt-2">
+                <label className="text-xs sm:text-sm font-bold text-slate-700">Set as Active Brand</label>
+                <ButtonToggleStatus
+                  status={brandStatus}
+                  onToggle={() => setBrandStatus(!brandStatus)}
+                  className=""
+                />
               </div>
 
               {/* Submit Buttons */}

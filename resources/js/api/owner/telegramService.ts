@@ -16,15 +16,16 @@ const STORAGE_KEY = "telegram_bot_config";
 /**
  * Load Telegram bot config from localStorage.
  */
-export const getTelegramConfig = (): TelegramBotConfig | null => {
+export const getTelegramConfig = (ownerId?: number | string): TelegramBotConfig | null => {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const activeOwnerId = ownerId || localStorage.getItem('selected_owner_id') || 'global';
+    const saved = localStorage.getItem(`telegram_bot_config_owner_${activeOwnerId}`);
     if (saved) {
       return JSON.parse(saved) as TelegramBotConfig;
     }
 
     // Fallback to store_settings
-    const storeSettingsRaw = localStorage.getItem("store_settings");
+    const storeSettingsRaw = localStorage.getItem(`store_settings_owner_${activeOwnerId}`) || localStorage.getItem("store_settings");
     if (storeSettingsRaw) {
       const storeSettings = JSON.parse(storeSettingsRaw);
       if (storeSettings.telegram_bot_token || storeSettings.telegram_chat_id || storeSettings.telegram_customer_bot_link) {
@@ -46,17 +47,20 @@ export const getTelegramConfig = (): TelegramBotConfig | null => {
 
 export const saveTelegramConfig = async (
   config: TelegramBotConfig,
+  ownerId?: number | string
 ): Promise<void> => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  const activeOwnerId = ownerId || localStorage.getItem('selected_owner_id') || 'global';
+  localStorage.setItem(`telegram_bot_config_owner_${activeOwnerId}`, JSON.stringify(config));
 
   // Merge into store_settings
   try {
-    const storeSettingsRaw = localStorage.getItem("store_settings");
+    const storeSettingsRaw = localStorage.getItem(`store_settings_owner_${activeOwnerId}`) || localStorage.getItem("store_settings");
     const storeSettings = storeSettingsRaw ? JSON.parse(storeSettingsRaw) : {};
     storeSettings.telegram_bot_token = config.bot_token;
     storeSettings.telegram_chat_id = config.chat_id;
     storeSettings.telegram_enabled = config.enabled ? "1" : "0";
     storeSettings.telegram_customer_bot_link = config.customer_bot_link || "";
+    localStorage.setItem(`store_settings_owner_${activeOwnerId}`, JSON.stringify(storeSettings));
     localStorage.setItem("store_settings", JSON.stringify(storeSettings));
     window.dispatchEvent(new Event("settings_updated"));
   } catch (e) {
@@ -73,7 +77,7 @@ export const saveTelegramConfig = async (
       telegram_chat_id: config.chat_id,
       telegram_enabled: config.enabled ? "1" : "0",
       telegram_customer_bot_link: config.customer_bot_link || "",
-    });
+    }, ownerId);
   } catch (err) {
     console.warn("Failed to persist telegram config to backend:", err);
   }

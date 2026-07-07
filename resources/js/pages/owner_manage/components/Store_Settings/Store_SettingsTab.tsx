@@ -5,6 +5,11 @@ import { storesService, Store_setting } from '@/api/owner/stores';
 import { resolveImageUrl } from '@/api/imageUtils';
 import { GroupDiv } from '../../helper/GroupDiv';
 import '@/pages/owner_manage/style/font.css';
+import { BrandIdentityOperationsTab } from './System_Website_Settings/Brand_Identity_Operations_Tab';
+import { CheckoutFormVisibility } from './System_Website_Settings/CheckoutForm_Visibility';
+import { FinancialConfigurationsTab } from './System_Website_Settings/Financial_Configurations_Tab';
+import { StoreOperationsContent } from './System_Website_Settings/Store_Operations_Content';
+import { useTranslation } from '../../lang/i18n';
 
 interface SettingsTabProps {
   profile: any;
@@ -12,7 +17,11 @@ interface SettingsTabProps {
 }
 
 export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) => {
+  const { t } = useTranslation();
+  const activeOwnerId = ownerId ?? profile?.user?.id;
   const [loading, setLoading] = useState(true);
+  const [activeInnerTab, setActiveInnerTab] = useState<'brand' | 'financial' | 'operations' | 'checkout'>('brand');
+
   const [storeName, setStoreName] = useState('');
   const [customDomain, setCustomDomain] = useState('');
   const [storePhone, setStorePhone] = useState('');
@@ -150,9 +159,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
 
       // Also update localStorage so App.tsx favicon effect fires right away
       try {
-        const saved = localStorage.getItem('store_settings');
+        const saved = localStorage.getItem(`store_settings_owner_${activeOwnerId}`);
         const current = saved ? JSON.parse(saved) : {};
         const updated = { ...current, favicon_url: cleanPath };
+        localStorage.setItem(`store_settings_owner_${activeOwnerId}`, JSON.stringify(updated));
         localStorage.setItem('store_settings', JSON.stringify(updated));
         window.dispatchEvent(new Event('settings_updated'));
       } catch (_) { }
@@ -179,18 +189,26 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
         if (data) {
           const loadSetting = (key: string, defaultValue: string) => {
             if (data[key] !== undefined && data[key] !== null) return String(data[key]);
-            const settings = Store_setting();
-            if (settings && settings[key] !== undefined) return String(settings[key]);
+            try {
+              const scoped = localStorage.getItem(`store_settings_owner_${activeOwnerId}`);
+              if (scoped) {
+                const parsed = JSON.parse(scoped);
+                if (parsed && parsed[key] !== undefined && parsed[key] !== null) {
+                  return String(parsed[key]);
+                }
+              }
+            } catch (_) {}
             return defaultValue;
           };
 
-          setStoreName(loadSetting('store_name', '---'));
+          setStoreName(loadSetting('store_name', ''));
           setCustomDomain(loadSetting('custom_domain', ''));
-          setStorePhone(loadSetting('store_phone', '---'));
-          setStoreEmail(loadSetting('store_email', '---'));
-          setStoreAddress(loadSetting('store_address', '---'));
-          setStoreLatitude(loadSetting('store_latitude', ''));
-          setStoreLongitude(loadSetting('store_longitude', ''));
+          setStorePhone(loadSetting('store_phone', ''));
+          setStoreEmail(loadSetting('store_email', ''));
+          const locationData = data.location_store;
+          setStoreAddress(locationData?.store_address || loadSetting('store_address', ''));
+          setStoreLatitude(locationData?.store_latitude ? String(locationData.store_latitude) : loadSetting('store_latitude', ''));
+          setStoreLongitude(locationData?.store_longitude ? String(locationData.store_longitude) : loadSetting('store_longitude', ''));
           setTaxPercentage(loadSetting('tax_percentage', '0'));
           setShippingFee(loadSetting('shipping_fee', '0'));
           setFreeShippingThreshold(loadSetting('free_shipping_threshold', '0'));
@@ -204,24 +222,24 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
           setAnnouncementText(loadSetting('announcement_text', ''));
           setFooterText(loadSetting('footer_text', ''));
           setCheckoutDeliveryAddress((loadSetting('checkout_delivery_address', 'open') as any));
-           setCheckoutPreferredContact((loadSetting('checkout_preferred_contact', 'open') as any));
-           setPreferredContactPhone(loadSetting('preferred_contact_phone', 'true') === 'true');
-           setPreferredContactTelegram(loadSetting('preferred_contact_telegram', 'true') === 'true');
-           setPreferredContactWhatsapp(loadSetting('preferred_contact_whatsapp', 'true') === 'true');
-           setCheckoutNote((loadSetting('checkout_note', 'open') as any));
-           setCheckoutClaimCode((loadSetting('checkout_claim_code', 'open') as any));
-         }
+          setCheckoutPreferredContact((loadSetting('checkout_preferred_contact', 'open') as any));
+          setPreferredContactPhone(loadSetting('preferred_contact_phone', 'true') === 'true');
+          setPreferredContactTelegram(loadSetting('preferred_contact_telegram', 'true') === 'true');
+          setPreferredContactWhatsapp(loadSetting('preferred_contact_whatsapp', 'true') === 'true');
+          setCheckoutNote((loadSetting('checkout_note', 'open') as any));
+          setCheckoutClaimCode((loadSetting('checkout_claim_code', 'open') as any));
+        }
       })
       .catch((err) => {
         console.warn('Failed to fetch store settings from API, loading local backup.', err);
-        const saved = localStorage.getItem('store_settings');
+        const saved = localStorage.getItem(`store_settings_owner_${activeOwnerId}`);
         if (saved) {
           const parsed = JSON.parse(saved);
           setStoreName(parsed.store_name || 'Food');
           setCustomDomain(parsed.custom_domain || '');
           setStorePhone(parsed.store_phone || '+855 12 345 678');
           setStoreEmail(parsed.store_email || 'contact@food.com');
-          setStoreAddress(parsed.store_address || '---');
+          setStoreAddress(parsed.store_address || '');
           setTaxPercentage(parsed.tax_percentage || '0');
           setShippingFee(parsed.shipping_fee || '0');
           setFreeShippingThreshold(parsed.free_shipping_threshold || '0');
@@ -235,13 +253,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
           setAnnouncementText(parsed.announcement_text || '');
           setFooterText(parsed.footer_text || '');
           setCheckoutDeliveryAddress(parsed.checkout_delivery_address || 'open');
-           setCheckoutPreferredContact(parsed.checkout_preferred_contact || 'open');
-           setPreferredContactPhone(parsed.preferred_contact_phone === 'true' || parsed.preferred_contact_phone === true || parsed.preferred_contact_phone === undefined);
-           setPreferredContactTelegram(parsed.preferred_contact_telegram === 'true' || parsed.preferred_contact_telegram === true || parsed.preferred_contact_telegram === undefined);
-           setPreferredContactWhatsapp(parsed.preferred_contact_whatsapp === 'true' || parsed.preferred_contact_whatsapp === true || parsed.preferred_contact_whatsapp === undefined);
-           setCheckoutNote(parsed.checkout_note || 'open');
-           setCheckoutClaimCode(parsed.checkout_claim_code || 'open');
-         }
+          setCheckoutPreferredContact(parsed.checkout_preferred_contact || 'open');
+          setPreferredContactPhone(parsed.preferred_contact_phone === 'true' || parsed.preferred_contact_phone === true || parsed.preferred_contact_phone === undefined);
+          setPreferredContactTelegram(parsed.preferred_contact_telegram === 'true' || parsed.preferred_contact_telegram === true || parsed.preferred_contact_telegram === undefined);
+          setPreferredContactWhatsapp(parsed.preferred_contact_whatsapp === 'true' || parsed.preferred_contact_whatsapp === true || parsed.preferred_contact_whatsapp === undefined);
+          setCheckoutNote(parsed.checkout_note || 'open');
+          setCheckoutClaimCode(parsed.checkout_claim_code || 'open');
+        }
       })
       .finally(() => {
         setLoading(false);
@@ -249,16 +267,21 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
   }, [ownerId, profile]);
 
   const handleSaveSettings = () => {
-    // Retrieve existing website settings from local storage to preserve all other keys (like payment_methods, pusher, etc.)
     let existingSettings: Record<string, any> = {};
     try {
-      const saved = localStorage.getItem('store_settings');
+      const saved = localStorage.getItem(`store_settings_owner_${activeOwnerId}`);
       if (saved) {
         existingSettings = JSON.parse(saved);
       }
     } catch (e) {
       console.warn('Failed to parse website settings from local storage', e);
     }
+
+    const location_store = {
+      store_address: storeAddress,
+      store_latitude: storeLatitude,
+      store_longitude: storeLongitude,
+    };
 
     const updatedFields: Record<string, any> = {
       store_name: storeName,
@@ -287,29 +310,81 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
       checkout_claim_code: checkoutClaimCode,
       store_latitude: storeLatitude,
       store_longitude: storeLongitude,
+      location_store: location_store,
+    };
+
+    const brand_identity_operations = {
+      store_name: storeName,
+      custom_domain: customDomain,
+      store_phone: storePhone,
+      store_email: storeEmail,
+      store_address: storeAddress,
+      store_latitude: storeLatitude,
+      store_longitude: storeLongitude,
+      logo_url: logoUrl,
+      favicon_url: faviconUrl,
+    };
+
+    const financial_configurations = {
+      tax_percentage: taxPercentage,
+      shipping_fee: shippingFee,
+      free_shipping_threshold: freeShippingThreshold,
+      currency: currency,
+    };
+
+    const store_operations_content = {
+      maintenance_mode: String(maintenanceMode),
+      guest_checkout: String(guestCheckout),
+      customer_chat: String(customerChat),
+      send_chat_order: String(sendChatOrder),
+      announcement_text: announcementText,
+      footer_text: footerText,
+    };
+
+    const checkout_form_visibility = {
+      checkout_delivery_address: checkoutDeliveryAddress,
+      checkout_preferred_contact: checkoutPreferredContact,
+      preferred_contact_phone: String(preferredContactPhone),
+      preferred_contact_telegram: String(preferredContactTelegram),
+      preferred_contact_whatsapp: String(preferredContactWhatsapp),
+      checkout_note: checkoutNote,
+      checkout_claim_code: checkoutClaimCode,
+    };
+
+    const payload = {
+      brand_identity_operations,
+      financial_configurations,
+      store_operations_content,
+      checkout_form_visibility,
+      location_store,
     };
 
     const mergedSettings = {
       ...existingSettings,
       ...updatedFields,
+      ...payload,
     };
 
-    // Save locally
+    localStorage.setItem(`store_settings_owner_${activeOwnerId}`, JSON.stringify(mergedSettings));
     localStorage.setItem('store_settings', JSON.stringify(mergedSettings));
     window.dispatchEvent(new Event('settings_updated'));
 
-    // Update API — pass ownerId only if user role is admin to hit PUT /stores/{id}
     const isAdmin = profile?.user?.role === 'admin';
     const targetOwnerId = isAdmin ? ownerId : undefined;
 
-    toast.promise(
-      storesService.updateStore(updatedFields, targetOwnerId),
-      {
-        loading: 'Saving store configurations to server...',
-        success: 'Store and website configurations saved successfully!',
-        error: 'Failed to save store configurations to server.',
+    const saveSettings = async () => {
+      const loadToast = toast.loading('Saving store configurations to server...');
+      try {
+        await storesService.updateStore(payload, targetOwnerId);
+        toast.dismiss();
+        toast.success('Store and website configurations saved successfully!');
+      } catch (err: any) {
+        toast.dismiss();
+        const detail = err?.response?.data?.detail || err?.response?.data?.message || 'Failed to save store configurations to server.';
+        toast.error(detail);
       }
-    );
+    };
+    saveSettings();
   };
 
   const handleDiscardSettings = () => {
@@ -318,13 +393,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
     storesService.getStore(activeOwnerId)
       .then((data) => {
         if (data) {
-          setStoreName(data.store_name || '---');
+          setStoreName(data.store_name || '');
           setCustomDomain(data.custom_domain || '');
-          setStorePhone(data.store_phone || '---');
-          setStoreEmail(data.store_email || '---');
-          setStoreAddress(data.store_address || '---');
-          setStoreLatitude(data.store_latitude ? String(data.store_latitude) : '');
-          setStoreLongitude(data.store_longitude ? String(data.store_longitude) : '');
+          setStorePhone(data.store_phone || '');
+          setStoreEmail(data.store_email || '');
+          const locationData = data.location_store;
+          setStoreAddress(locationData?.store_address || data.store_address || '');
+          setStoreLatitude(locationData?.store_latitude ? String(locationData.store_latitude) : (data.store_latitude ? String(data.store_latitude) : ''));
+          setStoreLongitude(locationData?.store_longitude ? String(locationData.store_longitude) : (data.store_longitude ? String(data.store_longitude) : ''));
           setTaxPercentage(data.tax_percentage !== undefined && data.tax_percentage !== null ? String(data.tax_percentage) : '0');
           setShippingFee(data.shipping_fee !== undefined && data.shipping_fee !== null ? String(data.shipping_fee) : '0');
           setFreeShippingThreshold(data.free_shipping_threshold !== undefined && data.free_shipping_threshold !== null ? String(data.free_shipping_threshold) : '0');
@@ -338,13 +414,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
           setAnnouncementText(data.announcement_text || '');
           setFooterText(data.footer_text || '');
           setCheckoutDeliveryAddress(data.checkout_delivery_address || 'open');
-           setCheckoutPreferredContact(data.checkout_preferred_contact || 'open');
-           setPreferredContactPhone(data.preferred_contact_phone === 'true' || data.preferred_contact_phone === true || data.preferred_contact_phone === undefined);
-           setPreferredContactTelegram(data.preferred_contact_telegram === 'true' || data.preferred_contact_telegram === true || data.preferred_contact_telegram === undefined);
-           setPreferredContactWhatsapp(data.preferred_contact_whatsapp === 'true' || data.preferred_contact_whatsapp === true || data.preferred_contact_whatsapp === undefined);
-           setCheckoutNote(data.checkout_note || 'open');
-           setCheckoutClaimCode(data.checkout_claim_code || 'open');
-         }
+          setCheckoutPreferredContact(data.checkout_preferred_contact || 'open');
+          setPreferredContactPhone(data.preferred_contact_phone === 'true' || data.preferred_contact_phone === true || data.preferred_contact_phone === undefined);
+          setPreferredContactTelegram(data.preferred_contact_telegram === 'true' || data.preferred_contact_telegram === true || data.preferred_contact_telegram === undefined);
+          setPreferredContactWhatsapp(data.preferred_contact_whatsapp === 'true' || data.preferred_contact_whatsapp === true || data.preferred_contact_whatsapp === undefined);
+          setCheckoutNote(data.checkout_note || 'open');
+          setCheckoutClaimCode(data.checkout_claim_code || 'open');
+        }
         toast.success('Modifications discarded. Reverted to stored server config.');
       })
       .catch((err) => {
@@ -366,526 +442,160 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ profile, ownerId }) =>
   }
 
   return (
-    <div className="border p-6 sm:p-8 rounded-[5px] shadow-xs space-y-8 animate-fade-in font-kuntomruy custom-card-container">
+    <div className="bg-white border border-slate-100 p-6 sm:p-8 rounded-[8px] shadow-xs space-y-8 animate-fade-in font-kuntomruy custom-card-container">
+      {/* Title */}
       <div>
         <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
-          <FiSettings className="text-orange-500" />
-          <span>System & Website Settings</span>
+          <FiSettings className="text-orange-500 w-6 h-6" />
+          <span>{t('settings.title')}</span>
         </h2>
-        <p className="text-slate-400 text-xs sm:text-sm mt-1">Configure store brand, operational states, contact details, social links, and tax parameters.</p>
+        <p className="text-slate-400 text-xs sm:text-sm mt-1">{t('settings.subtitle')}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-        {/* Column 1 */}
-        <div className="space-y-6">
-          {/* Section 1: Brand details */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Brand Identity & Assets</h4>
-            <GroupDiv>
+      {/* Tabs Menu */}
+      <div className="flex border-b border-slate-200 overflow-x-auto pb-px gap-6 no-scrollbar select-none">
+        <button
+          onClick={() => setActiveInnerTab('brand')}
+          className={`flex items-center gap-2 pb-3.5 text-xs font-black uppercase tracking-wider cursor-pointer border-none bg-transparent whitespace-nowrap transition-all duration-200 outline-none ${
+            activeInnerTab === 'brand'
+              ? 'text-orange-500 border-b-2 border-orange-500'
+              : 'text-slate-400 hover:text-slate-655'
+          }`}
+        >
+          <FiImage className="w-4 h-4" />
+          <span>{t('settings.brand_tab')}</span>
+        </button>
 
-              {/* Store Brand Name */}
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Store Brand Name</label>
-                <input
-                  type="text"
-                  value={storeName}
-                  onChange={(e) => setStoreName(e.target.value)}
-                  placeholder="Name Store ..."
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
-                />
-              </div>
+        <button
+          onClick={() => setActiveInnerTab('financial')}
+          className={`flex items-center gap-2 pb-3.5 text-xs font-black uppercase tracking-wider cursor-pointer border-none bg-transparent whitespace-nowrap transition-all duration-200 outline-none ${
+            activeInnerTab === 'financial'
+              ? 'text-orange-500 border-b-2 border-orange-500'
+              : 'text-slate-400 hover:text-slate-655'
+          }`}
+        >
+          <FiSettings className="w-4 h-4" />
+          <span>{t('settings.financial_tab')}</span>
+        </button>
 
-              {/* Custom Domain */}
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Custom Domain / Subdomain</label>
-                <input
-                  type="text"
-                  value={customDomain}
-                  onChange={(e) => setCustomDomain(e.target.value)}
-                  placeholder="e.g. our20s"
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
-                />
-                <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                  Used by Next.js storefront to resolve this store (e.g. <code>our20s</code> for vhsite.vercel.app/our20s, or custom domain).
-                </p>
-              </div>
+        <button
+          onClick={() => setActiveInnerTab('operations')}
+          className={`flex items-center gap-2 pb-3.5 text-xs font-black uppercase tracking-wider cursor-pointer border-none bg-transparent whitespace-nowrap transition-all duration-200 outline-none ${
+            activeInnerTab === 'operations'
+              ? 'text-orange-500 border-b-2 border-orange-500'
+              : 'text-slate-400 hover:text-slate-655'
+          }`}
+        >
+          <FiSettings className="w-4 h-4" />
+          <span>{t('settings.operations_tab')}</span>
+        </button>
 
-              {/* Upload image Logo */}
-              <div className="space-y-2">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Brand Logo Image</label>
-
-                <div className="flex items-start space-x-4">
-                  {/* Logo Preview Container */}
-                  <div className="w-24 h-24 rounded-[5px] border border-slate-200 bg-white flex items-center justify-center overflow-hidden shrink-0 relative group">
-                    {logoUrl?.trim() && !logoError ? (
-                      <img
-                        src={resolveImageUrl(logoUrl)}
-                        alt="Logo Preview"
-                        className="w-full h-full object-contain p-1.5 bg-white"
-                        onError={() => setLogoError(true)}
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-slate-300">
-                        <FiImage className="w-8 h-8 stroke-[1.5]" />
-                        <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">No Logo</span>
-                      </div>
-                    )}
-                    {uploadingLogo && (
-                      <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
-                        <FiLoader className="w-5 h-5 text-orange-500 animate-spin" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Upload Actions */}
-                  <div className="space-y-2">
-                    <div className="flex space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => logoInputRef.current?.click()}
-                        className="px-3.5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-[5px] text-xs font-extrabold flex items-center space-x-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-98 cursor-pointer border-none"
-                        disabled={uploadingLogo}
-                      >
-                        <FiUploadCloud className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Upload Logo</span>
-                      </button>
-                      {logoUrl && (
-                        <button
-                          type="button"
-                          onClick={() => setLogoUrl('')}
-                          className="p-2 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-[5px] border border-slate-200 hover:border-rose-100 transition-all cursor-pointer"
-                          title="Remove Logo"
-                        >
-                          <FiTrash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                      JPG, PNG, WebP or SVG.<br />
-                      Max size: 2MB.<br />
-                      Recommended: 250x100px.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Hidden file input */}
-                <input
-                  type="file"
-                  ref={logoInputRef}
-                  onChange={handleLogoUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-              </div>
-
-              {/* Upload image Favicon */}
-              <div className="space-y-2">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Logo Favicon (Tab Icon)</label>
-
-                <div className="flex items-start space-x-4">
-                  {/* Favicon Preview Container */}
-                  <div className="w-24 h-24 rounded-[5px] border border-slate-200 bg-white flex items-center justify-center overflow-hidden shrink-0 relative group">
-                    {faviconUrl?.trim() && !faviconError ? (
-                      <img
-                        src={resolveImageUrl(faviconUrl)}
-                        alt="Favicon Preview"
-                        className="w-10 h-10 object-contain p-1 bg-white rounded-md border border-slate-100 shadow-2xs"
-                        onError={() => setFaviconError(true)}
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-slate-300">
-                        <FiGlobe className="w-8 h-8 stroke-[1.5]" />
-                        <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">No Icon</span>
-                      </div>
-                    )}
-                    {uploadingFavicon && (
-                      <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
-                        <FiLoader className="w-5 h-5 text-orange-500 animate-spin" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Upload Actions */}
-                  <div className="space-y-2">
-                    <div className="flex space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => faviconInputRef.current?.click()}
-                        className="px-3.5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-[5px] text-xs font-extrabold flex items-center space-x-1.5 transition-all shadow-2xs hover:shadow-xs active:scale-98 cursor-pointer border-none"
-                        disabled={uploadingFavicon}
-                      >
-                        <FiUploadCloud className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Upload Favicon</span>
-                      </button>
-                      {faviconUrl && (
-                        <button
-                          type="button"
-                          onClick={() => setFaviconUrl('')}
-                          className="p-2 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-[5px] border border-slate-200 hover:border-rose-100 transition-all cursor-pointer"
-                          title="Remove Favicon"
-                        >
-                          <FiTrash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                      ICO, PNG, WebP or SVG.<br />
-                      Max size: 1MB.<br />
-                      Recommended: 32x32px.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Hidden file input */}
-                <input
-                  type="file"
-                  ref={faviconInputRef}
-                  onChange={handleFaviconUpload}
-                  accept="image/*,.ico"
-                  className="hidden"
-                />
-              </div>
-
-            </GroupDiv>
-          </div>
-
-          {/* Section 2: Contacts & Operations */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Contact & Operations</h4>
-            <GroupDiv>
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Store Telephone</label>
-                <input
-                  type="text"
-                  value={storePhone}
-                  onChange={(e) => setStorePhone(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Store Email</label>
-                <input
-                  type="email"
-                  value={storeEmail}
-                  onChange={(e) => setStoreEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Store Address</label>
-                <input
-                  type="text"
-                  value={storeAddress}
-                  onChange={(e) => setStoreAddress(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
-                />
-              </div>
-
-              {/* Store Latitude and Longitude */}
-              <div className="flex justify-between items-center pt-2">
-                <label className="text-xs font-bold text-slate-700 block">Store Coordinates</label>
-                <button
-                  type="button"
-                  onClick={handleAutoGetStoreLocation}
-                  className="px-3 py-1 bg-orange-50 hover:bg-orange-100 text-orange-650 rounded-[5px] text-[10px] font-black uppercase tracking-wider transition-all border border-orange-100 cursor-pointer flex items-center gap-1"
-                >
-                  <FiMapPin className="w-3 h-3 stroke-[2.5]" /> Auto-Detect GPS
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 block">Store Latitude</label>
-                  <input
-                    type="number"
-                    step="0.00000001"
-                    value={storeLatitude}
-                    onChange={(e) => setStoreLatitude(e.target.value)}
-                    placeholder="e.g. 11.5564"
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 block">Store Longitude</label>
-                  <input
-                    type="number"
-                    step="0.00000001"
-                    value={storeLongitude}
-                    onChange={(e) => setStoreLongitude(e.target.value)}
-                    placeholder="e.g. 104.9282"
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
-                  />
-                </div>
-              </div>
-
-              {/* Store Map Preview */}
-              {(storeLatitude || storeLongitude || storeAddress) && (
-                <div className="pt-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Store Location Preview</label>
-                  <div className="w-full h-44 rounded-[5px] overflow-hidden border border-slate-200 bg-slate-50 relative">
-                    <iframe
-                      title="Store Map Preview"
-                      src={
-                        storeLatitude && storeLongitude
-                          ? `https://maps.google.com/maps?q=${parseFloat(storeLatitude)},${parseFloat(storeLongitude)}&z=15&output=embed`
-                          : `https://maps.google.com/maps?q=${encodeURIComponent(storeAddress)}&z=15&output=embed`
-                      }
-                      className="w-full h-full border-none"
-                      allowFullScreen
-                      loading="lazy"
-                    />
-                  </div>
-                </div>
-              )}
-            </GroupDiv>
-          </div>
-        </div>
-
-        {/* Column 2 */}
-        <div className="space-y-6">
-          {/* Section 3: Financial configuration */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Financial Configurations</h4>
-            <GroupDiv>
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">VAT / Sales Tax Rate (%)</label>
-                <input
-                  type="number"
-                  value={taxPercentage}
-                  onChange={(e) => setTaxPercentage(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-black"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Base Currency Symbol</label>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                >
-                  <option value="USD">USD ($) - US Dollar</option>
-                  <option value="KHR">KHR (៛) - Cambodian Riel</option>
-                  <option value="EUR">EUR (€) - Euro</option>
-                </select>
-              </div>
-            </GroupDiv>
-          </div>
-
-          {/* Section 4: Store Operations & Content */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Store Operations & Content</h4>
-            <GroupDiv>
-              <div className="space-y-2">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Maintenance Mode</label>
-                <div className="flex items-center space-x-3 p-3 rounded-[5px] border border-black/10">
-                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={maintenanceMode}
-                      onChange={(e) => setMaintenanceMode(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-250 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500" />
-                  </label>
-                  <span className="text-xs font-bold text-inherit opacity-75">{maintenanceMode ? 'Store is Offline' : 'Store is Online'}</span>
-                </div>
-                <p className="text-[10px] text-slate-400 font-medium">When enabled, customers will see a maintenance page instead of your storefront.</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Guest Checkout</label>
-                <div className="flex items-center space-x-3 bg-white p-3 rounded-[5px] border border-slate-200">
-                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={guestCheckout}
-                      onChange={(e) => setGuestCheckout(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500" />
-                  </label>
-                  <span className="text-xs font-bold text-slate-600">{guestCheckout ? 'Enabled (Any user)' : 'Disabled (Login Required)'}</span>
-                </div>
-                <p className="text-[10px] text-slate-400 font-medium">Allow customers to checkout without creating an account.</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Customer Live Chat Widget</label>
-                <div className="flex items-center space-x-3 bg-white p-3 rounded-[5px] border border-slate-200">
-                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={customerChat}
-                      onChange={(e) => setCustomerChat(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500" />
-                  </label>
-                  <span className="text-xs font-bold text-slate-600">{customerChat ? 'Enabled (Show Chat Bubble)' : 'Disabled (Close/Hide Chat Widget)'}</span>
-                </div>
-                <p className="text-[10px] text-slate-400 font-medium">Control whether the live chat widget is visible to customers on your storefront.</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Send Chat Order</label>
-                <div className="flex items-center space-x-3 bg-white p-3 rounded-[5px] border border-slate-200">
-                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={sendChatOrder}
-                      onChange={(e) => setSendChatOrder(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500" />
-                  </label>
-                  <span className="text-xs font-bold text-slate-600">{sendChatOrder ? 'Enabled (Send Chat Order)' : 'Disabled (Do Not Send Chat Order)'}</span>
-                </div>
-                <p className="text-[10px] text-slate-400 font-medium">Automatically send order details to the customer's live chat conversation on successful checkout.</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Website Announcement Bar</label>
-                <input
-                  type="text"
-                  value={announcementText}
-                  onChange={(e) => setAnnouncementText(e.target.value)}
-                  placeholder="e.g. Free delivery on orders over $50!"
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Website Footer Copyright / Info</label>
-                <textarea
-                  value={footerText}
-                  onChange={(e) => setFooterText(e.target.value)}
-                  placeholder="e.g. © 2026 Your Store Name. All rights reserved."
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-semibold min-h-[80px] resize-none"
-                />
-              </div>
-            </GroupDiv>
-          </div>
-        </div>
-
-        {/* Column 3 */}
-        <div className="space-y-6">
-          {/* Section 5: Checkout Form Configurations */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Checkout Fields Visibility & Validation</h4>
-            <GroupDiv>
-              {/* Delivery Address Field */}
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Delivery Address Field</label>
-                <select
-                  value={checkoutDeliveryAddress}
-                  onChange={(e) => setCheckoutDeliveryAddress(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                >
-                  <option value="open">Required (Open)</option>
-                  <option value="null">Optional (Null)</option>
-                  <option value="close">Hidden (Close)</option>
-                </select>
-                <p className="text-[10px] text-slate-400 font-medium">Control whether delivery address is required, optional, or hidden on checkout.</p>
-              </div>
-
-              {/* Preferred Contact Line Field */}
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Preferred Contact Field</label>
-                <select
-                  value={checkoutPreferredContact}
-                  onChange={(e) => setCheckoutPreferredContact(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                >
-                  <option value="open">Required (Open)</option>
-                  <option value="null">Optional (Null)</option>
-                  <option value="close">Hidden (Close)</option>
-                </select>
-                <p className="text-[10px] text-slate-400 font-medium">Control whether preferred contact method/details are required, optional, or hidden.</p>
-              </div>
-
-              {checkoutPreferredContact !== 'close' && (
-                <div className="space-y-2 pt-1">
-                  <label className="text-xs font-bold text-slate-700 block">Enabled Contact Channels</label>
-                  <div className="space-y-2 bg-slate-50 p-3 rounded-[5px] border border-slate-200">
-                    <label className="flex items-center space-x-2.5 cursor-pointer text-xs font-bold text-slate-650">
-                      <input
-                        type="checkbox"
-                        checked={preferredContactPhone}
-                        onChange={(e) => setPreferredContactPhone(e.target.checked)}
-                        className="w-4 h-4 rounded text-orange-550 border-slate-350 focus:ring-orange-550 cursor-pointer"
-                      />
-                      <span>Phone Call (+855...)</span>
-                    </label>
-                    <label className="flex items-center space-x-2.5 cursor-pointer text-xs font-bold text-slate-650">
-                      <input
-                        type="checkbox"
-                        checked={preferredContactTelegram}
-                        onChange={(e) => setPreferredContactTelegram(e.target.checked)}
-                        className="w-4 h-4 rounded text-orange-550 border-slate-355 focus:ring-orange-555 cursor-pointer"
-                      />
-                      <span>Telegram (username/phone)</span>
-                    </label>
-                    <label className="flex items-center space-x-2.5 cursor-pointer text-xs font-bold text-slate-650">
-                      <input
-                        type="checkbox"
-                        checked={preferredContactWhatsapp}
-                        onChange={(e) => setPreferredContactWhatsapp(e.target.checked)}
-                        className="w-4 h-4 rounded text-orange-550 border-slate-355 focus:ring-orange-555 cursor-pointer"
-                      />
-                      <span>WhatsApp (phone)</span>
-                    </label>
-                  </div>
-                  <p className="text-[10px] text-slate-400 font-medium">Select which contact channels are allowed for the customer during checkout.</p>
-                </div>
-              )}
-
-              {/* Note Field */}
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Order Note Field</label>
-                <select
-                  value={checkoutNote}
-                  onChange={(e) => setCheckoutNote(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                >
-                  <option value="open">Required (Open)</option>
-                  <option value="null">Optional (Null)</option>
-                  <option value="close">Hidden (Close)</option>
-                </select>
-                <p className="text-[10px] text-slate-400 font-medium">Control whether the order note field is required, optional, or hidden.</p>
-              </div>
-
-              {/* Claim Code Field */}
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-bold text-slate-700 block">Claim Code / Voucher Field</label>
-                <select
-                  value={checkoutClaimCode}
-                  onChange={(e) => setCheckoutClaimCode(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-[5px] text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                >
-                  <option value="open">Required (Open)</option>
-                  <option value="null">Optional (Null)</option>
-                  <option value="close">Hidden (Close)</option>
-                </select>
-                <p className="text-[10px] text-slate-400 font-medium">Control whether the voucher claim code input is required, optional, or hidden.</p>
-              </div>
-            </GroupDiv>
-          </div>
-        </div>
+        <button
+          onClick={() => setActiveInnerTab('checkout')}
+          className={`flex items-center gap-2 pb-3.5 text-xs font-black uppercase tracking-wider cursor-pointer border-none bg-transparent whitespace-nowrap transition-all duration-200 outline-none ${
+            activeInnerTab === 'checkout'
+              ? 'text-orange-500 border-b-2 border-orange-500'
+              : 'text-slate-400 hover:text-slate-655'
+          }`}
+        >
+          <FiSettings className="w-4 h-4" />
+          <span>{t('settings.checkout_tab')}</span>
+        </button>
       </div>
 
-      <div className="pt-6 border-t border-slate-100 flex justify-end space-x-3">
+      {/* Tab Contents */}
+      <div className="min-h-[300px]">
+        {activeInnerTab === 'brand' && (
+          <BrandIdentityOperationsTab
+            storeName={storeName}
+            setStoreName={setStoreName}
+            customDomain={customDomain}
+            setCustomDomain={setCustomDomain}
+            logoUrl={logoUrl}
+            setLogoUrl={setLogoUrl}
+            logoError={logoError}
+            setLogoError={setLogoError}
+            uploadingLogo={uploadingLogo}
+            handleLogoUpload={handleLogoUpload}
+            logoInputRef={logoInputRef}
+            faviconUrl={faviconUrl}
+            setFaviconUrl={setFaviconUrl}
+            faviconError={faviconError}
+            setFaviconError={setFaviconError}
+            uploadingFavicon={uploadingFavicon}
+            handleFaviconUpload={handleFaviconUpload}
+            faviconInputRef={faviconInputRef}
+            storePhone={storePhone}
+            setStorePhone={setStorePhone}
+            storeEmail={storeEmail}
+            setStoreEmail={setStoreEmail}
+            storeAddress={storeAddress}
+            setStoreAddress={setStoreAddress}
+            storeLatitude={storeLatitude}
+            setStoreLatitude={setStoreLatitude}
+            storeLongitude={storeLongitude}
+            setStoreLongitude={setStoreLongitude}
+            handleAutoGetStoreLocation={handleAutoGetStoreLocation}
+          />
+        )}
+
+        {activeInnerTab === 'financial' && (
+          <FinancialConfigurationsTab
+            taxPercentage={taxPercentage}
+            setTaxPercentage={setTaxPercentage}
+            currency={currency}
+            setCurrency={setCurrency}
+          />
+        )}
+
+        {activeInnerTab === 'operations' && (
+          <StoreOperationsContent
+            maintenanceMode={maintenanceMode}
+            setMaintenanceMode={setMaintenanceMode}
+            guestCheckout={guestCheckout}
+            setGuestCheckout={setGuestCheckout}
+            customerChat={customerChat}
+            setCustomerChat={setCustomerChat}
+            sendChatOrder={sendChatOrder}
+            setSendChatOrder={setSendChatOrder}
+            announcementText={announcementText}
+            setAnnouncementText={setAnnouncementText}
+            footerText={footerText}
+            setFooterText={setFooterText}
+          />
+        )}
+
+        {activeInnerTab === 'checkout' && (
+          <CheckoutFormVisibility
+            checkoutDeliveryAddress={checkoutDeliveryAddress}
+            setCheckoutDeliveryAddress={setCheckoutDeliveryAddress}
+            checkoutPreferredContact={checkoutPreferredContact}
+            setCheckoutPreferredContact={setCheckoutPreferredContact}
+            preferredContactPhone={preferredContactPhone}
+            setPreferredContactPhone={setPreferredContactPhone}
+            preferredContactTelegram={preferredContactTelegram}
+            setPreferredContactTelegram={setPreferredContactTelegram}
+            preferredContactWhatsapp={preferredContactWhatsapp}
+            setPreferredContactWhatsapp={setPreferredContactWhatsapp}
+            checkoutNote={checkoutNote}
+            setCheckoutNote={setCheckoutNote}
+            checkoutClaimCode={checkoutClaimCode}
+            setCheckoutClaimCode={setCheckoutClaimCode}
+          />
+        )}
+      </div>
+
+      {/* Footer actions */}
+      <div className="pt-6 border-t border-slate-200 flex justify-end space-x-3">
         <button
           onClick={handleDiscardSettings}
-          className="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[5px] text-xs font-extrabold transition-all cursor-pointer"
+          className="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-655 rounded-[5px] text-xs font-extrabold transition-all cursor-pointer border border-slate-200"
         >
           Discard Changes
         </button>
         <button
           onClick={handleSaveSettings}
-          className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-[5px] text-xs font-extrabold shadow-xs active:scale-98 transition-all cursor-pointer"
+          className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-[5px] text-xs font-black shadow-xs hover:shadow-sm active:scale-98 transition-all cursor-pointer border-none uppercase tracking-wider"
         >
           Save System Configs
         </button>

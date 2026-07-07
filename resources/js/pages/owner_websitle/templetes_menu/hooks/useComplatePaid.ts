@@ -9,8 +9,7 @@ import { nullOrRequest } from '../nullOrRequest';
 export const useComplatePaid = (
     transactionId: string | null,
     isOpen: boolean,
-    onSuccess: () => void,
-    paymentMethod?: string
+    onSuccess: () => void
 ) => {
     const [isPolling, setIsPolling] = useState(false);
 
@@ -24,8 +23,7 @@ export const useComplatePaid = (
         setIsPolling(true);
         const checkStatus = async () => {
             try {
-                const isBakong = paymentMethod?.toLowerCase() === 'bakong';
-                const response = await paymentsService.checkTransaction(resolvedTxId, false, isBakong);
+                const response = await paymentsService.checkTransaction(resolvedTxId);
                 
                 // Robust check supporting multiple property naming formats from real/mock payment servers
                 const isPaid = response.success && (
@@ -51,7 +49,7 @@ export const useComplatePaid = (
             clearInterval(interval);
             setIsPolling(false);
         };
-    }, [isOpen, transactionId, onSuccess, paymentMethod]);
+    }, [isOpen, transactionId, onSuccess]);
 
     return { isPolling };
 };

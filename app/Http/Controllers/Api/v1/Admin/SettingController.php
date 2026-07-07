@@ -88,7 +88,7 @@ class SettingController extends Controller
             'store_name',
             'store_phone',
             'store_email',
-            'store_address',
+            'location_store',
             'tax_percentage',
             'subscription_tier',
             'custom_domain',

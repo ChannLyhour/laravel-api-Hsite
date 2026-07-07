@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import React from 'react';
 import { FiX, FiChevronRight } from 'react-icons/fi';
 import '@/pages/owner_manage/style/font.css';
+import { DragDetail } from './DragDetail';
 
 export interface FilterOption {
   id: string;
@@ -41,20 +41,6 @@ export const HelperFilter: React.FC<HelperFilterProps> = ({
   onApply,
   children,
 }) => {
-  // Prevent body scroll when drawer is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
   const handleCheckboxChange = (sectionId: string, optionId: string, checked: boolean) => {
     const currentList = Array.isArray(selectedValues[sectionId]) ? selectedValues[sectionId] : [];
     let updatedList: string[];
@@ -66,23 +52,15 @@ export const HelperFilter: React.FC<HelperFilterProps> = ({
     onChange(sectionId, updatedList);
   };
 
-  return createPortal(
-    <>
-      {/* Backdrop overlay */}
-      <div
-        className="fixed inset-0 bg-slate-900/40 z-[200] transition-opacity duration-300 ease-in-out"
-        onClick={onClose}
-      />
-
-      {/* Drawer panel */}
-      <div className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-slate-50 border-l border-slate-200 z-[210] flex flex-col shadow-2xl animate-slide-left font-kuntomruy">
+  return (
+    <DragDetail isOpen={isOpen} onClose={onClose} maxHeight="90vh" maxWidth="max-w-md">
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-50/80 to-white px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
           <h3 className="text-base font-extrabold text-slate-800 tracking-tight">Filter</h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-[5px] hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-none bg-transparent"
+            className="p-1.5 rounded-[5px] hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors border-none bg-transparent cursor-pointer"
           >
             <FiX className="w-5 h-5" />
           </button>
@@ -115,7 +93,7 @@ export const HelperFilter: React.FC<HelperFilterProps> = ({
                         key={opt.id}
                         className="flex items-center justify-between group hover:bg-slate-50/50 p-1 rounded-[5px] transition-colors"
                       >
-                        <label className="flex items-center space-x-2.5 cursor-pointer text-xs font-semibold text-slate-650 w-full select-none">
+                        <label className="flex items-center space-x-2.5 cursor-pointer text-xs font-semibold text-slate-900 w-full select-none">
                           {isRadio ? (
                             <input
                               type="radio"
@@ -141,7 +119,7 @@ export const HelperFilter: React.FC<HelperFilterProps> = ({
                           <button
                             type="button"
                             onClick={() => opt.onArrowClick?.()}
-                            className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-650 transition-colors border-none bg-transparent cursor-pointer"
+                            className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-700 transition-colors border-none bg-transparent cursor-pointer"
                           >
                             <FiChevronRight className="w-4 h-4" />
                           </button>
@@ -184,9 +162,6 @@ export const HelperFilter: React.FC<HelperFilterProps> = ({
             Apply
           </button>
         </div>
-      </div>
-    </>
-    ,
-    document.body
+    </DragDetail>
   );
 };

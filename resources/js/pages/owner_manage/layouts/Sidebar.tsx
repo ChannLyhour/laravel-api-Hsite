@@ -242,7 +242,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (activeTab.startsWith('marketing')) return 'marketing';
     if (['customers', 'customer-reviews', 'partner-stores'].includes(activeTab)) return 'people';
     if (['pages', 'posts', 'pages-builder'].includes(activeTab)) return 'content';
-    if (['theme', 'settings', 'social-media', 'settings-delivery-methods', 'settings-delivery-zones', 'settings-thirdparty-payment', 'settings-thirdparty-firebase', 'settings-thirdparty-pusher', 'settings-thirdparty-marketing', 'settings-thirdparty-oauth', 'settings-thirdparty-telegram', 'settings-thirdparty-gmailotp', 'customize-system'].includes(activeTab)) return 'settings';
+    if (['settings-delivery-methods', 'settings-delivery-zones'].includes(activeTab)) return 'delivery';
+    if (['theme', 'settings', 'social-media', 'settings-thirdparty-payment', 'settings-thirdparty-firebase', 'settings-thirdparty-pusher', 'settings-thirdparty-marketing', 'settings-thirdparty-oauth', 'settings-thirdparty-telegram', 'settings-thirdparty-gmailotp', 'customize-system'].includes(activeTab)) return 'settings';
     return 'dashboard';
   };
 
@@ -257,6 +258,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'marketing', label: t('sidebar.marketing'), icon: <FiVolume2 className="w-[18px] h-[18px]" /> },
     { id: 'people', label: t('sidebar.people'), icon: <FiUsers className="w-[18px] h-[18px]" /> },
     { id: 'content', label: t('sidebar.content'), icon: <FiFileText className="w-[18px] h-[18px]" /> },
+    { id: 'delivery', label: 'Delivery', icon: <FiTruck className="w-[18px] h-[18px]" /> },
     { id: 'settings', label: t('sidebar.settings'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
   ];
 
@@ -291,6 +293,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         break;
       case 'content':
         setActiveTab('pages-builder');
+        setSidebarCollapsed(false);
+        break;
+      case 'delivery':
+        setActiveTab('settings-delivery-methods');
         setSidebarCollapsed(false);
         break;
       case 'settings':
@@ -929,6 +935,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
 
+            {activeCategory === 'delivery' && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-2">
+                  Delivery
+                </p>
+
+                <button
+                  onClick={() => { setActiveTab('settings-delivery-methods'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'settings-delivery-methods'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiTruck className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>Delivery Methods</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('settings-delivery-zones'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'settings-delivery-zones'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiMapPin className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>Delivery Zones</span>
+                </button>
+              </div>
+            )}
+
             {activeCategory === 'settings' && (
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-2">
@@ -966,28 +1002,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <FiShare2 className="w-4 h-4 text-indigo-200/80 shrink-0" />
                   <span>{t('sidebar.social_media')}</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('settings-delivery-methods'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'settings-delivery-methods'
-                      ? 'bg-white/10 text-white'
-                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <FiTruck className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span>Delivery Methods</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('settings-delivery-zones'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'settings-delivery-zones'
-                      ? 'bg-white/10 text-white'
-                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <FiMapPin className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span>Delivery Zones</span>
                 </button>
 
                 <button

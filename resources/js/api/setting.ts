@@ -27,6 +27,19 @@ export interface SettingResponse {
         preferred_contact_phone?: boolean | string;
         preferred_contact_telegram?: boolean | string;
         preferred_contact_whatsapp?: boolean | string;
+        payment_methods?: any;
+        brand_identity_operations?: any;
+        financial_configurations?: any;
+        store_operations_content?: any;
+        checkout_form_visibility?: any;
+        firebase_setup?: any;
+        pusher_configuration?: any;
+        marketing_tools_setup?: any;
+        social_login_setup?: any;
+        social_login_setup_oauth?: any;
+        telegram_bot_notifications?: any;
+        otp_email_configuration?: any;
+        location_store?: any;
     };
 }
 
@@ -89,6 +102,23 @@ export const settingService = {
                 preferred_contact_phone: rawSettings.preferred_contact_phone === 'true' || rawSettings.preferred_contact_phone === true || rawSettings.preferred_contact_phone === undefined,
                 preferred_contact_telegram: rawSettings.preferred_contact_telegram === 'true' || rawSettings.preferred_contact_telegram === true || rawSettings.preferred_contact_telegram === undefined,
                 preferred_contact_whatsapp: rawSettings.preferred_contact_whatsapp === 'true' || rawSettings.preferred_contact_whatsapp === true || rawSettings.preferred_contact_whatsapp === undefined,
+                payment_methods: rawSettings.payment_methods || {},
+                brand_identity_operations: rawSettings.brand_identity_operations || [],
+                financial_configurations: rawSettings.financial_configurations || [],
+                store_operations_content: rawSettings.store_operations_content || [],
+                checkout_form_visibility: rawSettings.checkout_form_visibility || [],
+                firebase_setup: rawSettings.firebase_setup || [],
+                pusher_configuration: rawSettings.pusher_configuration || [],
+                marketing_tools_setup: rawSettings.marketing_tools_setup || [],
+                social_login_setup: rawSettings.social_login_setup || [],
+                social_login_setup_oauth: rawSettings.social_login_setup_oauth || [],
+                telegram_bot_notifications: rawSettings.telegram_bot_notifications || [],
+                otp_email_configuration: rawSettings.otp_email_configuration || [],
+                location_store: rawSettings.location_store || {
+                    store_address: rawSettings.store_address || '',
+                    store_latitude: rawSettings.store_latitude ? String(rawSettings.store_latitude) : '',
+                    store_longitude: rawSettings.store_longitude ? String(rawSettings.store_longitude) : '',
+                },
             }
         };
     },

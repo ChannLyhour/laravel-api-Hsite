@@ -8,6 +8,7 @@ import { HelperTable } from '@/pages/owner_manage/helper/HelperTable';
 import { useConfirm } from '@/components/ConfirmProvider';
 import '@/pages/owner_manage/style/font.css';
 import { ImageCropModal } from './ImageCropModal';
+import { ButtonToggleStatus } from '../helper/buttonToggleStatus';
 
 interface BannersTabProps {
   ownerId?: number | string;
@@ -248,15 +249,11 @@ export const BannersTab: React.FC<BannersTabProps> = () => {
               {/* Status Switch */}
               <div className="flex items-center space-x-3 pt-2">
                 <label className="text-xs font-bold text-slate-700">Set as Active Banner</label>
-                <label className="relative inline-flex items-center cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={(e) => setIsActive(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500" />
-                </label>
+                <ButtonToggleStatus
+                  status={isActive}
+                  onToggle={() => setIsActive(!isActive)}
+                  className=""
+                />
               </div>
             </div>
 
@@ -371,15 +368,10 @@ export const BannersTab: React.FC<BannersTabProps> = () => {
                   {banner.title ? banner.title : <span className="text-slate-400 font-normal italic">No Title Provided</span>}
                 </td>
                 <td className="px-5 py-4">
-                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={banner.is_active}
-                      onChange={() => handleToggleStatus(banner)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500" />
-                  </label>
+                  <ButtonToggleStatus
+                    status={banner.is_active}
+                    onToggle={() => handleToggleStatus(banner)}
+                  />
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center justify-center space-x-2">

@@ -8,6 +8,7 @@ import { toast } from '@/pages/owner_manage/utils/toast';
 import '@/pages/owner_manage/style/font.css';
 import { HelperTable } from '../helper/HelperTable';
 import type { HelperTableColumn } from '../helper/HelperTable';
+import { ButtonToggleStatus } from '../helper/buttonToggleStatus';
 
 interface ProductBadgesTabProps {
   ownerId?: number | string;
@@ -350,17 +351,10 @@ export const ProductBadgesTab: React.FC<ProductBadgesTabProps> = ({ ownerId }) =
 
               {/* Status Switch Toggle */}
               <td className="py-3.5 px-5 text-center">
-                <button
-                  type="button"
-                  onClick={() => handleToggleStatus(badge)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mx-auto ${badge.status ? 'bg-[#0f53a1] shadow-2xs' : 'bg-slate-200'
-                    }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${badge.status ? 'translate-x-4' : 'translate-x-0'
-                      }`}
-                  />
-                </button>
+                <ButtonToggleStatus
+                  status={badge.status}
+                  onToggle={() => handleToggleStatus(badge)}
+                />
               </td>
 
               {/* Action Buttons */}

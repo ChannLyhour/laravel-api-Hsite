@@ -14,7 +14,7 @@ const translations: Record<Language, any> = {
 interface TranslationContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined);
@@ -29,7 +29,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('owner_manage_lang', lang);
   };
 
-  const t = (key: string) => {
+  const t = (key: string, params?: Record<string, string | number>) => {
     const keys = key.split('.');
     let value = translations[language];
     
@@ -41,7 +41,17 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     }
     
-    return typeof value === 'string' ? value : key;
+    if (typeof value === 'string') {
+      if (params) {
+        let interpolated = value;
+        Object.entries(params).forEach(([paramKey, paramVal]) => {
+          interpolated = interpolated.replace(new RegExp(`{${paramKey}}`, 'g'), String(paramVal));
+        });
+        return interpolated;
+      }
+      return value;
+    }
+    return key;
   };
 
   return (

@@ -4,6 +4,7 @@ import { toast } from '@/pages/owner_manage/utils/toast';
 import { storesService } from '@/api/owner/stores';
 import '@/pages/owner_manage/style/font.css';
 import { GroupDiv } from '@/pages/owner_manage/helper/GroupDiv';
+import { useTranslation } from '../../lang/i18n';
 
 interface TabProps {
      ownerId?: number | string;
@@ -42,6 +43,7 @@ const saveSettingsToStore = async (newSettings: Record<string, any>, ownerId?: n
 };
 
 export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) => {
+     const { t } = useTranslation();
      const [loading, setLoading] = useState(true);
      const [googleClientId, setGoogleClientId] = useState('');
      const [googleClientSecret, setGoogleClientSecret] = useState('');
@@ -89,7 +91,7 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
           return (
                <div className="border p-12 rounded-[5px] shadow-xs flex flex-col items-center justify-center space-y-3 font-kuntomruy custom-card-container">
                     <FiLoader className="w-8 h-8 text-primary animate-spin" />
-                    <span className="text-xs font-bold text-slate-400">Loading OAuth Settings...</span>
+                    <span className="text-xs font-bold text-slate-400">{t('oauth.loading')}</span>
                </div>
           );
      }
@@ -99,17 +101,17 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                <div>
                     <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
                          <FiSettings className="text-orange-500" />
-                         <span>Social Login Setup (OAuth)</span>
+                         <span>{t('oauth.title')}</span>
                     </h2>
                     <p className="text-slate-400 text-xs sm:text-sm mt-1">
-                         Configure Google and Facebook OAuth credentials to enable social logins on your storefront.
+                         {t('oauth.subtitle')}
                     </p>
                </div>
 
                <div className="bg-black/[0.02] border border-black/10 rounded-[8px] p-5 flex items-start gap-3">
                     <FiInfo className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                     <div className="text-xs text-slate-500 leading-relaxed font-semibold">
-                         Providing these credentials connects your store to Google and Facebook Authentication services. Make sure to whitelist your store domain as an authorized redirect URI in your Google Developer Console and Meta Apps Dashboard.
+                         {t('oauth.info')}
                     </div>
                </div>
 
@@ -120,7 +122,7 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                          <div className="space-y-4 border-b border-slate-100 pb-6">
                               <div className="flex items-center justify-between">
                                    <h4 className="text-sm font-black text-slate-855 uppercase tracking-wider flex items-center gap-2 text-left">
-                                        <span className="text-emerald-600">●</span> Google Login Configuration
+                                        <span className="text-emerald-600">●</span> {t('oauth.google_title')}
                                    </h4>
                                    <label className="relative inline-flex items-center cursor-pointer select-none">
                                         <input
@@ -130,13 +132,13 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                                              className="sr-only peer"
                                         />
                                         <div className="w-10 h-5.5 bg-slate-250 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-orange-500" />
-                                        <span className="ml-2 text-xs font-bold text-slate-650">{googleEnabled ? 'Enabled' : 'Disabled'}</span>
+                                        <span className="ml-2 text-xs font-bold text-slate-650">{googleEnabled ? t('oauth.enabled') : t('oauth.disabled')}</span>
                                    </label>
                               </div>
 
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-left">
                                    <div className="space-y-1.5 sm:col-span-2">
-                                        <label className="text-xs font-bold text-slate-750 block">Google Client ID</label>
+                                        <label className="text-xs font-bold text-slate-750 block">{t('oauth.google_client_id')}</label>
                                         <input
                                              type="text"
                                              value={googleClientId}
@@ -149,13 +151,13 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                                    </div>
 
                                    <div className="space-y-1.5 sm:col-span-2">
-                                        <label className="text-xs font-bold text-slate-755 block">Google Client Secret</label>
+                                        <label className="text-xs font-bold text-slate-755 block">{t('oauth.google_client_secret')}</label>
                                         <div className="relative">
                                              <input
                                                   type={showGoogleSecret ? 'text' : 'password'}
                                                   value={googleClientSecret}
                                                   onChange={e => setGoogleClientSecret(e.target.value)}
-                                                  placeholder="Google client secret key"
+                                                  placeholder={t('oauth.google_secret_placeholder')}
                                                   className="w-full pl-4 pr-10 py-2.5 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                                                   disabled={!googleEnabled}
                                                   required={googleEnabled}
@@ -177,7 +179,7 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                          <div className="space-y-4">
                               <div className="flex items-center justify-between">
                                    <h4 className="text-sm font-black text-slate-855 uppercase tracking-wider flex items-center gap-2 text-left">
-                                        <span className="text-[#1877f2]">●</span> Facebook Login Configuration
+                                        <span className="text-[#1877f2]">●</span> {t('oauth.facebook_title')}
                                    </h4>
                                    <label className="relative inline-flex items-center cursor-pointer select-none">
                                         <input
@@ -187,13 +189,13 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                                              className="sr-only peer"
                                         />
                                         <div className="w-10 h-5.5 bg-slate-250 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-orange-500" />
-                                        <span className="ml-2 text-xs font-bold text-slate-650">{facebookEnabled ? 'Enabled' : 'Disabled'}</span>
+                                        <span className="ml-2 text-xs font-bold text-slate-650">{facebookEnabled ? t('oauth.enabled') : t('oauth.disabled')}</span>
                                    </label>
                               </div>
 
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-left">
                                    <div className="space-y-1.5 sm:col-span-2">
-                                        <label className="text-xs font-bold text-slate-755 block">Facebook App ID</label>
+                                        <label className="text-xs font-bold text-slate-755 block">{t('oauth.facebook_app_id')}</label>
                                         <input
                                              type="text"
                                              value={facebookAppId}
@@ -206,13 +208,13 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                                    </div>
 
                                    <div className="space-y-1.5 sm:col-span-2">
-                                        <label className="text-xs font-bold text-slate-755 block">Facebook App Secret</label>
+                                        <label className="text-xs font-bold text-slate-755 block">{t('oauth.facebook_app_secret')}</label>
                                         <div className="relative">
                                              <input
                                                   type={showFacebookSecret ? 'text' : 'password'}
                                                   value={facebookAppSecret}
                                                   onChange={e => setFacebookAppSecret(e.target.value)}
-                                                  placeholder="Facebook app secret key"
+                                                  placeholder={t('oauth.facebook_secret_placeholder')}
                                                   className="w-full pl-4 pr-10 py-2.5 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                                                   disabled={!facebookEnabled}
                                                   required={facebookEnabled}
@@ -237,7 +239,7 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                                    className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-[5px] text-xs font-extrabold transition-all border-none cursor-pointer flex items-center space-x-1.5 shadow-2xs active:scale-98"
                               >
                                    {saving ? <FiLoader className="w-3.5 h-3.5 animate-spin" /> : <FiCheck className="w-3.5 h-3.5" />}
-                                   <span>Save Configuration</span>
+                                   <span>{t('oauth.save_config')}</span>
                               </button>
                          </div>
                     </form>
@@ -245,22 +247,22 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                     {/* Setup Instructions Column */}
                     <GroupDiv className="lg:col-span-5 space-y-6 text-left">
                          <h4 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2 border-b border-slate-200/80 pb-3">
-                              <FiInfo className="text-orange-500 w-4 h-4" /> OAuth Setup Guides
+                              <FiInfo className="text-orange-500 w-4 h-4" /> {t('oauth.guide_title')}
                          </h4>
 
                          {/* Google Credentials Guide */}
                          <div className="space-y-3">
                               <h5 className="text-xs font-bold text-slate-755 flex items-center gap-1.5">
-                                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Google App Setup
+                                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span> {t('oauth.google_setup_title')}
                               </h5>
                               <ol className="list-decimal pl-4 text-[11px] text-slate-550 font-semibold space-y-2 leading-relaxed">
-                                   <li>Go to the <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">Google Cloud Console</a>.</li>
-                                   <li>Create a new project or select an existing one.</li>
-                                   <li>Navigate to <strong>APIs & Services &gt; Credentials</strong>.</li>
-                                   <li>Click <strong>Create Credentials</strong> and select <strong>OAuth client ID</strong>.</li>
-                                   <li>Configure the OAuth consent screen if prompted.</li>
-                                   <li>Under Application Type, select <strong>Web application</strong>.</li>
-                                   <li>Add your Authorized Redirect URI:
+                                   <li>{t('oauth.google_step1')}</li>
+                                   <li>{t('oauth.google_step2')}</li>
+                                   <li>{t('oauth.google_step3')}</li>
+                                   <li>{t('oauth.google_step4')}</li>
+                                   <li>{t('oauth.google_step5')}</li>
+                                   <li>{t('oauth.google_step6')}</li>
+                                   <li>{t('oauth.google_step7')}
                                         <div className="mt-1.5 flex items-center gap-1.5">
                                              <code className="bg-black/[0.04] border px-2 py-1 rounded text-[10px] font-mono flex-1 break-all select-all">
                                                   {window.location.origin}/auth/google/callback
@@ -278,23 +280,23 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                                              </button>
                                         </div>
                                    </li>
-                                   <li>Copy the generated <strong>Client ID</strong> and <strong>Client Secret</strong> into the form on the left.</li>
+                                   <li>{t('oauth.google_step8')}</li>
                               </ol>
                          </div>
 
                          {/* Facebook Credentials Guide */}
                          <div className="space-y-3 pt-4 border-t border-slate-200/60">
                               <h5 className="text-xs font-bold text-slate-755 flex items-center gap-1.5">
-                                   <span className="w-2 h-2 rounded-full bg-[#1877f2]"></span> Meta (Facebook) App Setup
+                                   <span className="w-2 h-2 rounded-full bg-[#1877f2]"></span> {t('oauth.fb_setup_title')}
                               </h5>
                               <ol className="list-decimal pl-4 text-[11px] text-slate-550 font-semibold space-y-2 leading-relaxed">
-                                   <li>Go to <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">Meta for Developers</a>.</li>
-                                   <li>Click <strong>My Apps</strong> and create a new Developer App.</li>
-                                   <li>Select <strong>Allow users to log in...</strong> as your usecase.</li>
-                                   <li>Add the <strong>Facebook Login</strong> product to your App.</li>
-                                   <li>Navigate to <strong>Facebook Login &gt; Settings</strong>.</li>
-                                   <li>Enable <strong>Client OAuth Login</strong> and <strong>Web OAuth Login</strong>.</li>
-                                   <li>Add your Valid OAuth Redirect URI:
+                                   <li>{t('oauth.fb_step1')}</li>
+                                   <li>{t('oauth.fb_step2')}</li>
+                                   <li>{t('oauth.fb_step3')}</li>
+                                   <li>{t('oauth.fb_step4')}</li>
+                                   <li>{t('oauth.fb_step5')}</li>
+                                   <li>{t('oauth.fb_step6')}</li>
+                                   <li>{t('oauth.fb_step7')}
                                         <div className="mt-1.5 flex items-center gap-1.5">
                                              <code className="bg-black/[0.04] border px-2 py-1 rounded text-[10px] font-mono flex-1 break-all select-all">
                                                   {window.location.origin}/auth/facebook/callback
@@ -312,7 +314,7 @@ export const Social_Login_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) 
                                              </button>
                                         </div>
                                    </li>
-                                   <li>Find your <strong>App ID</strong> and <strong>App Secret</strong> under <strong>App Settings &gt; Basic</strong>.</li>
+                                   <li>{t('oauth.fb_step8')}</li>
                               </ol>
                          </div>
                     </GroupDiv>

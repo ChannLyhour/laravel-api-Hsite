@@ -140,6 +140,11 @@ class DatabaseSeeder extends Seeder
                 'store_email' => 'store' . $ownerId . '@example.com',
                 'store_phone' => '0123456' . $ownerId,
                 'store_address' => 'Street ' . $ownerId . ', City',
+                'location_store' => json_encode([
+                    'store_address' => 'Street ' . $ownerId . ', City',
+                    'store_latitude' => '',
+                    'store_longitude' => '',
+                ]),
                 'guest_checkout' => '1',
             ];
             foreach ($settings as $key => $value) {

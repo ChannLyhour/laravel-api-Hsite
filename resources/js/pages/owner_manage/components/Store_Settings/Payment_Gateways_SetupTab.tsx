@@ -5,6 +5,17 @@ import { storesService } from '@/api/owner/stores';
 import { resolveImageUrl } from '@/api/imageUtils';
 import { EditPage } from '../payment_method/edit';
 import '@/pages/owner_manage/style/font.css';
+import { useTranslation } from '../../lang/i18n';
+
+import abaLogo from '@/pages/main_website/Company_bank/aba.png';
+import bakongLogo from '@/pages/main_website/Company_bank/bakong.png';
+import acledaLogo from '@/pages/main_website/Company_bank/acleda.png';
+
+const DEFAULT_LOGOS: Record<string, string> = {
+     aba: abaLogo,
+     bakong: bakongLogo,
+     acleda: acledaLogo,
+};
 
 interface TabProps {
      ownerId?: number | string;
@@ -55,6 +66,7 @@ interface PaymentGateway {
 
 
 export const Payment_Gateways_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) => {
+     const { t } = useTranslation();
      const [loading, setLoading] = useState(true);
      const [activeGateway, setActiveGateway] = useState<PaymentGateway | null>(null);
      const [gateways, setGateways] = useState<PaymentGateway[]>([]);
@@ -125,7 +137,7 @@ export const Payment_Gateways_SetupTab: React.FC<TabProps> = ({ ownerId, profile
           return (
                <div className="border p-12 rounded-[5px] shadow-xs flex flex-col items-center justify-center space-y-3 font-kuntomruy custom-card-container">
                     <FiLoader className="w-8 h-8 text-primary animate-spin" />
-                    <span className="text-xs font-bold text-slate-400">Loading payment gateways...</span>
+                    <span className="text-xs font-bold text-slate-400">{t('payment_gateways.loading')}</span>
                </div>
           );
      }
@@ -164,10 +176,10 @@ export const Payment_Gateways_SetupTab: React.FC<TabProps> = ({ ownerId, profile
                <div>
                     <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
                          <FiSettings className="text-orange-500" />
-                         <span>Payment Gateways Setup</span>
+                         <span>{t('payment_gateways.title')}</span>
                     </h2>
                     <p className="text-slate-400 text-xs sm:text-sm mt-1">
-                         Configure third-party payment providers to process merchant checkout transactions securely.
+                         {t('payment_gateways.subtitle')}
                     </p>
                </div>
 
@@ -175,7 +187,7 @@ export const Payment_Gateways_SetupTab: React.FC<TabProps> = ({ ownerId, profile
                     {gateways.length === 0 ? (
                          <div className="text-center py-10 border border-dashed rounded-[5px]">
                               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest italic">
-                                   No gateways available from API
+                                   {t('payment_gateways.no_gateways')}
                               </p>
                          </div>
                     ) : gateways.map(gw => {
@@ -186,10 +198,10 @@ export const Payment_Gateways_SetupTab: React.FC<TabProps> = ({ ownerId, profile
                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-[5px] hover:bg-black/[0.04] transition-colors gap-4"
                               >
                                    <div className="flex items-center gap-4">
-                                        {config.values?.logo_url ? (
+                                        {DEFAULT_LOGOS[gw.id] ? (
                                              <div className="w-12 h-8 rounded-[4px] shrink-0 border border-black/5 bg-black/[0.03] flex items-center justify-center overflow-hidden shadow-xs">
                                                   <img
-                                                       src={resolveImageUrl(config.values.logo_url)}
+                                                       src={DEFAULT_LOGOS[gw.id]}
                                                        alt={`${gw.name} Logo`}
                                                        className="w-full h-full object-contain p-1"
                                                   />
@@ -199,14 +211,14 @@ export const Payment_Gateways_SetupTab: React.FC<TabProps> = ({ ownerId, profile
                                                   {gw.logoText}
                                              </div>
                                         )}
-                                        <div className="text-xs">
+                                        <div className="text-xs text-left">
                                              <div className="flex items-center gap-2">
                                                   <p className="font-bold text-inherit">{gw.name}</p>
                                                   <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${config.enabled
                                                        ? config.sandbox ? 'bg-amber-550 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                                        : 'bg-slate-150 text-slate-450'
                                                        }`}>
-                                                       {config.enabled ? (config.sandbox ? 'Sandbox' : 'Live') : 'Inactive'}
+                                                       {config.enabled ? (config.sandbox ? t('payment_gateways.sandbox') : t('payment_gateways.live')) : t('payment_gateways.inactive')}
                                                   </span>
                                              </div>
                                              <p className="text-[10px] opacity-60 font-medium mt-0.5">{gw.description}</p>
@@ -219,7 +231,7 @@ export const Payment_Gateways_SetupTab: React.FC<TabProps> = ({ ownerId, profile
                                              className="px-3.5 py-1.5 bg-black/[0.04] hover:bg-black/[0.08] text-inherit rounded-[5px] text-[11px] font-extrabold flex items-center space-x-1 border-none cursor-pointer transition-colors"
                                         >
                                              <FiSettings className="w-3.5 h-3.5 text-slate-400" />
-                                             <span>Configure API</span>
+                                             <span>{t('payment_gateways.configure_api')}</span>
                                         </button>
 
                                         <label className="relative inline-flex items-center cursor-pointer select-none">
