@@ -601,18 +601,15 @@ export const ProductDetailBottomCenterPage: React.FC<ProductDetailBottomCenterPa
                                         <div className="grid grid-cols-3 gap-2.5">
                                             {sizes.map((sz) => {
                                                 const isSelected = selectedSize === sz;
-                                                const isAvailable = isSizeAvailable(sz);
                                                 return (
                                                     <button
                                                         key={sz}
-                                                        disabled={!isAvailable}
+                                                        type="button"
                                                         onClick={() => setSelectedSize(sz)}
-                                                        className={`py-2 px-3 text-center text-xs font-black rounded-[5px] transition-all border ${
+                                                        className={`py-2 px-3 text-center text-xs font-black rounded-[5px] transition-all border cursor-pointer ${
                                                             isSelected
                                                                 ? 'bg-[#8C5A3C] text-white border-[#8C5A3C] shadow-xs'
-                                                                : isAvailable
-                                                                    ? 'bg-[#FCFAF7] hover:bg-stone-50 text-stone-750 border-stone-200 cursor-pointer'
-                                                                    : 'bg-stone-50 text-stone-400 border-stone-200/50 line-through opacity-45 cursor-not-allowed'
+                                                                : 'bg-white hover:bg-[#FAF2EB]/30 text-stone-900 border-stone-200 hover:border-[#8C5A3C]/50'
                                                         }`}
                                                     >
                                                         {sz}
@@ -644,8 +641,8 @@ export const ProductDetailBottomCenterPage: React.FC<ProductDetailBottomCenterPa
                                                         onClick={() => setSelectedColor(color)}
                                                         className={`flex items-center gap-2 py-1.5 px-3 text-xs font-bold rounded-[5px] transition-all border cursor-pointer ${
                                                             isSelected
-                                                                ? 'bg-stone-900 text-white border-stone-900 shadow-xs'
-                                                                : 'bg-[#FCFAF7] hover:bg-stone-50 text-stone-600 border-stone-200'
+                                                                ? 'bg-[#8C5A3C] text-white border-[#8C5A3C] shadow-xs'
+                                                                : 'bg-white hover:bg-[#FAF2EB]/30 text-stone-900 border-stone-200 hover:border-[#8C5A3C]/50'
                                                         }`}
                                                     >
                                                         <span
@@ -679,10 +676,11 @@ export const ProductDetailBottomCenterPage: React.FC<ProductDetailBottomCenterPa
                                                     return (
                                                         <button
                                                             key={sugar.value}
+                                                            type="button"
                                                             onClick={() => setSelectedSugar(sugar.value)}
-                                                            className={`py-1.5 px-3 text-[11px] font-bold rounded-[5px] transition-all border shrink-0 ${isSelected
-                                                                ? 'bg-stone-900 text-white border-stone-900'
-                                                                : 'bg-[#FCFAF7] hover:bg-stone-50 text-stone-600 border-stone-200 cursor-pointer'
+                                                            className={`py-1.5 px-3 text-[11px] font-bold rounded-[5px] transition-all border shrink-0 cursor-pointer ${isSelected
+                                                                ? 'bg-[#8C5A3C] text-white border-[#8C5A3C] shadow-xs'
+                                                                : 'bg-white hover:bg-[#FAF2EB]/30 text-stone-900 border-stone-200 hover:border-[#8C5A3C]/50'
                                                                 }`}
                                                         >
                                                             {sugar.label}
@@ -708,10 +706,11 @@ export const ProductDetailBottomCenterPage: React.FC<ProductDetailBottomCenterPa
                                                     return (
                                                         <button
                                                             key={ice.value}
+                                                            type="button"
                                                             onClick={() => setSelectedIce(ice.value)}
                                                             className={`py-1.5 px-3 text-[11px] font-bold rounded-[5px] transition-all border shrink-0 ${isSelected
-                                                                ? 'bg-stone-900 text-white border-stone-900'
-                                                                : 'bg-[#FCFAF7] hover:bg-stone-50 text-stone-600 border-stone-200 cursor-pointer'
+                                                                ? 'bg-[#8C5A3C] text-white border-[#8C5A3C] shadow-xs'
+                                                                : 'bg-white hover:bg-[#FAF2EB]/30 text-stone-900 border-stone-200 hover:border-[#8C5A3C]/50 cursor-pointer'
                                                                 }`}
                                                         >
                                                             {ice.label}
@@ -732,7 +731,7 @@ export const ProductDetailBottomCenterPage: React.FC<ProductDetailBottomCenterPa
                                                 <h3 className="font-extrabold text-stone-850 text-xs uppercase tracking-wider">
                                                     {attrName}
                                                 </h3>
-                                                <span className="text-[9px] font-bold uppercase text-stone-400 bg-stone-100 px-2 py-0.5 rounded-[5px]">
+                                                <span className="text-[9px] font-bold uppercase text-stone-600 bg-stone-100 px-2 py-0.5 rounded-[5px]">
                                                     Choose Option
                                                 </span>
                                             </div>
@@ -746,8 +745,8 @@ export const ProductDetailBottomCenterPage: React.FC<ProductDetailBottomCenterPa
                                                             onClick={() => setSelectedAttributes(prev => ({ ...prev, [attrName]: val }))}
                                                             className={`py-1.5 px-3 text-xs font-bold rounded-[5px] transition-all border cursor-pointer ${
                                                                 isSelected
-                                                                    ? 'bg-stone-900 text-white border-stone-900 shadow-xs'
-                                                                    : 'bg-[#FCFAF7] hover:bg-stone-50 text-stone-600 border-stone-200'
+                                                                    ? 'bg-[#8C5A3C] text-white border-[#8C5A3C] shadow-xs'
+                                                                    : 'bg-white hover:bg-[#FAF2EB]/30 text-stone-900 border-stone-200 hover:border-[#8C5A3C]/50'
                                                             }`}
                                                         >
                                                             {val}

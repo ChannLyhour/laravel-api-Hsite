@@ -22,7 +22,7 @@ class OrderController extends Controller
             'customer_name' => 'nullable|string',
             'customer_phone' => 'nullable|string',
             'items' => 'required|array',
-            'store_id' => 'required|exists:stores,id',
+            'store_id' => 'required|exists:stores,created_by',
             'total_amount' => 'required|numeric',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
@@ -165,6 +165,21 @@ class OrderController extends Controller
                 $custEmail = $isEmail ? $loginValue : $request->customer_email;
                 $isRealEmail = $custEmail && !str_contains($custEmail, 'temp-customer.com');
 
+                $storeId = $request->store_id;
+
+                // Check if Telegram OTP is configured and enabled
+                $tgEnabled = Store::where('created_by', $storeId)->where('key', 'telegram_enabled')->value('value');
+                $tgToken = Store::where('created_by', $storeId)->where('key', 'telegram_bot_token')->value('value');
+                $isTgOTPEnabled = ($tgEnabled === '1' || $tgEnabled === 1 || $tgEnabled === 'true') && !empty($tgToken);
+
+                // Check if Gmail OTP is configured and enabled
+                $gmailEnabled = Store::where('created_by', $storeId)->where('key', 'gmail_enabled')->value('value');
+                $gmailUser = Store::where('created_by', $storeId)->where('key', 'mail_username')->value('value');
+                $gmailHost = Store::where('created_by', $storeId)->where('key', 'mail_host')->value('value');
+                $isGmailOTPEnabled = ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') || (!empty($gmailUser) && !empty($gmailHost));
+
+                $otpRequiredForStore = ($isTgOTPEnabled && $custPhone) || ($isGmailOTPEnabled && $isRealEmail);
+
                 $order = Order::create([
                     'order_no' => OrderNoHelper::generate(),
                     'order_type' => $request->order_type ?? 'delivery',
@@ -178,7 +193,7 @@ class OrderController extends Controller
                     'latitude' => $request->latitude,
                     'longitude' => $request->longitude,
                     'notes' => $request->notes,
-                    'status' => ($custPhone || $isRealEmail) ? 'unverified' : 'pending',
+                    'status' => $otpRequiredForStore ? 'unverified' : 'pending',
                     'subtotal' => $request->subtotal ?? $request->total_amount,
                     'tax' => $request->tax ?? 0,
                     'shipping_fee' => $request->shipping_fee ?? 0,
@@ -232,7 +247,7 @@ class OrderController extends Controller
                 }
 
                 // Send Telegram notification to the store owner immediately only if no OTP verification is required
-                if (!$custPhone && !$isRealEmail) {
+                if (!$otpRequiredForStore) {
                     try {
                         \App\Helpers\TelegramHelper::sendOrderNotification($order);
                     } catch (\Exception $ex) {
@@ -241,7 +256,7 @@ class OrderController extends Controller
                 }
 
                 // Send OTP code via Telegram or Gmail if order requires verification
-                if ($custPhone || $isRealEmail) {
+                if ($otpRequiredForStore) {
                     try {
                         $otpCode = (string) rand(100000, 999999);
                         \Illuminate\Support\Facades\Cache::put("order_otp_{$order->id}", $otpCode, 3600);
@@ -261,7 +276,7 @@ class OrderController extends Controller
                 $token = null;
                 $otpRequired = false;
                 $telegramBotLink = null;
-                if ($custPhone || $isRealEmail) {
+                if ($otpRequiredForStore) {
                     $otpRequired = true;
                     if ($custPhone) {
                         $botToken = Store::where('created_by', $order->store_id)->where('key', 'telegram_bot_token')->value('value');

@@ -109,12 +109,14 @@ export const getProductSizes = (item: Root2) => {
     item.variants.forEach((v: any) => {
       if (v.attribute_values) {
         v.attribute_values.forEach((av: any) => {
+          const attrName = av.attribute?.name?.toLowerCase() || '';
+          const isSizeAttr = attrName.includes('size') || attrName === 'sz' || attrName === 'sizing';
           const parsed = parseAttributeValue(
             av.value,
             av.attribute?.name?.toLowerCase() === 'color' ||
             av.attribute?.name?.toLowerCase() === 'colour'
           );
-          if (parsed.value && !parsed.isColor) {
+          if (parsed.value && !parsed.isColor && isSizeAttr) {
             const exists = sizesList.some(
               s => s.toLowerCase() === parsed.value.toLowerCase()
             );
@@ -166,6 +168,8 @@ export const mapToUIItem = (item: Root2) => {
     item.variants.forEach(v => {
       if (v.attribute_values) {
         v.attribute_values.forEach((av: any) => {
+          const attrName = av.attribute?.name?.toLowerCase() || '';
+          const isSizeAttr = attrName.includes('size') || attrName === 'sz' || attrName === 'sizing';
           const parsed = parseAttributeValue(
             av.value,
             av.attribute?.name?.toLowerCase() === 'color' ||
@@ -174,7 +178,7 @@ export const mapToUIItem = (item: Root2) => {
           if (parsed.isColor) {
             // Prefer hex value for rendering; fall back to color name
             colorsSet.add(parsed.colorHex || parsed.colorName);
-          } else if (parsed.value) {
+          } else if (parsed.value && isSizeAttr) {
             sizesSet.add(parsed.value);
           }
         });

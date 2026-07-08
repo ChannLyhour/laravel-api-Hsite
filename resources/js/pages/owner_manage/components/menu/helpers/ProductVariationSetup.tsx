@@ -3,6 +3,8 @@ import { FiUploadCloud, FiTrash2 } from 'react-icons/fi';
 import { attributesService } from '@/api/owner/categories';
 import type { ProductAttribute, ProductAttributeValue } from '@/api/owner/categories';
 import { toast } from '@/pages/owner_manage/utils/toast';
+import { HelperTable } from '@/pages/owner_manage/helper/HelperTable';
+import type { HelperTableColumn } from '@/pages/owner_manage/helper/HelperTable';
 
 async function compressImage(file: File, maxWidth = 800, quality = 0.7): Promise<File> {
   return new Promise((resolve) => {
@@ -401,6 +403,46 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
   const [customColorName, setCustomColorName] = useState('');
   const [customColorHex, setCustomColorHex] = useState('#1455ac');
 
+  // Bulk update states
+  const [bulkKeyword, setBulkKeyword] = useState('');
+  const [bulkPrice, setBulkPrice] = useState('');
+
+  const handleBulkPriceUpdate = () => {
+    if (!bulkKeyword.trim() || !bulkPrice.trim()) {
+      toast.error('Please enter both keyword and price.');
+      return;
+    }
+    const updated = variants.map(v => {
+      if (v.combinationName.toLowerCase().includes(bulkKeyword.trim().toLowerCase())) {
+        return { ...v, price: parseFloat(bulkPrice.trim()).toFixed(2) };
+      }
+      return v;
+    });
+    onChangeVariants(updated);
+    toast.success(`Updated prices for variations containing "${bulkKeyword.trim()}" to $${parseFloat(bulkPrice.trim()).toFixed(2)}`);
+    setBulkKeyword('');
+    setBulkPrice('');
+  };
+
+  // Selection and Search states
+  const [selectedVariantNames, setSelectedVariantNames] = useState<string[]>([]);
+  const [variationSearchQuery, setVariationSearchQuery] = useState('');
+
+  // Clear selections when variants list changes
+  useEffect(() => {
+    setSelectedVariantNames(prev => prev.filter(name => variants.some(v => v.combinationName === name)));
+  }, [variants]);
+
+  // Filtered variants computed state
+  const filteredVariants = React.useMemo(() => {
+    if (!variationSearchQuery.trim()) return variants;
+    const query = variationSearchQuery.toLowerCase();
+    return variants.filter(v =>
+      v.combinationName.toLowerCase().includes(query) ||
+      (v.sku && v.sku.toLowerCase().includes(query))
+    );
+  }, [variants, variationSearchQuery]);
+
   const addCustomColor = async () => {
     if (!customColorName.trim()) return;
     await selectColor({ name: customColorName.trim(), hex: customColorHex });
@@ -779,76 +821,142 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                 )}
               </div>
 
-              <table className="w-full text-left border-collapse rounded-[8px] overflow-hidden text-xs">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100 font-extrabold text-slate-600">
-                    <th className="p-3 w-12 text-center">SL</th>
-                    <th className="p-3">Attribute Variation</th>
-                    <th className="p-3 w-40">Variation Wise Price ($)</th>
-                    <th className="p-3">SKU</th>
-                    <th className="p-3 w-36">Variation Wise Stock</th>
-                    <th className="p-3 w-16 text-center">Action</th>
+              {/* Bulk price update helper bar */}
+              <div className="bg-slate-50 border border-slate-200/60 p-3.5 rounded-[8px] text-xs space-y-2 max-w-2xl">
+                <p className="font-extrabold text-slate-700 flex items-center gap-1.5">
+                  ⚡ Quick Bulk Price Update
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500 font-medium">If variant name contains</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. Large"
+                      value={bulkKeyword}
+                      onChange={e => setBulkKeyword(e.target.value)}
+                      className="px-2.5 py-1.5 border border-slate-200 rounded-[5px] bg-white font-extrabold text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1455ac] focus:border-[#1455ac] w-32"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500 font-medium">set price to $</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="2.00"
+                      value={bulkPrice}
+                      onChange={e => setBulkPrice(e.target.value)}
+                      className="px-2.5 py-1.5 border border-slate-200 rounded-[5px] bg-white font-extrabold text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1455ac] focus:border-[#1455ac] w-24"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleBulkPriceUpdate}
+                    className="px-4 py-1.5 bg-[#1455ac] hover:bg-[#0f4d9c] text-white font-bold rounded-[5px] cursor-pointer transition-colors shadow-3xs"
+                  >
+                    Apply to All
+                  </button>
+                </div>
+              </div>
+
+              <HelperTable<GeneratedVariantRow>
+                columns={[
+                  { key: 'sl', label: 'SL', align: 'center', className: 'w-12 text-slate-400 font-bold' },
+                  { key: 'combinationName', label: 'Attribute Variation', className: 'font-extrabold text-[#1455ac]' },
+                  { key: 'price', label: 'Variation Wise Price ($)', className: 'w-40' },
+                  { key: 'sku', label: 'SKU' },
+                  { key: 'stock', label: 'Variation Wise Stock', className: 'w-36' },
+                  { key: 'action', label: 'Action', align: 'center', className: 'w-16' }
+                ]}
+                data={filteredVariants}
+                currentPage={1}
+                totalPages={1}
+                itemsPerPage={filteredVariants.length || 10}
+                totalItems={filteredVariants.length}
+                onPageChange={() => {}}
+                searchValue={variationSearchQuery}
+                onSearchChange={setVariationSearchQuery}
+                searchPlaceholder="Search variations..."
+                selectedIds={selectedVariantNames}
+                onSelectionChange={setSelectedVariantNames}
+                getRowId={(v) => v.combinationName}
+                bulkActions={[
+                  {
+                    label: 'Delete Selected',
+                    onClick: (names) => {
+                      const normalizedNames = names.map(name => name.split('-').sort().join('-'));
+                      setDeletedCombos(prev => [...prev, ...normalizedNames]);
+                      setSelectedVariantNames([]);
+                      toast.success(`Deleted ${names.length} variations.`);
+                    },
+                    className: 'text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200'
+                  }
+                ]}
+                renderRow={(v, index) => (
+                  <tr key={v.combinationName} className="hover:bg-slate-50/50 transition-colors text-xs font-semibold text-slate-700">
+                    <td className="p-3 text-center text-slate-400 font-bold border-b border-slate-100/50">{index + 1}</td>
+                    <td className="p-3 font-extrabold text-[#1455ac] border-b border-slate-100/50">{v.combinationName}</td>
+                    <td className="p-3 border-b border-slate-100/50">
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        value={v.price}
+                        onChange={e => {
+                          const updated = variants.map(item =>
+                            item.combinationName === v.combinationName
+                              ? { ...item, price: e.target.value }
+                              : item
+                          );
+                          onChangeVariants(updated);
+                        }}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-[5px] text-xs font-extrabold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-[#1455ac] focus:border-[#1455ac]"
+                      />
+                    </td>
+                    <td className="p-3 border-b border-slate-100/50">
+                      <input
+                        type="text"
+                        required
+                        value={v.sku}
+                        onChange={e => {
+                          const updated = variants.map(item =>
+                            item.combinationName === v.combinationName
+                              ? { ...item, sku: e.target.value }
+                              : item
+                          );
+                          onChangeVariants(updated);
+                        }}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-[5px] text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-[#1455ac] focus:border-[#1455ac]"
+                      />
+                    </td>
+                    <td className="p-3 border-b border-slate-100/50">
+                      <input
+                        type="number"
+                        required
+                        value={v.stock}
+                        onChange={e => {
+                          const updated = variants.map(item =>
+                            item.combinationName === v.combinationName
+                              ? { ...item, stock: parseInt(e.target.value) || 0 }
+                              : item
+                          );
+                          onChangeVariants(updated);
+                        }}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-[5px] text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-[#1455ac] focus:border-[#1455ac]"
+                      />
+                    </td>
+                    <td className="p-3 text-center border-b border-slate-100/50">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCombo(v.combinationName)}
+                        className="p-1 bg-transparent hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-[4px] cursor-pointer transition-colors border-none"
+                        title="Delete variation"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                  {variants.map((v, index) => (
-                    <tr key={index} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-3 text-center text-slate-400 font-bold">{index + 1}</td>
-                      <td className="p-3 font-extrabold text-[#1455ac]">{v.combinationName}</td>
-                      <td className="p-3">
-                        <input
-                          type="number"
-                          step="0.01"
-                          required
-                          value={v.price}
-                          onChange={e => {
-                            const updated = [...variants];
-                            updated[index].price = e.target.value;
-                            onChangeVariants(updated);
-                          }}
-                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-[5px] text-xs font-extrabold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-[#1455ac] focus:border-[#1455ac]"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          required
-                          value={v.sku}
-                          onChange={e => {
-                            const updated = [...variants];
-                            updated[index].sku = e.target.value;
-                            onChangeVariants(updated);
-                          }}
-                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-[5px] text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-[#1455ac] focus:border-[#1455ac]"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="number"
-                          required
-                          value={v.stock}
-                          onChange={e => {
-                            const updated = [...variants];
-                            updated[index].stock = parseInt(e.target.value) || 0;
-                            onChangeVariants(updated);
-                          }}
-                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-[5px] text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-[#1455ac] focus:border-[#1455ac]"
-                        />
-                      </td>
-                      <td className="p-3 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCombo(v.combinationName)}
-                          className="p-1 bg-transparent hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-[4px] cursor-pointer transition-colors border-none"
-                          title="Delete variation"
-                        >
-                          <FiTrash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                )}
+              />
             </div>
           )}
 

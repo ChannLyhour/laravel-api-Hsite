@@ -23,6 +23,7 @@ import { useOwnerURL } from '@/app/OwnerURL';
 import { PageRenderer } from './components/PageRenderer';
 import { WishlistPage } from './components/wishlistPage';
 import { FooterPage } from './components/footerPage';
+import { ProfileSetting } from '../templetes/fashion_website/components/info/profilesetting';
 
 
 interface HomePageProps {
@@ -181,6 +182,15 @@ export const HomePage: React.FC<HomePageProps> = ({
   const isMenuView = currentPath.endsWith('/menu');
   const isCheckoutView = currentPath.endsWith('/checkout');
   const isWishlistView = currentPath.endsWith('/wishlist');
+  const isProfileView = currentPath.endsWith('/profile');
+
+  // Enforce customer auth on /profile
+  useEffect(() => {
+    if (isProfileView && !token) {
+      onNavigateLogin();
+      onNavigate(buildStoreLink('/'));
+    }
+  }, [isProfileView, token]);
 
   const activeTheme = getLightTheme(themes[settings?.website_theme || 'default'] || themes.default);
   const { buildLink: buildStoreLink } = useOwnerURL(
@@ -352,6 +362,24 @@ export const HomePage: React.FC<HomePageProps> = ({
               addToCart={addToCart}
             />
           </div>
+        ) : isProfileView ? (
+          /* Customer Profile & Orders View */
+          profile?.user ? (
+            <div className="animate-fade-in py-0 sm:py-6 flex justify-center items-start px-0 sm:px-4">
+              <ProfileSetting
+                user={profile.user}
+                onClose={() => onNavigate(buildStoreLink('/'))}
+                ownerUserId={ownerUserId}
+                logout={onLogout}
+                locale={locale}
+                stores={{ ...settings, ...storeInfo }}
+              />
+            </div>
+          ) : (
+            <div className="min-h-[50vh] flex items-center justify-center">
+              <div className="animate-spin h-8 w-8 border-4 border-[#8C5A3C] border-t-transparent rounded-full" />
+            </div>
+          )
         ) : (
           /* Main Homepage Sections */
           <>
