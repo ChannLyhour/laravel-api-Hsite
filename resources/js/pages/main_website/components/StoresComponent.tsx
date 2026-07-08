@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiCoffee, FiStar, FiArrowRight, FiShoppingBag, FiAlertCircle } from 'react-icons/fi';
-import { client, API_BASE_URL } from '@/api/client';
-import { getAdminUsers } from '@/api/auth';
-import type { AdminUser } from '@/api/auth';
+import { API_BASE_URL } from '@/api/client';
+import { getPublicStores } from '../api';
 import { useTranslation } from '../lang/i18n';
 
 interface StoresComponentProps {
@@ -85,58 +84,6 @@ const getAbsoluteImageUrl = (path: string | null | undefined): string => {
   return `${serverBase}/uploads/${cleanPath}`;
 };
 
-async function fetchStoreData(user: AdminUser, themeIndex: number): Promise<StoreCard | null> {
-  try {
-    // Use user name as fallback store name when no store record exists
-    let storeName = user.name || `Store #${user.id}`;
-    let logoUrl = '';
-
-    // Try to fetch the store profile (public endpoint — no auth required)
-    try {
-      const settings = await client.get<Record<string, any>>(`/stores/owner/${user.id}`);
-      if (settings && settings.store_name) {
-        storeName = settings.store_name;
-      }
-      if (settings && settings.logo_url) {
-        logoUrl = getAbsoluteImageUrl(settings.logo_url);
-      }
-    } catch {
-      // No store record yet — use user info as fallback (still show the card)
-    }
-
-    const slug = storeName.replace(/\s+/g, '_');
-
-    // Fetch menu item count via top-selling (public, no auth)
-    let products = 0;
-    try {
-      const items = await client.get<any[]>(`/menu-items/top-selling?limit=200&created_by=${user.id}`);
-      products = Array.isArray(items) ? items.length : 0;
-    } catch {
-      products = 0;
-    }
-
-    // Use user avatar if available and no store logo
-    if (!logoUrl && user.image) {
-      logoUrl = getAbsoluteImageUrl(user.image);
-    }
-
-    return {
-      ownerId: user.id,
-      slug,
-      name: storeName,
-      logoUrl,
-      letter: storeName.charAt(0).toUpperCase(),
-      products,
-      rating: 4.5 + Math.round(Math.random() * 4) / 10,
-      reviews: Math.floor(50 + Math.random() * 150),
-      theme: THEMES[themeIndex % THEMES.length],
-      bannerImage: FALLBACK_IMAGES[themeIndex % FALLBACK_IMAGES.length],
-    };
-  } catch {
-    return null;
-  }
-}
-
 export const StoresComponent: React.FC<StoresComponentProps> = React.memo(({ onNavigate }) => {
   const { t } = useTranslation();
   const [stores, setStores] = useState<StoreCard[]>([]);
@@ -148,7 +95,7 @@ export const StoresComponent: React.FC<StoresComponentProps> = React.memo(({ onN
     const load = async () => {
       setLoading(true);
       try {
-        const rawStores: any[] = await client.get('/stores/public-list');
+        const rawStores = await getPublicStores();
         if (cancelled) return;
         
         const mappedStores = rawStores.map((item, idx) => {

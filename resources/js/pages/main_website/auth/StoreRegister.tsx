@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FiUser, FiMail, FiLock, FiMapPin, FiShoppingBag, FiArrowRight, FiArrowLeft, FiCheck } from 'react-icons/fi';
-import { client } from '@/api/client';
+import { registerOwnerAtomic } from '../api';
 import { toast } from 'react-hot-toast';
 import { TypeStore } from '../typeStore/typeStore';
 import { useTranslation } from '../lang/i18n';
@@ -69,7 +69,7 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
 
           try {
                // Single atomic endpoint: creates owner user + store settings together
-               const res = await client.post<any>('/register-owner', {
+               const res = await registerOwnerAtomic({
                     first_name: firstName.trim(),
                     last_name: lastName.trim(),
                     email,

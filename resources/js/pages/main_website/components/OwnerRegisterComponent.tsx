@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FiUser, FiMail, FiLock, FiMapPin, FiShoppingBag, FiArrowRight, FiArrowLeft, FiCheck } from 'react-icons/fi';
-import { client } from '@/api/client';
+import { registerOwnerUser, createStore } from '../api';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from '../lang/i18n';
 
@@ -67,7 +67,7 @@ export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = Rea
 
     try {
       // 1. Create owner user
-      const regRes = await client.post<any>('/register', {
+      const regRes = await registerOwnerUser({
         name: `${firstName.trim()} ${lastName.trim()}`,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -90,7 +90,7 @@ export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = Rea
       localStorage.setItem('selected_owner_id', String(newUserId));
 
       // 2. Create the associated store record
-      await client.post<any>('/stores', {
+      await createStore({
         created_by: newUserId,
         store_name: storeName,
         store_phone: null,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { client } from '@/api/client';
+import { saveStoreType } from '../api';
 import { toast } from 'react-hot-toast';
 import { runAutoSetup } from '../../owner_manage/helper/auto/autoSetup';
 
@@ -181,11 +181,7 @@ export const TypeStore: React.FC<TypeStoreProps> = ({ ownerId, token, onComplete
           setLoading(true);
           try {
                // Save store type to database settings
-               await client.put(
-                    '/stores/me',
-                    { store_type: selectedType },
-                    { headers: { Authorization: `Bearer ${token}` } }
-               );
+               await saveStoreType(selectedType, token);
 
                // Run auto-setup helper to seed static categories and attributes
                const setupToast = toast.loading('Initializing workspace settings & seeding category structures...');
