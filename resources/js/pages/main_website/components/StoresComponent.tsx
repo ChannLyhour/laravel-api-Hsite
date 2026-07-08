@@ -137,7 +137,7 @@ async function fetchStoreData(user: AdminUser, themeIndex: number): Promise<Stor
   }
 }
 
-export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) => {
+export const StoresComponent: React.FC<StoresComponentProps> = React.memo(({ onNavigate }) => {
   const { t } = useTranslation();
   const [stores, setStores] = useState<StoreCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -326,5 +326,5 @@ export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) 
       </div>
     </section>
   );
-};
+});
 

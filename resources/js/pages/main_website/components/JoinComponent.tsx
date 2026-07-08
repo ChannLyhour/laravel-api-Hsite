@@ -6,7 +6,7 @@ interface JoinComponentProps {
   onNavigate: (to: string) => void;
 }
 
-export const JoinComponent: React.FC<JoinComponentProps> = ({ onNavigate }) => {
+export const JoinComponent: React.FC<JoinComponentProps> = React.memo(({ onNavigate }) => {
   const { t } = useTranslation();
 
   return (
@@ -46,4 +46,4 @@ export const JoinComponent: React.FC<JoinComponentProps> = ({ onNavigate }) => {
       </div>
     </section>
   );
-};
+});

@@ -2,7 +2,7 @@ import React from 'react';
 import { FiPlusCircle, FiLink, FiSmartphone, FiShoppingCart, FiSliders, FiGrid } from 'react-icons/fi';
 import { useTranslation } from '../lang/i18n';
 
-export const FeaturesComponent: React.FC = () => {
+export const FeaturesComponent: React.FC = React.memo(() => {
   const { t } = useTranslation();
 
   const capabilities = [
@@ -152,4 +152,4 @@ export const FeaturesComponent: React.FC = () => {
       </div>
     </section>
   );
-};
+});

@@ -14,7 +14,7 @@ interface PricingComponentProps {
   onNavigate?: (to: string) => void;
 }
 
-export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }) => {
+export const PricingComponent: React.FC<PricingComponentProps> = React.memo(({ onNavigate }) => {
   const { t } = useTranslation();
 
   const plans = [
@@ -315,4 +315,4 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       </div>
     </section>
   );
-};
+});

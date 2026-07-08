@@ -33,7 +33,7 @@ const bankLogos = [
   lyhour
 ];
 
-export const AboutComponent: React.FC = () => {
+export const AboutComponent: React.FC = React.memo(() => {
   const { t, language } = useTranslation();
   const headline = t('about.headline');
   const hasChineseComma = headline.includes('，');
@@ -150,4 +150,4 @@ export const AboutComponent: React.FC = () => {
       </div>
     </section>
   );
-};
+});

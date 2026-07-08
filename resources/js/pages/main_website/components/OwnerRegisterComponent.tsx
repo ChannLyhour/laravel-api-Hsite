@@ -8,7 +8,7 @@ interface OwnerRegisterComponentProps {
   onNavigate: (to: string) => void;
 }
 
-export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = ({ onNavigate }) => {
+export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = React.memo(({ onNavigate }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -360,4 +360,4 @@ export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = ({ 
       </div>
     </div>
   );
-};
+});
