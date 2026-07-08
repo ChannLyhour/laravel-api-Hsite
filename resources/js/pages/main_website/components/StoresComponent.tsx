@@ -148,21 +148,29 @@ export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) 
     const load = async () => {
       setLoading(true);
       try {
-        const adminUsers: AdminUser[] = await getAdminUsers();
+        const rawStores: any[] = await client.get('/stores/public-list');
         if (cancelled) return;
-        if (adminUsers.length === 0) {
-          setStores([]);
-          setLoading(false);
-          return;
-        }
-        const results = await Promise.all(
-          adminUsers.map((user, idx) => fetchStoreData(user, idx % THEMES.length))
-        );
-        if (!cancelled) {
-          setStores(results.filter((s): s is StoreCard => s !== null));
-          setLoading(false);
-        }
-      } catch {
+        
+        const mappedStores = rawStores.map((item, idx) => {
+          const storeName = item.name || `Store #${item.owner_id}`;
+          return {
+            ownerId: item.owner_id,
+            slug: storeName.replace(/\s+/g, '_'),
+            name: storeName,
+            logoUrl: item.logo_url ? getAbsoluteImageUrl(item.logo_url) : '',
+            letter: storeName.charAt(0).toUpperCase(),
+            products: item.products || 0,
+            rating: 4.5 + Math.round(Math.random() * 4) / 10,
+            reviews: Math.floor(50 + Math.random() * 150),
+            theme: THEMES[idx % THEMES.length],
+            bannerImage: FALLBACK_IMAGES[idx % FALLBACK_IMAGES.length],
+          };
+        });
+
+        setStores(mappedStores);
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed to load public store list:', err);
         if (!cancelled) {
           setStores([]);
           setLoading(false);
@@ -192,7 +200,7 @@ export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) 
           <h2 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
             {t('stores.headline')}
           </h2>
-          <p className="text-slate-655 dark:text-slate-400 text-base sm:text-lg max-w-2xl mx-auto font-medium leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-base sm:text-lg max-w-2xl mx-auto font-medium leading-relaxed">
             {t('stores.desc')}
           </p>
         </div>
@@ -233,7 +241,7 @@ export const StoresComponent: React.FC<StoresComponentProps> = ({ onNavigate }) 
                   <p className={`text-sm font-black leading-snug text-slate-800 dark:text-white max-w-[55%] z-10`}>
                     {store.name.split(' ').slice(0, 2).join(' ')}
                     {'\n'}
-                    <span className="font-bold text-xs text-amber-550 dark:text-amber-500/80">
+                    <span className="font-bold text-xs text-amber-500 dark:text-amber-500/80">
                       {store.name.split(' ').slice(2).join(' ') || 'Elite Quality'}
                     </span>
                   </p>

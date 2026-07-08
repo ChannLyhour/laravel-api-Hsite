@@ -81,7 +81,7 @@ export const AboutComponent: React.FC = () => {
               )}
             </h1>
 
-            <p className="text-slate-655 dark:text-slate-400 text-sm sm:text-lg max-w-xl font-medium leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-lg max-w-xl font-medium leading-relaxed">
               {t('about.desc')}
             </p>
 

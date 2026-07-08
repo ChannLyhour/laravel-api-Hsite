@@ -113,6 +113,7 @@ Route::middleware(['identify-store'])->group(function () {
     Route::get('/attributes', [ProductAttributeController::class, 'index']);
 
     // Stores (Public)
+    Route::get('/stores/public-list', [StoreController::class, 'publicList']);
     Route::get('/stores/owner/{owner_id}', [StoreController::class, 'showByOwner']);
 
     // CMS - Pages & Posts (Public)

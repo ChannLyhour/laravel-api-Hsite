@@ -117,7 +117,7 @@ const NavbarPageContent: React.FC<NavbarPageProps> = ({
                               <div id="lang-switcher-container" className="relative shrink-0">
                                    <button
                                         onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                                        className="flex items-center space-x-1.5 text-xs font-black text-slate-500 dark:text-slate-400 hover:text-slate-955 dark:hover:text-white transition-all py-2.5 px-3 rounded-[5px] hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer bg-transparent border-none active:scale-[0.98]"
+                                        className="flex items-center space-x-1.5 text-xs font-black text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white transition-all py-2.5 px-3 rounded-[5px] hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer bg-transparent border-none active:scale-[0.98]"
                                    >
                                         <span>🌐 {language === 'en' ? 'EN' : language === 'kh' ? 'KH' : 'ZH'}</span>
                                    </button>
@@ -147,7 +147,7 @@ const NavbarPageContent: React.FC<NavbarPageProps> = ({
 
                               <button
                                    onClick={() => onNavigate('/owner/login')}
-                                   className="flex items-center space-x-1.5 text-xs font-black text-slate-500 dark:text-slate-400 hover:text-slate-955 dark:hover:text-white transition-all py-2.5 px-4 rounded-[5px] hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer bg-transparent border-none active:scale-[0.98]"
+                                   className="flex items-center space-x-1.5 text-xs font-black text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white transition-all py-2.5 px-4 rounded-[5px] hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer bg-transparent border-none active:scale-[0.98]"
                               >
                                    <FiLogIn className="w-4 h-4" />
                                    <span>{t('navbar.merchant_login')}</span>
@@ -180,7 +180,7 @@ const NavbarPageContent: React.FC<NavbarPageProps> = ({
                     <div className="md:hidden fixed inset-0 z-50 flex">
                          {/* Backdrop */}
                          <div
-                              className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-xs"
+                              className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[2px]"
                               onClick={() => setMobileMenuOpen(false)}
                          />
                          {/* Drawer container */}
@@ -192,7 +192,7 @@ const NavbarPageContent: React.FC<NavbarPageProps> = ({
                                              onClick={() => { onNavigate('/'); setMobileMenuOpen(false); }}
                                              className="flex items-center space-x-2 cursor-pointer"
                                         >
-                                             <div className="w-8 h-8 bg-amber-500 rounded-[5px] flex items-center justify-center text-slate-955">
+                                             <div className="w-8 h-8 bg-amber-500 rounded-[5px] flex items-center justify-center text-slate-950">
                                                   <FiShoppingBag className="w-5 h-5" />
                                              </div>
                                              <span className="text-base font-black tracking-tight text-slate-900 dark:text-white">
@@ -201,7 +201,7 @@ const NavbarPageContent: React.FC<NavbarPageProps> = ({
                                         </div>
                                         <button
                                              onClick={() => setMobileMenuOpen(false)}
-                                             className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-905 bg-transparent border-none cursor-pointer"
+                                             className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-950 bg-transparent border-none cursor-pointer"
                                         >
                                              <FiX className="w-6 h-6" />
                                         </button>

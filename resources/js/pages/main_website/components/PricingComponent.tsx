@@ -220,12 +220,13 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
       </div>
 
       <div className="max-w-7xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
-        {plans.map((plan) => {
+        {plans.map((plan, idx) => {
           return (
             <div
               key={plan.id}
               data-aos="fade-up"
-              data-aos-anchor-placement="center-center"
+              data-aos-delay={idx * 50}
+              data-aos-anchor-placement="top-bottom"
               className={`relative bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-xl flex flex-col transition-all duration-500 transition-colors duration-300 ${
                 plan.highlight
                   ? 'border-2 border-amber-500 shadow-[0_0_40px_-10px_rgba(245,158,11,0.15)] dark:shadow-[0_0_40px_-10px_rgba(245,158,11,0.3)] scale-[1.05] z-10'
@@ -233,7 +234,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = ({ onNavigate }
               }`}
             >
               {plan.badge && (
-                <span className="absolute -top-4 left-1/2 -translate-x-1/2 inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-bold text-slate-955 bg-amber-500 tracking-wider shadow-lg shadow-amber-500/30 uppercase">
+                <span className="absolute -top-4 left-1/2 -translate-x-1/2 inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-bold text-slate-950 bg-amber-500 tracking-wider shadow-lg shadow-amber-500/30 uppercase">
                   {plan.badge}
                 </span>
               )}

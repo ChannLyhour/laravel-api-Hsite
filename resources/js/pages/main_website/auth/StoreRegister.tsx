@@ -125,7 +125,7 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                     {/* Progress Tracker */}
                     <div className="flex items-center justify-between mb-12 pb-6 border-b border-slate-200">
                          <div className="flex items-center space-x-4">
-                              <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${step === 1 ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-emerald-500 text-slate-955'
+                              <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${step === 1 ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'bg-emerald-500 text-slate-950'
                                    }`}>
                                    {step > 1 ? <FiCheck className="w-5 h-5" /> : '1'}
                               </span>
@@ -172,7 +172,7 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                                   {t('register.first_name')} <span className="text-amber-500">*</span>
                                              </label>
                                              <div className="relative group">
-                                                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-550 transition-colors">
+                                                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
                                                        <FiUser className="w-4 h-4" />
                                                   </div>
                                                   <input
@@ -181,7 +181,7 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                                        placeholder="e.g. Chann"
                                                        value={firstName}
                                                        onChange={(e) => setFirstName(e.target.value)}
-                                                       className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-450 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
+                                                        className="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:border-amber-500/50 focus:bg-white focus:outline-none transition-all"
                                                   />
                                              </div>
                                         </div>
@@ -210,7 +210,7 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                              {t('register.email')}
                                         </label>
                                         <div className="relative group">
-                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-550 transition-colors">
+                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
                                                   <FiMail className="w-4 h-4" />
                                              </div>
                                              <input
@@ -261,7 +261,7 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                              {t('register.store_name')}
                                         </label>
                                         <div className="relative group">
-                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-550 transition-colors">
+                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
                                                   <FiShoppingBag className="w-4 h-4" />
                                              </div>
                                              <input
@@ -322,7 +322,7 @@ export const StoreRegister: React.FC<StoreRegisterProps> = ({ onNavigate }) => {
                                         <button
                                              type="submit"
                                              disabled={loading}
-                                             className="flex-[2] py-4 bg-[#FFAD21] hover:bg-[#FFAD21]/90 text-slate-955 font-bold text-xs rounded-xl transition-all shadow-md shadow-[#FFAD21]/20 active:scale-[0.98] flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                                             className="flex-[2] py-4 bg-[#FFAD21] hover:bg-[#FFAD21]/90 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md shadow-[#FFAD21]/20 active:scale-[0.98] flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                              {loading ? (
                                                   <span className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />

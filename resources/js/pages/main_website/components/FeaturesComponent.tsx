@@ -78,7 +78,7 @@ export const FeaturesComponent: React.FC = () => {
           {/* Vertical Timeline Line */}
           <div className="absolute left-6 md:left-1/2 top-4 bottom-4 w-[2px] bg-slate-200 dark:bg-slate-800/80 -translate-x-1/2 -z-10">
             {/* Ambient vertical line gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-amber-500 via-orange-555 to-amber-500 opacity-60" />
+            <div className="absolute inset-0 bg-gradient-to-b from-amber-500 via-orange-500 to-amber-500 opacity-60" />
           </div>
 
           <div className="space-y-12 md:space-y-16">
@@ -88,7 +88,8 @@ export const FeaturesComponent: React.FC = () => {
                 <div
                   key={idx}
                   data-aos="fade-up"
-                  data-aos-anchor-placement="center-center"
+                  data-aos-anchor-placement="top-bottom"
+                  data-aos-delay={idx * 50}
                   className="relative flex flex-col md:flex-row items-stretch group"
                 >
                   {/* Left Column (Alternates Card or Space) */}

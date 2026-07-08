@@ -128,7 +128,7 @@ export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = ({ 
         <div className="flex items-center justify-between mb-12 pb-6 border-b border-slate-200">
           <div className="flex items-center space-x-4">
             <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
-              step === 1 ? 'bg-[#FFAD21] text-slate-955 shadow-md shadow-[#FFAD21]/20' : 'bg-emerald-500 text-slate-950'
+              step === 1 ? 'bg-[#FFAD21] text-slate-950 shadow-md shadow-[#FFAD21]/20' : 'bg-emerald-500 text-slate-950'
             }`}>
               {step > 1 ? <FiCheck className="w-5 h-5" /> : '1'}
             </span>
@@ -143,7 +143,7 @@ export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = ({ 
 
           <div className="flex items-center space-x-4">
             <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
-              step === 2 ? 'bg-[#FFAD21] text-slate-955 shadow-md shadow-[#FFAD21]/20' : 'bg-slate-200 text-slate-500'
+              step === 2 ? 'bg-[#FFAD21] text-slate-950 shadow-md shadow-[#FFAD21]/20' : 'bg-slate-200 text-slate-500'
             }`}>
               2
             </span>
@@ -196,7 +196,7 @@ export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = ({ 
                     {t('register.last_name')} <span className="text-amber-500">*</span>
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-550 transition-colors">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
                       <FiUser className="w-4 h-4" />
                     </div>
                     <input
@@ -235,7 +235,7 @@ export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = ({ 
                   {t('register.password')}
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-550 transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
                     <FiLock className="w-4 h-4" />
                   </div>
                   <input
@@ -251,7 +251,7 @@ export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = ({ 
 
               <button
                 type="submit"
-                className="w-full mt-8 py-3.5 bg-[#FFAD21] hover:bg-[#FFAD21]/90 text-slate-955 font-bold text-sm rounded-xl transition-all shadow-md shadow-[#FFAD21]/20 active:scale-[0.98] flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-wider"
+                className="w-full mt-8 py-3.5 bg-[#FFAD21] hover:bg-[#FFAD21]/90 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-md shadow-[#FFAD21]/20 active:scale-[0.98] flex items-center justify-center space-x-2 border-none cursor-pointer uppercase tracking-wider"
               >
                 <span>{t('register.continue')}</span>
                 <FiArrowRight className="w-5 h-5" />
@@ -285,7 +285,7 @@ export const OwnerRegisterComponent: React.FC<OwnerRegisterComponentProps> = ({ 
                   {t('register.address')}
                 </label>
                 <div className="relative group">
-                  <div className="absolute top-4 left-4 pointer-events-none text-slate-400 group-focus-within:text-amber-550 transition-colors">
+                  <div className="absolute top-4 left-4 pointer-events-none text-slate-400 group-focus-within:text-amber-500 transition-colors">
                     <FiMapPin className="w-4 h-4" />
                   </div>
                   <textarea

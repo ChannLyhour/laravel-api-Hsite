@@ -82,6 +82,62 @@ class StoreController extends Controller
         return response()->json($formatted);
     }
 
+    public function publicList()
+    {
+        // 1. Fetch active owners/admins
+        $users = \App\Models\User::whereIn('role_id', [1, 30003])
+            ->where('state', 'active')
+            ->get();
+
+        // 2. Fetch product counts for each owner (only active storefronts with products)
+        $productCounts = \App\Models\Product::select('created_by', \DB::raw('count(*) as total'))
+            ->whereIn('created_by', $users->pluck('id'))
+            ->groupBy('created_by')
+            ->pluck('total', 'created_by')
+            ->toArray();
+
+        // 3. Fetch public settings (name & logo)
+        $settings = Store::whereIn('created_by', $users->pluck('id'))
+            ->whereIn('key', ['store_name', 'logo_url'])
+            ->get()
+            ->groupBy('created_by');
+
+        $formatted = [];
+        foreach ($users as $user) {
+            $productsCount = $productCounts[$user->id] ?? 0;
+            if ($productsCount === 0) {
+                continue; // Only list active stores with products
+            }
+
+            $userSettings = $settings->get($user->id);
+            $storeName = $user->name;
+            $logoUrl = $user->image ?: '';
+
+            if ($userSettings) {
+                foreach ($userSettings as $item) {
+                    if ($item->key === 'store_name' && !empty($item->value)) {
+                        $storeName = $item->value;
+                    }
+                    if ($item->key === 'logo_url' && !empty($item->value)) {
+                        $logoUrl = $item->value;
+                    }
+                }
+            }
+
+            $formatted[] = [
+                'id' => intval($user->id),
+                'owner_id' => intval($user->id),
+                'created_by' => intval($user->id),
+                'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($user->id)),
+                'name' => $storeName,
+                'logo_url' => $logoUrl,
+                'products' => $productsCount,
+            ];
+        }
+
+        return response()->json($formatted);
+    }
+
     public function showByOwner ($ownerId)
     {
         $realOwnerId = $ownerId;
