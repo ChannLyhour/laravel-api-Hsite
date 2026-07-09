@@ -50,7 +50,7 @@
     "APP_ENV": "production",
     "APP_DEBUG": "false",
     "APP_KEY": "base64:431VmB8uVpGqkp8yjKIJpEjtUr8NjI5enqdbXYRWpIk=",
-    "APP_URL": "https://laravel-api-hsite.vercel.app",
+    "APP_URL": "https://vhsitekh.site",
     "LOG_CHANNEL": "stderr",
     "LOG_LEVEL": "error",
     "DB_CONNECTION": "mysql",
