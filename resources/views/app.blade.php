@@ -69,11 +69,30 @@
     if ($ownerId) {
         $settings = \App\Models\Store::where('created_by', $ownerId)->get()->pluck('value', 'key');
         
-        if ($settings->has('store_name')) {
+        // Decode JSON settings blocks
+        $brandOps = [];
+        if ($settings->has('brand_identity_operations')) {
+            $brandOps = json_decode($settings->get('brand_identity_operations'), true) ?: [];
+        }
+        
+        $storeOps = [];
+        if ($settings->has('store_operations_content')) {
+            $storeOps = json_decode($settings->get('store_operations_content'), true) ?: [];
+        }
+
+        // 1. Resolve Store Name
+        if (isset($brandOps['store_brand_name']) && $brandOps['store_brand_name']) {
+            $metaTitle = $brandOps['store_brand_name'];
+        } elseif ($settings->has('store_name')) {
             $metaTitle = $settings->get('store_name');
         }
         
-        if ($settings->has('announcement_bar') && $settings->get('announcement_bar')) {
+        // 2. Resolve Description
+        if (isset($storeOps['announcement_bar']) && $storeOps['announcement_bar']) {
+            $metaDesc = $storeOps['announcement_bar'];
+        } elseif (isset($storeOps['footer_copyright']) && $storeOps['footer_copyright']) {
+            $metaDesc = $storeOps['footer_copyright'];
+        } elseif ($settings->has('announcement_bar') && $settings->get('announcement_bar')) {
             $metaDesc = $settings->get('announcement_bar');
         } elseif ($settings->has('footer_copyright') && $settings->get('footer_copyright')) {
             $metaDesc = $settings->get('footer_copyright');
@@ -81,8 +100,15 @@
             $metaDesc = "Welcome to " . $metaTitle . "! View our products and catalog online.";
         }
         
-        if ($settings->has('logo_url') && $settings->get('logo_url')) {
+        // 3. Resolve Logo Image
+        $logo = null;
+        if (isset($brandOps['logo_url']) && $brandOps['logo_url']) {
+            $logo = $brandOps['logo_url'];
+        } elseif ($settings->has('logo_url')) {
             $logo = $settings->get('logo_url');
+        }
+        
+        if ($logo) {
             if (str_starts_with($logo, 'http://') || str_starts_with($logo, 'https://')) {
                 $metaImage = $logo;
             } else {
