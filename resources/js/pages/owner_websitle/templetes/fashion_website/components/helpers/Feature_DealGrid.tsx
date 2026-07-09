@@ -110,7 +110,7 @@ export const Feature_DealGrid: React.FC<Feature_DealGridProps> = ({
                               </div>
 
                               <div className="space-y-1">
-                                   <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight leading-tight">
+                                   <h3 className="text-lg sm:text-xl font-black !text-white uppercase leading-tight">
                                         {deal.title}
                                    </h3>
                                    {deal.meta_description && (

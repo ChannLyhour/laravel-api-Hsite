@@ -187,7 +187,7 @@ const FlashDealsGridInner: React.FC<FlashDealsGridProps> = ({
               </div> */}
 
               <div className="space-y-1">
-                <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight leading-tight">
+                <h3 className="text-lg sm:text-xl font-black !text-white uppercase tracking-tight leading-tight">
                   {deal.title}
                 </h3>
                 {/* <p className="text-stone-300 text-2xs font-semibold leading-relaxed tracking-wide uppercase line-clamp-3">

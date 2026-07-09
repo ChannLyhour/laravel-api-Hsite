@@ -241,7 +241,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (['categories', 'sub-categories', 'sub-sub-categories', 'brands', 'product-badges', 'attributes', 'menu-items'].includes(activeTab)) return 'catalog';
     if (activeTab.startsWith('marketing')) return 'marketing';
     if (['customers', 'customer-reviews', 'partner-stores'].includes(activeTab)) return 'people';
-    if (['pages', 'posts', 'pages-builder'].includes(activeTab)) return 'content';
     if (['settings-delivery-methods', 'settings-delivery-zones'].includes(activeTab)) return 'delivery';
     if (['theme', 'settings', 'social-media', 'settings-thirdparty-payment', 'settings-thirdparty-firebase', 'settings-thirdparty-pusher', 'settings-thirdparty-marketing', 'settings-thirdparty-oauth', 'settings-thirdparty-telegram', 'settings-thirdparty-gmailotp', 'customize-system'].includes(activeTab)) return 'settings';
     return 'dashboard';
@@ -257,7 +256,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'inbox', label: 'Customer Chat', icon: <FiMessageSquare className="w-[18px] h-[18px]" /> },
     { id: 'marketing', label: t('sidebar.marketing'), icon: <FiVolume2 className="w-[18px] h-[18px]" /> },
     { id: 'people', label: t('sidebar.people'), icon: <FiUsers className="w-[18px] h-[18px]" /> },
-    { id: 'content', label: t('sidebar.content'), icon: <FiFileText className="w-[18px] h-[18px]" /> },
     { id: 'delivery', label: 'Delivery', icon: <FiTruck className="w-[18px] h-[18px]" /> },
     { id: 'settings', label: t('sidebar.settings'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
   ];
@@ -289,10 +287,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         break;
       case 'people':
         setActiveTab('customers');
-        setSidebarCollapsed(false);
-        break;
-      case 'content':
-        setActiveTab('pages-builder');
         setSidebarCollapsed(false);
         break;
       case 'delivery':
@@ -853,21 +847,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </button>
                 </div>
 
-                <div>
-                  <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-1">
-                    {t('sidebar.content')}
-                  </p>
-                  <button
-                    onClick={() => { setActiveTab('posts'); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'posts'
-                        ? 'bg-white/10 text-white'
-                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                  >
-                    <FiEdit className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                    <span>{t('sidebar.blog_setup')}</span>
-                  </button>
-                </div>
+
               </div>
             )}
 
@@ -903,37 +883,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
 
-            {activeCategory === 'content' && (
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-2">
-                  {t('sidebar.content')}
-                </p>
 
-                <button
-                  onClick={() => { setActiveTab('pages-builder'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'pages-builder'
-                      ? 'bg-white/10 text-white'
-                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <FiMonitor className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span>Sites & Stores</span>
-                </button>
-
-
-
-                <button
-                  onClick={() => { setActiveTab('posts'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'posts'
-                      ? 'bg-white/10 text-white'
-                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <FiEdit className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span>{t('sidebar.blog_news')}</span>
-                </button>
-              </div>
-            )}
 
             {activeCategory === 'delivery' && (
               <div className="space-y-1">
