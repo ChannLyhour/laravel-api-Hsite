@@ -125,10 +125,18 @@
 
     // 3. Resolve Logo Image
     $logo = null;
-    if (isset($brandOps['logo_url']) && $brandOps['logo_url']) {
+    if (isset($brandOps['logo_url']) && !empty($brandOps['logo_url']) && $brandOps['logo_url'] !== 'false') {
       $logo = $brandOps['logo_url'];
-    } elseif ($settings->has('logo_url')) {
+    } elseif ($settings->has('logo_url') && !empty($settings->get('logo_url')) && $settings->get('logo_url') !== 'false') {
       $logo = $settings->get('logo_url');
+    }
+
+    // Fallback: If no logo is set in store settings, try using the owner's profile image (User model)
+    if (empty($logo) || $logo === 'false' || $logo === false) {
+      $user = \App\Models\User::find($ownerId);
+      if ($user && !empty($user->image) && $user->image !== 'false') {
+        $logo = $user->image;
+      }
     }
 
     if ($logo) {
