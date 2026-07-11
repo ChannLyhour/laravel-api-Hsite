@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { FiHeart, FiLayers, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { resolveImageUrl } from '../../utils/imageUtils';
 import { CardProduct } from './CardProduct';
+import { FASHION_ROUTES } from '../../routes';
 
 interface SpecialProductProps {
   items: any[];
@@ -169,7 +170,13 @@ export const Special_Product: React.FC<SpecialProductProps> = ({
   }
 
   const handleProductClick = (id: number) => {
-    window.dispatchEvent(new CustomEvent('open_product_popup', { detail: { productId: String(id) } }));
+    if (onNavigate) {
+      const storeSlug = (stores?.store_name || storeName || '').replace(/\s+/g, '_');
+      const routeUrl = FASHION_ROUTES.getProduct(id, ownerUserId, storeSlug);
+      onNavigate(routeUrl);
+    } else {
+      window.dispatchEvent(new CustomEvent('open_product_popup', { detail: { productId: String(id) } }));
+    }
   };
 
   return (

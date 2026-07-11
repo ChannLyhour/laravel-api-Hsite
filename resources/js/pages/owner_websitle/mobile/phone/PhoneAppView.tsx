@@ -16,6 +16,7 @@ import { WishlistScreen } from './screens/wishlist_screen';
 import { CartScreen } from './screens/cart_screen';
 import { DetailScreen } from './screens/Detail_screen';
 import { FashionPhoneView } from '../../templetes/fashion_website/mobile/FashionPhoneView';
+import { FashionPhoneView as FashionPhoneViewGeneral } from '../../templetes/fashion_website_general/mobile/FashionPhoneView';
 
 interface PhoneAppViewProps {
   ownerUserId?: number | string;
@@ -47,6 +48,19 @@ export const PhoneAppView: React.FC<PhoneAppViewProps> = ({
   if (settings?.website_theme === 'fashion') {
     return (
       <FashionPhoneView
+        ownerUserId={ownerUserId}
+        storeName={storeName}
+        settings={settings}
+        locale={locale}
+        profile={profile}
+        onToggleDesktop={onToggleDesktop}
+        onLogout={onLogout}
+      />
+    );
+  }
+  if (settings?.website_theme === 'fashion_website_general') {
+    return (
+      <FashionPhoneViewGeneral
         ownerUserId={ownerUserId}
         storeName={storeName}
         settings={settings}

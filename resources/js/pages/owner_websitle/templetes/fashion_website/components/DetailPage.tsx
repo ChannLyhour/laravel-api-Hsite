@@ -72,9 +72,9 @@ export const DetailPage: React.FC<DetailPageProps> = ({
     setProduct(initialProduct);
   }, [initialProduct]);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [product.id]);
+  // useEffect(() => {
+  //   window.scrollTo(0, 0);
+  // }, [product.id]);
 
   useEffect(() => {
     const bc = new BroadcastChannel('data_updates');

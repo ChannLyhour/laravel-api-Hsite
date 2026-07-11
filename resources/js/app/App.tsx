@@ -801,6 +801,7 @@ function App() {
   const navigate = useCallback((to: string) => {
     const [pathAndQuery, hash] = to.split('#');
     const [path, query] = pathAndQuery.split('?');
+    const isProductPage = path.startsWith('/product') || path.includes('/product');
 
     // If an owner/admin is logged in and tries to navigate to storefront menus without ?owner= or ?id=,
     // intercept and redirect them to their own store URL instead.
@@ -844,12 +845,13 @@ function App() {
           }
         }, 100);
       } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (!isProductPage) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
       return;
     }
 
-    const isProductPage = path.startsWith('/product');
     if (query) {
       const params = new URLSearchParams(query);
       const urlOwnerId = params.get('owner') || (!isProductPage ? params.get('id') : null);
@@ -889,7 +891,9 @@ function App() {
         }
       }, 100);
     } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!isProductPage) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   }, [routerNavigate, adminProfile, settings, resolvedStores]);
 

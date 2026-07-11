@@ -12,6 +12,7 @@ import { themes } from '@/pages/owner_manage/templete_website/themes';
 import { Store_setting } from '@/api/owner/stores';
 import type { SettingResponse } from '@/api/setting';
 import { FashionTabletView } from '../../templetes/fashion_website/mobile/FashionTabletView';
+import { FashionTabletView as FashionTabletViewGeneral } from '../../templetes/fashion_website_general/mobile/FashionTabletView';
 
 interface TabletAppViewProps {
   ownerUserId?: number | string;
@@ -41,6 +42,18 @@ export const TabletAppView: React.FC<TabletAppViewProps> = ({
   if (settings?.website_theme === 'fashion') {
     return (
       <FashionTabletView
+        ownerUserId={ownerUserId}
+        storeName={storeName}
+        settings={settings}
+        locale={locale}
+        profile={profile}
+        onToggleDesktop={onToggleDesktop}
+      />
+    );
+  }
+  if (settings?.website_theme === 'fashion_website_general') {
+    return (
+      <FashionTabletViewGeneral
         ownerUserId={ownerUserId}
         storeName={storeName}
         settings={settings}

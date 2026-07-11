@@ -321,6 +321,21 @@ class TemplateController extends Controller
             'purchased_at' => now(),
         ]);
 
+        // Automatically set the store's active theme to the assigned template
+        $template = Template::find($templateId);
+        if ($template) {
+            \App\Models\Store::updateOrCreate(
+                ['created_by' => $userId, 'key' => 'website_theme'],
+                ['value' => $template->theme_key]
+            );
+
+            \App\Models\StoreThemeHistory::create([
+                'owner_id' => $userId,
+                'theme_id' => $template->theme_key,
+                'changed_by' => $request->user()->id,
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Template assigned successfully.',
@@ -338,7 +353,24 @@ class TemplateController extends Controller
         }
 
         $purchase = TemplatePurchase::findOrFail($id);
+        $userId = $purchase->user_id;
+        $templateId = $purchase->template_id;
+
         $purchase->delete();
+
+        // Reset store theme to default if the deleted template was the active one
+        $template = Template::find($templateId);
+        if ($template) {
+            $activeTheme = \App\Models\Store::where('created_by', $userId)
+                ->where('key', 'website_theme')
+                ->value('value');
+            if ($activeTheme === $template->theme_key) {
+                \App\Models\Store::updateOrCreate(
+                    ['created_by' => $userId, 'key' => 'website_theme'],
+                    ['value' => 'default']
+                );
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -382,6 +414,21 @@ class TemplateController extends Controller
             'user_id' => $userId,
             'template_id' => $templateId,
         ]);
+
+        // Automatically update the store's active theme to the newly assigned template
+        $template = Template::find($templateId);
+        if ($template) {
+            \App\Models\Store::updateOrCreate(
+                ['created_by' => $userId, 'key' => 'website_theme'],
+                ['value' => $template->theme_key]
+            );
+
+            \App\Models\StoreThemeHistory::create([
+                'owner_id' => $userId,
+                'theme_id' => $template->theme_key,
+                'changed_by' => $request->user()->id,
+            ]);
+        }
 
         return response()->json([
             'success' => true,

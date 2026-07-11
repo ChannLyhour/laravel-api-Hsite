@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiHeart, FiShoppingBag } from 'react-icons/fi';
 import { toast } from '../../utils/toast';
+import { FASHION_ROUTES } from '../../routes';
 import { resolveImageUrl, getHoverImage } from '../../utils/imageUtils';
 import { resolveColorHex } from '../../utils/priceUtils';
 import type { StoreRow } from '@/api/owner/stores';
@@ -36,6 +37,10 @@ export const CardProduct: React.FC<CardProductProps> = (props) => {
 
 const CardProductInner: React.FC<CardProductProps> = ({
     item,
+    ownerUserId,
+    stores,
+    storeName,
+    onNavigate,
     addToCart,
     isFavorited,
     onToggleFavorite,
@@ -248,7 +253,13 @@ const CardProductInner: React.FC<CardProductProps> = ({
     );
 
     const handleCardClick = () => {
-        window.dispatchEvent(new CustomEvent('open_product_popup', { detail: { productId: String(item.id) } }));
+        if (onNavigate) {
+            const storeSlug = (stores?.store_name || storeName || '').replace(/\s+/g, '_');
+            const routeUrl = FASHION_ROUTES.getProduct(item.id, ownerUserId, storeSlug);
+            onNavigate(routeUrl);
+        } else {
+            window.dispatchEvent(new CustomEvent('open_product_popup', { detail: { productId: String(item.id) } }));
+        }
     };
 
     return (
@@ -358,7 +369,7 @@ const CardProductInner: React.FC<CardProductProps> = ({
                                 {discountLabel}
                             </span>
                         )}
-                        {isLarge && (   
+                        {isLarge && (
                             <span className="w-fit bg-gradient-to-r from-amber-500 to-yellow-600 text-white border border-amber-400 px-2.5 py-1 rounded-full leading-none shadow-md flex items-center gap-1">
                                 👑 <TextSp size="3xs" weight="black" uppercase tracking="wider" font={font}>TOP SELLER</TextSp>
                             </span>
@@ -430,17 +441,17 @@ const CardProductInner: React.FC<CardProductProps> = ({
             </div>
 
             {/* Product Metadata Info Area */}
-            <div className={`space-y-1.5 pt-1 ${fontClass}`}>
+            <div className={`space-y-1.5 pt-1.5 ${fontClass}`}>
                 {/* Price block + Heart icon inline */}
                 <div className="flex items-center justify-between">
                     <div className={`flex items-baseline space-x-1.5 text-left ${fontClass}`}>
                         <TextSp
                             size={isLarge ? 'lg' : 'xl'}
                             weight="bold"
-                            color="text-[#E61E25]"
+                            color="text-stone-900"
                             font={font}
                         >
-                            {`$${itemPrice.toFixed(2)}`}
+                            {`US $${itemPrice.toFixed(2)}`}
                         </TextSp>
                         {comparePrice && (
                             <TextSp
@@ -461,10 +472,10 @@ const CardProductInner: React.FC<CardProductProps> = ({
                                 e.stopPropagation();
                                 onToggleFavorite(String(item.id), item.name);
                             }}
-                            className="text-stone-400 hover:text-[#E61E25] focus:outline-none transition-colors pr-0.5"
+                            className="text-stone-850 hover:text-[#E61E25] focus:outline-none transition-colors pr-0.5"
                         >
                             <FiHeart
-                                className={`w-6 h-6 ${isFavorited ? 'fill-[#E61E25] text-[#E61E25]' : ''}`}
+                                className={`w-5 h-5 ${isFavorited ? 'fill-[#E61E25] text-[#E61E25]' : ''}`}
                             />
                         </button>
                     )}
@@ -473,18 +484,17 @@ const CardProductInner: React.FC<CardProductProps> = ({
                 {/* Product Name */}
                 <TextSp
                     as="p"
-                    size={isLarge ? { mobile: '8px', tablet: 'sm' } : { mobile: '14px', tablet: '2xs' }}
-                    weight="black"
-                    color="text-stone-900 group-hover:text-[#E61E25] pb-4"
-                    font={'kontomruy'}
-                    // uppercase
+                    size={isLarge ? { mobile: '11px', tablet: 'sm' } : { mobile: '13px', tablet: 'xs' }}
+                    weight="medium"
+                    color="text-stone-850 group-hover:text-[#E61E25]"
+                    font={font}
                     tracking="tight"
                     truncateCount={{
-                        mobile: 15,
-                        tablet: 16,
-                        desktop: 22
+                        mobile: 24,
+                        tablet: 26,
+                        desktop: 32
                     }}
-                    className="transition-colors leading-tight block text-left"
+                    className="transition-colors leading-tight block text-left pb-1"
                 >
                     {item.name}
                 </TextSp>
@@ -492,36 +502,20 @@ const CardProductInner: React.FC<CardProductProps> = ({
 
                 {/* Colors swatches preview */}
                 {item.colors && item.colors.length > 0 && (
-                    <div className="h-3.5 flex items-center pt-0.5 select-none text-left">
-                        <div className="flex items-center space-x-1">
-                            {item.colors.slice(0, 3).map((col: string, cIdx: number) => (
+                    <div className="h-5 flex items-center pt-0.5 select-none text-left">
+                        <div className="flex items-center space-x-1.5">
+                            {item.colors.slice(0, 5).map((col: string, cIdx: number) => (
                                 <span
                                     key={cIdx}
-                                    className="w-4 h-3 rounded-[3px] border border-stone-200/80 shrink-0"
+                                    className="w-4 h-4 rounded-[4px] border border-stone-300 shrink-0 shadow-3xs"
                                     style={{ backgroundColor: resolveColorHex(item, col) }}
                                 />
                             ))}
-                            {item.colors.length > 3 && (
+                            {item.colors.length > 5 && (
                                 <span className="text-[8px] text-stone-400 font-extrabold leading-none">
-                                    +{item.colors.length - 3}
+                                    +{item.colors.length - 5}
                                 </span>
                             )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Sizing Label preview */}
-                {item.sizes && item.sizes.length > 0 && (
-                    <div className="h-4 flex items-center select-none text-left">
-                        <div className="flex flex-wrap gap-1">
-                            {item.sizes.slice(0, 3).map((sz: string, szIdx: number) => (
-                                <span
-                                    key={szIdx}
-                                    className="text-[8px] font-black text-stone-400 bg-stone-50 border border-stone-200/40 px-1 py-0.5 rounded-[2px] uppercase leading-none"
-                                >
-                                    {sz}
-                                </span>
-                            ))}
                         </div>
                     </div>
                 )}

@@ -48,6 +48,17 @@ class TemplateSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'tpl_code' => 'TPLGENF5',
+                'title' => 'Fashion General – Zine Style',
+                'description' => 'Retro-themed zine style fashion catalog featuring blue badge stickers, high contrast product collages, and dynamic navigation.',
+                'price' => 89.00,
+                'file_path' => 'templates/fashion_website_general.zip',
+                'theme_key' => 'fashion_website_general',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'tpl_code' => 'TPLGOLD4',
                 'title' => 'Minimal Dark Gold – Luxury Theme',
                 'description' => 'Deep dark palette accented with gold details. Ideal for jewelry, premium products, designer pieces, and luxury boutiques.',

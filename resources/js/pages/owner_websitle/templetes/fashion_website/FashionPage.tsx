@@ -288,9 +288,9 @@ export const FashionPage: React.FC<FashionPageProps> = ({
   }, [lastScrollY]);
 
   // Reset scroll to top of document on page/route changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentPath]);
+  // useEffect(() => {
+  //   window.scrollTo(0, 0);
+  // }, [currentPath]);
 
   // ── Profile route guard ───────────────────────────────────────────────────
   // If the session check is done and user is not logged in while on /profile,

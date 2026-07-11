@@ -200,7 +200,7 @@ export const ThemeSelectorPanel: React.FC<ThemeSelectorPanelProps> = ({
     'glass_gradient',
     'sweet_pastry'
   ];
-  const premiumThemeIds = ['cafe_shop', 'electronic', 'fashion', 'minimal_dark_gold'];
+  const premiumThemeIds = ['cafe_shop', 'electronic', 'fashion', 'fashion_website_general', 'minimal_dark_gold'];
 
   const freeThemes = freeThemeIds.map(id => themes[id]).filter(Boolean);
   const premiumThemes = premiumThemeIds.map(id => themes[id]).filter(Boolean);

@@ -48,6 +48,18 @@ export const paidThemes: Record<string, ThemeMarketplaceInfo> = {
     badge: 'Unlimited Updates',
     badgeBg: 'bg-stone-900 text-white',
   },
+  fashion_website_general: {
+    author: 'CoutureStyles Boutique',
+    category: 'Fashion, Apparel & Zine Aesthetic',
+    price: '$65',
+    originalPrice: '$89',
+    rating: 5,
+    reviews: '2.2K',
+    sales: '14,200 Sales',
+    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=500&q=80',
+    badge: 'Retro Collage',
+    badgeBg: 'bg-[#003CFF] text-white',
+  },
   minimal_dark_gold: {
     author: 'AuraSteak & Grill',
     category: 'Luxury Steakhouse, Maroon Bar & Grill',

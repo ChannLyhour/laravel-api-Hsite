@@ -12,6 +12,7 @@ import { menuItemsService } from '@/api/owner/categories';
 import { CafeShopPage } from '../templetes/cafeShop_website/CafeShopPage';
 import { ElectronicPage } from '../templetes/Electronic_website/ElectronicPage';
 import { FashionPage } from '../templetes/fashion_website/FashionPage';
+import { FashionPage as FashionPageGeneral } from '../templetes/fashion_website_general/FashionPage';
 import type { SettingResponse } from '@/api/setting';
 import type { StoreRow } from '@/api/owner/stores';
 import { themes } from '@/pages/owner_manage/templete_website/themes';
@@ -296,6 +297,20 @@ export const HomePage: React.FC<HomePageProps> = ({
   if (theme === 'fashion' || theme === 'fashion_website') {
     return (
       <FashionPage
+        ownerUserId={ownerUserId}
+        profile={profile}
+        onNavigate={onNavigate}
+        storeName={storeInfo?.store_name || storeName || settings?.store_name}
+        locale={locale}
+        onChangeLanguage={handleLocaleChange}
+        stores={(storeInfo ?? settings) as any}
+        currentPath={currentPath}
+      />
+    );
+  }
+  if (theme === 'fashion_website_general') {
+    return (
+      <FashionPageGeneral
         ownerUserId={ownerUserId}
         profile={profile}
         onNavigate={onNavigate}
