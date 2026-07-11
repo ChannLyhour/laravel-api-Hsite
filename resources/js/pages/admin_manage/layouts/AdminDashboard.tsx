@@ -18,6 +18,7 @@ import {
   FiActivity,
   FiChevronLeft,
   FiChevronRight,
+  FiBookOpen,
 } from 'react-icons/fi';
 
 interface AdminDashboardProps {
@@ -27,7 +28,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabId = 'overview' | 'merchants' | 'subscriptions' | 'payments' | 'settings';
+type TabId = 'overview' | 'merchants' | 'subscriptions' | 'payments' | 'settings' | 'assign-template';
 
 interface Merchant {
   id: number;
@@ -91,6 +92,95 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
   useEffect(() => {
     fetchStores();
   }, []);
+
+  // ─── TEMPLATE ASSIGNMENTS STATE ──────────────────────────────────────────────
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [newAssignment, setNewAssignment] = useState({ userId: '', templateId: '' });
+  const [isEditAssignModalOpen, setIsEditAssignModalOpen] = useState(false);
+  const [currentAssignment, setCurrentAssignment] = useState<{ id: number; userId: string; templateId: string } | null>(null);
+
+  const fetchTemplates = async () => {
+    try {
+      const res = await client.get<{ success: boolean; data: any[] }>('/admin/templates');
+      setTemplates(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch templates:', err);
+    }
+  };
+
+  const fetchAssignments = async () => {
+    try {
+      const res = await client.get<{ success: boolean; data: any[] }>('/admin/template-assignments');
+      setAssignments(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch template assignments:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'assign-template') {
+      fetchTemplates();
+      fetchAssignments();
+    }
+  }, [activeTab]);
+
+  const handleAssignTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAssignment.userId || !newAssignment.templateId) {
+      toast.error('Please select both a store/owner and a template.');
+      return;
+    }
+
+    try {
+      await client.post('/admin/template-assignments', {
+        user_id: parseInt(newAssignment.userId),
+        template_id: parseInt(newAssignment.templateId),
+      });
+      toast.success('Template assigned successfully!');
+      setIsAssignModalOpen(false);
+      setNewAssignment({ userId: '', templateId: '' });
+      fetchAssignments();
+    } catch (err: any) {
+      const errMsg = err.details?.message || err.message || 'Failed to assign template.';
+      toast.error(errMsg);
+    }
+  };
+
+  const handleRemoveAssignment = async (id: number, storeName: string, templateTitle: string) => {
+    if (confirm(`Are you sure you want to remove template "${templateTitle}" from "${storeName}"?`)) {
+      try {
+        await client.delete(`/admin/template-assignments/${id}`);
+        toast.success('Template assignment removed successfully.');
+        fetchAssignments();
+      } catch (err: any) {
+        toast.error('Failed to remove template assignment.');
+      }
+    }
+  };
+
+  const handleEditAssignmentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentAssignment || !currentAssignment.userId || !currentAssignment.templateId) {
+      toast.error('Please select both a store/owner and a template.');
+      return;
+    }
+
+    try {
+      await client.put(`/admin/template-assignments/${currentAssignment.id}`, {
+        user_id: parseInt(currentAssignment.userId),
+        template_id: parseInt(currentAssignment.templateId),
+      });
+      toast.success('Template assignment updated successfully.');
+      setIsEditAssignModalOpen(false);
+      setCurrentAssignment(null);
+      fetchAssignments();
+    } catch (err: any) {
+      const errMsg = err.details?.message || err.message || 'Failed to update template assignment.';
+      toast.error(errMsg);
+    }
+  };
 
   // ─── SUBSCRIPTION PLAN FEATURES STATE ─────────────────────────────────────────
   // Pre-configured features matching standard listings
@@ -729,6 +819,104 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
+          {/* ── ASSIGN TEMPLATE TAB ────────────────────────── */}
+          {activeTab === 'assign-template' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-[5px] border border-slate-200/60 shadow-sm">
+                <div className="space-y-1">
+                  <span className="text-xs font-black text-slate-800 tracking-tight uppercase block">Store Template Assignments ({assignments.length} assigned)</span>
+                  <span className="text-[10px] font-bold text-slate-400 block">Manage which premium layout templates are assigned to which stores.</span>
+                </div>
+                <button
+                  onClick={() => {
+                    setNewAssignment({ userId: '', templateId: '' });
+                    setIsAssignModalOpen(true);
+                  }}
+                  className="bg-primary hover:bg-primary-hover text-white text-xs font-black px-3.5 py-2 rounded-[5px] transition-all flex items-center space-x-1.5 cursor-pointer shadow-sm shadow-orange-500/10 border-none w-max"
+                >
+                  <FiPlus className="w-4 h-4" />
+                  <span>Assign Template</span>
+                </button>
+              </div>
+
+              {/* Table */}
+              <div className="bg-white rounded-[5px] border border-slate-200/60 shadow-sm overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <th className="p-4">Assignment ID</th>
+                      <th className="p-4">Merchant Info</th>
+                      <th className="p-4">Store Outlet</th>
+                      <th className="p-4">Assigned Template</th>
+                      <th className="p-4">Code / Theme Key</th>
+                      <th className="p-4">Assigned Date</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-600">
+                    {assignments.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="p-8 text-center text-slate-400 font-bold text-sm">
+                          No templates assigned yet. Click the "Assign Template" button to start.
+                        </td>
+                      </tr>
+                    ) : (
+                      assignments.map((assignment) => (
+                        <tr key={assignment.id} className="hover:bg-slate-50/50">
+                          <td className="p-4 font-bold text-slate-900">#{assignment.id}</td>
+                          <td className="p-4 space-y-0.5">
+                            <span className="block font-black text-slate-800 text-sm">
+                              {assignment.user?.name || 'Unknown Owner'}
+                            </span>
+                            <span className="block text-[10px] text-slate-400 font-bold">
+                              {assignment.user?.email || 'No Email'}
+                            </span>
+                          </td>
+                          <td className="p-4 font-bold text-slate-800">
+                            {assignment.store?.store_name || 'Unnamed Store'}
+                          </td>
+                          <td className="p-4 font-bold text-slate-800 text-primary">
+                            {assignment.template?.title || 'Unknown Template'}
+                          </td>
+                          <td className="p-4 space-y-0.5">
+                            <span className="block text-slate-900 font-bold">{assignment.template?.tpl_code || 'N/A'}</span>
+                            <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">{assignment.template?.theme_key || 'N/A'}</span>
+                          </td>
+                          <td className="p-4 text-slate-500">
+                            {assignment.purchased_at ? assignment.purchased_at.split(' ')[0] : 'N/A'}
+                          </td>
+                          <td className="p-4 text-right space-x-1.5 shrink-0">
+                            <button
+                              onClick={() => {
+                                setCurrentAssignment({
+                                  id: assignment.id,
+                                  userId: assignment.user_id.toString(),
+                                  templateId: assignment.template_id.toString(),
+                                });
+                                setIsEditAssignModalOpen(true);
+                              }}
+                              className="p-2 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded-[5px] cursor-pointer transition-colors border-none bg-transparent"
+                              title="Edit Assignment"
+                            >
+                              <FiEdit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleRemoveAssignment(assignment.id, assignment.store?.store_name || 'Store', assignment.template?.title || 'Template')}
+                              className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-[5px] cursor-pointer transition-colors border-none bg-transparent"
+                              title="Remove Assignment"
+                            >
+                              <FiTrash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* ── SETTINGS TAB ────────────────────────────────── */}
           {activeTab === 'settings' && <SettingTab />}
 
@@ -909,6 +1097,126 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                 className="w-full py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-black uppercase tracking-widest rounded-[5px] shadow-md border-none cursor-pointer mt-2"
               >
                 Save Particulars
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── ASSIGN TEMPLATE MODAL ─────────────────────────────────────────────── */}
+      {isAssignModalOpen && (
+        <div className="fixed inset-0 z-[300] bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[5px] border border-slate-200 shadow-2xl w-full max-w-md p-6 relative animate-slide-up">
+            <button
+              onClick={() => setIsAssignModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 border-none bg-transparent cursor-pointer"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest border-b border-slate-100 pb-3 mb-4">Assign Template to Store</h3>
+
+            <form onSubmit={handleAssignTemplate} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Store / Merchant</label>
+                <select
+                  required
+                  value={newAssignment.userId}
+                  onChange={(e) => setNewAssignment({ ...newAssignment, userId: e.target.value })}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-[5px] text-xs font-semibold text-slate-800"
+                >
+                  <option value="">-- Choose Store --</option>
+                  {merchants.map((merchant) => (
+                    <option key={merchant.id} value={merchant.createdBy}>
+                      {merchant.storeName} ({merchant.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Template</label>
+                <select
+                  required
+                  value={newAssignment.templateId}
+                  onChange={(e) => setNewAssignment({ ...newAssignment, templateId: e.target.value })}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-[5px] text-xs font-semibold text-slate-800"
+                >
+                  <option value="">-- Choose Template --</option>
+                  {templates.map((tpl) => (
+                    <option key={tpl.id} value={tpl.id}>
+                      {tpl.title} ({tpl.tpl_code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-black uppercase tracking-widest rounded-[5px] shadow-md border-none cursor-pointer mt-2"
+              >
+                Assign & Save
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isEditAssignModalOpen && currentAssignment && (
+        <div className="fixed inset-0 z-[300] bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[5px] border border-slate-200 shadow-2xl w-full max-w-md p-6 relative animate-slide-up">
+            <button
+              onClick={() => {
+                setIsEditAssignModalOpen(false);
+                setCurrentAssignment(null);
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 border-none bg-transparent cursor-pointer"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest border-b border-slate-100 pb-3 mb-4">Edit Template Assignment</h3>
+
+            <form onSubmit={handleEditAssignmentSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Store / Merchant</label>
+                <select
+                  required
+                  value={currentAssignment.userId}
+                  onChange={(e) => setCurrentAssignment({ ...currentAssignment, userId: e.target.value })}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-[5px] text-xs font-semibold text-slate-800"
+                >
+                  <option value="">-- Choose Store --</option>
+                  {merchants.map((merchant) => (
+                    <option key={merchant.id} value={merchant.createdBy}>
+                      {merchant.storeName} ({merchant.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Template</label>
+                <select
+                  required
+                  value={currentAssignment.templateId}
+                  onChange={(e) => setCurrentAssignment({ ...currentAssignment, templateId: e.target.value })}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-[5px] text-xs font-semibold text-slate-800"
+                >
+                  <option value="">-- Choose Template --</option>
+                  {templates.map((tpl) => (
+                    <option key={tpl.id} value={tpl.id}>
+                      {tpl.title} ({tpl.tpl_code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-black uppercase tracking-widest rounded-[5px] shadow-md border-none cursor-pointer mt-2"
+              >
+                Update Assignment
               </button>
             </form>
           </div>

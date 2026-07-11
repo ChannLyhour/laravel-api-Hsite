@@ -260,6 +260,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/stores', [StoreController::class, 'index']);
         Route::post('/stores', [StoreController::class, 'store']);
         Route::put('/stores/{id}', [StoreController::class, 'update'])->where('id', '^(?!me$)[a-zA-Z0-9]+$');
+
+        // Global Template Assignments (Super Admin)
+        Route::get('/admin/templates', [TemplateController::class, 'adminListTemplates']);
+        Route::get('/admin/template-assignments', [TemplateController::class, 'listAssignments']);
+        Route::post('/admin/template-assignments', [TemplateController::class, 'assignTemplate']);
+        Route::put('/admin/template-assignments/{id}', [TemplateController::class, 'updateAssignment'])->whereNumber('id');
+        Route::delete('/admin/template-assignments/{id}', [TemplateController::class, 'removeAssignment'])->whereNumber('id');
     });
 
     // ---------------------------------------------------------------------

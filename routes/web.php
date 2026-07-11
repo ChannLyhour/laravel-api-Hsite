@@ -65,33 +65,39 @@ Route::get('/uploads/{path}', function ($path) {
 Route::get('/', function () {
     return view('app');
 });
-Route::get('/about', function () { return view('app'); });
-Route::get('/restaurants', function () { return view('app'); });
-Route::get('/features', function () { return view('app'); });
-Route::get('/join', function () { return view('app'); });
-Route::get('/pricing', function () { return view('app'); });
-Route::get('/register-owner', function () { return view('app'); });
+Route::get('/about', function () {
+    return view('app'); });
+Route::get('/restaurants', function () {
+    return view('app'); });
+Route::get('/features', function () {
+    return view('app'); });
+Route::get('/join', function () {
+    return view('app'); });
+Route::get('/pricing', function () {
+    return view('app'); });
+Route::get('/register-owner', function () {
+    return view('app'); });
 
 
 // Route Admin 
 Route::get('/admin/dashboard', function () {
-    return view('admin.index');
+    return view('app');
 })->name('admin.dashboard');
 
 Route::get('/admin/manage', function () {
-    return view('admin.index');
+    return view('app');
 })->name('admin.manage');
 
 Route::get('/admin/stores', function () {
-    return view('admin.stores.index');
+    return view('app');
 })->name('admin.stores');
 
 Route::get('/admin/users', function () {
-    return view('admin.users.index');
+    return view('app');
 })->name('admin.users');
 
 Route::get('/admin/settings', function () {
-    return view('admin.settings.index');
+    return view('app');
 })->name('admin.settings');
 
 Route::get('/admin', function () {
@@ -99,14 +105,14 @@ Route::get('/admin', function () {
 });
 
 Route::get('/admin/login', function () {
-    return view('admin.auth.login');
+    return view('app');
 });
 
 Route::get('/admin/{module}', function ($module) {
     $validModules = ['orders', 'products', 'health'];
     if (!in_array($module, $validModules))
         abort(404);
-    return view('admin.manager', ['module' => $module]);
+    return view('app');
 })->name('admin.module');
 
 
@@ -120,13 +126,20 @@ Route::get('/owner/{any}', function () {
 
 
 // Route Customers 
-Route::get('/shop', function () { return view('app'); });
-Route::get('/product', function () { return view('app'); });
-Route::get('/checkout', function () { return view('app'); });
-Route::get('/profile', function () { return view('app'); });
-Route::get('/wishlist', function () { return view('app'); });
-Route::get('/categories', function () { return view('app'); });
-Route::get('/walkin', function () { return view('app'); });
+Route::get('/shop', function () {
+    return view('app'); });
+Route::get('/product', function () {
+    return view('app'); });
+Route::get('/checkout', function () {
+    return view('app'); });
+Route::get('/profile', function () {
+    return view('app'); });
+Route::get('/wishlist', function () {
+    return view('app'); });
+Route::get('/categories', function () {
+    return view('app'); });
+Route::get('/walkin', function () {
+    return view('app'); });
 
 
 Route::get('/{any}', function () {
@@ -134,12 +147,19 @@ Route::get('/{any}', function () {
 })->where('any', '^(?!api|admin|uploads|static|build).*$');
 
 // Routr Template_menu Defual all Store 
-Route::get('/{storeSlug}/shop', function () { return view('app'); });
-Route::get('/{storeSlug}/product', function () { return view('app'); });
-Route::get('/{storeSlug}/checkout', function () { return view('app'); });
-Route::get('/{storeSlug}/profile', function () { return view('app'); });
-Route::get('/{storeSlug}/wishlist', function () { return view('app'); });
-Route::get('/{storeSlug}/categories', function () { return view('app'); });
-Route::get('/{storeSlug}/menu', function () { return view('app'); });
+Route::get('/{storeSlug}/shop', function () {
+    return view('app'); });
+Route::get('/{storeSlug}/product', function () {
+    return view('app'); });
+Route::get('/{storeSlug}/checkout', function () {
+    return view('app'); });
+Route::get('/{storeSlug}/profile', function () {
+    return view('app'); });
+Route::get('/{storeSlug}/wishlist', function () {
+    return view('app'); });
+Route::get('/{storeSlug}/categories', function () {
+    return view('app'); });
+Route::get('/{storeSlug}/menu', function () {
+    return view('app'); });
 
 

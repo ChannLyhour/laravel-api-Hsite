@@ -7,10 +7,11 @@ import {
   FiSettings,
   FiLogOut,
   FiChevronLeft,
+  FiBookOpen,
 } from 'react-icons/fi';
 import { useTranslation } from '../lang/i18n';
 
-type TabId = 'overview' | 'merchants' | 'subscriptions' | 'payments' | 'settings';
+type TabId = 'overview' | 'merchants' | 'subscriptions' | 'payments' | 'settings' | 'assign-template';
 
 interface SidebarProps {
   activeTab: TabId;
@@ -35,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const leftMenuItems = [
     { id: 'overview', label: 'Platform Stats', icon: <FiGrid className="w-[18px] h-[18px]" /> },
     { id: 'merchants', label: 'All Merchants', icon: <FiUsers className="w-[18px] h-[18px]" /> },
+    { id: 'assign-template', label: 'Assign Template', icon: <FiBookOpen className="w-[18px] h-[18px]" /> },
     { id: 'subscriptions', label: 'Package Toggles', icon: <FiSliders className="w-[18px] h-[18px]" /> },
     { id: 'payments', label: 'Gross Revenue', icon: <FiCreditCard className="w-[18px] h-[18px]" /> },
     { id: 'settings', label: 'Global Settings', icon: <FiSettings className="w-[18px] h-[18px]" /> },

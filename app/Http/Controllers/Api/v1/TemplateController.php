@@ -17,7 +17,7 @@ class TemplateController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $request->user('sanctum');
+        $user = $request->user('sanctum') ?? auth('sanctum')->user();
         $templates = Template::where('status', 'active')->get();
 
         if ($user) {
@@ -49,7 +49,7 @@ class TemplateController extends Controller
             ->where('status', 'active')
             ->firstOrFail();
 
-        $user = $request->user('sanctum');
+        $user = $request->user('sanctum') ?? auth('sanctum')->user();
         $owned = false;
 
         if ($user) {
@@ -215,5 +215,178 @@ class TemplateController extends Controller
         ]);
 
         return response()->download($filePath, basename($filePath));
+    }
+
+    /**
+     * Retrieve all premium templates (Super Admin).
+     */
+    public function adminListTemplates(Request $request)
+    {
+        if ($request->user()->role_id !== 1) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $templates = Template::all();
+        return response()->json([
+            'success' => true,
+            'data' => $templates
+        ]);
+    }
+
+    /**
+     * Retrieve all template assignments (Super Admin).
+     */
+    public function listAssignments(Request $request)
+    {
+        if ($request->user()->role_id !== 1) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $assignments = TemplatePurchase::with(['user', 'template'])->get();
+        
+        $formatted = $assignments->map(function ($assignment) {
+            $userId = $assignment->user_id;
+            
+            // Get store name for this user from Store table
+            $storeName = \App\Models\Store::where('created_by', $userId)
+                ->where('key', 'store_name')
+                ->value('value') ?? 'Unnamed Store';
+                
+            return [
+                'id' => $assignment->id,
+                'user_id' => $userId,
+                'template_id' => $assignment->template_id,
+                'order_ref' => $assignment->order_ref,
+                'amount_paid' => $assignment->amount_paid,
+                'purchased_at' => $assignment->purchased_at ? $assignment->purchased_at->toDateTimeString() : null,
+                'user' => [
+                    'id' => $assignment->user?->id,
+                    'name' => $assignment->user?->name,
+                    'email' => $assignment->user?->email,
+                ],
+                'store' => [
+                    'store_name' => $storeName,
+                ],
+                'template' => [
+                    'id' => $assignment->template?->id,
+                    'tpl_code' => $assignment->template?->tpl_code,
+                    'title' => $assignment->template?->title,
+                    'theme_key' => $assignment->template?->theme_key,
+                ]
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $formatted
+        ]);
+    }
+
+    /**
+     * Assign a template to a specific store owner (Super Admin).
+     */
+    public function assignTemplate(Request $request)
+    {
+        if ($request->user()->role_id !== 1) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'template_id' => 'required|exists:templates,id',
+        ]);
+
+        $userId = $request->input('user_id');
+        $templateId = $request->input('template_id');
+
+        $template = Template::findOrFail($templateId);
+
+        // Check if already assigned
+        $purchase = TemplatePurchase::where('user_id', $userId)
+            ->where('template_id', $templateId)
+            ->first();
+
+        if ($purchase) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This template is already assigned to this store owner.'
+            ], 422);
+        }
+
+        $purchase = TemplatePurchase::create([
+            'user_id' => $userId,
+            'template_id' => $templateId,
+            'order_ref' => 'ADMIN_ASSIGN_' . strtoupper(bin2hex(random_bytes(4))),
+            'amount_paid' => 0.00,
+            'purchased_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Template assigned successfully.',
+            'data' => $purchase
+        ]);
+    }
+
+    /**
+     * Remove a template assignment (Super Admin).
+     */
+    public function removeAssignment(Request $request, $id)
+    {
+        if ($request->user()->role_id !== 1) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $purchase = TemplatePurchase::findOrFail($id);
+        $purchase->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Template assignment removed successfully.'
+        ]);
+    }
+
+    /**
+     * Update an existing template assignment (Super Admin).
+     */
+    public function updateAssignment(Request $request, $id)
+    {
+        if ($request->user()->role_id !== 1) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'template_id' => 'required|exists:templates,id',
+        ]);
+
+        $purchase = TemplatePurchase::findOrFail($id);
+
+        $userId = $request->input('user_id');
+        $templateId = $request->input('template_id');
+
+        // Check if there is another record with the same user_id and template_id
+        $exists = TemplatePurchase::where('user_id', $userId)
+            ->where('template_id', $templateId)
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This template is already assigned to this store owner.'
+            ], 422);
+        }
+
+        $purchase->update([
+            'user_id' => $userId,
+            'template_id' => $templateId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Template assignment updated successfully.',
+            'data' => $purchase
+        ]);
     }
 }

@@ -1,0 +1,438 @@
+/* ZANDO Style Animation Utility Stylesheet */
+
+/* 1. Entrance Fade & Keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-down {
+  animation: fadeInDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slide-up {
+  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Address Book drawer — slides in from the right */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-slide-left {
+  animation: slideInFromRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+
+/* 2. Floating Parallax Collage */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-10px) rotate(-0.5deg); }
+}
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+@keyframes float-slower {
+  0%, 100% { transform: translateY(0) rotate(1deg); }
+  50% { transform: translateY(10px) rotate(0.5deg); }
+}
+.animate-float-slower {
+  animation: float-slower 10s ease-in-out infinite;
+}
+
+/* 3. Micro-Interactions: Favorite Heart Pop */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.animate-heart-pop {
+  animation: heartPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* 4. Progressive Animation Delays */
+.delay-75 { animation-delay: 75ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* 5. Underline Draw Transitions */
+.nav-link-draw {
+  position: relative;
+  transition: color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link-draw::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 22px;
+  left: 0;
+  background-color: #E61E25;
+  transform-origin: bottom right;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link-draw:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.footer-link-draw {
+  position: relative;
+  display: inline-block;
+  transition: color 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.footer-link-draw::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: #E61E25;
+  transform-origin: bottom right;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.footer-link-draw:hover {
+  color: #1c1c1c;
+  transform: translateX(6px);
+}
+.footer-link-draw:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* 6. Call to Action Shine reflection overlay */
+.btn-shine-swipe {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine-swipe::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  transition: none;
+}
+.btn-shine-swipe:hover::after {
+  left: 150%;
+  transition: left 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 7. Product Catalog Card Hover lifts */
+.card-lift-hover {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.5s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-lift-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+}
+
+.img-zoom-hover {
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-lift-hover:hover .img-zoom-hover {
+  transform: scale(1.05);
+}
+
+.quick-add-slide-up {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-lift-hover:hover .quick-add-slide-up {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 8. Interactive Action Icon Scaling */
+.icon-scale-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+}
+.icon-scale-hover:hover {
+  transform: scale(1.2);
+}
+.icon-scale-hover:active {
+  transform: scale(0.9);
+}
+
+/* 9. General Hover Translate Utility */
+.hover-translate-r {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-translate-r:hover {
+  transform: translateX(6px);
+}
+
+/* 10. Scrollbar Hide Utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* 11. Premium Smooth Product Image Hover transition */
+.product-image-primary {
+  object-fit: contain;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.group:hover .product-image-primary {
+  transform: scale(1.05);
+}
+
+.product-image-hover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.group:hover .product-image-hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* 12. Ken Burns Slide Background Animation */
+@keyframes kenBurns {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+.animate-ken-burns {
+  animation: kenBurns 15s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* 13. Shopping Cart Count Badge Pop Animation */
+@keyframes cartPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.4); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-cart-pop {
+  animation: cartPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* 14. Slide In From Right */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 15. ZANDO Style "To Top" Button & Arrows */
+@keyframes zandoArrowSlide {
+  0% { transform: translateY(0); opacity: 1; }
+  45% { transform: translateY(-120%); opacity: 0; }
+  50% { transform: translateY(120%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes zandoPulse {
+  0% { box-shadow: 0 0 0 0 rgba(230, 30, 37, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(230, 30, 37, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(230, 30, 37, 0); }
+}
+
+.zando-top-button {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.zando-top-button:hover {
+  transform: translateY(-4px);
+}
+
+.zando-top-button:hover .zando-arrow-icon {
+  animation: zandoArrowSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.zando-dot {
+  width: 4px;
+  height: 4px;
+  background-color: #E61E25;
+  border-radius: 50%;
+  margin-top: 2px;
+  transition: transform 0.3s ease;
+}
+
+.zando-top-button:hover .zando-dot {
+  transform: scale(1.5);
+  background-color: #1c1c1c;
+}
+
+/* Modal Fade ZANDO Style (Aba Checkout Style) */
+@keyframes modalAbaCheckout {
+  0% { opacity: 0; transform: translateY(10px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-modal-zando {
+  animation: modalAbaCheckout 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Scroll Progress indicator */
+.scroll-progress-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.scroll-progress-circle {
+  transition: stroke-dashoffset 0.1s linear;
+  stroke: #E61E25;
+}
+
+/* 16. Mega Menu Premium Hover Styles */
+.mega-menu-item {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mega-menu-item:hover {
+  padding-left: 8px;
+  color: #E61E25 !important;
+}
+
+.mega-menu-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 4px;
+  height: 1px;
+  background-color: #E61E25;
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mega-menu-item:hover::before {
+  transform: translateY(-50%) scaleX(1);
+}
+
+.mega-menu-column-title {
+  position: relative;
+  display: inline-block;
+}
+
+.mega-menu-column-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 20px;
+  height: 1.5px;
+  background-color: #E61E25;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.group:hover .mega-menu-column-title::after {
+  width: 100%;
+}
+
+/* Scroll Indicator Mouse Dot & Pulsing Text Animations */
+@keyframes scrollDotDown {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(14px); opacity: 0; }
+}
+
+@keyframes scrollDotUp {
+  0% { transform: translateY(14px); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(0); opacity: 0; }
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.95; }
+}
+
+.animate-scroll-dot-down {
+  animation: scrollDotDown 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite !important;
+}
+
+.animate-scroll-dot-up {
+  animation: scrollDotUp 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite !important;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 2.5s ease-in-out infinite !important;
+}
+

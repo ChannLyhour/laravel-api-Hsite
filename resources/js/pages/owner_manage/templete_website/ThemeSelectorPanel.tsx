@@ -205,6 +205,20 @@ export const ThemeSelectorPanel: React.FC<ThemeSelectorPanelProps> = ({
   const freeThemes = freeThemeIds.map(id => themes[id]).filter(Boolean);
   const premiumThemes = premiumThemeIds.map(id => themes[id]).filter(Boolean);
 
+  const isAdmin = profile?.user?.role === 'admin';
+
+  const visiblePremiumThemes = premiumThemes.filter(theme => {
+    if (isAdmin) return true;
+    const dbTpl = dbTemplates.find(t => t.theme_key === theme.id);
+    return dbTpl ? dbTpl.owned : unlockedThemes.includes(theme.id);
+  });
+
+  const visibleMobileThemes = Object.values(paidSmartPhoneThemes).filter(template => {
+    if (isAdmin) return true;
+    const dbTpl = dbTemplates.find(t => t.theme_key === template.id);
+    return dbTpl ? dbTpl.owned : unlockedSmartPhoneTemplates.includes(template.id);
+  });
+
   const getStoreSlug = () => {
     const path = window.location.pathname;
     if (path.startsWith('/owner=')) {
@@ -232,11 +246,17 @@ export const ThemeSelectorPanel: React.FC<ThemeSelectorPanelProps> = ({
 
   const handleThemeAction = (e: React.MouseEvent, theme: ThemeConfig, isPremium: boolean) => {
     e.stopPropagation();
-    const isUnlocked = !isPremium || unlockedThemes.includes(theme.id);
+    
+    const dbTpl = isPremium ? dbTemplates.find(t => t.theme_key === theme.id) : null;
+    const isUnlocked = !isPremium || (dbTpl ? dbTpl.owned : unlockedThemes.includes(theme.id));
 
     if (isUnlocked) {
       onSelectTheme(theme.id);
     } else {
+      if (profile?.user?.role === 'admin') {
+        toast.error('This template is locked. Please assign it from the Admin Panel.');
+        return;
+      }
       setThemeToBuy(theme);
       setShowPurchaseModal(true);
     }
@@ -520,7 +540,7 @@ export const ThemeSelectorPanel: React.FC<ThemeSelectorPanelProps> = ({
                 isSelected 
                   ? 'Theme applied and activated' 
                   : isPremium && !isUnlocked 
-                    ? 'Purchase this premium template' 
+                    ? (profile?.user?.role === 'admin' ? 'This template is locked. Please assign it from the Admin Panel.' : 'Purchase this premium template') 
                     : 'Apply this storefront theme'
               }
             >
@@ -581,14 +601,16 @@ export const ThemeSelectorPanel: React.FC<ThemeSelectorPanelProps> = ({
                 isSelected
                   ? 'bg-emerald-500 hover:bg-emerald-600 border-transparent text-white shadow-2xs'
                   : isPremium && !isUnlocked
-                    ? 'bg-amber-500 hover:bg-amber-600 border-transparent text-white shadow-2xs'
+                    ? (profile?.user?.role === 'admin'
+                        ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'bg-amber-500 hover:bg-amber-600 border-transparent text-white shadow-2xs')
                     : 'bg-white hover:bg-orange-50 border-orange-500 text-orange-600 hover:text-orange-700'
               }`}
             >
               {isSelected 
                 ? 'Active' 
                 : isPremium && !isUnlocked 
-                  ? 'Buy Theme' 
+                  ? (profile?.user?.role === 'admin' ? 'Locked' : 'Buy Theme') 
                   : 'Apply Theme'}
             </button>
           </div>
@@ -624,98 +646,103 @@ export const ThemeSelectorPanel: React.FC<ThemeSelectorPanelProps> = ({
         </div>
       </div>
 
-      {/* SECTION 2: Premium Paid Templates */}
-      <div className="space-y-4 pt-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center space-x-2">
-            <FiCreditCard className="text-amber-500 w-5 h-5 shrink-0" />
-            <div>
-              <h4 className="text-sm font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
-                <span>Premium Theme Templates</span>
-                <span className="px-2 py-0.5 text-[9px] font-black uppercase bg-amber-100 text-amber-700 rounded-[3px]">
-                  Paid
-                </span>
-              </h4>
-              <p className="text-slate-400 text-xs mt-0.5">
-                Elevate your storefront with fully customized layout architectures designed for specific industries.
-              </p>
+      {/* SECTION 2: Premium Theme Templates */}
+      {visiblePremiumThemes.length > 0 && (
+        <div className="space-y-4 pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center space-x-2">
+              <FiCreditCard className="text-amber-500 w-5 h-5 shrink-0" />
+              <div>
+                <h4 className="text-sm font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+                  <span>Premium Theme Templates</span>
+                  <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-[3px] ${isAdmin ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                    {isAdmin ? 'Admin Assign' : 'Assigned'}
+                  </span>
+                </h4>
+                <p className="text-slate-400 text-xs mt-0.5">
+                  Elevate your storefront with premium templates assigned to your store.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {premiumThemes.map((theme) => renderThemeCard(theme, true))}
-        </div>
-      </div>
-
-      {/* SECTION 3: Premium Responsive Mobile App Templates (Phone & Tablet) */}
-      <div className="space-y-4 pt-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center space-x-2">
-            <FiSmartphone className="text-violet-500 w-5 h-5 shrink-0" />
-            <div>
-              <h4 className="text-sm font-extrabold text-slate-800 tracking-tight flex items-center gap-2 flex-wrap">
-                <span>Premium Mobile App Templates</span>
-                <span className="px-2 py-0.5 text-[9px] font-black uppercase bg-violet-100 text-violet-700 rounded-[3px]">
-                  📱 Phone
-                </span>
-                <span className="px-2 py-0.5 text-[9px] font-black uppercase bg-indigo-100 text-indigo-700 rounded-[3px]">
-                  📟 Tablet
-                </span>
-                <span className="px-2 py-0.5 text-[9px] font-black uppercase bg-amber-100 text-amber-700 rounded-[3px]">
-                  Paid
-                </span>
-              </h4>
-              <p className="text-slate-400 text-xs mt-0.5">
-                Transform your storefront into a premium responsive mobile experience. Includes both smartphone and tablet app templates with full e-commerce features.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {visiblePremiumThemes.map((theme) => renderThemeCard(theme, true))}
           </div>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
-          {Object.values(paidSmartPhoneThemes).map((template) => {
-            const dbTpl = dbTemplates.find(t => t.theme_key === template.id);
-            const overriddenTemplate = dbTpl ? {
-              ...template,
-              name: dbTpl.title,
-              price: '$' + parseFloat(dbTpl.price).toFixed(2)
-            } : template;
-            const isUnlocked = dbTpl ? !!dbTpl.owned : unlockedSmartPhoneTemplates.includes(template.id);
-            
-            return (
-              <SmartPhoneTemplateCard
-                key={template.id}
-                template={overriddenTemplate}
-                isUnlocked={isUnlocked}
-                isActive={activeSmartPhoneTemplate === template.id}
-                onPurchase={handleSmartPhonePurchase}
-                onActivate={handleSmartPhoneActivate}
-                onPreview={handleSmartPhonePreview}
-                onDownload={async (templateId) => {
-                  const backendTpl = dbTemplates.find(t => t.theme_key === templateId);
-                  if (backendTpl) {
-                    try {
-                      const loadingId = toast.loading('Generating download link...');
-                      const res = await templatesService.generateDownloadToken(backendTpl.tpl_code);
-                      toast.dismiss(loadingId);
-                      if (res.success && res.download_token) {
-                        window.location.href = templatesService.getDownloadUrl(res.download_token);
-                        toast.success('Download started!');
-                      } else {
-                        toast.error('Failed to generate download link.');
+      {/* SECTION 3: Premium Mobile App Templates */}
+      {visibleMobileThemes.length > 0 && (
+        <div className="space-y-4 pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center space-x-2">
+              <FiSmartphone className="text-violet-500 w-5 h-5 shrink-0" />
+              <div>
+                <h4 className="text-sm font-extrabold text-slate-800 tracking-tight flex items-center gap-2 flex-wrap">
+                  <span>Premium Mobile App Templates</span>
+                  <span className="px-2 py-0.5 text-[9px] font-black uppercase bg-violet-100 text-violet-700 rounded-[3px]">
+                    📱 Phone
+                  </span>
+                  <span className="px-2 py-0.5 text-[9px] font-black uppercase bg-indigo-100 text-indigo-700 rounded-[3px]">
+                    📟 Tablet
+                  </span>
+                  <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-[3px] ${isAdmin ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                    {isAdmin ? 'Admin Assign' : 'Assigned'}
+                  </span>
+                </h4>
+                <p className="text-slate-400 text-xs mt-0.5">
+                  Transform your storefront with responsive smartphone & tablet app templates assigned to your store.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
+            {visibleMobileThemes.map((template) => {
+              const dbTpl = dbTemplates.find(t => t.theme_key === template.id);
+              const overriddenTemplate = dbTpl ? {
+                ...template,
+                name: dbTpl.title,
+                price: '$' + parseFloat(dbTpl.price).toFixed(2)
+              } : template;
+              const isUnlocked = dbTpl ? !!dbTpl.owned : unlockedSmartPhoneTemplates.includes(template.id);
+              
+              return (
+                <SmartPhoneTemplateCard
+                  key={template.id}
+                  template={overriddenTemplate}
+                  isUnlocked={isUnlocked}
+                  isActive={activeSmartPhoneTemplate === template.id}
+                  onPurchase={isAdmin ? () => toast.error('This template is locked. Please assign it from the Admin Panel.') : handleSmartPhonePurchase}
+                  onActivate={handleSmartPhoneActivate}
+                  onPreview={handleSmartPhonePreview}
+                  isAdmin={isAdmin}
+                  onDownload={async (templateId) => {
+                    const backendTpl = dbTemplates.find(t => t.theme_key === templateId);
+                    if (backendTpl) {
+                      try {
+                        const loadingId = toast.loading('Generating download link...');
+                        const res = await templatesService.generateDownloadToken(backendTpl.tpl_code);
+                        toast.dismiss(loadingId);
+                        if (res.success && res.download_token) {
+                          window.location.href = templatesService.getDownloadUrl(res.download_token);
+                          toast.success('Download started!');
+                        } else {
+                          toast.error('Failed to generate download link.');
+                        }
+                      } catch (err: any) {
+                        toast.dismiss();
+                        toast.error(err.message || 'Download failed.');
                       }
-                    } catch (err: any) {
-                      toast.dismiss();
-                      toast.error(err.message || 'Download failed.');
                     }
-                  }
-                }}
-              />
-            );
-          })}
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
+
+
 
       {/* PREMIUM PURCHASE MODAL */}
       {showPurchaseModal && themeToBuy && (

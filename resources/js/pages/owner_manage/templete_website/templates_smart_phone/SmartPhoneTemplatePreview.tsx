@@ -16,6 +16,7 @@ interface SmartPhoneTemplateCardProps {
   onActivate: (templateId: string) => void;
   onPreview: (templateId: string) => void;
   onDownload?: (templateId: string) => void;
+  isAdmin?: boolean;
 }
 
 export const SmartPhoneTemplateCard: React.FC<SmartPhoneTemplateCardProps> = ({
@@ -26,6 +27,7 @@ export const SmartPhoneTemplateCard: React.FC<SmartPhoneTemplateCardProps> = ({
   onActivate,
   onPreview,
   onDownload,
+  isAdmin = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -212,7 +214,7 @@ export const SmartPhoneTemplateCard: React.FC<SmartPhoneTemplateCardProps> = ({
               isActive 
                 ? 'Template activated' 
                 : !isUnlocked 
-                  ? 'Purchase this premium template' 
+                  ? (isAdmin ? 'This template is locked. Please assign it from the Admin Panel.' : 'Purchase this premium template') 
                   : 'Activate this mobile template'
             }
           >
@@ -263,14 +265,16 @@ export const SmartPhoneTemplateCard: React.FC<SmartPhoneTemplateCardProps> = ({
               isActive
                 ? 'bg-emerald-500 hover:bg-emerald-600 border-transparent text-white shadow-2xs'
                 : !isUnlocked
-                  ? 'bg-violet-500 hover:bg-violet-600 border-transparent text-white shadow-2xs'
+                  ? (isAdmin 
+                      ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                      : 'bg-violet-500 hover:bg-violet-600 border-transparent text-white shadow-2xs')
                   : 'bg-white hover:bg-violet-50 border-violet-500 text-violet-600 hover:text-violet-700'
             }`}
           >
             {isActive 
               ? 'Active' 
               : !isUnlocked 
-                ? 'Buy App' 
+                ? (isAdmin ? 'Locked' : 'Buy App') 
                 : 'Activate'}
           </button>
         </div>
