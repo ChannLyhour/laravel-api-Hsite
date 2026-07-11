@@ -244,6 +244,14 @@ class OrderController extends Controller
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                     ]);
+
+                    // Subtract stock if the order does not require OTP verification (starts as 'pending')
+                    if (!$otpRequiredForStore && $variantId) {
+                        $variant = \App\Models\ProductVariant::find($variantId);
+                        if ($variant) {
+                            $variant->decrement('stock_qty', $item['quantity']);
+                        }
+                    }
                 }
 
                 // Send Telegram notification to the store owner immediately only if no OTP verification is required
@@ -426,6 +434,19 @@ class OrderController extends Controller
                     }
                 }
                 
+                // Revert stock subtraction if the order was active (i.e. status is not 'unverified' and not already 'canceled'/'cancelled')
+                $wasActive = $order->status !== 'unverified' && $order->status !== 'canceled' && $order->status !== 'cancelled';
+                if ($wasActive) {
+                    foreach ($order->items as $item) {
+                        if ($item->product_variant_id) {
+                            $variant = \App\Models\ProductVariant::find($item->product_variant_id);
+                            if ($variant) {
+                                $variant->increment('stock_qty', $item->quantity);
+                            }
+                        }
+                    }
+                }
+
                 // Set status to canceled and payment status to Failed
                 $order->update([
                     'status' => 'canceled',
@@ -469,6 +490,16 @@ class OrderController extends Controller
 
         // Update order status to pending
         $order->update(['status' => 'pending']);
+
+        // Subtract stock for all items in the order now that it is verified
+        foreach ($order->items as $item) {
+            if ($item->product_variant_id) {
+                $variant = \App\Models\ProductVariant::find($item->product_variant_id);
+                if ($variant) {
+                    $variant->decrement('stock_qty', $item->quantity);
+                }
+            }
+        }
 
         // Send Telegram notification to the store owner
         try {

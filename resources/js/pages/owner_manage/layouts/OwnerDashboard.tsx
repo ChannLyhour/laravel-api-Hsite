@@ -117,44 +117,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
         return JSON.parse(saved);
       } catch (_) { }
     }
-    return [
-      {
-        id: 'mock-1',
-        title: 'New Order #1204',
-        description: 'Pending payment verification from Lyhour Chann ($32.50)',
-        time: '5 mins ago',
-        read: false,
-        type: 'order',
-        action: { tab: 'orders' }
-      },
-      {
-        id: 'mock-2',
-        title: 'Customer Message',
-        description: 'Sarah Connor: "Is my order on the way?"',
-        time: '20 mins ago',
-        read: false,
-        type: 'chat',
-        action: { tab: 'inbox' }
-      },
-      {
-        id: 'mock-3',
-        title: 'Low Stock Alert',
-        description: 'Coca-Cola Can is down to 3 units.',
-        time: '1 hour ago',
-        read: true,
-        type: 'stock',
-        action: { tab: 'menu-items' }
-      },
-      {
-        id: 'mock-4',
-        title: 'System Announcement',
-        description: 'VAT and Store Location settings successfully updated.',
-        time: '2 hours ago',
-        read: true,
-        type: 'system',
-        action: { tab: 'settings' }
-      }
-    ];
+    return [];
   });
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);

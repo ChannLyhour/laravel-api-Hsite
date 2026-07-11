@@ -24,6 +24,7 @@ import { chatService } from '@/api/owner/chat';
 import { resolveImageUrl } from '@/api/imageUtils';
 import { customersService } from '@/api/owner/customers';
 import { useTranslation } from '../lang/i18n';
+import { ShowLowStockProduct } from './dashboad/show_low_stock_product';
 
 interface OverviewTabProps {
   ownerId?: number | string;
@@ -473,6 +474,63 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
         </div>
       </div>
 
+      {/* ── Low Stock + Top Products Section ───────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Low Stock Alerts (col-span-1) */}
+        <div className="lg:col-span-1 flex">
+          <ShowLowStockProduct ownerId={ownerId} storeId={storeId} />
+        </div>
+
+        {/* Top Selling Products List (col-span-2) */}
+        <div className="lg:col-span-2 rounded-[5px] border overflow-hidden shadow-2xs flex flex-col justify-between custom-card-container">
+          <div>
+            <div className="flex items-center justify-between px-5 py-4 border-b custom-card-header-bar">
+              <h3 className="text-sm font-black uppercase tracking-wider">{t('overview.top_selling_products') || 'Top Selling Products'}</h3>
+              <span className="text-[10px] font-extrabold text-slate-400 tracking-wider bg-slate-100 px-2 py-0.5 rounded-full">5 top products</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-100 text-[10px] font-black text-slate-450 uppercase tracking-wider bg-slate-50/50">
+                    <th className="py-3 px-5">Item</th>
+                    <th className="py-3 px-3 text-center">Units Sold</th>
+                    <th className="py-3 px-5 text-right">Total Revenue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 text-xs">
+                  {finalTopProducts.map((prod, i) => (
+                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3.5 px-5 font-bold text-slate-800 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-[4px] border overflow-hidden shrink-0 bg-slate-50 flex items-center justify-center relative">
+                          {prod.image ? (
+                            <img src={resolveImageUrl(prod.image)} alt={prod.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <FiBox className="w-4 h-4 text-slate-300" />
+                          )}
+                          {getRankBadge(i + 1)}
+                        </div>
+                        <span>{prod.name}</span>
+                      </td>
+                      <td className="py-3.5 px-3 font-bold text-slate-700 text-center font-mono">{prod.qty}</td>
+                      <td className="py-3.5 px-5 font-black text-slate-900 text-right font-mono">${prod.totalSales.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  {finalTopProducts.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-8 text-center text-slate-400 font-bold">
+                        No sales records yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="border-t p-3 bg-black/[0.015] text-center">
+            <p className="text-[11px] text-slate-400 font-bold">Based on order item quantities</p>
+          </div>
+        </div>
+      </div>
 
     </div>
   );

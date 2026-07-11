@@ -34,6 +34,7 @@ import { toast } from '@/pages/owner_manage/utils/toast';
 import type { StoreRow } from '@/api/owner/stores';
 import { resolveImageUrl } from '@/api/imageUtils';
 import { ordersService } from '@/api/owner/orders';
+import { stockManagementService } from '@/api/owner/stockManagement';
 import { useTranslation } from '../lang/i18n';
 import { getStoreUrl, slugifyStoreName } from '@Security/Owner/configUrl';
 
@@ -77,6 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     complete: 0,
     canceled: 0,
   });
+  const [lowStockCount, setLowStockCount] = useState<number>(0);
 
   const [isOffersDealsOpen, setIsOffersDealsOpen] = useState(false);
 
@@ -232,6 +234,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }
       })
       .catch(err => console.warn('Failed to load order counts in sidebar', err));
+
+    stockManagementService.getStockItems(ownerId, stores?.id)
+      .then(items => {
+        if (items) {
+          let lowCount = 0;
+          items.forEach(item => {
+            const vars = item.variants || [];
+            vars.forEach(v => {
+              const threshold = v.low_stock_threshold ?? 5;
+              const isOutOfStock = v.stock_qty === 0;
+              const isLowStock = v.stock_qty <= threshold;
+              if (isOutOfStock || isLowStock) {
+                lowCount++;
+              }
+            });
+          });
+          setLowStockCount(lowCount);
+        }
+      })
+      .catch(err => console.warn('Failed to load low stock count in sidebar', err));
   }, [profile, activeTab, stores?.id]);
 
 
@@ -417,6 +439,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {item.id === 'inbox' && unreadChatCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black px-1 min-w-[15px] h-3.5 rounded-full flex items-center justify-center border border-white leading-none shadow-sm shadow-red-500/25">
                       {unreadChatCount}
+                    </span>
+                  )}
+                  {item.id === 'stock' && lowStockCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black px-1 min-w-[15px] h-3.5 rounded-full flex items-center justify-center border border-white leading-none shadow-sm shadow-red-500/25 animate-pulse">
+                      {lowStockCount}
                     </span>
                   )}
                   {/* Tooltip on Hover */}
@@ -894,8 +921,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {activeCategory === 'stock' && (
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-2">
-                  Stock Manage
+                <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-2 flex items-center justify-between">
+                  <span>Stock Manage</span>
+                  {lowStockCount > 0 && (
+                    <span className="bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
+                      {lowStockCount} LOW
+                    </span>
+                  )}
                 </p>
 
                 <button
@@ -922,13 +954,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                 <button
                   onClick={() => { setActiveTab('stock-low'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'stock-low'
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'stock-low'
                       ? 'bg-white/10 text-white'
                       : 'text-indigo-100 hover:text-white hover:bg-white/5'
                     }`}
                 >
-                  <FiAlertTriangle className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span>Low Stock Alerts</span>
+                  <div className="flex items-center gap-2.5">
+                    <FiAlertTriangle className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                    <span>Low Stock Alerts</span>
+                  </div>
+                  {lowStockCount > 0 && (
+                    <span className="bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shrink-0">
+                      {lowStockCount}
+                    </span>
+                  )}
                 </button>
 
                 <button

@@ -14,7 +14,7 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
      const [fgColor, setFgColor] = useState('#0f172a'); // default dark slate
      const [bgColor, setBgColor] = useState('#ffffff');
      const [size, setSize] = useState(240);
-     const [includeLogo, setIncludeLogo] = useState(true);
+
 
      // Resolve store details
      const storeName = settings?.store_name || profile?.user?.name || 'My Store';
@@ -199,7 +199,6 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
           setFgColor('#0f172a');
           setBgColor('#ffffff');
           setSize(240);
-          setIncludeLogo(true);
      };
 
      const presetColors = [
@@ -306,46 +305,10 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
                                         </div>
                                    </div>
 
-                                   {/* Logo inclusion */}
-                                   {resolvedLogoUrl && (
-                                        <div className="space-y-3">
-                                             <label className="text-2xs font-black text-slate-500 uppercase tracking-wider block">
-                                                  Brand Logo
-                                             </label>
-                                             <div className="flex items-center gap-3">
-                                                  <button
-                                                       onClick={() => setIncludeLogo(!includeLogo)}
-                                                       className={`px-4 py-2 border rounded-[6px] text-xs font-black transition-colors cursor-pointer ${includeLogo
-                                                            ? 'border-orange-500 bg-orange-50/50 text-orange-700'
-                                                            : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                                                            }`}
-                                                  >
-                                                       {includeLogo ? 'Embed Store Logo' : 'No Logo'}
-                                                  </button>
-                                                  <div className="w-9 h-9 rounded-full overflow-hidden border bg-slate-50 shrink-0">
-                                                       <img src={resolvedLogoUrl} alt="Store Logo" className="w-full h-full object-cover" />
-                                                  </div>
-                                             </div>
-                                        </div>
-                                   )}
+
                               </div>
 
-                              {/* QR Size setting */}
-                              <div className="space-y-2 pt-2">
-                                   <div className="flex justify-between items-center text-2xs font-black text-slate-500 uppercase tracking-wider">
-                                        <span>QR Size (Resolution)</span>
-                                        <span className="text-slate-800 font-bold">{size}x{size} px</span>
-                                   </div>
-                                   <input
-                                        type="range"
-                                        min="180"
-                                        max="320"
-                                        step="20"
-                                        value={size}
-                                        onChange={(e) => setSize(Number(e.target.value))}
-                                        className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-orange-600"
-                                   />
-                              </div>
+
                          </div>
                     </div>
 
@@ -365,7 +328,7 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
                                         size={size}
                                         fgColor={fgColor}
                                         bgColor={bgColor}
-                                        logoUrl={includeLogo ? resolvedLogoUrl : undefined}
+                                        logoUrl={undefined}
                                    />
                               </div>
                          </div>

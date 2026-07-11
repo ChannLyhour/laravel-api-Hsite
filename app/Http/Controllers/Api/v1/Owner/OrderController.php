@@ -186,7 +186,35 @@ class OrderController extends Controller
             $newStatus = 'delivering';
         }
 
+        $oldStatus = $order->status;
         $order->update(['status' => $newStatus]);
+
+        $activeStatuses = ['pending', 'processing', 'completed', 'confirmed', 'delivering'];
+        $wasActive = in_array($oldStatus, $activeStatuses);
+        $isActiveNow = in_array($newStatus, $activeStatuses);
+
+        if ($wasActive && ($newStatus === 'cancelled' || $newStatus === 'canceled')) {
+            // Revert stock (increment)
+            foreach ($order->items as $item) {
+                if ($item->product_variant_id) {
+                    $variant = \App\Models\ProductVariant::find($item->product_variant_id);
+                    if ($variant) {
+                        $variant->increment('stock_qty', $item->quantity);
+                    }
+                }
+            }
+        } elseif (($oldStatus === 'cancelled' || $oldStatus === 'canceled') && $isActiveNow) {
+            // Deduct stock again (decrement)
+            foreach ($order->items as $item) {
+                if ($item->product_variant_id) {
+                    $variant = \App\Models\ProductVariant::find($item->product_variant_id);
+                    if ($variant) {
+                        $variant->decrement('stock_qty', $item->quantity);
+                    }
+                }
+            }
+        }
+
         \App\Helpers\SendStatusTelegramboToCustomers::sendStatus($order, $newStatus);
         return response()->json($order);
     }
