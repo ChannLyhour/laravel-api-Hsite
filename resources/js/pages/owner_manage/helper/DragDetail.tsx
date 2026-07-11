@@ -13,13 +13,12 @@ export const DragDetail: React.FC<DragDetailProps> = ({
      isOpen,
      onClose,
      children,
-     maxHeight = '85vh',
-     maxWidth = 'max-w-md md:max-w-xl',
+     maxWidth = 'max-w-md',
 }) => {
      const [active, setActive] = useState(false);
-     const [dragY, setDragY] = useState(0);
+     const [dragX, setDragX] = useState(0);
      const [isDragging, setIsDragging] = useState(false);
-     const startY = useRef(0);
+     const startX = useRef(0);
 
      useEffect(() => {
           if (isOpen) {
@@ -42,49 +41,49 @@ export const DragDetail: React.FC<DragDetailProps> = ({
      };
 
      const handleTouchStart = (e: React.TouchEvent) => {
-          startY.current = e.touches[0].clientY;
+          startX.current = e.touches[0].clientX;
           setIsDragging(true);
      };
 
      const handleTouchMove = (e: React.TouchEvent) => {
           if (!isDragging) return;
-          const currentY = e.touches[0].clientY;
-          const deltaY = currentY - startY.current;
-          if (deltaY > 0) {
-               setDragY(deltaY);
+          const currentX = e.touches[0].clientX;
+          const deltaX = currentX - startX.current;
+          if (deltaX > 0) {
+               setDragX(deltaX);
           }
      };
 
      const handleTouchEnd = () => {
           setIsDragging(false);
-          if (dragY > 150) {
+          if (dragX > 150) {
                handleClose();
           } else {
-               setDragY(0);
+               setDragX(0);
           }
      };
 
      const handleMouseDown = (e: React.MouseEvent) => {
-          startY.current = e.clientY;
+          startX.current = e.clientX;
           setIsDragging(true);
      };
 
      useEffect(() => {
           const handleMouseMove = (e: MouseEvent) => {
                if (!isDragging) return;
-               const deltaY = e.clientY - startY.current;
-               if (deltaY > 0) {
-                    setDragY(deltaY);
+               const deltaX = e.clientX - startX.current;
+               if (deltaX > 0) {
+                    setDragX(deltaX);
                }
           };
 
           const handleMouseUp = () => {
                if (isDragging) {
                     setIsDragging(false);
-                    if (dragY > 150) {
+                    if (dragX > 150) {
                          handleClose();
                     } else {
-                         setDragY(0);
+                         setDragX(0);
                     }
                }
           };
@@ -98,12 +97,12 @@ export const DragDetail: React.FC<DragDetailProps> = ({
                window.removeEventListener('mousemove', handleMouseMove);
                window.removeEventListener('mouseup', handleMouseUp);
           };
-     }, [isDragging, dragY]);
+     }, [isDragging, dragX]);
 
      if (!isOpen) return null;
 
      return createPortal(
-          <div className="fixed inset-0 z-[10000] flex items-end justify-center">
+          <div className="fixed inset-0 z-[10000] flex justify-end items-stretch">
                {/* Backdrop overlay */}
                <div
                     className={`absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300 ease-in-out ${
@@ -112,27 +111,25 @@ export const DragDetail: React.FC<DragDetailProps> = ({
                     onClick={handleClose}
                />
 
-               {/* Bottom Sheet Panel container */}
+               {/* Right Side Panel container */}
                <div
-                    className={`relative z-10 bg-white w-full ${maxWidth} rounded-t-[16px] shadow-2xl overflow-hidden flex flex-col ${
+                    className={`relative z-10 bg-white h-full w-full ${maxWidth} sm:rounded-l-[16px] shadow-2xl overflow-hidden flex flex-col pl-3.5 ${
                          isDragging ? '' : 'transition-transform duration-300 ease-out'
                     }`}
                     style={{
-                         height: maxHeight,
-                         transform: active ? `translateY(${dragY}px)` : 'translateY(100%)',
+                         transform: active ? `translateX(${dragX}px)` : 'translateX(100%)',
                     }}
                >
-                    {/* Drag Handle Bar */}
+                    {/* Left Drag Handle Bar (vertical handle) */}
                     <div
-                         className="w-full pt-3 pb-2 flex justify-center bg-white cursor-pointer select-none shrink-0"
+                         className="absolute left-0 top-0 bottom-0 w-3.5 flex items-center justify-center cursor-ew-resize select-none z-20 group hover:bg-slate-50/80 transition-colors"
                          onTouchStart={handleTouchStart}
                          onTouchMove={handleTouchMove}
                          onTouchEnd={handleTouchEnd}
                          onMouseDown={handleMouseDown}
-                         onClick={handleClose}
-                         title="Drag down or click to close"
+                         title="Drag right to close"
                     >
-                         <div className="w-12 h-1.5 bg-slate-200 rounded-full hover:bg-slate-300 transition-colors" />
+                         <div className="w-1 h-16 bg-slate-200 group-hover:bg-slate-350 rounded-full transition-colors" />
                     </div>
 
                     {/* Content Area */}

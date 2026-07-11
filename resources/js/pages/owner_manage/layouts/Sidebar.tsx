@@ -26,6 +26,9 @@ import {
   FiMonitor,
   FiTruck,
   FiMapPin,
+  FiBox,
+  FiTrendingUp,
+  FiAlertTriangle,
 } from 'react-icons/fi';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import type { StoreRow } from '@/api/owner/stores';
@@ -34,7 +37,7 @@ import { ordersService } from '@/api/owner/orders';
 import { useTranslation } from '../lang/i18n';
 import { getStoreUrl, slugifyStoreName } from '@Security/Owner/configUrl';
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis';
 
 interface SidebarProps {
   activeTab: TabId;
@@ -239,10 +242,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (activeTab === 'inbox') return 'inbox';
     if (activeTab.startsWith('orders')) return 'orders';
     if (['categories', 'sub-categories', 'sub-sub-categories', 'brands', 'product-badges', 'attributes', 'menu-items'].includes(activeTab)) return 'catalog';
+    if (['stock-overview', 'stock-items', 'stock-low', 'stock-movements', 'stock-abc-analysis'].includes(activeTab)) return 'stock';
     if (activeTab.startsWith('marketing')) return 'marketing';
     if (['customers', 'customer-reviews', 'partner-stores'].includes(activeTab)) return 'people';
     if (['settings-delivery-methods', 'settings-delivery-zones'].includes(activeTab)) return 'delivery';
-    if (['theme', 'settings', 'social-media', 'settings-thirdparty-payment', 'settings-thirdparty-firebase', 'settings-thirdparty-pusher', 'settings-thirdparty-marketing', 'settings-thirdparty-oauth', 'settings-thirdparty-telegram', 'settings-thirdparty-gmailotp', 'customize-system'].includes(activeTab)) return 'settings';
+    if (['theme', 'settings', 'sharinglink', 'social-media', 'settings-thirdparty-payment', 'settings-thirdparty-firebase', 'settings-thirdparty-pusher', 'settings-thirdparty-marketing', 'settings-thirdparty-oauth', 'settings-thirdparty-telegram', 'settings-thirdparty-gmailotp', 'customize-system'].includes(activeTab)) return 'settings';
     return 'dashboard';
   };
 
@@ -252,6 +256,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const leftMenuItems = [
     { id: 'dashboard', label: t('sidebar.dashboard'), icon: <FiHome className="w-[18px] h-[18px]" /> },
     { id: 'catalog', label: t('sidebar.catalog'), icon: <FiLayers className="w-[18px] h-[18px]" /> },
+    { id: 'stock', label: 'Stock Manage', icon: <FiBox className="w-[18px] h-[18px]" /> },
     { id: 'orders', label: t('sidebar.orders'), icon: <FiCheckSquare className="w-[18px] h-[18px]" /> },
     { id: 'inbox', label: 'Customer Chat', icon: <FiMessageSquare className="w-[18px] h-[18px]" /> },
     { id: 'marketing', label: t('sidebar.marketing'), icon: <FiVolume2 className="w-[18px] h-[18px]" /> },
@@ -280,6 +285,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         setActiveTab('categories');
         setSidebarCollapsed(false);
         setIsCategorySetupOpen(true);
+        break;
+      case 'stock':
+        setActiveTab('stock-overview');
+        setSidebarCollapsed(false);
         break;
       case 'marketing':
         setActiveTab('marketing-banners');
@@ -883,6 +892,69 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
 
+            {activeCategory === 'stock' && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-2">
+                  Stock Manage
+                </p>
+
+                <button
+                  onClick={() => { setActiveTab('stock-overview'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'stock-overview'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiBox className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>Overview</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('stock-items'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'stock-items'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiLayers className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>Stock Items</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('stock-low'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'stock-low'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiAlertTriangle className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>Low Stock Alerts</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('stock-movements'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'stock-movements'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiActivity className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>Stock Movements</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('stock-abc-analysis'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'stock-abc-analysis'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiTrendingUp className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>ABC Analysis</span>
+                </button>
+              </div>
+            )}
+
 
 
             {activeCategory === 'delivery' && (
@@ -941,6 +1013,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <FiLayout className="w-4 h-4 text-indigo-200/80 shrink-0" />
                   <span>{t('sidebar.storefront_themes')}</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('sharinglink'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'sharinglink'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiShare2 className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>Online Store</span>
                 </button>
 
                 <button

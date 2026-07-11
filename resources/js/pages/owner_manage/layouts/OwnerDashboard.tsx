@@ -25,6 +25,8 @@ import {
   FiMessageSquare,
   FiTruck,
   FiMapPin,
+  FiBox,
+  FiTrendingUp,
 } from 'react-icons/fi';
 import { OverviewTab } from '../components/OverviewTab';
 import { CategoriesTab } from '../components/categories/categories';
@@ -69,6 +71,8 @@ import { CustomizeSystemTab } from '../components/Store_Settings/CustomizeSystem
 import { DeliveryMethodsTab } from '../components/Delivery_Methods';
 import { DeliveryZonesTab } from '../components/Delivery_Zones';
 import { ConfigOTPGmailTab } from '../components/gmailotp/configotpGmail';
+import { StockManagementTab } from '../components/StockManagementTab';
+import { SharingLinkShow } from '../components/sharinglink/show';
 
 interface AdminDashboardProps {
   token: string | null;
@@ -77,7 +81,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis';
 
 interface NotificationItem {
   id: string;
@@ -683,6 +687,23 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       ]
     },
     {
+      section: 'STOCK',
+      items: [
+        {
+          id: 'stock' as const,
+          label: 'Stock Manage',
+          icon: <FiBox className="w-[18px] h-[18px]" />,
+          subItems: [
+            { id: 'stock-overview', label: 'Overview', icon: <span className="text-xs">•</span> },
+            { id: 'stock-items', label: 'Stock Items', icon: <span className="text-xs">•</span> },
+            { id: 'stock-low', label: 'Low Stock Alerts', icon: <span className="text-xs">•</span> },
+            { id: 'stock-movements', label: 'Stock Movements', icon: <span className="text-xs">•</span> },
+            { id: 'stock-abc-analysis', label: 'ABC Analysis', icon: <span className="text-xs">•</span> },
+          ]
+        }
+      ]
+    },
+    {
       section: 'DELIVERY',
       items: [
         { id: 'settings-delivery-methods', label: 'Delivery Methods', icon: <FiTruck className="w-[18px] h-[18px]" /> },
@@ -694,6 +715,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       items: [
         { id: 'theme', label: t('sidebar.storefront_themes'), icon: <FiLayout className="w-[18px] h-[18px]" /> },
         { id: 'settings', label: t('sidebar.store_settings'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
+        { id: 'sharinglink', label: 'Online Store', icon: <FiShare2 className="w-[18px] h-[18px]" /> },
         { id: 'social-media', label: t('sidebar.social_media'), icon: <FiShare2 className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-payment', label: t('sidebar.payment_methods'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
         { id: 'settings-thirdparty-firebase', label: t('sidebar.firebase'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
@@ -748,12 +770,18 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'theme': return <Storefront_ThemeTab ownerId={activeOwnerId} profile={profile} />;
       case 'customize-system': return <CustomizeSystemTab />;
       case 'settings': return <SettingsTab profile={profile} ownerId={activeOwnerId} />;
+      case 'sharinglink': return <SharingLinkShow profile={profile} settings={settings} />;
       case 'attributes': return <AttributesTab ownerId={activeOwnerId} />;
       case 'customers': return <CustomersTab ownerId={activeOwnerId} />;
       case 'customer-reviews': return <CustomerReviewsTab ownerId={activeOwnerId} />;
       case 'social-media': return <SocialMediaTab ownerId={activeOwnerId} />;
       case 'settings-delivery-methods': return <DeliveryMethodsTab />;
       case 'settings-delivery-zones': return <DeliveryZonesTab />;
+      case 'stock-overview': return <StockManagementTab defaultView="overview" ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'stock-items': return <StockManagementTab defaultView="items" ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'stock-low': return <StockManagementTab defaultView="low" ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'stock-movements': return <StockManagementTab defaultView="movements" ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'stock-abc-analysis': return <StockManagementTab defaultView="abc" ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'settings-thirdparty-payment': return <Payment_Gateways_SetupTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-firebase': return <ThirdPartyFirebaseTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-pusher': return <Pusher_ConfigurationTab ownerId={activeOwnerId} profile={profile} />;
