@@ -376,9 +376,10 @@ class AuthController extends Controller
         ]);
 
         $storeId = $request->input('store_id') ?? $request->input('created_by');
+        $email = strtolower(trim($request->email));
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $storeId) {
-            $user = User::where('email', $request->email)->first();
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $storeId, $email) {
+            $user = User::withTrashed()->whereRaw('LOWER(email) = ?', [$email])->first();
 
             if (!$user) {
                 // Determine first/last name
@@ -394,7 +395,7 @@ class AuthController extends Controller
                     'name' => $request->name,
                     'first_name' => $firstName,
                     'last_name' => $lastName,
-                    'email' => $request->email,
+                    'email' => $email,
                     'password' => Hash::make(\Illuminate\Support\Str::random(16)),
                     'role_id' => 2, // Customer
                     'state' => 'active',
@@ -409,11 +410,15 @@ class AuthController extends Controller
                         'name' => $request->name,
                         'first_name' => $firstName,
                         'last_name' => $lastName,
-                        'email' => $request->email,
+                        'email' => $email,
                         'created_by' => $storeId,
                     ]);
                 }
             } else {
+                if ($user->trashed()) {
+                    $user->restore();
+                }
+
                 // If user exists, check if they need a customer record for this store
                 if ((int) $user->role_id === 2 && $storeId) {
                     $existingCustomer = $user->customerForStore($storeId);
@@ -431,7 +436,7 @@ class AuthController extends Controller
                             'name' => $request->name ?: $user->name,
                             'first_name' => $firstName,
                             'last_name' => $lastName,
-                            'email' => $request->email ?: $user->email,
+                            'email' => $email,
                             'created_by' => $storeId,
                         ]);
                     }
