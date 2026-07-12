@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { FiUploadCloud, FiX, FiEdit } from 'react-icons/fi';
 import { API_BASE_URL } from '@/api/client';
 
@@ -281,7 +282,7 @@ export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
       )}
 
       {/* Preview Lightbox Modal */}
-      {previewImage && (
+      {previewImage && createPortal(
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4 animate-fade-in"
           onClick={() => setPreviewImage(null)}
@@ -307,7 +308,8 @@ export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
               className="max-w-full max-h-[80vh] object-contain rounded-md"
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
