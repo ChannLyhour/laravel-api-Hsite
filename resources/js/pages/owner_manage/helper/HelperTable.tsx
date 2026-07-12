@@ -284,9 +284,9 @@ export function HelperTable<T>({
                 })}
               </div>
             ) : (
-              <div className="overflow-x-auto overflow-y-auto max-h-[500px] custom-scrollbar p-1 md:p-0 bg-slate-50/30 md:bg-transparent">
-                <table className="w-full text-left border-collapse block md:table">
-                  <thead className="hidden md:table-header-group">
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px] custom-scrollbar">
+                <table className="w-full text-left border-collapse">
+                  <thead>
                     <tr className="text-slate-500 text-xs uppercase font-extrabold tracking-wider">
                       {/* Checkbox column header */}
                       {selectedIds && onSelectionChange && getRowId && (
@@ -312,7 +312,6 @@ export function HelperTable<T>({
                         const alignClass = 
                           col.align === 'center' ? 'text-center' :
                           col.align === 'right' ? 'text-right' : 'text-left';
-                        const hasFilter = col.filterable && onColumnFilterChange;
                         return (
                           <th
                             key={col.key}
@@ -324,31 +323,22 @@ export function HelperTable<T>({
                       })}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-900 text-[12px] sm:text-[14px] block md:table-row-group space-y-3.5 md:space-y-0">
+                  <tbody className="divide-y divide-slate-100 text-slate-900 text-[12px] sm:text-[14px]">
                     {data.map((item, index) => {
                       const rowElement = renderRow(item, index);
                       if (React.isValidElement(rowElement)) {
                         const validRowElement = rowElement as React.ReactElement<any>;
                         const rowId = getRowId ? getRowId(item) : null;
-                        const isChecked = selectedIds && rowId ? selectedIds.includes(rowId) : false;
 
                         // Get original children (tds) of the tr
                         const originalChildren = React.Children.toArray(validRowElement.props.children) as React.ReactElement<any>[];
 
-                        // Enhance tds with mobile responsive labels and flex styles
+                        // Enhance tds with flex styles
                         const enhancedChildren = originalChildren.map((child, colIdx) => {
                           if (!React.isValidElement(child)) return child;
 
-                          // Check if it's the checkbox / selection column
-                          const isSelection = child.key === 'selection' || (selectedIds && colIdx === 0 && originalChildren.length > columns.length);
-                          
-                          // Map correct column label
-                          const colConfigIdx = selectedIds ? (isSelection ? -1 : colIdx - 1) : colIdx;
-                          const label = colConfigIdx >= 0 && columns[colConfigIdx] ? columns[colConfigIdx].label : (t('menu.select') || 'Select');
-
                           return React.cloneElement(child, {
-                            'data-label': label,
-                            className: `flex md:table-cell py-2.5 md:py-3.5 px-0 md:px-5 border-none md:border-b md:border-slate-100/50 items-center justify-between md:justify-start before:content-[attr(data-label)] before:md:hidden before:font-extrabold before:text-[10px] before:text-slate-400 before:uppercase before:tracking-wider before:mr-4 text-right md:text-left ${(child.props as any).className || ''}`
+                            className: `py-2.5 md:py-3.5 px-4 md:px-5 border-b border-slate-100/50 ${(child.props as any).className || ''}`
                           } as any);
                         });
 
@@ -360,8 +350,7 @@ export function HelperTable<T>({
                           const selectionCell = (
                             <td 
                               key="selection" 
-                              data-label={t('menu.select') || 'Select'}
-                              className="flex md:table-cell py-2.5 md:py-3.5 px-0 md:px-5 border-none md:border-b border-slate-100/50 items-center justify-between md:justify-start before:content-[attr(data-label)] before:md:hidden before:font-extrabold before:text-[10px] before:text-slate-400 before:uppercase before:tracking-wider before:mr-4 text-right md:text-left"
+                              className="py-2.5 md:py-3.5 px-4 md:px-5 border-b border-slate-100/50 text-center w-10"
                             >
                               <input
                                 type="checkbox"
@@ -381,7 +370,7 @@ export function HelperTable<T>({
                         }
 
                         return React.cloneElement(validRowElement, {
-                          className: `block md:table-row bg-white border border-slate-200/60 md:border-none rounded-[8px] p-4 shadow-sm md:shadow-none mb-3.5 md:mb-0 md:bg-transparent ${validRowElement.props.className || ''}`
+                          className: `hover:bg-slate-50/40 transition-colors ${(validRowElement.props as any).className || ''}`
                         } as any, finalChildren);
                       }
                       return rowElement;
