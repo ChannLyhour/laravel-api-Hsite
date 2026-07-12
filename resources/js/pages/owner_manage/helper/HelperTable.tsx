@@ -99,7 +99,19 @@ export function HelperTable<T>({
 }: HelperTableProps<T>) {
   
   const { t } = useTranslation();
-  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table');
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('helper_table_view_mode');
+      if (renderCard && (saved === 'table' || saved === 'grid')) {
+        return saved;
+      }
+    }
+    return 'table';
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('helper_table_view_mode', viewMode);
+  }, [viewMode]);
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
   const indexOfLastItem = indexOfFirstItem + itemsPerPage;
 
