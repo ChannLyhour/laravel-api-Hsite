@@ -173,108 +173,113 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
         if (!phone) return '';
         let clean = phone.trim();
         clean = clean.replace(/^(\+?855\s*)+/, '');
-        if (clean.startsWith('0')) {
-            clean = clean.slice(1);
-        }
-        return clean;
-    };
-
-    const formatPhoneNumber = (phone: string) => {
-        let clean = phone.trim().replace(/^0/, '');
-        return `+855${clean}`;
+        return clean.replace(/\s+/g, ''); // strip spaces too
     };
 
     const [form, setForm] = useState({
-        first_name: addressToEdit?.first_name || '',
-        last_name: addressToEdit?.last_name || '',
-        telephone: addressToEdit ? formatInitialPhone(addressToEdit.telephone) : '',
-        address: addressToEdit?.address || '',
-        country: addressToEdit?.country || 'Cambodia',
-        city_province: addressToEdit?.city_province || '',
-        latitude: addressToEdit?.latitude || null as number | string | null,
-        longitude: addressToEdit?.longitude || null as number | string | null,
+        first_name: addressToEdit ? (addressToEdit.first_name || '') : '',
+        last_name: addressToEdit ? (addressToEdit.last_name || '') : '',
+        telephone: addressToEdit ? formatInitialPhone(addressToEdit.telephone || '') : '',
+        address: addressToEdit ? (addressToEdit.address || '') : '',
+        city_province: addressToEdit ? (addressToEdit.city_province || '') : '',
+        country: addressToEdit ? (addressToEdit.country || 'Cambodia') : 'Cambodia',
+        latitude: addressToEdit ? addressToEdit.latitude : undefined,
+        longitude: addressToEdit ? addressToEdit.longitude : undefined,
     });
-    const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [fetchingLocation, setFetchingLocation] = useState(false);
 
-    const handleAutoGetLocation = async () => {
-        try {
-            setFetchingLocation(true);
-            const result = await openLocationMapModal(
-                form.latitude ? parseFloat(String(form.latitude)) : null,
-                form.longitude ? parseFloat(String(form.longitude)) : null
-            );
-            if (result) {
-                setForm(prev => ({
-                    ...prev,
-                    address: result.address,
-                    city_province: result.city_province || prev.city_province,
-                    latitude: result.latitude,
-                    longitude: result.longitude,
-                }));
-                toast.success('Location updated from map!');
-            }
-        } catch (err) {
-            console.error('Map selection error:', err);
-            toast.error('Failed to select location from map.');
-        } finally {
-            setFetchingLocation(false);
-        }
+    const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+    const [fetchingLocation, setFetchingLocation] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setForm(p => ({ ...p, [key]: e.target.value }));
     };
 
-    const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-        setForm(prev => ({ ...prev, [key]: e.target.value }));
+    const handleAutoGetLocation = () => {
+        if (!navigator.geolocation) {
+            toast.error('Geolocation is not supported by your browser.');
+            return;
+        }
+        setFetchingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                setForm(p => ({ ...p, latitude, longitude }));
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const addrName = data.display_name || '';
+                        setForm(p => ({ ...p, address: addrName }));
+                        toast.success('Location auto-pinned successfully!');
+                    } else {
+                        toast.success('Coordinates pinned! Address lookup failed.');
+                    }
+                } catch {
+                    toast.success('Coordinates pinned! (Offline lookup fallback)');
+                } finally {
+                    setFetchingLocation(false);
+                }
+            },
+            (error) => {
+                console.error(error);
+                toast.error('Could not retrieve GPS location.');
+                setFetchingLocation(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!form.telephone || !form.address || !form.city_province) {
-            toast.error('Telephone, City/Province, and Address are required.');
+    const handleSave = async () => {
+        if (!form.first_name.trim() || !form.last_name.trim()) {
+            toast.error('Please enter first name and last name.');
+            return;
+        }
+        if (!form.telephone.trim()) {
+            toast.error('Please enter telephone number.');
+            return;
+        }
+        if (!form.address.trim()) {
+            toast.error('Please enter delivery address.');
+            return;
+        }
+        if (!form.city_province) {
+            toast.error('Please select city/province.');
             return;
         }
 
-        if (!isLoggedIn) {
-            // Local address for guest checkout
-            const guestAddress: ShippingAddress = {
-                id: addressToEdit ? addressToEdit.id : Date.now(),
-                user_id: 0,
-                first_name: form.first_name,
-                last_name: form.last_name,
-                telephone: form.telephone,
-                address: form.address,
-                city_province: form.city_province,
-                country: form.country,
-                set_as_default: true,
-                latitude: form.latitude,
-                longitude: form.longitude,
-                created_at: addressToEdit ? addressToEdit.created_at : new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            };
-            onSave(guestAddress);
-            onClose();
-            toast.success(addressToEdit ? 'Address updated!' : 'Address set for this order!');
-            return;
-        }
+        // Standardize telephone prefix logic to matching address book DB
+        const prefix = '+855';
+        let rawPhone = form.telephone.trim().replace(/^0+/, ''); // strip leading zero
+        const fullTelephone = `${prefix} ${rawPhone}`;
 
-        setLoading(true);
         try {
-            if (addressToEdit) {
-                const updatedAddress = await shippingAddressesService.updateAddress(addressToEdit.id, {
-                    first_name: form.first_name,
-                    last_name: form.last_name,
-                    telephone: form.telephone,
-                    address: form.address,
-                    city_province: form.city_province,
-                    country: form.country,
-                    set_as_default: addressToEdit.set_as_default,
-                    latitude: form.latitude,
-                    longitude: form.longitude,
-                });
-                onSave(updatedAddress);
-                onClose();
-                toast.success('Address updated successfully!');
+            setLoading(false);
+            if (isLoggedIn) {
+                setLoading(true);
+                if (addressToEdit) {
+                    const updated = await shippingAddressesService.updateAddress(addressToEdit.id, {
+                        ...form,
+                        telephone: fullTelephone,
+                    });
+                    onSave(updated);
+                    onClose();
+                    toast.success('Address updated successfully!');
+                } else {
+                    const created = await shippingAddressesService.createAddress({
+                        ...form,
+                        telephone: fullTelephone,
+                        set_as_default: false,
+                    });
+                    onSave(created);
+                    onClose();
+                    toast.success('New address added!');
+                }
             } else {
-                const newAddress = await shippingAddressesService.createAddress({
+                // For guest checkout save address locally
+                const newAddress: ShippingAddress = {
+                    id: addressToEdit ? addressToEdit.id : Date.now(),
+                    user_id: addressToEdit?.user_id ?? 0,
                     first_name: form.first_name,
                     last_name: form.last_name,
                     telephone: form.telephone,
@@ -284,7 +289,9 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                     set_as_default: false,
                     latitude: form.latitude,
                     longitude: form.longitude,
-                });
+                    created_at: addressToEdit?.created_at ?? new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                };
                 onSave(newAddress);
                 onClose();
                 toast.success('New address saved!');
@@ -300,15 +307,15 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-stone-950/40"
+                className="absolute inset-0 bg-stone-955/20 backdrop-blur-xs"
                 onClick={onClose}
             />
 
             {/* Modal */}
-            <div className="relative z-10 bg-white w-full max-w-md rounded-sm shadow-2xl animate-fade-in">
+            <div className="relative z-10 bg-white w-full max-w-md rounded-3xl border border-stone-100/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] animate-fade-in">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 pt-6 pb-4">
-                    <h2 className="text-sm font-black text-stone-900 uppercase tracking-widest">
+                <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100/80">
+                    <h2 className="text-sm font-black text-stone-955 uppercase tracking-widest">
                         {addressToEdit ? 'Modify Address' : 'Add new address'}
                     </h2>
                     <button
@@ -320,11 +327,11 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                 </div>
 
                 {/* Body */}
-                <div className="px-6 pb-6 space-y-4">
+                <div className="px-6 py-6 space-y-4">
                     {/* First & Last name */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
+                            <label className="text-[10px] font-extrabold text-stone-500 uppercase tracking-wider block">
                                 First name
                             </label>
                             <input
@@ -332,11 +339,11 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                                 value={form.first_name}
                                 onChange={set('first_name')}
                                 placeholder="Enter first name"
-                                className="w-full px-3 py-2.5 border border-stone-200 rounded-[3px] text-xs font-medium text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-stone-900"
+                                className="w-full px-4 py-3 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-955/10 focus:border-stone-955 transition-all"
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
+                            <label className="text-[10px] font-extrabold text-stone-500 uppercase tracking-wider block">
                                 Last name
                             </label>
                             <input
@@ -344,18 +351,18 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                                 value={form.last_name}
                                 onChange={set('last_name')}
                                 placeholder="Enter last name"
-                                className="w-full px-3 py-2.5 border border-stone-200 rounded-[3px] text-xs font-medium text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-stone-900"
+                                className="w-full px-4 py-3 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-955/10 focus:border-stone-955 transition-all"
                             />
                         </div>
                     </div>
 
                     {/* Phone */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
+                        <label className="text-[10px] font-extrabold text-stone-500 uppercase tracking-wider block">
                             Telephone <span className="text-red-400">(Required)</span>
                         </label>
                         <div className="flex gap-2">
-                            <div className="flex items-center px-3 py-2.5 border border-stone-200 rounded-[3px] bg-stone-50 text-xs font-black text-stone-700 shrink-0">
+                            <div className="flex items-center px-4 py-3 border border-stone-200 rounded-xl bg-stone-50 text-xs font-black text-stone-700 shrink-0">
                                 + 855
                             </div>
                             <input
@@ -363,7 +370,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                                 value={form.telephone}
                                 onChange={set('telephone')}
                                 placeholder="Enter phone number"
-                                className="flex-1 px-3 py-2.5 border border-stone-200 rounded-[3px] text-xs font-medium text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-stone-900"
+                                className="flex-1 px-4 py-3 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-955/10 focus:border-stone-955 transition-all"
                             />
                         </div>
                     </div>
@@ -371,7 +378,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                     {/* Address */}
                     <div className="space-y-1.5">
                         <div className="flex justify-between items-center">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
+                            <label className="text-[10px] font-extrabold text-stone-500 uppercase tracking-wider block">
                                 Address <span className="text-red-400">(Required)</span>
                             </label>
                             <button
@@ -389,7 +396,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                                 value={form.address}
                                 onChange={set('address')}
                                 placeholder="Enter address or click auto location"
-                                className="w-full pl-3 pr-10 py-2.5 border border-stone-200 rounded-[3px] text-xs font-medium text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-stone-900"
+                                className="w-full pl-4 pr-10 py-3 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-955/10 focus:border-stone-955 transition-all"
                             />
                             <button
                                 type="button"
@@ -411,37 +418,37 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                         {/* Country */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
+                            <label className="text-[10px] font-extrabold text-stone-500 uppercase tracking-wider block">
                                 Country
                             </label>
                             <div className="relative">
                                 <select
                                     value={form.country}
                                     onChange={set('country')}
-                                    className="w-full appearance-none px-3 py-2.5 border border-stone-200 rounded-[3px] text-xs font-medium text-stone-800 focus:outline-none focus:border-stone-900 bg-white pr-8 cursor-pointer"
+                                    className="w-full appearance-none px-4 py-3 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-955/10 focus:border-stone-955 bg-white pr-8 cursor-pointer transition-all"
                                 >
                                     <option value="Cambodia">Cambodia</option>
                                 </select>
-                                <FiChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 w-3.5 h-3.5 text-stone-400 pointer-events-none" />
+                                <FiChevronRight className="absolute right-3.5 top-1/2 -translate-y-1/2 rotate-90 w-3.5 h-3.5 text-stone-400 pointer-events-none" />
                             </div>
                         </div>
 
                         {/* City */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
+                            <label className="text-[10px] font-extrabold text-stone-500 uppercase tracking-wider block">
                                 City/province <span className="text-red-400">(Required)</span>
                             </label>
                             <div className="relative">
                                 <button
                                     type="button"
                                     onClick={() => setCityDropdownOpen(v => !v)}
-                                    className={`w-full flex items-center justify-between px-3 py-2.5 border rounded-[3px] text-xs text-left cursor-pointer bg-white transition-colors ${form.city_province ? 'text-stone-800 font-medium' : 'text-stone-300'} ${cityDropdownOpen ? 'border-stone-900' : 'border-stone-200'}`}
+                                    className={`w-full flex items-center justify-between px-4 py-3 border rounded-xl text-xs text-left cursor-pointer bg-white transition-all ${form.city_province ? 'text-stone-900 font-semibold' : 'text-stone-300'} ${cityDropdownOpen ? 'border-stone-955 ring-2 ring-stone-955/10' : 'border-stone-200'}`}
                                 >
-                                    {form.city_province || '— Select city / province *'}
+                                    {form.city_province || '— Select *'}
                                     <FiChevronRight className={`w-3.5 h-3.5 text-stone-400 transition-transform ${cityDropdownOpen ? 'rotate-90' : ''}`} />
                                 </button>
                                 {cityDropdownOpen && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-[3px] shadow-lg z-50 max-h-48 overflow-y-auto">
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-100 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto py-1 animate-fade-in">
                                         {CAMBODIA_CITIES.map(city => (
                                             <button
                                                 key={city}
@@ -450,7 +457,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                                                     setForm(p => ({ ...p, city_province: city }));
                                                     setCityDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-2 text-xs font-medium cursor-pointer border-none transition-colors ${form.city_province === city ? 'bg-stone-900 text-white' : 'bg-white text-stone-700 hover:bg-stone-50'}`}
+                                                className={`w-full text-left px-4 py-2 text-xs font-semibold cursor-pointer border-none transition-colors ${form.city_province === city ? 'bg-stone-955 text-white' : 'bg-white text-stone-700 hover:bg-stone-50'}`}
                                             >
                                                 {city}
                                             </button>
@@ -461,17 +468,15 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                         </div>
                     </div>
 
-
-
                     {form.latitude && form.longitude && !isNaN(parseFloat(String(form.latitude))) && !isNaN(parseFloat(String(form.longitude))) && (
-                        <div className="w-full h-32 border border-stone-200 rounded-[3px] overflow-hidden mt-1 relative">
+                        <div className="w-full h-32 border border-stone-200 rounded-2xl overflow-hidden mt-1 relative">
                             <iframe
                                 title="Selected Location Preview"
                                 src={`https://maps.google.com/maps?q=${parseFloat(String(form.latitude))},${parseFloat(String(form.longitude))}&z=15&output=embed`}
                                 className="w-full h-full border-none"
                                 loading="lazy"
                             />
-                            <div className="absolute top-2 right-2 bg-stone-900/80 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded backdrop-blur-xs">
+                            <div className="absolute top-2 right-2 bg-stone-955/80 text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg backdrop-blur-xs">
                                 Pinned Map Preview
                             </div>
                         </div>
@@ -481,7 +486,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className={`w-full py-3.5 bg-stone-900 hover:bg-stone-850 text-white font-black text-xs uppercase tracking-widest rounded-[3px] border-none cursor-pointer transition-colors mt-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        className={`w-full py-3.5 bg-stone-955 hover:bg-stone-900 active:scale-[0.98] text-white font-black text-xs uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all mt-2 shadow-[0_4px_14px_rgba(0,0,0,0.15)] ${loading ? 'opacity-70 cursor-not-allowed shadow-none' : ''}`}
                     >
                         {loading ? 'Saving...' : (addressToEdit ? 'Apply Changes' : 'Save')}
                     </button>
@@ -515,21 +520,21 @@ const AddressBookDrawer: React.FC<AddressBookDrawerProps> = ({
     <div className="fixed inset-0 z-[9999] flex justify-end">
         {/* Backdrop */}
         <div
-            className="absolute inset-0 bg-stone-950/30"
+            className="absolute inset-0 bg-stone-955/20 backdrop-blur-xs"
             onClick={onClose}
         />
 
         {/* Drawer */}
-        <div className="relative z-10 w-full max-w-sm bg-white h-full flex flex-col shadow-2xl animate-slide-left">
+        <div className="relative z-10 w-full max-w-sm bg-white h-full flex flex-col shadow-2xl border-l border-stone-100/50 animate-slide-left">
             {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-stone-100">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-stone-100/80">
                 <button
                     onClick={onClose}
                     className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 text-stone-600 transition-colors border-none bg-transparent cursor-pointer"
                 >
                     <FiChevronLeft className="w-4 h-4 stroke-[2.5]" />
                 </button>
-                <h2 className="text-sm font-black text-stone-900 uppercase tracking-widest">
+                <h2 className="text-sm font-black text-stone-955 uppercase tracking-widest">
                     Address book
                 </h2>
             </div>
@@ -540,7 +545,7 @@ const AddressBookDrawer: React.FC<AddressBookDrawerProps> = ({
                     <div className="flex flex-col items-center justify-center py-16 gap-4 text-center text-stone-600 animate-fade-in">
                         <FiMapPin className="w-8 h-8 text-stone-400 stroke-[1.5]" />
                         <div className="space-y-1">
-                            <p className="text-xs font-black uppercase tracking-wider text-stone-900">Login Required</p>
+                            <p className="text-xs font-black uppercase tracking-wider text-stone-955">Login Required</p>
                             <p className="text-[11px] text-stone-500 font-medium px-4">Please login or register to see your saved address book.</p>
                         </div>
                         <button
@@ -548,7 +553,7 @@ const AddressBookDrawer: React.FC<AddressBookDrawerProps> = ({
                                 onClose();
                                 window.dispatchEvent(new CustomEvent('request_login'));
                             }}
-                            className="px-6 py-2.5 bg-stone-900 hover:bg-stone-850 text-white font-black text-xs uppercase tracking-widest rounded-[3px] border-none cursor-pointer transition-colors duration-200"
+                            className="px-6 py-2.5 bg-stone-955 hover:bg-stone-900 active:scale-[0.98] text-white font-black text-xs uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all duration-200 shadow-[0_4px_14px_rgba(0,0,0,0.12)]"
                         >
                             Login / Register
                         </button>
@@ -562,34 +567,34 @@ const AddressBookDrawer: React.FC<AddressBookDrawerProps> = ({
                     addresses.map(addr => (
                         <div
                             key={addr.id}
-                            className={`relative p-4 border rounded-sm cursor-pointer transition-colors ${selectedId === addr.id
-                                ? 'border-stone-900 bg-stone-50/60'
-                                : 'border-stone-150 hover:bg-stone-50'
+                            className={`relative p-4 border rounded-2xl cursor-pointer transition-all duration-200 ${selectedId === addr.id
+                                ? 'border-stone-955 bg-stone-50/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)]'
+                                : 'border-stone-150 hover:border-stone-350 hover:bg-stone-50/40'
                                 }`}
                             onClick={() => { onSelect(addr.id); onClose(); }}
                         >
                             <div className="flex items-start gap-3">
                                 {/* Checkbox */}
-                                <div className={`mt-0.5 shrink-0 w-4 h-4 rounded-sm border-2 flex items-center justify-center transition-colors ${selectedId === addr.id ? 'bg-stone-900 border-stone-900' : 'border-stone-300'}`}>
-                                    {selectedId === addr.id && <FiCheck className="w-2.5 h-2.5 text-white stroke-[3]" />}
+                                <div className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-200 ${selectedId === addr.id ? 'bg-stone-955 border-stone-955 scale-105 shadow-xs' : 'border-stone-300 bg-white'}`}>
+                                    {selectedId === addr.id && <FiCheck className="w-3 h-3 text-white stroke-[3.5]" />}
                                 </div>
 
                                 <div className="flex-1 text-xs space-y-0.5">
-                                    <h3 className="font-bold text-stone-900 text-sm">
+                                    <h3 className="font-bold text-stone-955 text-sm">
                                         {addr.first_name} {addr.last_name}
                                         {addr.set_as_default && (
-                                            <span className="ml-2 text-[9px] bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded-sm font-black uppercase tracking-wide">
+                                            <span className="ml-2 text-[9px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                                                 Default
                                             </span>
                                         )}
                                     </h3>
-                                    <p className="text-stone-500">{addr.city_province}</p>
+                                    <p className="text-stone-550 font-medium">{addr.city_province}</p>
                                     <p className="text-stone-400">{addr.telephone}</p>
                                 </div>
 
                                 <button
                                     onClick={e => { e.stopPropagation(); onEdit(addr.id); }}
-                                    className="text-[10px] font-black text-stone-400 hover:text-stone-900 flex items-center gap-0.5 transition-colors border-none bg-transparent cursor-pointer"
+                                    className="text-[10px] font-black text-stone-400 hover:text-stone-955 flex items-center gap-0.5 transition-colors border-none bg-transparent cursor-pointer"
                                 >
                                     Edit <FiEdit2 className="w-3 h-3" />
                                 </button>
@@ -600,11 +605,11 @@ const AddressBookDrawer: React.FC<AddressBookDrawerProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 border-t border-stone-100">
+            <div className="px-5 py-4 border-t border-stone-100/80">
                 {isLoggedIn ? (
                     <button
                         onClick={onAddNew}
-                        className="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-black text-xs uppercase tracking-widest rounded-[3px] border-none cursor-pointer transition-colors flex items-center justify-center gap-2"
+                        className="w-full py-3.5 bg-stone-955 hover:bg-stone-900 active:scale-[0.98] text-white font-black text-xs uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(0,0,0,0.15)]"
                     >
                         <FiPlus className="w-4 h-4 stroke-[2.5]" />
                         Add new address
@@ -615,7 +620,7 @@ const AddressBookDrawer: React.FC<AddressBookDrawerProps> = ({
                             onClose();
                             window.dispatchEvent(new CustomEvent('request_login'));
                         }}
-                        className="w-full py-3.5 bg-stone-900 hover:bg-stone-800 text-white font-black text-xs uppercase tracking-widest rounded-[3px] border-none cursor-pointer transition-colors flex items-center justify-center gap-2"
+                        className="w-full py-3.5 bg-stone-955 hover:bg-stone-900 active:scale-[0.98] text-white font-black text-xs uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(0,0,0,0.15)]"
                     >
                         Login / Register
                     </button>
@@ -1460,14 +1465,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     // Guest checkout check
     if (!isGuestCheckoutEnabled && !isLoggedIn) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-sm shadow-2xs min-h-[50vh] mt-8 font-kuntomruy">
-                <h2 className="text-lg font-black text-stone-900 uppercase">Login Required</h2>
-                <p className="text-sm text-stone-500 mt-2">You must be logged in to checkout in this store.</p>
+            <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-3xl border border-stone-100 shadow-[0_8px_30px_rgba(0,0,0,0.025)] min-h-[50vh] mt-8 font-kuntomruy animate-fade-in">
+                <h2 className="text-lg font-black text-stone-955 uppercase tracking-wider">Login Required</h2>
+                <p className="text-sm text-stone-500 mt-2 font-medium">You must be logged in to checkout in this store.</p>
                 <button
                     onClick={() => {
                         window.dispatchEvent(new CustomEvent('request_login'));
                     }}
-                    className="mt-6 px-6 py-3 bg-stone-900 hover:bg-stone-850 text-white font-black text-xs uppercase tracking-widest rounded-[3px] border-none cursor-pointer transition-colors"
+                    className="mt-6 px-8 py-3.5 bg-stone-955 hover:bg-stone-900 active:scale-[0.98] text-white font-extrabold text-xs uppercase tracking-widest rounded-xl border-none cursor-pointer transition-all duration-200 shadow-[0_4px_14px_rgba(0,0,0,0.15)]"
                 >
                     Login / Register
                 </button>
@@ -1476,12 +1481,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }
 
     return (
-        <div className="min-h-screen bg-stone-50 font-kuntomruy pb-16">
+        <div className="min-h-screen bg-stone-50 font-kuntomruy pb-16 relative">
 
             <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                {/* LEFT COLUMN: Sticky persistent Subtotal/Summary Card on Desktop / Bottom Sheet + Modal on Mobile */}
-                <section className="lg:col-span-5">
+                {/* LEFT COLUMN: Sticky persistent Subtotal/Summary Card on Desktop */}
+                <section className="hidden lg:block lg:col-span-5">
                     <SummaryOrder
                         claimCode={claimCode}
                         setClaimCode={setClaimCode}
@@ -1571,13 +1576,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             customAddressRef={customAddressRef}
                         />
                     ) : (
-                        <div className="bg-white p-5 rounded-sm border border-stone-200/60 shadow-2xs flex items-center justify-between opacity-60 cursor-not-allowed select-none">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 shrink-0 font-bold text-xs">
+                        <div className="bg-white p-6 rounded-3xl border border-stone-150 shadow-[0_8px_30px_rgba(0,0,0,0.025)] flex items-center justify-between opacity-60 cursor-not-allowed select-none transition-all duration-200">
+                            <div className="flex items-center gap-4">
+                                <div className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 shrink-0 font-black text-xs">
                                     2
                                 </div>
                                 <div>
-                                    <h2 className="text-xs font-black text-stone-400 uppercase tracking-widest">
+                                    <h2 className="text-xs font-black text-stone-450 uppercase tracking-widest">
                                         2. Delivery Address
                                     </h2>
                                     <p className="text-[11px] text-stone-400 font-bold mt-0.5">
@@ -1843,6 +1848,30 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>,
                 document.body
             )}
+            
+            {/* Mobile Layout: Sleek Sticky Bottom Action Bar */}
+            <div className="lg:hidden sticky bottom-0 left-0 right-0 z-50 bg-white border-t border-stone-100">
+                <SummaryOrder
+                    claimCode={claimCode}
+                    setClaimCode={setClaimCode}
+                    appliedCoupon={appliedCoupon}
+                    setAppliedCoupon={setAppliedCoupon}
+                    handleApplyCode={handleApplyCode}
+                    setIsVoucherDrawerOpen={setIsVoucherDrawerOpen}
+                    subtotal={subtotal}
+                    totalDiscount={totalDiscount}
+                    deliveryFee={deliveryFee}
+                    stores={stores}
+                    storeSettings={storeSettings}
+                    totalAmount={totalAmount}
+                    isCheckingOut={isCheckingOut}
+                    currentStep={currentStep}
+                    displayCartItems={displayCartItems}
+                    selectedPayment={selectedPayment}
+                    handleSubtotalAction={handleSubtotalAction}
+                    coupons={coupons}
+                />
+            </div>
         </div>
     );
 };

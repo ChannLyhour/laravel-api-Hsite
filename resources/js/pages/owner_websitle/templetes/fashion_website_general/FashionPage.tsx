@@ -1126,26 +1126,28 @@ export const FashionPage: React.FC<FashionPageProps> = ({
       </button> */}
 
       {/* Floating Add to Cart Count Button */}
-      <button
-        onClick={() => setIsCartOpen(true)}
-        className={`fixed bottom-6 right-6 z-45 flex items-center justify-center w-14 h-14 bg-stone-900 hover:bg-[#E61E25] text-white rounded-[7px] shadow-2xl cursor-pointer border border-stone-850 focus:outline-none transition-all duration-300 ${showFloatingCart && cart.reduce((sum, ci) => sum + ci.qty, 0) > 0
-          ? 'translate-y-0 opacity-100 scale-100 pointer-events-auto'
-          : 'translate-y-16 opacity-0 scale-75 pointer-events-none'
-          }`}
-        style={{
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2)'
-        }}
-      >
-        <FiShoppingBag className="w-6 h-6 transition-transform duration-300" />
-        {cart.reduce((sum, ci) => sum + ci.qty, 0) > 0 && (
-          <span
-            className="absolute -top-1.5 -right-1.5 bg-[#E61E25] text-white text-[10px] font-black rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-md animate-cart-pop"
-            key={cart.reduce((sum, ci) => sum + ci.qty, 0)}
-          >
-            {cart.reduce((sum, ci) => sum + ci.qty, 0)}
-          </span>
-        )}
-      </button>
+      {activePath !== '/checkout' && (
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className={`fixed bottom-6 right-6 z-45 flex items-center justify-center w-14 h-14 bg-stone-900 hover:bg-[#E61E25] text-white rounded-[7px] shadow-2xl cursor-pointer border border-stone-850 focus:outline-none transition-all duration-300 ${showFloatingCart && cart.reduce((sum, ci) => sum + ci.qty, 0) > 0
+            ? 'translate-y-0 opacity-100 scale-100 pointer-events-auto'
+            : 'translate-y-16 opacity-0 scale-75 pointer-events-none'
+            }`}
+          style={{
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2)'
+          }}
+        >
+          <FiShoppingBag className="w-6 h-6 transition-transform duration-300" />
+          {cart.reduce((sum, ci) => sum + ci.qty, 0) > 0 && (
+            <span
+              className="absolute -top-1.5 -right-1.5 bg-[#E61E25] text-white text-[10px] font-black rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-md animate-cart-pop"
+              key={cart.reduce((sum, ci) => sum + ci.qty, 0)}
+            >
+              {cart.reduce((sum, ci) => sum + ci.qty, 0)}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Vouchers / Coupon Modal Drawer */}
       <ModelCoupon
@@ -1162,7 +1164,7 @@ export const FashionPage: React.FC<FashionPageProps> = ({
 
 
       {/* Floating Back to Top Scroll Indicator */}
-      <DotTechSc />
+      {activePath !== '/checkout' && <DotTechSc />}
     </div>
   );
 };

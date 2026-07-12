@@ -204,7 +204,7 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                                                        type="text"
                                                        value={customCustomerName}
                                                        onChange={(e) => setCustomCustomerName?.(e.target.value)}
-                                                       placeholder="e.g. John Doe"
+                                                       placeholder="your name"
                                                        className={`w-full px-3 py-2.5 border rounded-[3px] text-xs font-medium text-stone-850 placeholder:text-stone-300 focus:outline-none focus:border-stone-900 transition-all ${validationError?.field === 'customCustomerName' ? 'border-red-500' : 'border-stone-200'}`}
                                                   />
                                              </div>
@@ -225,7 +225,7 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                                                             type="text"
                                                             value={customCustomerPhone}
                                                             onChange={(e) => setCustomCustomerPhone?.(e.target.value)}
-                                                            placeholder="e.g. 012345678 or you@example.com"
+                                                            placeholder="phone or email"
                                                             className={`w-full pl-9 pr-3 py-2.5 border rounded-[3px] text-xs font-medium text-stone-855 placeholder:text-stone-300 focus:outline-none focus:border-stone-900 transition-all ${validationError?.field === 'customCustomerPhone' ? 'border-red-500' : 'border-stone-200'}`}
                                                        />
                                                   </div>
@@ -241,7 +241,7 @@ export const Delivery_addressTab: React.FC<DeliveryAddressTabProps> = ({
                                                        type="text"
                                                        value={customCustomerAddress}
                                                        onChange={(e) => setCustomCustomerAddress?.(e.target.value)}
-                                                       placeholder="e.g. #123, St 456, Phnom Penh"
+                                                       placeholder="Address"
                                                        className={`w-full px-3 py-2.5 border rounded-[3px] text-xs font-medium text-stone-850 placeholder:text-stone-300 focus:outline-none focus:border-stone-900 transition-all ${validationError?.field === 'customCustomerAddress' ? 'border-red-500' : 'border-stone-200'}`}
                                                   />
                                              </div>

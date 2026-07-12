@@ -1476,12 +1476,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }
 
     return (
-        <div className="min-h-screen bg-stone-50 font-kuntomruy pb-16">
+        <div className="min-h-screen bg-stone-50 font-kuntomruy pb-16 relative">
 
             <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                {/* LEFT COLUMN: Sticky persistent Subtotal/Summary Card on Desktop / Bottom Sheet + Modal on Mobile */}
-                <section className="lg:col-span-5">
+                {/* LEFT COLUMN: Sticky persistent Subtotal/Summary Card on Desktop */}
+                <section className="hidden lg:block lg:col-span-5">
                     <SummaryOrder
                         claimCode={claimCode}
                         setClaimCode={setClaimCode}
@@ -1843,6 +1843,30 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>,
                 document.body
             )}
+            
+            {/* Mobile Layout: Sleek Sticky Bottom Action Bar */}
+            <div className="lg:hidden sticky bottom-0 left-0 right-0 z-50 bg-white border-t border-stone-150">
+                <SummaryOrder
+                    claimCode={claimCode}
+                    setClaimCode={setClaimCode}
+                    appliedCoupon={appliedCoupon}
+                    setAppliedCoupon={setAppliedCoupon}
+                    handleApplyCode={handleApplyCode}
+                    setIsVoucherDrawerOpen={setIsVoucherDrawerOpen}
+                    subtotal={subtotal}
+                    totalDiscount={totalDiscount}
+                    deliveryFee={deliveryFee}
+                    stores={stores}
+                    storeSettings={storeSettings}
+                    totalAmount={totalAmount}
+                    isCheckingOut={isCheckingOut}
+                    currentStep={currentStep}
+                    displayCartItems={displayCartItems}
+                    selectedPayment={selectedPayment}
+                    handleSubtotalAction={handleSubtotalAction}
+                    coupons={coupons}
+                />
+            </div>
         </div>
     );
 };
