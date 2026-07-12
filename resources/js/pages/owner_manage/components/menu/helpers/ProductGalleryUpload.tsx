@@ -65,6 +65,8 @@ interface ProductGalleryUploadProps {
   children?: React.ReactNode;
 }
 
+import { useTranslation } from '../../../lang/i18n';
+
 export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
   gallery,
   onUploadImages,
@@ -73,6 +75,7 @@ export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
   onReplaceImage,
   children,
 }) => {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -88,10 +91,10 @@ export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
     <div className="bg-white border border-slate-100 rounded-[10px] p-6 sm:p-8 shadow-xs space-y-4">
       <div>
         <label className="text-xs sm:text-sm font-bold text-slate-700 block flex items-center gap-1">
-          Product thumbnail <span className="text-rose-500">*</span>
+          {t('menu.thumbnail')} <span className="text-rose-500">*</span>
         </label>
         <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-          Upload image
+          {t('menu.upload_image')}
         </p>
       </div>
 
@@ -157,10 +160,10 @@ export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
             </div>
             <div>
               <p className="text-xs font-bold text-[#1455ac] group-hover:underline">
-                Click to upload
+                {t('menu.click_upload')}
               </p>
               <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                Or drag and drop
+                {t('menu.drag_drop')}
               </p>
             </div>
           </div>
@@ -168,7 +171,7 @@ export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
 
         {/* Upload constraint info */}
         <p className="text-[10px] text-slate-400 font-medium text-center mt-2 leading-relaxed">
-          JPEG, PNG, JPG, WEBP &nbsp;·&nbsp; Max 50 MB per image
+          {t('menu.upload_constraints')}
         </p>
 
         {/* Gallery Thumbnails List */}
@@ -217,7 +220,7 @@ export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
                       type="button"
                       onClick={() => onRemoveImage(originalIdx)}
                       className="absolute top-1 right-1 p-1 bg-white/90 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-full shadow-sm border-none cursor-pointer opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200"
-                      title="Remove image"
+                      title={t('menu.delete_product')}
                     >
                       <FiX className="w-3 h-3 stroke-[2.5]" />
                     </button>
@@ -231,7 +234,7 @@ export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
                           ? 'bg-[#1455ac] text-white shadow-2xs opacity-100 scale-100'
                           : 'bg-white/90 hover:bg-white text-slate-500 hover:text-[#1455ac] opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100'
                       }`}
-                      title={img.isPrimary ? 'Primary Main Image' : 'Set as main picture'}
+                      title={img.isPrimary ? 'Primary Main Image' : t('menu.set_main_pic')}
                     >
                       <span className="text-[10px]">★</span>
                       {img.isPrimary && <span>MAIN</span>}
@@ -243,7 +246,7 @@ export const ProductGalleryUpload: React.FC<ProductGalleryUploadProps> = ({
           </div>
         ) : (
           <div className="py-4 border border-dashed border-slate-100 rounded-[5px] text-center text-[11px] font-bold text-slate-400 italic bg-slate-50/20">
-            No images uploaded yet.
+            {t('menu.no_gallery')}
           </div>
         )}
       </div>

@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import { FiX } from 'react-icons/fi';
 import { resolveImageUrl } from '@/api/imageUtils';
 
+import { useTranslation } from '../../../lang/i18n';
+
 interface VariantImageUploadProps {
   index: number;
   image?: string;
@@ -14,12 +16,13 @@ export const VariantImageUpload: React.FC<VariantImageUploadProps> = ({
   onChange,
   hideLabel,
 }) => {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className={hideLabel ? "" : "space-y-1 sm:col-span-1"}>
       {!hideLabel && (
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Image</label>
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.image')}</label>
       )}
       <div className={`flex items-center gap-2 ${hideLabel ? "justify-center" : ""}`}>
         <div

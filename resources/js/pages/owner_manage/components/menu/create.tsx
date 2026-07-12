@@ -28,6 +28,8 @@ const getCategoryLevel = (cat: Category, allCats: Category[]): number => {
   return level;
 };
 
+import { useTranslation } from '../../lang/i18n';
+
 interface CreatePageProps {
   onClose: () => void;
   categories: Category[];
@@ -44,6 +46,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
   ownerId,
   onCategoriesUpdated,
 }) => {
+  const { t } = useTranslation();
   const getDraftField = <T,>(key: string, defaultValue: T): T => {
     const draft = localStorage.getItem('create_product_draft');
     if (draft) {
@@ -647,8 +650,8 @@ export const CreatePage: React.FC<CreatePageProps> = ({
             {/* Basic Setup Card */}
             <div className="bg-white border border-slate-100 rounded-[10px] p-6 sm:p-8 shadow-xs space-y-4">
               <div className="mb-2">
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-800">Basic Setup</h3>
-                <p className="text-slate-400 text-xs mt-0.5">Here you can setup the product information for website.</p>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-800">{t('menu.general_info')}</h3>
+                <p className="text-slate-400 text-xs mt-0.5">{t('menu.subtitle')}</p>
               </div>
 
               <div className="bg-slate-50/50 border border-slate-100 p-5 rounded-lg space-y-4">
@@ -683,7 +686,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                   <div className="space-y-4 animate-fade-in">
                     <div className="space-y-1.5">
                       <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                        Product Name (EN) <span className="text-rose-500">*</span>
+                        {t('menu.name')} (EN) <span className="text-rose-500">*</span>
                       </label>
                       <input
                         id="itemNameEn"
@@ -712,7 +715,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
 
                     <div className="space-y-1.5">
                       <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                        Description (EN)
+                        {t('menu.description')} (EN)
                       </label>
                       <textarea
                         value={itemDescEn}
@@ -727,7 +730,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                   <div className="space-y-4 animate-fade-in">
                     <div className="space-y-1.5">
                       <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                        Product Name (KH) <span className="text-rose-500">*</span>
+                        {t('menu.name')} (KH) <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -741,7 +744,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
 
                     <div className="space-y-1.5">
                       <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                        Description (KH)
+                        {t('menu.description')} (KH)
                       </label>
                       <textarea
                         value={itemDescKh}
@@ -758,10 +761,10 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Social Media Links */}
               <div className="space-y-4 border-t border-slate-100 pt-5">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm sm:text-base font-extrabold text-slate-700">Social Media Links</span>
-                  <span className="text-slate-400 text-xs cursor-help" title="Add links to your social media posts or pages for this product.">ℹ️</span>
+                  <span className="text-sm sm:text-base font-extrabold text-slate-700">{t('menu.social_links')}</span>
+                  <span className="text-slate-400 text-xs cursor-help" title={t('menu.social_links_tip')}>ℹ️</span>
                 </div>
-                <p className="text-slate-400 text-xs mt-0.5">Customers can visit your social media profiles or product posts directly.</p>
+                <p className="text-slate-400 text-xs mt-0.5">{t('menu.social_links_desc')}</p>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-3">
                   {/* Facebook */}
@@ -874,7 +877,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
             >
               <div className="bg-slate-50/50 border border-slate-100 p-5 rounded-lg space-y-4">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Availability Status
+                  {t('menu.status')}
                 </label>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
@@ -886,7 +889,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                       }`}
                   >
                     <FiCheck className="w-4 h-4 stroke-[3]" />
-                    <span>In Stock (Show)</span>
+                    <span>{t('menu.active')}</span>
                   </button>
                   <button
                     type="button"
@@ -897,7 +900,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                       }`}
                   >
                     <FiX className="w-4 h-4 stroke-[3]" />
-                    <span>Sold Out (Hide)</span>
+                    <span>{t('menu.inactive')}</span>
                   </button>
                 </div>
               </div>
@@ -908,8 +911,8 @@ export const CreatePage: React.FC<CreatePageProps> = ({
         {/* General Setup Card */}
         <div className="bg-white border border-slate-100 rounded-[10px] p-6 sm:p-8 shadow-xs space-y-4">
           <div className="mb-2">
-            <h3 className="text-base sm:text-lg font-extrabold text-slate-800">General Setup</h3>
-            <p className="text-slate-400 text-xs mt-0.5">Here you can setup the foundational details required for product creation.</p>
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-800">{t('menu.general_info')}</h3>
+            <p className="text-slate-400 text-xs mt-0.5">{t('menu.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -918,7 +921,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Product Type */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Product Type <span className="text-rose-500">*</span>
+                  {t('menu.product_type')} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   required
@@ -956,7 +959,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Product Badge */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Product Badge
+                  {t('menu.badges')}
                 </label>
                 <select
                   value={selectedBadgeId}
@@ -981,7 +984,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Category (Root) */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Category <span className="text-rose-500">*</span>
+                  {t('menu.category')} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   id="selectedRootId"
@@ -1092,7 +1095,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
                   <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                    Product SKU <span className="text-rose-500">*</span>
+                    {t('menu.sku')} <span className="text-rose-500">*</span>
                     <span className="text-slate-400 cursor-help" title="Unique product code.">ℹ️</span>
                   </label>
                   <ProductSKUGenerate
@@ -1141,7 +1144,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Unit */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Unit <span className="text-rose-500">*</span>
+                  {t('menu.unit')} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   required
@@ -1164,7 +1167,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
             {/* Search Tags */}
             <div className="space-y-1.5 sm:col-span-3">
               <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                Search Tags
+                {t('menu.search_tags')}
                 <span className="text-slate-400 cursor-help" title="Enter search keywords to help users find the product.">ℹ️</span>
               </label>
               <input
@@ -1182,8 +1185,8 @@ export const CreatePage: React.FC<CreatePageProps> = ({
         {/* Pricing & Others Card */}
         <div className="bg-white border border-slate-100 rounded-[10px] p-6 sm:p-8 shadow-xs space-y-4">
           <div className="mb-2 border-b border-slate-100 pb-3">
-            <h3 className="text-base sm:text-lg font-extrabold text-slate-800">Pricing & Others</h3>
-            <p className="text-slate-400 text-xs mt-0.5">Here you can setup the price and other information for the product.</p>
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-800">{t('menu.price')}</h3>
+            <p className="text-slate-400 text-xs mt-0.5">{t('menu.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -1192,7 +1195,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Retail Price */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Retail Price ($) <span className="text-rose-500">*</span>
+                  {t('menu.price')} ($) <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
@@ -1228,7 +1231,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Base Purchase Price */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Base Purchase Price (USD)
+                  {t('menu.purchase_price')} (USD)
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
@@ -1257,7 +1260,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Current Stock Qty */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                  Current Stock Qty <span className="text-rose-500">*</span>
+                  {t('menu.stock_qty')} <span className="text-rose-500">*</span>
                   <span className="text-slate-400 cursor-help" title="Quantity currently in stock.">ℹ️</span>
                 </label>
                 <input
@@ -1284,7 +1287,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Minimum Order Qty */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                  Minimum Order Qty <span className="text-rose-500">*</span>
+                  {t('menu.min_order_qty')} <span className="text-rose-500">*</span>
                   <span className="text-slate-400 cursor-help" title="Minimum quantity a customer can order.">ℹ️</span>
                 </label>
                 <input
@@ -1304,7 +1307,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Discount Amount */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                  Discount Amount<span className="text-rose-500">*</span>
+                  {t('menu.discount_amount')}<span className="text-rose-500">*</span>
                   <span className="text-slate-400 cursor-help" title="Discount value.">ℹ️</span>
                 </label>
                 <div className="flex rounded-[5px] border border-slate-200 overflow-hidden focus-within:ring-2 focus-within:ring-[#1455ac]/20 focus-within:border-[#1455ac]">
@@ -1321,8 +1324,8 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                     onChange={(e) => setDiscountType(e.target.value)}
                     className="bg-slate-50 border-l border-slate-200 px-3 py-2.5 text-xs sm:text-sm font-bold text-slate-700 focus:outline-none cursor-pointer"
                   >
-                    <option value="flat">Flat ($)</option>
-                    <option value="percent">Percent (%)</option>
+                    <option value="flat">{t('menu.flat')} ($)</option>
+                    <option value="percent">{t('menu.percent')} (%)</option>
                   </select>
                 </div>
               </div>
@@ -1330,7 +1333,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Shipping Cost */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                  Shipping Cost ($)
+                  {t('menu.shipping_cost')} ($)
                   <span className="text-slate-400 cursor-help" title="Shipping charge for this product.">ℹ️</span>
                 </label>
                 <div className="relative">
@@ -1352,7 +1355,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               <div className="flex flex-col justify-center pt-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5 cursor-pointer select-none">
-                    Shipping cost multiply with quantity
+                    {t('menu.shipping_multiply')}
                   </label>
                   <div
                     onClick={() => setMultiplyQtyShipping(!multiplyQtyShipping)}
@@ -1369,7 +1372,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
               {/* Barcode / EAN */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Barcode / EAN (Optional)
+                  {t('menu.barcode_optional')}
                 </label>
                 <input
                   type="text"
@@ -1390,7 +1393,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                   className="w-4.5 h-4.5 text-[#1455ac] border-slate-300 rounded focus:ring-[#1455ac] cursor-pointer"
                 />
                 <label htmlFor="isSpecial" className="text-xs sm:text-sm font-bold text-slate-700 cursor-pointer select-none">
-                  Mark as Special Product (Featured Layout)
+                  {t('menu.special_product')}
                 </label>
               </div>
             </div>
@@ -1401,14 +1404,14 @@ export const CreatePage: React.FC<CreatePageProps> = ({
         <div className="bg-white border border-slate-100 rounded-[10px] p-6 sm:p-8 shadow-xs space-y-4">
           <div className="mb-2 border-b border-slate-100 pb-3 flex justify-between items-center">
             <div>
-              <h3 className="text-base sm:text-lg font-extrabold text-slate-800">Product Addons</h3>
-              <p className="text-slate-400 text-xs mt-0.5">Manage optional extras/addons that customers can add to this product.</p>
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-800">{t('menu.product_addons')}</h3>
+              <p className="text-slate-400 text-xs mt-0.5">{t('menu.addons_desc')}</p>
             </div>
             <div className="flex items-center gap-3">
               {addons.length > 0 && (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-[5px] border border-slate-200/50 text-xs font-extrabold text-slate-700">
-                    <span>Total Addons: ${addonPriceTotal.toFixed(2)}</span>
+                    <span>{t('menu.total_addons')}: ${addonPriceTotal.toFixed(2)}</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -1417,12 +1420,12 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                       }}
                       className="ml-1 px-2 py-0.5 bg-[#1455ac] text-white rounded-[3px] text-[10px] font-extrabold transition-all hover:bg-[#0f4d9c] cursor-pointer border-none"
                     >
-                      Set as Unit Price
+                      {t('menu.set_unit_price')}
                     </button>
                   </div>
                   {parseFloat(itemPrice) === addonPriceTotal && (
                     <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                      ✔️ Unit Price matches Total Addons
+                      ✔️ {t('menu.unit_price_matches')}
                     </span>
                   )}
                 </div>
@@ -1432,14 +1435,14 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                 onClick={() => setAddons(prev => [...prev, { addon_name: '', additional_price: '0.00', discount: '0.00', discount_type: 'flat', is_default: false }])}
                 className="py-1.5 px-3 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[5px] text-xs font-bold transition-all border border-slate-200/50 cursor-pointer"
               >
-                + Add Addon Option
+                {t('menu.add_addon_option')}
               </button>
             </div>
           </div>
 
           {addons.length === 0 ? (
             <div className="text-center py-6 border border-dashed border-slate-200 rounded-[5px] text-slate-400 text-xs font-medium">
-              No addons configured yet. Click "+ Add Addon Option" to get started.
+              {t('menu.no_addons_configured')}
             </div>
           ) : (
             <div className="space-y-3">
@@ -1456,7 +1459,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <label className="text-[10px] text-white font-bold cursor-pointer">
-                            Change
+                            {t('menu.change')}
                             <input
                               type="file"
                               accept="image/*"
@@ -1468,7 +1471,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                       </>
                     ) : (
                       <label className="w-full h-full flex flex-col items-center justify-center text-slate-400 hover:text-[#1455ac] hover:bg-slate-50/80 transition-all cursor-pointer">
-                        <span className="text-[10px] font-bold">Image</span>
+                        <span className="text-[10px] font-bold">{t('menu.image')}</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -1480,7 +1483,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                   </div>
 
                   <div className="flex-[3] space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Addon Name</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.addon_name')}</label>
                     <input
                       type="text"
                       required
@@ -1495,7 +1498,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                     />
                   </div>
                   <div className="flex-[1.5] space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Additional Price ($)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.additional_price')} ($)</label>
                     <div className="relative">
                       <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-xs">
                         <FiDollarSign className="w-3.5 h-3.5" />
@@ -1517,7 +1520,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                   </div>
 
                   <div className="flex-[2] space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Discount</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.discount')}</label>
                     <div className="flex rounded-[5px] border border-slate-200 overflow-hidden bg-white focus-within:ring-2 focus-within:ring-[#1455ac]/20 focus-within:border-[#1455ac]">
                       <div className="relative flex-1">
                         <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-xs">
@@ -1546,15 +1549,15 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                         }}
                         className="bg-slate-50 border-l border-slate-200 px-2 py-2 text-2xs font-extrabold text-slate-650 focus:outline-none cursor-pointer"
                       >
-                        <option value="flat">Flat ($)</option>
-                        <option value="percent">Percent (%)</option>
+                        <option value="flat">{t('menu.flat')} ($)</option>
+                        <option value="percent">{t('menu.percent')} (%)</option>
                       </select>
                     </div>
                   </div>
                   
                   {/* Auto Checkbox toggle */}
                   <div className="w-20 shrink-0 space-y-1 flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Auto Check</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.auto_check')}</label>
                     <div className="pt-2">
                       <div
                         onClick={() => {
@@ -1602,7 +1605,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
             onClick={handleClose}
             className="py-2.5 px-6 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[10px] text-sm font-bold transition-all border border-slate-200/50 cursor-pointer min-w-[120px]"
           >
-            Cancel
+            {t('menu.cancel')}
           </button>
           <button
             type="submit"
@@ -1615,10 +1618,10 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>Adding Product...</span>
+                <span>{t('menu.save')}...</span>
               </>
             ) : (
-              <span>Add Product to Menu</span>
+              <span>{t('menu.save')}</span>
             )}
           </button>
         </div>

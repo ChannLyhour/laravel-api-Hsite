@@ -13,6 +13,7 @@ import type { FilterSection } from '../../helper/HelperFilter';
 import { CreatePage } from './create';
 import { EditPage } from './edit';
 import { ShowPage } from './show';
+import { useTranslation } from '../../lang/i18n';
 
 const strLimit = (str: string, limit: number = 25): string => {
   if (!str) return '';
@@ -26,6 +27,7 @@ interface MenuItemsTabProps {
 }
 
 export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) => {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -77,34 +79,34 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
   const filterSections: FilterSection[] = [
     {
       id: 'sorting',
-      title: 'Sort By',
+      title: t('menu.sorting'),
       type: 'radio',
       options: [
-        { id: 'newest', label: 'Newest' },
-        { id: 'oldest', label: 'Oldest' },
-        { id: 'price_asc', label: 'Price: Low to High' },
-        { id: 'price_desc', label: 'Price: High to Low' },
+        { id: 'newest', label: t('menu.newest') },
+        { id: 'oldest', label: t('menu.oldest') },
+        { id: 'price_asc', label: t('menu.price_asc') },
+        { id: 'price_desc', label: t('menu.price_desc') },
       ],
     },
     {
       id: 'status',
-      title: 'Status',
+      title: t('menu.status'),
       type: 'checkbox',
       options: [
-        { id: 'active', label: 'Active' },
-        { id: 'inactive', label: 'Inactive' },
+        { id: 'active', label: t('menu.active') },
+        { id: 'inactive', label: t('menu.inactive') },
       ],
     },
     {
       id: 'category',
-      title: 'Category',
+      title: t('menu.category'),
       type: 'checkbox',
       options: (showAllCategories ? categories : categories.slice(0, 6)).map(cat => ({
         id: cat.id.toString(),
         label: cat.name,
       })),
       hasSeeMore: categories.length > 6,
-      seeMoreLabel: showAllCategories ? 'See Less' : 'See More',
+      seeMoreLabel: showAllCategories ? t('menu.see_less') : t('menu.see_more'),
       onSeeMoreClick: () => setShowAllCategories(p => !p),
     },
   ];
@@ -232,10 +234,10 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
 
   const handleDeleteItem = async (id: number, name: string) => {
     const confirmed = await confirm({
-      title: 'Remove Dish',
-      message: `Are you sure you want to delete "${name}" from the active menu? This action is irreversible.`,
-      confirmText: 'Remove Dish',
-      cancelText: 'Cancel',
+      title: t('menu.delete_product'),
+      message: t('menu.delete_confirm_desc', { name }),
+      confirmText: t('menu.delete_product'),
+      cancelText: t('menu.cancel'),
       type: 'danger'
     });
 
@@ -311,13 +313,13 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
   // Table columns definition
   const columns: HelperTableColumn[] = [
     { key: 'sl', label: 'SL', align: 'center', className: 'w-12' },
-    { key: 'name', label: 'Product Name', align: 'left', className: 'w-1/3', filterable: true },
-    { key: 'type', label: 'Product Type', align: 'left' },
-    { key: 'price', label: 'Unit Price', align: 'left', filterable: true },
-    { key: 'stock', label: 'Stock', align: 'center' },
-    { key: 'social_media_link', label: 'Social Link', align: 'center' },
-    { key: 'status', label: 'Status', align: 'center' },
-    { key: 'action', label: 'Action', align: 'right', className: 'w-36' }
+    { key: 'name', label: t('menu.title_label'), align: 'left', className: 'w-1/3', filterable: true },
+    { key: 'type', label: t('menu.product_type'), align: 'left' },
+    { key: 'price', label: t('menu.price'), align: 'left', filterable: true },
+    { key: 'stock', label: t('menu.stock_qty'), align: 'center' },
+    { key: 'social_media_link', label: t('menu.social_links'), align: 'center' },
+    { key: 'status', label: t('menu.status'), align: 'center' },
+    { key: 'action', label: t('menu.actions'), align: 'right', className: 'w-36' }
   ];
 
 
@@ -378,10 +380,10 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
             <FiShoppingBag className="text-orange-500" />
-            <span>Manage Products</span>
+            <span>{t('menu.title')}</span>
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm mt-1">
-            Display, add, edit, and disable food offerings on your restaurant site.
+            {t('menu.subtitle')}
           </p>
         </div>
       </div>
@@ -408,7 +410,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
         getRowId={(item) => item.id}
         bulkActions={[
           {
-            label: 'Activate',
+            label: t('menu.active'),
             onClick: async (ids) => {
               try {
                 await Promise.all(
@@ -439,7 +441,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
             },
           },
           {
-            label: 'Inactivate',
+            label: t('menu.inactive'),
             onClick: async (ids) => {
               try {
                 await Promise.all(
@@ -470,13 +472,13 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
             },
           },
           {
-            label: 'Duplicate',
+            label: t('menu.edit_product'),
             onClick: async (ids) => {
               const confirmed = await confirm({
-                title: 'Duplicate Selected Products',
-                message: `Are you sure you want to duplicate the ${ids.length} selected products?`,
-                confirmText: 'Duplicate',
-                cancelText: 'Cancel',
+                title: t('menu.duplicate_title'),
+                message: t('menu.duplicate_msg', { count: ids.length }),
+                confirmText: t('menu.edit_product'),
+                cancelText: t('menu.cancel'),
                 type: 'info'
               });
               if (confirmed) {
@@ -544,14 +546,14 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
             }
           },
           {
-            label: 'Delete',
+            label: t('menu.delete_product'),
             className: 'text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-250 hover:border-rose-350',
             onClick: async (ids) => {
               const confirmed = await confirm({
-                title: 'Remove Multiple Dishes',
-                message: `Are you sure you want to delete the ${ids.length} selected dishes? This action is irreversible.`,
-                confirmText: 'Remove Dishes',
-                cancelText: 'Cancel',
+                title: t('menu.delete_multiple_title'),
+                message: t('menu.delete_multiple_msg', { count: ids.length }),
+                confirmText: t('menu.delete_product'),
+                cancelText: t('menu.cancel'),
                 type: 'danger'
               });
               if (confirmed) {
@@ -571,18 +573,18 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
           }
         ]}
         exportButton={{
-          label: 'Export',
+          label: t('menu.export') || 'Export',
           onClick: () => toast.success('Menu Products exported successfully!')
         }}
         filterButton={{
-          label: 'Filter',
+          label: t('menu.filter'),
           onClick: () => {
             setTempFilters(appliedFilters);
             setShowFilters(true);
           }
         }}
         addButton={{
-          label: 'Add New Product',
+          label: t('menu.add_product'),
           onClick: () => setView('create')
         }}
 
@@ -841,28 +843,28 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                   <button
                     onClick={() => toast.success(`Generated Barcode for ${item.name}`)}
                     className="p-2 border border-amber-200/80 text-amber-500 hover:bg-amber-50 rounded-[5px] transition-colors cursor-pointer"
-                    title="Barcode Label"
+                    title={t('menu.barcode')}
                   >
                     <FiTag className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleOpenShowModal(item)}
                     className="p-2 border border-emerald-200/80 text-emerald-600 hover:bg-emerald-50 rounded-[5px] transition-colors cursor-pointer"
-                    title="View Product Page"
+                    title={t('menu.view')}
                   >
                     <FiEye className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleOpenEditModal(item)}
                     className="p-2 border border-blue-200/80 text-blue-600 hover:bg-blue-50 rounded-[5px] transition-colors cursor-pointer animate-fade-in"
-                    title="Edit Dish Info"
+                    title={t('menu.edit')}
                   >
                     <FiEdit2 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleDeleteItem(item.id, item.name)}
                     className="p-2 border border-rose-200/80 text-rose-500 hover:bg-rose-50 rounded-[5px] transition-colors cursor-pointer animate-fade-in"
-                    title="Remove Dish"
+                    title={t('menu.delete')}
                   >
                     <FiTrash2 className="w-3.5 h-3.5" />
                   </button>
@@ -881,8 +883,8 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
           localStorage.setItem('itemsPerPage_menu', size.toString());
           setCurrentPage(1);
         }}
-        emptyStateText="No Menu Items Listed"
-        emptyStateSubtext="Try changing the active category filter, or draft a brand new recipe to share with customers!"
+        emptyStateText={t('menu.no_data')}
+        emptyStateSubtext={t('menu.empty_desc')}
       />
 
       <HelperFilter

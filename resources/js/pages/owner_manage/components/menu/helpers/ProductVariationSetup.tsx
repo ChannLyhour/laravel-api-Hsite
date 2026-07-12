@@ -92,6 +92,8 @@ const PRESET_COLORS = [
   { name: 'Pink', hex: '#FFC0CB' },
 ];
 
+import { useTranslation } from '../../../lang/i18n';
+
 export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
   ownerId,
   basePrice,
@@ -105,6 +107,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
   onChangeColorWiseImages,
   onAttributesLoaded,
 }) => {
+  const { t } = useTranslation();
   const [colorsEnabled, setColorsEnabled] = useState(false);
   const [selectedColors, setSelectedColors] = useState<SelectedColor[]>([]);
   const [availableAttributes, setAvailableAttributes] = useState<ProductAttribute[]>([]);
@@ -522,9 +525,9 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
       <div className="flex items-center justify-between border-b border-slate-100 pb-4">
         <div>
           <h3 className="font-extrabold text-slate-800 text-sm sm:text-base flex items-center gap-2">
-            Product Variation Setup
+            {t('menu.variant_setup')}
           </h3>
-          <p className="text-slate-400 text-xs mt-0.5">Enable and manage different variations of a product.</p>
+          <p className="text-slate-400 text-xs mt-0.5">{t('menu.variant_desc')}</p>
         </div>
         <div
           onClick={() => onHasOptionsChange(!hasOptions)}
@@ -542,7 +545,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
             {/* Colors block */}
             <div className="space-y-2 border border-slate-100 p-4 rounded-[8px] bg-slate-50/30">
               <div className="flex items-center justify-between">
-                <label className="text-xs sm:text-sm font-bold text-slate-700">Colors</label>
+                <label className="text-xs sm:text-sm font-bold text-slate-700">{t('menu.colors')}</label>
                 <div
                   onClick={() => setColorsEnabled(!colorsEnabled)}
                   className={`w-9 h-5 flex items-center rounded-full p-0.5 cursor-pointer transition-all duration-300 ${colorsEnabled ? 'bg-[#1455ac]' : 'bg-slate-300'}`}
@@ -563,7 +566,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                       }}
                       className="w-full text-left px-3 py-2 border border-slate-200 rounded-[5px] bg-white text-xs font-bold text-slate-600 flex justify-between items-center cursor-pointer shadow-3xs"
                     >
-                      <span>Choose color options</span>
+                      <span>{t('menu.choose_color')}</span>
                       <span className="text-[10px]">▼</span>
                     </button>
 
@@ -589,7 +592,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
 
                         {/* Custom Color Inline */}
                         <div className="border-t border-slate-100 p-2.5 bg-slate-50 rounded-b-[8px] space-y-1.5">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Custom Color</p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('menu.custom_color')}</p>
                           <div className="flex gap-1.5">
                             <input
                               type="text"
@@ -609,7 +612,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                               onClick={addCustomColor}
                               className="px-2.5 bg-[#1455ac] hover:bg-[#0f4d9c] text-white rounded-[4px] text-xs font-bold border-none cursor-pointer"
                             >
-                              Add
+                              {t('menu.add')}
                             </button>
                           </div>
                         </div>
@@ -645,29 +648,29 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
             {/* Attributes block */}
             <div className="space-y-2 border border-slate-100 p-4 rounded-[8px] bg-slate-50/30">
               <label className="text-xs sm:text-sm font-bold text-slate-700 flex justify-between items-center w-full">
-                <span>Attributes <small className="text-slate-400 font-normal">(optional)</small></span>
+                <span>{t('menu.attributes')} <small className="text-slate-400 font-normal">({t('menu.optional')})</small></span>
                 <div className="relative group">
                   <span 
                     className="inline-flex items-center gap-1.5 text-[10px] font-black text-[#1455ac] bg-[#1455ac]/10 hover:bg-[#1455ac]/15 px-2.5 py-0.5 rounded-full cursor-help transition-colors uppercase tracking-wider"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1455ac] animate-pulse" />
-                    <span>How to use</span>
+                    <span>{t('menu.how_to_use')}</span>
                   </span>
 
                   {/* Styled Hover Tooltip Card */}
                   <div className="absolute right-0 top-full mt-1.5 w-64 p-3 bg-white border border-slate-100 rounded-[8px] shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-40 space-y-2 normal-case font-normal text-left">
                     <p className="text-xs font-extrabold text-slate-800 border-b border-slate-100 pb-1.5 flex items-center gap-1">
-                      💡 Quick Guide
+                      💡 {t('menu.quick_guide')}
                     </p>
                     <ul className="space-y-2 text-[11px] text-slate-600 list-disc list-inside">
                       <li>
-                        For <span className="font-bold text-[#1455ac]">Colors</span>: Toggle color switch, then choose preset colors or add custom ones.
+                        {t('menu.guide_step1')}
                       </li>
                       <li>
-                        For <span className="font-bold text-[#1455ac]">Attributes</span>: Select attribute name (or create custom) from dropdown.
+                        {t('menu.guide_step2')}
                       </li>
                       <li>
-                        Type choice values (e.g., <span className="bg-slate-50 border border-slate-100 px-1 py-0.5 rounded font-mono text-[10px] text-slate-700">S</span>, <span className="bg-slate-50 border border-slate-100 px-1 py-0.5 rounded font-mono text-[10px] text-slate-700">M</span>) and press <span className="font-bold text-[#1455ac]">Enter</span> or <span className="font-bold text-[#1455ac]">comma (,)</span> to add.
+                        {t('menu.guide_step3')}
                       </li>
                     </ul>
                   </div>
@@ -684,7 +687,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                     }}
                     className="w-full text-left px-3 py-2 border border-slate-200 rounded-[5px] bg-white text-xs font-bold text-slate-600 flex justify-between items-center cursor-pointer shadow-3xs"
                   >
-                    <span>Select attributes</span>
+                    <span>{t('menu.select_attributes')}</span>
                     <span className="text-[10px]">▼</span>
                   </button>
 
@@ -709,7 +712,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
 
                       {/* Custom Attribute Addition */}
                       <div className="border-t border-slate-100 p-2.5 bg-slate-50 rounded-b-[8px] space-y-1.5">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Custom Options</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('menu.custom_options')}</p>
                         <div className="flex gap-1.5">
                           <input
                             type="text"
@@ -723,7 +726,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                             onClick={addCustomAttribute}
                             className="px-2.5 bg-[#1455ac] hover:bg-[#0f4d9c] text-white rounded-[4px] text-xs font-bold border-none cursor-pointer whitespace-nowrap"
                           >
-                            Create
+                            {t('menu.create')}
                           </button>
                         </div>
                       </div>
@@ -783,7 +786,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                       ))}
                       <input
                         type="text"
-                        placeholder="Enter choice values"
+                        placeholder={t('menu.enter_choice_values')}
                         value={currentVal}
                         onChange={e => setChoiceInputs(prev => ({ ...prev, [name]: e.target.value }))}
                         onKeyDown={async e => {
@@ -809,14 +812,14 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
           {variants.length > 0 && (
             <div className="space-y-4 pt-4 border-t border-slate-100 overflow-x-auto">
               <div className="flex justify-between items-center mb-2">
-                <p className="text-xs font-black text-slate-700 uppercase tracking-wider">Generated Variant Specifications</p>
+                <p className="text-xs font-black text-slate-700 uppercase tracking-wider">{t('menu.generated_specs')}</p>
                 {deletedCombos.length > 0 && (
                   <button
                     type="button"
                     onClick={handleRestoreCombos}
                     className="text-xs font-bold text-[#1455ac] hover:underline cursor-pointer bg-transparent border-none p-0 outline-none"
                   >
-                    Restore deleted variations ({deletedCombos.length})
+                    {t('menu.restore_deleted', { count: deletedCombos.length })}
                   </button>
                 )}
               </div>
@@ -824,11 +827,11 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
               {/* Bulk price update helper bar */}
               <div className="bg-slate-50 border border-slate-200/60 p-3.5 rounded-[8px] text-xs space-y-2 max-w-2xl">
                 <p className="font-extrabold text-slate-700 flex items-center gap-1.5">
-                  ⚡ Quick Bulk Price Update
+                  ⚡ {t('menu.bulk_update_title')}
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-500 font-medium">If variant name contains</span>
+                    <span className="text-slate-500 font-medium">{t('menu.bulk_update_keyword')}</span>
                     <input
                       type="text"
                       placeholder="e.g. Large"
@@ -838,7 +841,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                     />
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-500 font-medium">set price to $</span>
+                    <span className="text-slate-500 font-medium">{t('menu.bulk_update_price')}</span>
                     <input
                       type="number"
                       step="0.01"
@@ -853,7 +856,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                     onClick={handleBulkPriceUpdate}
                     className="px-4 py-1.5 bg-[#1455ac] hover:bg-[#0f4d9c] text-white font-bold rounded-[5px] cursor-pointer transition-colors shadow-3xs"
                   >
-                    Apply to All
+                    {t('menu.apply')}
                   </button>
                 </div>
               </div>
@@ -861,11 +864,11 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
               <HelperTable<GeneratedVariantRow>
                 columns={[
                   { key: 'sl', label: 'SL', align: 'center', className: 'w-12 text-slate-400 font-bold' },
-                  { key: 'combinationName', label: 'Attribute Variation', className: 'font-extrabold text-[#1455ac]' },
-                  { key: 'price', label: 'Variation Wise Price ($)', className: 'w-40' },
-                  { key: 'sku', label: 'SKU' },
-                  { key: 'stock', label: 'Variation Wise Stock', className: 'w-36' },
-                  { key: 'action', label: 'Action', align: 'center', className: 'w-16' }
+                  { key: 'combinationName', label: t('menu.variant_breakdown'), className: 'font-extrabold text-[#1455ac]' },
+                  { key: 'price', label: `${t('menu.price')} ($)`, className: 'w-40' },
+                  { key: 'sku', label: t('menu.sku') },
+                  { key: 'stock', label: t('menu.stock_qty'), className: 'w-36' },
+                  { key: 'action', label: t('menu.actions'), align: 'center', className: 'w-16' }
                 ]}
                 data={filteredVariants}
                 currentPage={1}
@@ -875,13 +878,13 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                 onPageChange={() => {}}
                 searchValue={variationSearchQuery}
                 onSearchChange={setVariationSearchQuery}
-                searchPlaceholder="Search variations..."
+                searchPlaceholder={t('header.search_placeholder')}
                 selectedIds={selectedVariantNames}
                 onSelectionChange={setSelectedVariantNames}
                 getRowId={(v) => v.combinationName}
                 bulkActions={[
                   {
-                    label: 'Delete Selected',
+                    label: t('menu.clear'),
                     onClick: (names) => {
                       const normalizedNames = names.map(name => name.split('-').sort().join('-'));
                       setDeletedCombos(prev => [...prev, ...normalizedNames]);
