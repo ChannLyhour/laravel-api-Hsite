@@ -3,7 +3,6 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
-import { cloudflare } from "@cloudflare/vite-plugin";
 
 export default defineConfig(({ mode }) => {
     const isCloudflare = mode === 'cloudflare' || process.env.CF_PAGES === '1';
@@ -15,8 +14,7 @@ export default defineConfig(({ mode }) => {
                 refresh: true,
             }),
             react(),
-            tailwindcss(),
-            isCloudflare && cloudflare()
+            tailwindcss()
         ].filter(Boolean),
         resolve: {
             alias: {
