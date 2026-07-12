@@ -102,7 +102,7 @@ export function getStoreUrl(
               if (slug.includes(":")) {
                 slug = slug.split(":")[0];
               }
-              const baseOrigin = typeof window !== "undefined" ? window.location.origin : "https://vhsitekh.site";
+              const baseOrigin = typeof window !== "undefined" ? window.location.origin : "https://vhsite-platform-ecommerce.brohour00044.workers.dev";
               domain = `${baseOrigin}/${slug}`;
             } else {
               if (domain.startsWith("http://")) {
