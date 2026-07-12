@@ -911,7 +911,7 @@ export const FashionPage: React.FC<FashionPageProps> = ({
                       : 'text-stone-500 hover:text-stone-900'
                       }`}
                   >
-                    Boutique Pickup
+                    Pickup
                   </button>
                 </div>
 

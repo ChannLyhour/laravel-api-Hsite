@@ -137,7 +137,7 @@ export const EditPage: React.FC<EditPageProps> = ({
 
   // Extended fields
   const [productType, setProductType] = useState('physical');
-  const [selectedBrandId, setSelectedBrandId] = useState<number | ''>('');
+  const [selectedBrandId, setSelectedBrandId] = useState<number | 'new' | ''>('');
   const [unit, setUnit] = useState('pc');
   const [searchTags, setSearchTags] = useState('');
   const [minOrderQty, setMinOrderQty] = useState<number>(1);
@@ -147,7 +147,21 @@ export const EditPage: React.FC<EditPageProps> = ({
   const [multiplyQtyShipping, setMultiplyQtyShipping] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [productBadges, setProductBadges] = useState<ProductBadge[]>([]);
-  const [selectedBadgeId, setSelectedBadgeId] = useState<number | ''>('');
+  const [selectedBadgeId, setSelectedBadgeId] = useState<number | 'new' | ''>('');
+
+  // Brand inline creation states
+  const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
+  const [newBrandName, setNewBrandName] = useState('');
+  const [newBrandAltText, setNewBrandAltText] = useState('');
+  const [brandSubmitting, setBrandSubmitting] = useState(false);
+
+  // Badge inline creation states
+  const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+  const [newBadgeName, setNewBadgeName] = useState('');
+  const [newBadgeSlug, setNewBadgeSlug] = useState('');
+  const [newBadgeTextColor, setNewBadgeTextColor] = useState('#ffffff');
+  const [newBadgeBgColor, setNewBadgeBgColor] = useState('#1455ac');
+  const [badgeSubmitting, setBadgeSubmitting] = useState(false);
 
   const lastInitializedId = useRef<number | null>(null);
 
@@ -783,6 +797,89 @@ export const EditPage: React.FC<EditPageProps> = ({
     }
   };
 
+  const handleOpenCreateBrandModal = () => {
+    setNewBrandName('');
+    setNewBrandAltText('');
+    setIsBrandModalOpen(true);
+  };
+
+  const handleCloseBrandModal = () => {
+    setIsBrandModalOpen(false);
+    if (selectedBrandId === 'new') setSelectedBrandId('');
+  };
+
+  const handleCreateBrand = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBrandName.trim()) return;
+
+    setBrandSubmitting(true);
+    try {
+      const newBrand = await brandsService.createBrand({
+        name: newBrandName.trim(),
+        alt_text: newBrandAltText.trim(),
+        status: true,
+        created_by: ownerId || '',
+      });
+
+      setBrands(prev => [newBrand, ...prev]);
+      setSelectedBrandId(newBrand.id);
+
+      toast.success('Brand created successfully!');
+      setIsBrandModalOpen(false);
+      window.dispatchEvent(new CustomEvent('data_updated'));
+      new BroadcastChannel('data_updates').postMessage('refresh');
+    } catch (err: any) {
+      console.error('Failed to create brand:', err);
+      const errMsg = err?.details?.message || err?.message || 'Failed to create brand.';
+      toast.error(errMsg);
+    } finally {
+      setBrandSubmitting(false);
+    }
+  };
+
+  const handleOpenCreateBadgeModal = () => {
+    setNewBadgeName('');
+    setNewBadgeSlug('');
+    setNewBadgeTextColor('#ffffff');
+    setNewBadgeBgColor('#1455ac');
+    setIsBadgeModalOpen(true);
+  };
+
+  const handleCloseBadgeModal = () => {
+    setIsBadgeModalOpen(false);
+    if (selectedBadgeId === 'new') setSelectedBadgeId('');
+  };
+
+  const handleCreateBadge = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBadgeName.trim() || !newBadgeSlug.trim()) return;
+
+    setBadgeSubmitting(true);
+    try {
+      const newBadge = await productBadgesService.createProductBadge({
+        name: newBadgeName.trim(),
+        slug: newBadgeSlug.trim(),
+        text_color: newBadgeTextColor,
+        background_color: newBadgeBgColor,
+        status: true,
+        priority: 1,
+        created_by: ownerId || '',
+      });
+
+      setProductBadges(prev => [newBadge, ...prev]);
+      setSelectedBadgeId(newBadge.id);
+
+      toast.success('Badge created successfully!');
+      setIsBadgeModalOpen(false);
+    } catch (err: any) {
+      console.error('Failed to create badge:', err);
+      const errMsg = err?.details?.message || err?.message || 'Failed to create badge.';
+      toast.error(errMsg);
+    } finally {
+      setBadgeSubmitting(false);
+    }
+  };
+
   const rootCategories = localCategories.filter(c => getCategoryLevel(c, localCategories) === 0);
   const subCategories = selectedRootId && selectedRootId !== 'new'
     ? localCategories.filter(c => getCategoryLevel(c, localCategories) === 1 && c.parent_id == selectedRootId)
@@ -1126,8 +1223,13 @@ export const EditPage: React.FC<EditPageProps> = ({
                 <select
                   value={selectedBrandId}
                   onChange={(e) => {
-                    const val = e.target.value ? Number(e.target.value) : '';
-                    setSelectedBrandId(val);
+                    const val = e.target.value;
+                    if (val === 'new') {
+                      setSelectedBrandId('new');
+                      handleOpenCreateBrandModal();
+                      return;
+                    }
+                    setSelectedBrandId(val ? Number(val) : '');
                   }}
                   className="w-full px-3.5 py-2.5 border border-slate-200 rounded-[5px] text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] transition-all bg-white cursor-pointer"
                 >
@@ -1137,6 +1239,7 @@ export const EditPage: React.FC<EditPageProps> = ({
                       {b.name}
                     </option>
                   ))}
+                  <option value="new" className="text-[#1455ac] font-bold">+ Add New Brand</option>
                 </select>
               </div>
 
@@ -1148,8 +1251,13 @@ export const EditPage: React.FC<EditPageProps> = ({
                 <select
                   value={selectedBadgeId}
                   onChange={(e) => {
-                    const val = e.target.value ? Number(e.target.value) : '';
-                    setSelectedBadgeId(val);
+                    const val = e.target.value;
+                    if (val === 'new') {
+                      setSelectedBadgeId('new');
+                      handleOpenCreateBadgeModal();
+                      return;
+                    }
+                    setSelectedBadgeId(val ? Number(val) : '');
                   }}
                   className="w-full px-3.5 py-2.5 border border-slate-200 rounded-[5px] text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] transition-all bg-white cursor-pointer"
                 >
@@ -1159,6 +1267,7 @@ export const EditPage: React.FC<EditPageProps> = ({
                       {badge.name}
                     </option>
                   ))}
+                  <option value="new" className="text-[#1455ac] font-bold">+ Add New Badge</option>
                 </select>
               </div>
             </div>
@@ -1909,6 +2018,198 @@ export const EditPage: React.FC<EditPageProps> = ({
                   className="flex-1 py-2.5 px-4 bg-[#1455ac] hover:bg-[#0f4d9c] text-white rounded-[5px] text-sm font-bold transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50 border-none cursor-pointer"
                 >
                   {categorySubmitting ? t('menu.creating') : t('menu.create')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Brand Creation Modal Backdrop */}
+      {isBrandModalOpen && createPortal(
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/60 animate-fade-in font-kuntomruy">
+          <div className="absolute inset-0 cursor-default" onClick={handleCloseBrandModal}></div>
+
+          <div className="w-full max-w-md bg-white rounded-[5px] p-6 sm:p-8 relative z-10 border border-slate-100 shadow-2xl animate-slide-up text-left">
+            <button
+              onClick={handleCloseBrandModal}
+              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-[5px] p-2 transition-all cursor-pointer border-none"
+            >
+              <FiX className="w-4 h-4 stroke-[3]" />
+            </button>
+
+            <div className="mb-6">
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center space-x-2">
+                <FiTag className="text-[#1455ac] w-5 h-5" />
+                <span>Create New Brand</span>
+              </h3>
+              <p className="text-slate-500 text-xs font-semibold mt-1">
+                Add a new brand to associate with your products.
+              </p>
+            </div>
+
+            <form onSubmit={handleCreateBrand} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 block">
+                  Brand Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newBrandName}
+                  onChange={(e) => setNewBrandName(e.target.value)}
+                  placeholder="e.g. Nike, Apple, Samsung"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-medium text-slate-800"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 block">
+                  Alt Text / Description
+                </label>
+                <input
+                  type="text"
+                  value={newBrandAltText}
+                  onChange={(e) => setNewBrandAltText(e.target.value)}
+                  placeholder="Optional description or alt text..."
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-medium text-slate-800"
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={handleCloseBrandModal}
+                  className="flex-1 py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[5px] text-sm font-bold transition-all border border-slate-200/50 cursor-pointer"
+                >
+                  {t('menu.cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={brandSubmitting || !newBrandName.trim()}
+                  className="flex-1 py-2.5 px-4 bg-[#1455ac] hover:bg-[#0f4d9c] text-white rounded-[5px] text-sm font-bold transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50 border-none cursor-pointer"
+                >
+                  {brandSubmitting ? t('menu.creating') : t('menu.create')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Badge Creation Modal Backdrop */}
+      {isBadgeModalOpen && createPortal(
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/60 animate-fade-in font-kuntomruy">
+          <div className="absolute inset-0 cursor-default" onClick={handleCloseBadgeModal}></div>
+
+          <div className="w-full max-w-md bg-white rounded-[5px] p-6 sm:p-8 relative z-10 border border-slate-100 shadow-2xl animate-slide-up text-left">
+            <button
+              onClick={handleCloseBadgeModal}
+              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-[5px] p-2 transition-all cursor-pointer border-none"
+            >
+              <FiX className="w-4 h-4 stroke-[3]" />
+            </button>
+
+            <div className="mb-6">
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center space-x-2">
+                <FiTag className="text-[#1455ac] w-5 h-5" />
+                <span>Create New Product Badge</span>
+              </h3>
+              <p className="text-slate-500 text-xs font-semibold mt-1">
+                Create a status badge (e.g. "New", "Hot", "Sale") to display on products.
+              </p>
+            </div>
+
+            <form onSubmit={handleCreateBadge} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 block">
+                  Badge Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newBadgeName}
+                  onChange={(e) => {
+                    setNewBadgeName(e.target.value);
+                    setNewBadgeSlug(e.target.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+                  }}
+                  placeholder="e.g. New Arrival, Best Seller"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-medium text-slate-800"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 block">
+                  Slug <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newBadgeSlug}
+                  onChange={(e) => setNewBadgeSlug(e.target.value)}
+                  placeholder="e.g. new-arrival"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-medium text-slate-800"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs sm:text-sm font-bold text-slate-700 block">
+                    Text Color
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={newBadgeTextColor}
+                      onChange={(e) => setNewBadgeTextColor(e.target.value)}
+                      className="w-8 h-8 rounded border border-slate-200 cursor-pointer animate-none bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={newBadgeTextColor}
+                      onChange={(e) => setNewBadgeTextColor(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-slate-200 rounded-[5px] text-xs focus:outline-none text-slate-800"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs sm:text-sm font-bold text-slate-700 block">
+                    Background Color
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={newBadgeBgColor}
+                      onChange={(e) => setNewBadgeBgColor(e.target.value)}
+                      className="w-8 h-8 rounded border border-slate-200 cursor-pointer animate-none bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={newBadgeBgColor}
+                      onChange={(e) => setNewBadgeBgColor(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-slate-200 rounded-[5px] text-xs focus:outline-none text-slate-800"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={handleCloseBadgeModal}
+                  className="flex-1 py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[5px] text-sm font-bold transition-all border border-slate-200/50 cursor-pointer"
+                >
+                  {t('menu.cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={badgeSubmitting || !newBadgeName.trim() || !newBadgeSlug.trim()}
+                  className="flex-1 py-2.5 px-4 bg-[#1455ac] hover:bg-[#0f4d9c] text-white rounded-[5px] text-sm font-bold transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50 border-none cursor-pointer"
+                >
+                  {badgeSubmitting ? t('menu.creating') : t('menu.create')}
                 </button>
               </div>
             </form>
