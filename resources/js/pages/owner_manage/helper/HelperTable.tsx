@@ -264,7 +264,7 @@ export function HelperTable<T>({
             )}
 
             {viewMode === 'grid' && renderCard ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 p-2 md:p-4 bg-slate-50/30 max-h-[600px] overflow-y-auto rounded-[8px] border border-slate-100">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5 p-2 md:p-4 bg-slate-50/30 max-h-[600px] overflow-y-auto rounded-[8px] border border-slate-100">
                 {data.map((item, index) => {
                   const rowId = getRowId ? getRowId(item) : null;
                   const isChecked = selectedIds && rowId ? selectedIds.includes(rowId) : false;

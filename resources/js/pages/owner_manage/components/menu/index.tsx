@@ -424,6 +424,17 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
             >
               {/* Product Image Wrapper */}
               <div className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 overflow-hidden shrink-0">
+                {/* Status Badge */}
+                <div className="absolute top-2 left-2 z-10">
+                  <span className={`px-2 py-0.5 text-white text-[9px] font-bold uppercase rounded-[3px] backdrop-blur-[1px] ${
+                    item.status === 'active' 
+                      ? 'bg-emerald-600/80' 
+                      : 'bg-slate-600/85'
+                  }`}>
+                    {item.status === 'active' ? t('menu.active') : t('menu.inactive')}
+                  </span>
+                </div>
+
                 {/* Top Category Badge */}
                 <div className="absolute top-2 right-2 z-10 flex flex-wrap gap-1">
                   <span className="px-2 py-0.5 bg-slate-900/60 text-white text-[9px] font-bold uppercase rounded-[3px] backdrop-blur-[1px]">
@@ -479,20 +490,13 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
 
               {/* Card Footer (Actions) */}
               <div className="px-3.5 py-2.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center">
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={(e) => onSelect(e.target.checked)}
                     className="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary/20 accent-primary cursor-pointer"
                   />
-                  <span className={`px-1.5 py-0.5 rounded-[3px] text-[8px] font-black uppercase tracking-wider ${
-                    item.status === 'active' 
-                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
-                      : 'bg-slate-100 text-slate-500 border border-slate-200/60'
-                  }`}>
-                    {item.status === 'active' ? t('menu.active') : t('menu.inactive')}
-                  </span>
                 </div>
 
                 {/* Action buttons with individual rounded border buttons */}
