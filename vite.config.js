@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
                 '@Security': path.resolve(__dirname, './resources/Security'),
             },
         },
+        publicDir: isCloudflare ? false : 'public',
         build: {
             outDir: isCloudflare ? 'dist' : 'public/build',
         },
