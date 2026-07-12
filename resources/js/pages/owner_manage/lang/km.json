@@ -534,6 +534,20 @@
     "inactive": "អសកម្ម",
     "see_more": "បង្ហាញបន្ថែម",
     "see_less": "បង្ហាញតិចជាង",
-    "unknown_category": "មិនស្គាល់ប្រភេទ"
+    "unknown_category": "មិនស្គាល់ប្រភេទ",
+    "name": "ឈ្មោះផលិតផល",
+    "description": "ការពិពណ៌នា / លម្អិតរូបមន្ត",
+    "export": "នាំចេញ",
+    "filter": "តម្រង",
+    "create_root_category": "បង្កើតប្រភេទថ្មី",
+    "create_sub_category": "បង្កើតប្រភេទរង",
+    "create_subsub_category": "បង្កើតប្រភេទរងកម្រិតទី២",
+    "category_desc": "បន្ថែមក្រុមចំណាត់ថ្នាក់ថ្មីដើម្បីរៀបចំផលិតផលរបស់អ្នក។",
+    "parent_group": "ក្រុមមេ (Parent Group)",
+    "category_name": "ឈ្មោះប្រភេទ",
+    "category_name_placeholder": "ဥទាហរណ៍៖ ភេសជ្ជៈ, បង្អែម, គ្រឿងបន្លាស់",
+    "category_desc_placeholder": "ការពិពណ៌នាអំពីប្រភេទនេះ (មិនបង្ខំ)...",
+    "creating": "កំពុងបង្កើត...",
+    "create": "បង្កើត"
   }
 }

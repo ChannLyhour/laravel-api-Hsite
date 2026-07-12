@@ -534,6 +534,20 @@
         "inactive": "Inactive",
         "see_more": "See More",
         "see_less": "See Less",
-        "unknown_category": "Unknown Category"
+        "unknown_category": "Unknown Category",
+        "name": "Product Name",
+        "description": "Description / Recipe Details",
+        "export": "Export",
+        "filter": "Filter",
+        "create_root_category": "Create New Category",
+        "create_sub_category": "Create Sub Category",
+        "create_subsub_category": "Create Sub Sub Category",
+        "category_desc": "Add a new classification group to organize your products.",
+        "parent_group": "Parent Group",
+        "category_name": "Category Name",
+        "category_name_placeholder": "e.g. Drinks, Desserts, Accessories",
+        "category_desc_placeholder": "Optional description of this category...",
+        "creating": "Creating...",
+        "create": "Create"
     }
 }

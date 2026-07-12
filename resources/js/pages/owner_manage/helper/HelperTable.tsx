@@ -148,12 +148,12 @@ export function HelperTable<T>({
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
               {filterButton && (
                 <button
                   type="button"
                   onClick={filterButton.onClick}
-                  className="px-3 py-1.5 bg-white hover:bg-slate-50 text-[#0f53a1] border border-[#0f53a1] rounded-[5px] text-xs font-bold flex items-center space-x-1.5 transition-all active:scale-95 duration-200 cursor-pointer shadow-2xs"
+                  className="px-3 py-1.5 bg-white hover:bg-slate-50 text-[#0f53a1] border border-[#0f53a1] rounded-[5px] text-xs font-bold flex items-center space-x-1.5 transition-all active:scale-95 duration-200 cursor-pointer shadow-2xs whitespace-nowrap"
                 >
                   <FiSliders className="w-3.5 h-3.5" />
                   <span>{filterButton.label}</span>
@@ -164,7 +164,7 @@ export function HelperTable<T>({
                 <button
                   type="button"
                   onClick={exportButton.onClick}
-                  className="px-3 py-1.5 bg-white hover:bg-slate-50 text-[#0f53a1] border border-[#0f53a1] rounded-[5px] text-xs font-bold flex items-center space-x-1.5 transition-all active:scale-95 duration-200 cursor-pointer shadow-2xs"
+                  className="px-3 py-1.5 bg-white hover:bg-slate-50 text-[#0f53a1] border border-[#0f53a1] rounded-[5px] text-xs font-bold flex items-center space-x-1.5 transition-all active:scale-95 duration-200 cursor-pointer shadow-2xs whitespace-nowrap"
                 >
                   <FiDownload className="w-3.5 h-3.5" />
                   <span>{exportButton.label}</span>
@@ -177,7 +177,7 @@ export function HelperTable<T>({
                 <button
                   type="button"
                   onClick={addButton.onClick}
-                  className="px-3.5 py-1.5 bg-[#0f53a1] hover:bg-[#0b4789] text-white rounded-[5px] text-xs font-bold flex items-center space-x-1.5 shadow-sm active:scale-95 transition-all duration-200 cursor-pointer border-none shrink-0"
+                  className="px-3.5 py-1.5 bg-[#0f53a1] hover:bg-[#0b4789] text-white rounded-[5px] text-xs font-bold flex items-center space-x-1.5 shadow-sm active:scale-95 transition-all duration-200 cursor-pointer border-none shrink-0 whitespace-nowrap"
                 >
                   <FiPlus className="w-3.5 h-3.5 stroke-[3]" />
                   <span>{addButton.label}</span>

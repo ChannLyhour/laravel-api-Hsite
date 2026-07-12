@@ -1591,17 +1591,16 @@ export const EditPage: React.FC<EditPageProps> = ({
             </div>
           </div>
         </div>
-
         {/* Product Addons Card */}
         <div className="bg-white border border-slate-100 rounded-[10px] p-6 sm:p-8 shadow-xs space-y-4">
-          <div className="mb-2 border-b border-slate-100 pb-3 flex justify-between items-center">
+          <div className="mb-2 border-b border-slate-100 pb-3 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
             <div>
               <h3 className="text-base sm:text-lg font-extrabold text-slate-800">{t('menu.product_addons')}</h3>
               <p className="text-slate-400 text-xs mt-0.5">{t('menu.addons_desc')}</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-start md:justify-end">
               {addons.length > 0 && (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
                   <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-[5px] border border-slate-200/50 text-xs font-extrabold text-slate-700">
                     <span>{t('menu.total_addons')}: ${addonPriceTotal.toFixed(2)}</span>
                     <button
@@ -1625,7 +1624,7 @@ export const EditPage: React.FC<EditPageProps> = ({
               <button
                 type="button"
                 onClick={() => setAddons(prev => [...prev, { addon_name: '', additional_price: '0.00', discount: '0.00', discount_type: 'flat', is_default: false }])}
-                className="py-1.5 px-3 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[5px] text-xs font-bold transition-all border border-slate-200/50 cursor-pointer"
+                className="py-1.5 px-3 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[5px] text-xs font-bold transition-all border border-slate-200/50 cursor-pointer whitespace-nowrap"
               >
                 {t('menu.add_addon_option')}
               </button>
@@ -1639,82 +1638,65 @@ export const EditPage: React.FC<EditPageProps> = ({
           ) : (
             <div className="space-y-3">
               {addons.map((addon, index) => (
-                <div key={index} className="flex items-center gap-3 bg-slate-50/50 border border-slate-100 p-3.5 rounded-lg">
-                  {/* Thumbnail upload field */}
-                  <div className="relative w-12 h-12 border border-slate-200 rounded-[5px] bg-white flex items-center justify-center overflow-hidden shrink-0 group">
-                    {addon.imageUrl || addon.image ? (
-                      <>
-                        <img
-                          src={addon.imageUrl || getImageUrl(addon.image)}
-                          alt="Addon preview"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <label className="text-[10px] text-white font-bold cursor-pointer">
-                            {t('menu.change')}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleAddonImageChange(index, e.target.files)}
-                            />
-                          </label>
-                        </div>
-                      </>
-                    ) : (
-                      <label className="w-full h-full flex flex-col items-center justify-center text-slate-400 hover:text-[#1455ac] hover:bg-slate-50/80 transition-all cursor-pointer">
-                        <span className="text-[10px] font-bold">{t('menu.image')}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleAddonImageChange(index, e.target.files)}
-                        />
-                      </label>
-                    )}
-                  </div>
+                <div key={index} className="flex flex-col lg:flex-row lg:items-center gap-4 bg-slate-50/50 border border-slate-100 p-4 lg:p-3.5 rounded-lg">
+                  {/* Left Column: Image Upload + Addon Name */}
+                  <div className="flex items-center gap-3 w-full lg:w-auto lg:flex-[3]">
+                    {/* Thumbnail upload field */}
+                    <div className="relative w-12 h-12 border border-slate-200 rounded-[5px] bg-white flex items-center justify-center overflow-hidden shrink-0 group">
+                      {addon.imageUrl || addon.image ? (
+                        <>
+                          <img
+                            src={addon.imageUrl || getImageUrl(addon.image)}
+                            alt="Addon preview"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <label className="text-[10px] text-white font-bold cursor-pointer">
+                              {t('menu.change')}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleAddonImageChange(index, e.target.files)}
+                              />
+                            </label>
+                          </div>
+                        </>
+                      ) : (
+                        <label className="w-full h-full flex flex-col items-center justify-center text-slate-400 hover:text-[#1455ac] hover:bg-slate-50/80 transition-all cursor-pointer">
+                          <span className="text-[10px] font-bold">{t('menu.image')}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleAddonImageChange(index, e.target.files)}
+                          />
+                        </label>
+                      )}
+                    </div>
 
-                  <div className="flex-[3] space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.addon_name')}</label>
-                    <input
-                      type="text"
-                      required
-                      value={addon.addon_name}
-                      onChange={(e) => {
-                        const newAddons = [...addons];
-                        newAddons[index].addon_name = e.target.value;
-                        setAddons(newAddons);
-                      }}
-                      placeholder="e.g. Extra Pearl, Oat Milk, Cheese"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-medium text-slate-800 bg-white"
-                    />
-                  </div>
-                  <div className="flex-[1.5] space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.additional_price')} ($)</label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-xs">
-                        <FiDollarSign className="w-3.5 h-3.5" />
-                      </span>
+                    <div className="flex-1 space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.addon_name')}</label>
                       <input
-                        type="number"
-                        step="0.01"
+                        type="text"
                         required
-                        value={addon.additional_price}
+                        value={addon.addon_name}
                         onChange={(e) => {
                           const newAddons = [...addons];
-                          newAddons[index].additional_price = e.target.value;
+                          newAddons[index].addon_name = e.target.value;
                           setAddons(newAddons);
                         }}
-                        placeholder="0.00"
-                        className="w-full pl-7 pr-3 py-2 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-bold text-slate-800 bg-white"
+                        placeholder="e.g. Extra Pearl, Oat Milk, Cheese"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-medium text-slate-800 bg-white"
                       />
                     </div>
                   </div>
 
-                  <div className="flex-[2] space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.discount')}</label>
-                    <div className="flex rounded-[5px] border border-slate-200 overflow-hidden bg-white focus-within:ring-2 focus-within:ring-[#1455ac]/20 focus-within:border-[#1455ac]">
-                      <div className="relative flex-1">
+                  {/* Right Column Grid: Price, Discount, Auto Check, Delete */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center gap-3.5 w-full lg:w-auto lg:flex-[5.5]">
+                    <div className="space-y-1 col-span-1 lg:flex-[1.5] w-full">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.additional_price')} ($)</label>
+                      <div className="relative">
                         <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-xs">
                           <FiDollarSign className="w-3.5 h-3.5" />
                         </span>
@@ -1722,54 +1704,81 @@ export const EditPage: React.FC<EditPageProps> = ({
                           type="number"
                           step="0.01"
                           required
-                          value={addon.discount}
+                          value={addon.additional_price}
                           onChange={(e) => {
                             const newAddons = [...addons];
-                            newAddons[index].discount = e.target.value;
+                            newAddons[index].additional_price = e.target.value;
                             setAddons(newAddons);
                           }}
                           placeholder="0.00"
-                          className="w-full pl-7 pr-2 py-2 text-sm font-bold text-slate-800 focus:outline-none border-none bg-transparent"
+                          className="w-full pl-7 pr-3 py-2 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-bold text-slate-800 bg-white"
                         />
                       </div>
-                      <select
-                        value={addon.discount_type || 'flat'}
-                        onChange={(e) => {
-                          const newAddons = [...addons];
-                          newAddons[index].discount_type = e.target.value as 'flat' | 'percent';
-                          setAddons(newAddons);
-                        }}
-                        className="bg-slate-50 border-l border-slate-200 px-2 py-2 text-2xs font-extrabold text-slate-650 focus:outline-none cursor-pointer"
-                      >
-                        <option value="flat">{t('menu.flat')} ($)</option>
-                        <option value="percent">{t('menu.percent')} (%)</option>
-                      </select>
                     </div>
-                  </div>
-                  
-                  {/* Auto Checkbox toggle */}
-                  <div className="w-20 shrink-0 space-y-1 flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.auto_check')}</label>
-                    <div className="pt-2">
-                      <div
-                        onClick={() => {
-                          const newAddons = [...addons];
-                          newAddons[index].is_default = !newAddons[index].is_default;
-                          setAddons(newAddons);
-                        }}
-                        className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${addon.is_default ? 'bg-[#1455ac]' : 'bg-slate-300'}`}
-                      >
-                        <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-all duration-300 ${addon.is_default ? 'translate-x-5' : 'translate-x-0'}`} />
+
+                    <div className="space-y-1 col-span-1 lg:flex-[2] w-full">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.discount')}</label>
+                      <div className="flex rounded-[5px] border border-slate-200 overflow-hidden bg-white focus-within:ring-2 focus-within:ring-[#1455ac]/20 focus-within:border-[#1455ac]">
+                        <div className="relative flex-1">
+                          <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-xs">
+                            <FiDollarSign className="w-3.5 h-3.5" />
+                          </span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            required
+                            value={addon.discount}
+                            onChange={(e) => {
+                              const newAddons = [...addons];
+                              newAddons[index].discount = e.target.value;
+                              setAddons(newAddons);
+                            }}
+                            placeholder="0.00"
+                            className="w-full pl-7 pr-2 py-2 text-sm font-bold text-slate-800 focus:outline-none border-none bg-transparent"
+                          />
+                        </div>
+                        <select
+                          value={addon.discount_type || 'flat'}
+                          onChange={(e) => {
+                            const newAddons = [...addons];
+                            newAddons[index].discount_type = e.target.value as 'flat' | 'percent';
+                            setAddons(newAddons);
+                          }}
+                          className="bg-slate-50 border-l border-slate-200 px-2 py-2 text-2xs font-extrabold text-slate-650 focus:outline-none cursor-pointer"
+                        >
+                          <option value="flat">{t('menu.flat')} ($)</option>
+                          <option value="percent">{t('menu.percent')} (%)</option>
+                        </select>
                       </div>
                     </div>
+                    
+                    {/* Auto Checkbox toggle */}
+                    <div className="w-full lg:w-20 col-span-1 lg:shrink-0 space-y-1 flex flex-col justify-center">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.auto_check')}</label>
+                      <div className="pt-2">
+                        <div
+                          onClick={() => {
+                            const newAddons = [...addons];
+                            newAddons[index].is_default = !newAddons[index].is_default;
+                            setAddons(newAddons);
+                          }}
+                          className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${addon.is_default ? 'bg-[#1455ac]' : 'bg-slate-300'}`}
+                        >
+                          <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-all duration-300 ${addon.is_default ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-1 lg:shrink-0 flex items-center justify-end lg:justify-start pt-5 lg:pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setAddons(prev => prev.filter((_, i) => i !== index))}
+                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-[5px] transition-colors border-none cursor-pointer"
+                      >
+                        <FiX className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setAddons(prev => prev.filter((_, i) => i !== index))}
-                    className="mt-4 p-2 text-rose-500 hover:bg-rose-50 rounded-[5px] transition-colors border-none cursor-pointer shrink-0"
-                  >
-                    <FiX className="w-4 h-4" />
-                  </button>
                 </div>
               ))}
             </div>
@@ -1837,13 +1846,13 @@ export const EditPage: React.FC<EditPageProps> = ({
               <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center space-x-2">
                 <FiTag className="text-[#1455ac] w-5 h-5" />
                 <span>
-                  {categoryType === 'root' && 'Create New Category'}
-                  {categoryType === 'sub' && 'Create Sub Category'}
-                  {categoryType === 'subsub' && 'Create Sub Sub Category'}
+                  {categoryType === 'root' && t('menu.create_root_category')}
+                  {categoryType === 'sub' && t('menu.create_sub_category')}
+                  {categoryType === 'subsub' && t('menu.create_subsub_category')}
                 </span>
               </h3>
               <p className="text-slate-500 text-xs font-semibold mt-1">
-                Add a new classification group to organize your products.
+                {t('menu.category_desc')}
               </p>
             </div>
 
@@ -1851,7 +1860,7 @@ export const EditPage: React.FC<EditPageProps> = ({
               {/* Display Parent Category Info if adding Sub / Sub-Sub Category */}
               {categoryType !== 'root' && (
                 <div className="p-3 bg-slate-50 border border-slate-100 rounded-[5px] space-y-1">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Parent Group</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">{t('menu.parent_group')}</span>
                   <span className="text-xs font-extrabold text-slate-705">
                     {categoryType === 'sub' && localCategories.find(c => c.id === selectedRootId)?.name}
                     {categoryType === 'subsub' && localCategories.find(c => c.id === selectedSubId)?.name}
@@ -1861,26 +1870,26 @@ export const EditPage: React.FC<EditPageProps> = ({
 
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Category Name <span className="text-rose-500">*</span>
+                  {t('menu.category_name')} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="e.g. Drinks, Desserts, Accessories"
+                  placeholder={t('menu.category_name_placeholder') || 'e.g. Drinks, Desserts, Accessories'}
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-medium text-slate-800"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-bold text-slate-700 block">
-                  Description
+                  {t('menu.description')}
                 </label>
                 <textarea
                   value={newCategoryDesc}
                   onChange={(e) => setNewCategoryDesc(e.target.value)}
-                  placeholder="Optional description of this category..."
+                  placeholder={t('menu.category_desc_placeholder') || 'Optional description of this category...'}
                   rows={3}
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-medium text-slate-800 resize-none font-kuntomruy"
                 />
@@ -1892,14 +1901,14 @@ export const EditPage: React.FC<EditPageProps> = ({
                   onClick={handleCloseCategoryModal}
                   className="flex-1 py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[5px] text-sm font-bold transition-all border border-slate-200/50 cursor-pointer"
                 >
-                  Cancel
+                  {t('menu.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={categorySubmitting || !newCategoryName.trim()}
                   className="flex-1 py-2.5 px-4 bg-[#1455ac] hover:bg-[#0f4d9c] text-white rounded-[5px] text-sm font-bold transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50 border-none cursor-pointer"
                 >
-                  {categorySubmitting ? 'Creating...' : 'Create'}
+                  {categorySubmitting ? t('menu.creating') : t('menu.create')}
                 </button>
               </div>
             </form>

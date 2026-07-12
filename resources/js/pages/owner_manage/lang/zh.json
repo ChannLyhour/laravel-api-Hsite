@@ -534,6 +534,20 @@
     "inactive": "停用",
     "see_more": "查看更多",
     "see_less": "收起",
-    "unknown_category": "未知分类"
+    "unknown_category": "未知分类",
+    "name": "产品名称",
+    "description": "描述 / 配方详情",
+    "export": "导出",
+    "filter": "筛选",
+    "create_root_category": "创建新分类",
+    "create_sub_category": "创建子分类",
+    "create_subsub_category": "创建次级子分类",
+    "category_desc": "添加新的分类组以管理您的产品。",
+    "parent_group": "上级分类",
+    "category_name": "分类名称",
+    "category_name_placeholder": "例如：饮料、甜点、配饰",
+    "category_desc_placeholder": "此分类的选填说明...",
+    "creating": "正在创建...",
+    "create": "创建"
   }
 }
