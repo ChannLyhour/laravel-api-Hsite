@@ -1,6 +1,7 @@
 import React from 'react';
-import { FiSearch, FiDownload, FiSliders, FiPlus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiSearch, FiDownload, FiSliders, FiPlus, FiChevronLeft, FiChevronRight, FiGrid, FiList } from 'react-icons/fi';
 import '@/pages/owner_manage/style/font.css';
+import { useTranslation } from '@/pages/owner_manage/lang/i18n';
 
 export interface HelperTableColumn {
   key: string;
@@ -63,6 +64,7 @@ interface HelperTableProps<T> {
     onClick: (selectedIds: any[]) => void;
     className?: string;
   }>;
+  renderCard?: (item: T, index: number, isSelected: boolean, onSelect: (checked: boolean) => void) => React.ReactNode;
 }
 
 export function HelperTable<T>({
@@ -93,8 +95,11 @@ export function HelperTable<T>({
   onSelectionChange,
   getRowId,
   bulkActions,
+  renderCard,
 }: HelperTableProps<T>) {
   
+  const { t } = useTranslation();
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table');
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
   const indexOfLastItem = indexOfFirstItem + itemsPerPage;
 
@@ -173,6 +178,26 @@ export function HelperTable<T>({
 
 
 
+              {renderCard && (
+                <button
+                  type="button"
+                  onClick={() => setViewMode(prev => prev === 'table' ? 'grid' : 'table')}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-50 text-[#0f53a1] border border-[#0f53a1] rounded-[5px] text-xs font-bold flex items-center space-x-1.5 transition-all active:scale-95 duration-200 cursor-pointer shadow-2xs whitespace-nowrap"
+                >
+                  {viewMode === 'table' ? (
+                    <>
+                      <FiGrid className="w-3.5 h-3.5" />
+                      <span>{t('menu.grid_view') || 'Grid View'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiList className="w-3.5 h-3.5" />
+                      <span>{t('menu.table_view') || 'Table View'}</span>
+                    </>
+                  )}
+                </button>
+              )}
+
               {addButton && (
                 <button
                   type="button"
@@ -238,77 +263,133 @@ export function HelperTable<T>({
               </div>
             )}
 
-            <div className="overflow-x-auto overflow-y-auto max-h-[500px] custom-scrollbar">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="text-slate-500 text-xs uppercase font-extrabold tracking-wider">
-                    {/* Checkbox column header */}
-                    {selectedIds && onSelectionChange && getRowId && (
-                      <th className="sticky top-0 z-10 py-4 px-5 bg-slate-50/95 backdrop-blur-[1px] border-b border-slate-100 text-center w-10">
-                        <input
-                          type="checkbox"
-                          checked={data.length > 0 && data.every(item => selectedIds.includes(getRowId(item)))}
-                          onChange={(e) => {
-                            const currentIds = data.map(getRowId);
-                            if (e.target.checked) {
-                              const newSelected = Array.from(new Set([...selectedIds, ...currentIds]));
-                              onSelectionChange(newSelected);
-                            } else {
-                              const newSelected = selectedIds.filter(id => !currentIds.includes(id));
-                              onSelectionChange(newSelected);
-                            }
-                          }}
-                          className="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary/20 accent-primary cursor-pointer"
-                        />
-                      </th>
-                    )}
-                    {columns.map((col) => {
-                      const alignClass = 
-                        col.align === 'center' ? 'text-center' :
-                        col.align === 'right' ? 'text-right' : 'text-left';
-                      const hasFilter = col.filterable && onColumnFilterChange;
-                      return (
-                        <th
-                          key={col.key}
-                          className={`sticky top-0 z-10 py-4 px-5 bg-slate-50/95 backdrop-blur-[1px] border-b border-slate-100 ${alignClass} ${col.className || ''}`}
-                        >
-                          {col.label}
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-900 text-[12px] sm:text-[14px]">
-                  {data.map((item, index) => {
-                    const rowElement = renderRow(item, index);
-                    if (selectedIds && onSelectionChange && getRowId && React.isValidElement(rowElement)) {
-                      const rowId = getRowId(item);
-                      const isChecked = selectedIds.includes(rowId);
-                      const selectionCell = (
-                        <td key="selection" className="py-3.5 px-5 text-center w-10 border-b border-slate-100/50">
+            {viewMode === 'grid' && renderCard ? (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 p-2 md:p-4 bg-slate-50/30 max-h-[600px] overflow-y-auto rounded-[8px] border border-slate-100">
+                {data.map((item, index) => {
+                  const rowId = getRowId ? getRowId(item) : null;
+                  const isChecked = selectedIds && rowId ? selectedIds.includes(rowId) : false;
+                  const handleSelect = (checked: boolean) => {
+                    if (!selectedIds || !onSelectionChange || !rowId) return;
+                    if (checked) {
+                      onSelectionChange([...selectedIds, rowId]);
+                    } else {
+                      onSelectionChange(selectedIds.filter(id => id !== rowId));
+                    }
+                  };
+                  return (
+                    <React.Fragment key={rowId || index}>
+                      {renderCard(item, index, isChecked, handleSelect)}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px] custom-scrollbar p-1 md:p-0 bg-slate-50/30 md:bg-transparent">
+                <table className="w-full text-left border-collapse block md:table">
+                  <thead className="hidden md:table-header-group">
+                    <tr className="text-slate-500 text-xs uppercase font-extrabold tracking-wider">
+                      {/* Checkbox column header */}
+                      {selectedIds && onSelectionChange && getRowId && (
+                        <th className="sticky top-0 z-10 py-4 px-5 bg-slate-50/95 backdrop-blur-[1px] border-b border-slate-100 text-center w-10">
                           <input
                             type="checkbox"
-                            checked={isChecked}
+                            checked={data.length > 0 && data.every(item => selectedIds.includes(getRowId(item)))}
                             onChange={(e) => {
+                              const currentIds = data.map(getRowId);
                               if (e.target.checked) {
-                                onSelectionChange([...selectedIds, rowId]);
+                                const newSelected = Array.from(new Set([...selectedIds, ...currentIds]));
+                                onSelectionChange(newSelected);
                               } else {
-                                onSelectionChange(selectedIds.filter(id => id !== rowId));
+                                const newSelected = selectedIds.filter(id => !currentIds.includes(id));
+                                onSelectionChange(newSelected);
                               }
                             }}
                             className="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary/20 accent-primary cursor-pointer"
                           />
-                        </td>
-                      );
-                      const element = rowElement as React.ReactElement<any>;
-                      const originalChildren = React.Children.toArray(element.props.children);
-                      return React.cloneElement(element, {}, [selectionCell, ...originalChildren]);
-                    }
-                    return rowElement;
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </th>
+                      )}
+                      {columns.map((col) => {
+                        const alignClass = 
+                          col.align === 'center' ? 'text-center' :
+                          col.align === 'right' ? 'text-right' : 'text-left';
+                        const hasFilter = col.filterable && onColumnFilterChange;
+                        return (
+                          <th
+                            key={col.key}
+                            className={`sticky top-0 z-10 py-4 px-5 bg-slate-50/95 backdrop-blur-[1px] border-b border-slate-100 ${alignClass} ${col.className || ''}`}
+                          >
+                            {col.label}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-900 text-[12px] sm:text-[14px] block md:table-row-group space-y-3.5 md:space-y-0">
+                    {data.map((item, index) => {
+                      const rowElement = renderRow(item, index);
+                      if (React.isValidElement(rowElement)) {
+                        const validRowElement = rowElement as React.ReactElement<any>;
+                        const rowId = getRowId ? getRowId(item) : null;
+                        const isChecked = selectedIds && rowId ? selectedIds.includes(rowId) : false;
+
+                        // Get original children (tds) of the tr
+                        const originalChildren = React.Children.toArray(validRowElement.props.children) as React.ReactElement<any>[];
+
+                        // Enhance tds with mobile responsive labels and flex styles
+                        const enhancedChildren = originalChildren.map((child, colIdx) => {
+                          if (!React.isValidElement(child)) return child;
+
+                          // Check if it's the checkbox / selection column
+                          const isSelection = child.key === 'selection' || (selectedIds && colIdx === 0 && originalChildren.length > columns.length);
+                          
+                          // Map correct column label
+                          const colConfigIdx = selectedIds ? (isSelection ? -1 : colIdx - 1) : colIdx;
+                          const label = colConfigIdx >= 0 && columns[colConfigIdx] ? columns[colConfigIdx].label : (t('menu.select') || 'Select');
+
+                          return React.cloneElement(child, {
+                            'data-label': label,
+                            className: `flex md:table-cell py-2.5 md:py-3.5 px-0 md:px-5 border-none md:border-b md:border-slate-100/50 items-center justify-between md:justify-start before:content-[attr(data-label)] before:md:hidden before:font-extrabold before:text-[10px] before:text-slate-400 before:uppercase before:tracking-wider before:mr-4 text-right md:text-left ${(child.props as any).className || ''}`
+                          } as any);
+                        });
+
+                        // If selection is enabled but not in the original row children, prepend selection column
+                        let finalChildren = enhancedChildren;
+                        if (selectedIds && onSelectionChange && getRowId && !originalChildren.some(c => c.key === 'selection')) {
+                          const rowIdVal = getRowId(item);
+                          const isCheckedVal = selectedIds.includes(rowIdVal);
+                          const selectionCell = (
+                            <td 
+                              key="selection" 
+                              data-label={t('menu.select') || 'Select'}
+                              className="flex md:table-cell py-2.5 md:py-3.5 px-0 md:px-5 border-none md:border-b border-slate-100/50 items-center justify-between md:justify-start before:content-[attr(data-label)] before:md:hidden before:font-extrabold before:text-[10px] before:text-slate-400 before:uppercase before:tracking-wider before:mr-4 text-right md:text-left"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isCheckedVal}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    onSelectionChange([...selectedIds, rowIdVal]);
+                                  } else {
+                                    onSelectionChange(selectedIds.filter(id => id !== rowIdVal));
+                                  }
+                                }}
+                                className="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary/20 accent-primary cursor-pointer"
+                              />
+                            </td>
+                          );
+                          finalChildren = [selectionCell, ...enhancedChildren];
+                        }
+
+                        return React.cloneElement(validRowElement, {
+                          className: `block md:table-row bg-white border border-slate-200/60 md:border-none rounded-[8px] p-4 shadow-sm md:shadow-none mb-3.5 md:mb-0 md:bg-transparent ${validRowElement.props.className || ''}`
+                        } as any, finalChildren);
+                      }
+                      return rowElement;
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {/* ── Pagination Footer ─────────────────────────────── */}
             <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 custom-card-header-bar">

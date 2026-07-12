@@ -548,6 +548,9 @@
     "category_name_placeholder": "例如：饮料、甜点、配饰",
     "category_desc_placeholder": "此分类的选填说明...",
     "creating": "正在创建...",
-    "create": "创建"
+    "create": "创建",
+    "add": "添加",
+    "grid_view": "网格视图",
+    "table_view": "表格视图"
   }
 }

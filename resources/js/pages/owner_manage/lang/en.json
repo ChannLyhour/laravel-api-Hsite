@@ -548,6 +548,9 @@
         "category_name_placeholder": "e.g. Drinks, Desserts, Accessories",
         "category_desc_placeholder": "Optional description of this category...",
         "creating": "Creating...",
-        "create": "Create"
+        "create": "Create",
+        "add": "Add",
+        "grid_view": "Grid View",
+        "table_view": "Table View"
     }
 }

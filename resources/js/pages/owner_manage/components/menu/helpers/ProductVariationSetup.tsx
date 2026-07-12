@@ -116,11 +116,22 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
   // Selector UI dropdowns
   const [showColorDropdown, setShowColorDropdown] = useState(false);
   const [showAttrDropdown, setShowAttrDropdown] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   // Custom tag inputs states
   const [choiceInputs, setChoiceInputs] = useState<Record<string, string>>({});
 
   const [deletedCombos, setDeletedCombos] = useState<string[]>([]);
+
+  // Close guide when clicking outside
+  useEffect(() => {
+    if (!showGuide) return;
+    const handleOutsideClick = () => {
+      setShowGuide(false);
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [showGuide]);
 
   const getDropdownAttributes = () => {
     const defaults = ['type', 'size', 'storage', 'material'];
@@ -651,14 +662,25 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                 <span>{t('menu.attributes')} <small className="text-slate-400 font-normal">({t('menu.optional')})</small></span>
                 <div className="relative group">
                   <span 
-                    className="inline-flex items-center gap-1.5 text-[10px] font-black text-[#1455ac] bg-[#1455ac]/10 hover:bg-[#1455ac]/15 px-2.5 py-0.5 rounded-full cursor-help transition-colors uppercase tracking-wider"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowGuide(prev => !prev);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-[10px] font-black text-[#1455ac] bg-[#1455ac]/10 hover:bg-[#1455ac]/15 px-2.5 py-0.5 rounded-full cursor-help transition-colors uppercase tracking-wider select-none"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-[#1455ac] animate-pulse" />
                     <span>{t('menu.how_to_use')}</span>
                   </span>
 
                   {/* Styled Hover Tooltip Card */}
-                  <div className="absolute right-0 top-full mt-1.5 w-64 p-3 bg-white border border-slate-100 rounded-[8px] shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-40 space-y-2 normal-case font-normal text-left">
+                  <div 
+                    onClick={(e) => e.stopPropagation()}
+                    className={`absolute right-0 top-full mt-1.5 w-64 p-3 bg-white border border-slate-100 rounded-[8px] shadow-lg transition-all duration-200 z-40 space-y-2 normal-case font-normal text-left ${
+                      showGuide 
+                        ? 'opacity-100 pointer-events-auto' 
+                        : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto'
+                    }`}
+                  >
                     <p className="text-xs font-extrabold text-slate-800 border-b border-slate-100 pb-1.5 flex items-center gap-1">
                       💡 {t('menu.quick_guide')}
                     </p>
@@ -801,6 +823,21 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                         }}
                         className="flex-1 min-w-[100px] text-xs font-semibold focus:outline-none bg-transparent h-6"
                       />
+                      {currentVal.trim() && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const val = currentVal.trim().replace(/,$/, '');
+                            if (val) {
+                              await addChoiceTag(name, val);
+                              setChoiceInputs(prev => ({ ...prev, [name]: '' }));
+                            }
+                          }}
+                          className="px-2.5 py-1 bg-[#1455ac] text-white rounded-[3px] text-[10px] font-bold hover:bg-[#0f4d9c] transition-all cursor-pointer border-none shrink-0"
+                        >
+                          {t('menu.add') || 'Add'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

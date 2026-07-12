@@ -392,6 +392,161 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
 
       <HelperTable<MenuItem>
         columns={columns}
+        renderCard={(item, index, isSelected, onSelect) => {
+          const sl = indexOfFirstItem + index + 1;
+
+          // Resolve display image conditionally based on options/variants activation status
+          const hasVariants = !!item.has_options;
+
+          let displayImage = '';
+          const resolvePath = (p?: string | string[]): string => {
+            if (!p) return '';
+            return Array.isArray(p) ? (p[0] || '') : p;
+          };
+          if (hasVariants) {
+            const firstVar = item.variants?.[0];
+            const varImage = firstVar ? item.images?.find(img => img.product_variant_id === firstVar.id) : null;
+            const fallbackVarImage = item.images?.find(img => img.product_variant_id !== null);
+            displayImage = resolvePath(varImage?.image) || resolvePath(fallbackVarImage?.image) || item.display_image || item.image || '';
+          } else {
+            const rootImages = item.images ? item.images.filter(img => img.product_variant_id === null) : [];
+            const primaryProductImg = rootImages.find(img => img.is_primary) || rootImages[0];
+            displayImage = resolvePath(primaryProductImg?.image) || item.display_image || item.image || '';
+          }
+
+          const cardImageUrl = activeRowImages[item.id] || resolveImageUrl(displayImage);
+          const categoryName = getCategoryName(item.category_id);
+
+          return (
+            <div 
+              key={item.id}
+              className="bg-white border border-slate-200/60 rounded-[8px] overflow-hidden shadow-2xs hover:shadow-xs transition-all duration-300 flex flex-col h-full font-kuntomruy relative group"
+            >
+              {/* Product Image Wrapper */}
+              <div className="relative aspect-[4/3] bg-slate-50 border-b border-slate-100 overflow-hidden shrink-0">
+                {/* Top Category Badge */}
+                <div className="absolute top-2 right-2 z-10 flex flex-wrap gap-1">
+                  <span className="px-2 py-0.5 bg-slate-900/60 text-white text-[9px] font-bold uppercase rounded-[3px] backdrop-blur-[1px]">
+                    {categoryName}
+                  </span>
+                </div>
+
+                <img
+                  src={cardImageUrl}
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-350"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+                  }}
+                />
+              </div>
+
+              {/* Card Body */}
+              <div className="p-3.5 flex-1 flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-start justify-between gap-3">
+                    <h4 className="text-sm font-extrabold text-slate-800 line-clamp-1 group-hover:text-primary transition-colors uppercase tracking-tight">
+                      {item.name}
+                    </h4>
+                    <span className="text-xs font-black text-[#1455ac] bg-[#1455ac]/5 px-2 py-0.5 rounded-[4px] whitespace-nowrap shrink-0">
+                      ${item.price}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-450 mt-1.5 line-clamp-2 leading-relaxed">
+                    {item.description || 'No description / recipe details available.'}
+                  </p>
+                </div>
+
+                {/* Attribute tags at description bottom */}
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {hasVariants && item.variants && item.variants.map((v, idx) => {
+                    if (idx > 2) return null;
+                    const attrVal = v.attribute_values?.map((av: any) => av.value?.split('|')[0]).join(', ');
+                    if (!attrVal) return null;
+                    return (
+                      <span key={v.id} className="text-[9px] bg-slate-50 border border-slate-200/50 text-slate-500 px-1.5 py-0.5 rounded-[3px] font-bold">
+                        {attrVal}
+                      </span>
+                    );
+                  })}
+                  {hasVariants && item.variants && item.variants.length > 3 && (
+                    <span className="text-[9px] text-slate-400 font-bold self-center">
+                      +{item.variants.length - 3} more
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Card Footer (Actions) */}
+              <div className="px-3.5 py-2.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={(e) => onSelect(e.target.checked)}
+                    className="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary/20 accent-primary cursor-pointer"
+                  />
+                  <span className={`px-1.5 py-0.5 rounded-[3px] text-[8px] font-black uppercase tracking-wider ${
+                    item.status === 'active' 
+                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                      : 'bg-slate-100 text-slate-500 border border-slate-200/60'
+                  }`}>
+                    {item.status === 'active' ? t('menu.active') : t('menu.inactive')}
+                  </span>
+                </div>
+
+                {/* Action buttons with individual rounded border buttons */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowingItem(item)}
+                    className="p-1.5 bg-white hover:bg-slate-50 text-slate-550 hover:text-slate-700 border border-slate-200 rounded-[5px] cursor-pointer shadow-3xs transition-all active:scale-95 flex items-center justify-center"
+                    title="View details"
+                  >
+                    <FiEye className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingItem(item);
+                      setView('edit');
+                    }}
+                    className="p-1.5 bg-white hover:bg-slate-50 text-slate-550 hover:text-[#1455ac] border border-slate-200 rounded-[5px] cursor-pointer shadow-3xs transition-all active:scale-95 flex items-center justify-center"
+                    title="Edit product"
+                  >
+                    <FiEdit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const confirmed = await confirm({
+                        title: t('menu.delete_title'),
+                        message: t('menu.delete_msg', { name: item.name }),
+                        confirmText: t('menu.delete_product'),
+                        cancelText: t('menu.cancel'),
+                        type: 'danger'
+                      });
+                      if (confirmed) {
+                        try {
+                          await menuItemsService.deleteMenuItem(item.id);
+                          setItems(prev => prev.filter(i => i.id !== item.id));
+                          toast.success('Successfully removed selected product!');
+                        } catch (err) {
+                          console.error(err);
+                          toast.error('Failed to remove product.');
+                        }
+                      }
+                    }}
+                    className="p-1.5 bg-white hover:bg-rose-50 text-slate-550 hover:text-rose-600 border border-slate-200 rounded-[5px] cursor-pointer shadow-3xs transition-all active:scale-95 flex items-center justify-center"
+                    title="Delete product"
+                  >
+                    <FiTrash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }}
         data={currentItems}
         loading={loading}
         searchPlaceholder="Search by Name Products..."
