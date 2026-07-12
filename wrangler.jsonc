@@ -14,7 +14,7 @@
     "nodejs_compat"
   ],
   "vars": {
-    "BACKEND_URL": "https://laravel-api-hsite.vercel.app",
+    "BACKEND_URL": "https://vhsitekh.site",
     "DB_CONNECTION": "mysql",
     "DB_HOST": "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
     "DB_PORT": "4000",
