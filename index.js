@@ -2,6 +2,24 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // Test endpoint to verify environment variable binding
+    if (url.pathname === '/api/db-config-test') {
+      return new Response(JSON.stringify({
+        status: 'ok',
+        backend_url: env.BACKEND_URL,
+        database: {
+          connection: env.DB_CONNECTION,
+          host: env.DB_HOST,
+          port: env.DB_PORT,
+          database: env.DB_DATABASE,
+          username: env.DB_USERNAME,
+          password_configured: !!env.DB_PASSWORD
+        }
+      }, null, 2), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Route API requests to the backend server
     if (url.pathname.startsWith('/api/')) {
       const backendUrl = env.BACKEND_URL || 'https://laravel-api-hsite.vercel.app';
