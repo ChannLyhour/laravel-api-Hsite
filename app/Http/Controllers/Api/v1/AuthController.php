@@ -365,108 +365,131 @@ class AuthController extends Controller
 
     public function socialLogin (Request $request)
     {
-        $request->validate([
-            'email' => 'required|string|email|max:255',
-            'name' => 'required|string|max:255',
-            'first_name' => 'nullable|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'image' => 'nullable|string',
-            'created_by' => 'nullable|integer|exists:users,id',
-            'store_id' => 'nullable|integer|exists:users,id',
-        ]);
+        try {
+            $request->validate([
+                'email' => 'required|string|email|max:255',
+                'name' => 'required|string|max:255',
+                'first_name' => 'nullable|string|max:255',
+                'last_name' => 'nullable|string|max:255',
+                'image' => 'nullable|string',
+                'created_by' => 'nullable|integer|exists:users,id',
+                'store_id' => 'nullable|integer|exists:users,id',
+            ]);
 
-        $storeId = $request->input('store_id') ?? $request->input('created_by');
-        $email = strtolower(trim($request->email));
+            $storeId = $request->input('store_id') ?? $request->input('created_by');
+            $email = strtolower(trim($request->email));
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $storeId, $email) {
-            $user = User::withTrashed()->whereRaw('LOWER(email) = ?', [$email])->first();
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $storeId, $email) {
+                // Highly robust case-insensitive email search
+                $user = User::withTrashed()
+                    ->where('email', $request->email)
+                    ->orWhere('email', $email)
+                    ->orWhereRaw('LOWER(email) = ?', [$email])
+                    ->first();
 
-            if (!$user) {
-                // Determine first/last name
-                $firstName = $request->first_name;
-                $lastName = $request->last_name;
-                if (empty($firstName) && empty($lastName)) {
-                    $parts = explode(' ', $request->name, 2);
-                    $firstName = $parts[0] ?? $request->name;
-                    $lastName = $parts[1] ?? '';
-                }
+                if (!$user) {
+                    // Determine first/last name
+                    $firstName = $request->first_name;
+                    $lastName = $request->last_name;
+                    if (empty($firstName) && empty($lastName)) {
+                        $parts = explode(' ', $request->name, 2);
+                        $firstName = $parts[0] ?? $request->name;
+                        $lastName = $parts[1] ?? '';
+                    }
 
-                $user = User::create([
-                    'name' => $request->name,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'email' => $email,
-                    'password' => Hash::make(\Illuminate\Support\Str::random(16)),
-                    'role_id' => 2, // Customer
-                    'state' => 'active',
-                    'image' => $request->image,
-                    'created_by' => $request->created_by,
-                ]);
-
-                // Create store-scoped customer record
-                if ($storeId) {
-                    $user->customers()->create([
-                        'store_id' => $storeId,
+                    $user = User::create([
                         'name' => $request->name,
                         'first_name' => $firstName,
                         'last_name' => $lastName,
                         'email' => $email,
-                        'created_by' => $storeId,
+                        'password' => Hash::make(\Illuminate\Support\Str::random(16)),
+                        'role_id' => 2, // Customer
+                        'state' => 'active',
+                        'image' => $request->image,
+                        'created_by' => $request->created_by,
                     ]);
-                }
-            } else {
-                if ($user->trashed()) {
-                    $user->restore();
-                }
 
-                // If user exists, check if they need a customer record for this store
-                if ((int) $user->role_id === 2 && $storeId) {
-                    $existingCustomer = $user->customerForStore($storeId);
-                    if (!$existingCustomer) {
-                        $firstName = $request->first_name ?: $user->first_name;
-                        $lastName = $request->last_name ?: $user->last_name;
-                        if (empty($firstName) && empty($lastName)) {
-                            $parts = explode(' ', $request->name ?: $user->name, 2);
-                            $firstName = $parts[0] ?? $user->name;
-                            $lastName = $parts[1] ?? '';
-                        }
-
+                    // Create store-scoped customer record
+                    if ($storeId) {
                         $user->customers()->create([
                             'store_id' => $storeId,
-                            'name' => $request->name ?: $user->name,
+                            'name' => $request->name,
                             'first_name' => $firstName,
                             'last_name' => $lastName,
                             'email' => $email,
                             'created_by' => $storeId,
                         ]);
                     }
+                } else {
+                    if ($user->trashed()) {
+                        $user->restore();
+                    }
+
+                    // If user exists, check if they need a customer record for this store
+                    if ((int) $user->role_id === 2 && $storeId) {
+                        $existingCustomer = $user->customerForStore($storeId);
+                        if (!$existingCustomer) {
+                            $firstName = $request->first_name ?: $user->first_name;
+                            $lastName = $request->last_name ?: $user->last_name;
+                            if (empty($firstName) && empty($lastName)) {
+                                $parts = explode(' ', $request->name ?: $user->name, 2);
+                                $firstName = $parts[0] ?? $user->name;
+                                $lastName = $parts[1] ?? '';
+                            }
+
+                            $user->customers()->create([
+                                'store_id' => $storeId,
+                                'name' => $request->name ?: $user->name,
+                                'first_name' => $firstName,
+                                'last_name' => $lastName,
+                                'email' => $email,
+                                'created_by' => $storeId,
+                            ]);
+                        }
+                    }
                 }
-            }
 
-            $token = $user->createToken('auth-token')->plainTextToken;
+                $token = $user->createToken('auth-token')->plainTextToken;
 
-            // Mark user as online and broadcast status
-            $user->update(['is_online' => true, 'last_seen_at' => now()]);
-            $user->refresh();
+                // Mark user as online and broadcast status
+                $user->update(['is_online' => true, 'last_seen_at' => now()]);
+                $user->refresh();
 
-            if (class_exists(\App\Events\UserStatusUpdated::class)) {
-                \App\Events\UserStatusUpdated::broadcastForUser($user);
-            }
+                if (class_exists(\App\Events\UserStatusUpdated::class)) {
+                    \App\Events\UserStatusUpdated::broadcastForUser($user);
+                }
 
-            $response = [
-                'success' => true,
-                'message' => 'Logged in successfully via social login',
-                'token' => $token,
-                'user' => $user->load('customers'),
-            ];
+                $response = [
+                    'success' => true,
+                    'message' => 'Logged in successfully via social login',
+                    'token' => $token,
+                    'user' => $user->load('customers'),
+                ];
 
-            // Include the specific store's customer if store_id was provided
-            if ($storeId) {
-                $response['customer'] = $user->customerForStore($storeId);
-            }
+                // Include the specific store's customer if store_id was provided
+                if ($storeId) {
+                    $response['customer'] = $user->customerForStore($storeId);
+                }
 
-            return response()->json($response, 200);
-        });
+                return response()->json($response, 200);
+            });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Social Login Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'email' => $request->email ?? null,
+            ]);
+
+            $details = "Social Login Error: " . $e->getMessage() .
+                " in " . basename($e->getFile()) .
+                " on line " . $e->getLine() .
+                ". Email: " . ($request->email ?? 'null') .
+                ". Trace: " . substr($e->getTraceAsString(), 0, 150);
+
+            return response()->json([
+                'success' => false,
+                'message' => $details
+            ], 500);
+        }
     }
 
     /**
@@ -587,7 +610,7 @@ class AuthController extends Controller
                 }
 
                 $productIds = \Illuminate\Support\Facades\DB::table('products')->where('created_by', $user->id)->pluck('id');
-                
+
                 $productImages = \Illuminate\Support\Facades\DB::table('product_images')->whereIn('product_id', $productIds)->pluck('image')->toArray();
                 foreach ($productImages as $img) {
                     \App\Helpers\UploadHelper::deleteImage($img);
