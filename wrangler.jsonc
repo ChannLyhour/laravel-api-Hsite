@@ -1,18 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vhsite-platform-ecommerce",
+  "main": "index.js",
   "compatibility_date": "2026-07-12",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "./dist",
+    "directory": "./dist/client",
     "not_found_handling": "single-page-application"
   },
   "compatibility_flags": [
     "nodejs_compat"
   ],
   "vars": {
+    "BACKEND_URL": "https://laravel-api-hsite.vercel.app",
     "DB_CONNECTION": "mysql",
     "DB_HOST": "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
     "DB_PORT": "4000",
