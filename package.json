@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "vite build --mode cloudflare",
     "dev": "vite",
     "deploy": "npm run build && wrangler deploy",
     "preview": "npm run build && wrangler dev"
