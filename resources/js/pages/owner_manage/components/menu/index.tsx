@@ -315,6 +315,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
     { key: 'type', label: 'Product Type', align: 'left' },
     { key: 'price', label: 'Unit Price', align: 'left', filterable: true },
     { key: 'stock', label: 'Stock', align: 'center' },
+    { key: 'social_media_link', label: 'Social Link', align: 'center' },
     { key: 'status', label: 'Status', align: 'center' },
     { key: 'action', label: 'Action', align: 'right', className: 'w-36' }
   ];
@@ -744,6 +745,83 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                 {item.variants && item.variants.length > 0
                   ? item.variants.reduce((sum, v) => sum + (v.stock_qty || 0), 0)
                   : 0}
+              </td>
+              <td className="py-3.5 px-5 text-center">
+                {(() => {
+                  const links = item.social_media_link;
+                  if (!links || !Object.values(links).some(v => !!v)) {
+                    return <span className="text-slate-400 font-normal">-</span>;
+                  }
+                  return (
+                    <div className="flex items-center justify-center gap-1.5">
+                      {links.facebook && (
+                        <a
+                          href={links.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-6 h-6 text-[#1877F2] hover:bg-[#1877F2]/10 border border-[#1877F2]/20 rounded-full transition-all"
+                          title={`Facebook: ${links.facebook}`}
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {links.instagram && (
+                        <a
+                          href={links.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-6 h-6 text-[#E1306C] hover:bg-[#E1306C]/10 border border-[#E1306C]/20 rounded-full transition-all"
+                          title={`Instagram: ${links.instagram}`}
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051C.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {links.tiktok && (
+                        <a
+                          href={links.tiktok}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-6 h-6 text-[#010101] hover:bg-[#010101]/10 border border-[#010101]/20 rounded-full transition-all"
+                          title={`TikTok: ${links.tiktok}`}
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.07-2.89-.52-4.06-1.39v7.86c-.03 2.44-1.18 4.86-3.23 6.13-2.45 1.57-5.83 1.67-8.38.25-2.52-1.4-3.89-4.32-3.39-7.18.39-2.52 2.22-4.71 4.73-5.26.79-.17 1.61-.17 2.41-.02v4.08c-.89-.25-1.89-.13-2.67.36-.92.56-1.4 1.62-1.28 2.68.1 1.05.81 1.99 1.83 2.26 1.03.3 2.18-.08 2.77-.95.34-.52.48-1.14.47-1.76l-.02-12.42z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {links.telegram && (
+                        <a
+                          href={links.telegram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-6 h-6 text-[#0088cc] hover:bg-[#0088cc]/10 border border-[#0088cc]/20 rounded-full transition-all"
+                          title={`Telegram: ${links.telegram}`}
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-1-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.46-.42-1.4-.88.03-.24.37-.49 1.03-.75 4.04-1.76 6.74-2.92 8.09-3.48 3.85-1.6 4.64-1.88 5.17-1.89.11 0 .37.03.54.17.14.12.18.28.2.45-.02.07-.02.19-.03.29z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {links.youtube && (
+                        <a
+                          href={links.youtube}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-6 h-6 text-[#FF0000] hover:bg-[#FF0000]/10 border border-[#FF0000]/20 rounded-full transition-all"
+                          title={`YouTube: ${links.youtube}`}
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.498 6.163a3.003 3.003 0 00-2.11-2.108C19.53 3.5 12 3.5 12 3.5s-7.53 0-9.388.555a3.003 3.003 0 00-2.11 2.108C0 8.017 0 12 0 12s0 3.982.502 5.837a3.003 3.003 0 002.11 2.108C4.47 20.5 12 20.5 12 20.5s7.53 0 9.388-.555a3.003 3.003 0 002.11-2.108C24 15.982 24 12 24 12s0-3.983-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                          </svg>
+                        </a>
+                      )}
+                    </div>
+                  );
+                })()}
               </td>
               <td className="py-3.5 px-5 text-center">
                 <button

@@ -28,6 +28,7 @@ class Product extends Model
         'discount_type',
         'shipping_cost',
         'multiply_qty_shipping',
+        'social_media_link',
     ];
 
     protected $casts = [
@@ -39,6 +40,7 @@ class Product extends Model
         'product_badge_id' => 'integer',
         'discount_amount' => 'decimal:2',
         'shipping_cost' => 'decimal:2',
+        'social_media_link' => 'array',
     ];
 
     protected $appends = [

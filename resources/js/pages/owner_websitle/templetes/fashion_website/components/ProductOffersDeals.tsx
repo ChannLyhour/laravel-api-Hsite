@@ -386,7 +386,7 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
                                                        addToCart={addToCart}
                                                        isFavorited={!!favorites[product.id]}
                                                        onToggleFavorite={toggleFavorite}
-                                                       showBadge={true}
+                                                       showBadge={false}
                                                   />
                                              ))}
                                         </div>
@@ -424,7 +424,7 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
                                                                       addToCart={addToCart}
                                                                       isFavorited={!!favorites[product.id]}
                                                                       onToggleFavorite={toggleFavorite}
-                                                                      showBadge={true}
+                                                                      showBadge={false}
                                                                  />
                                                             ))}
                                                        </div>
@@ -484,7 +484,7 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
                                                                            customComparePrice={comparePrice}
                                                                            isFavorited={!!favorites[product.id]}
                                                                            onToggleFavorite={toggleFavorite}
-                                                                           showBadge={true}
+                                                                           showBadge={false}
                                                                       />
                                                                  );
                                                             })}

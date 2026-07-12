@@ -56,16 +56,16 @@ const getHeaderTextColor = (name: string) => {
 const getGridColsClass = (cols: number) => {
   switch (cols) {
     case 2:
-      return 'grid-cols-2 gap-4';
+      return 'grid-cols-2 gap-4 sm:gap-6';
     case 3:
-      return 'grid-cols-2 sm:grid-cols-3 gap-4';
+      return 'grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6';
     case 4:
-      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4';
+      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6';
     case 5:
-      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
+      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6';
     case 6:
     default:
-      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4';
+      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6';
   }
 };
 
@@ -263,10 +263,10 @@ const BadgeGridRow: React.FC<BadgeGridRowProps> = ({
           onScroll={handleScroll}
           className={
             gridCols
-              ? `grid gap-x-1 gap-y-1 ${getGridColsClass(gridCols)}`
+              ? `grid ${getGridColsClass(gridCols)}`
               : displayedItems.length <= 4
-                ? 'grid grid-cols-2 gap-2 sm:grid sm:grid-cols-4 sm:gap-x-6 sm:gap-y-10 w-full'
-                : 'grid grid-cols-2 gap-2 sm:flex sm:overflow-x-auto sm:overflow-y-hidden scrollbar-none sm:scroll-smooth w-full sm:snap-x sm:gap-x-2 sm:gap-y-2'
+                ? 'grid grid-cols-2 gap-4 sm:grid sm:grid-cols-4 sm:gap-x-6 sm:gap-y-10 w-full'
+                : 'grid grid-cols-2 gap-4 sm:flex sm:overflow-x-auto sm:overflow-y-hidden scrollbar-none sm:scroll-smooth w-full sm:snap-x sm:gap-x-6 sm:gap-y-10'
           }
           style={
             gridCols || displayedItems.length <= 4

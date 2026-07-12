@@ -14,6 +14,13 @@ import {
   FiX,
 } from 'react-icons/fi';
 import { toast } from '../utils/toast';
+import {
+  FaFacebookF,
+  FaTelegramPlane,
+  FaInstagram,
+  FaTiktok,
+  FaYoutube
+} from 'react-icons/fa';
 import type { Root2 } from '@/api/owner/categories';
 import '../styles/animation.css';
 import type { GalleryItem, DetailPageProps } from '../types';
@@ -886,6 +893,77 @@ export const DetailPage: React.FC<DetailPageProps> = ({
               </p>
             </details>
           </div>
+
+          {/* Product Social Media Links Card */}
+          {(() => {
+            const links = product.social_media_link;
+            if (!links || !Object.values(links).some(v => !!v)) return null;
+
+            return (
+              <div className="border-t border-stone-200/60 dark:border-stone-800/60 pt-4 mt-4 text-left">
+                <span className="text-stone-500 dark:text-stone-400 text-xs font-bold uppercase tracking-wider block mb-2.5">
+                  Related Social Posts
+                </span>
+                <div className="flex flex-wrap gap-2.5">
+                  {links.facebook && (
+                    <a
+                      href={links.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#1877F2]/10 border border-stone-200 dark:border-stone-800 hover:border-[#1877F2]/30 text-stone-800 dark:text-stone-200 hover:text-[#1877F2] dark:hover:text-[#1877F2] rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                    >
+                      <FaFacebookF className="w-3.5 h-3.5" />
+                      Facebook
+                    </a>
+                  )}
+                  {links.instagram && (
+                    <a
+                      href={links.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#E1306C]/10 border border-stone-200 dark:border-stone-800 hover:border-[#E1306C]/30 text-stone-800 dark:text-stone-200 hover:text-[#E1306C] dark:hover:text-[#E1306C] rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                    >
+                      <FaInstagram className="w-3.5 h-3.5" />
+                      Instagram
+                    </a>
+                  )}
+                  {links.tiktok && (
+                    <a
+                      href={links.tiktok}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-stone-200 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-600 text-stone-800 dark:text-stone-200 rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                    >
+                      <FaTiktok className="w-3.5 h-3.5" />
+                      TikTok
+                    </a>
+                  )}
+                  {links.telegram && (
+                    <a
+                      href={links.telegram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#229ED9]/10 border border-stone-200 dark:border-stone-800 hover:border-[#229ED9]/30 text-stone-800 dark:text-stone-200 hover:text-[#229ED9] dark:hover:text-[#229ED9] rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                    >
+                      <FaTelegramPlane className="w-3.5 h-3.5" />
+                      Telegram
+                    </a>
+                  )}
+                  {links.youtube && (
+                    <a
+                      href={links.youtube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#FF0000]/10 border border-stone-200 dark:border-stone-800 hover:border-[#FF0000]/30 text-stone-800 dark:text-stone-200 hover:text-[#FF0000] dark:hover:text-[#FF0000] rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                    >
+                      <FaYoutube className="w-3.5 h-3.5" />
+                      YouTube
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="sticky bottom-0 bg-white dark:bg-stone-950 pt-4 pb-3 mt-auto border-t border-stone-100 dark:border-stone-900/60 z-20 -mx-6 px-6">

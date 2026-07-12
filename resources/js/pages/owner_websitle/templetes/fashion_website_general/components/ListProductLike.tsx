@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { FiTrash2, FiEdit2, FiChevronDown, FiCheck, FiHeart } from 'react-icons/fi';
+import { FiTrash2, FiEdit2, FiChevronDown, FiCheck, FiHeart, FiShoppingBag } from 'react-icons/fi';
 import { toast } from '../utils/toast';
 import type { Root2 } from '@/api/owner/categories';
 import type { StoreRow } from '@/api/owner/stores';
@@ -89,66 +89,67 @@ const LikedProductRow: React.FC<LikedProductRowProps> = ({
     };
 
     return (
-        <div className="bg-white p-4 sm:p-5 rounded-[4px] border border-stone-200/60 shadow-3xs hover:shadow-xs transition-shadow duration-300 relative text-left">
-            <div className="flex gap-4 sm:gap-6 items-start">
-                {/* Bulk edit selection checkbox/circle */}
-                {isEditMode && (
-                    <div
-                        onClick={(e) => { e.stopPropagation(); onSelectToggle(); }}
-                        className={`mt-12 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${isSelected ? 'bg-stone-900 border-stone-900 text-white' : 'border-stone-300 hover:border-stone-400 bg-white'
-                            }`}
-                    >
-                        {isSelected && <FiCheck className="w-3.5 h-3.5 stroke-[3]" />}
-                    </div>
-                )}
-
-                {/* Product Image Area */}
-                <div
-                    onClick={handleRowClick}
-                    className="relative w-24 h-32 sm:w-28 sm:h-38 bg-stone-50 border border-stone-150 rounded-[2px] overflow-hidden flex shrink-0 cursor-pointer group"
+        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)] transition-all duration-300 relative flex flex-col justify-between text-left">
+            <div>
+                {/* Trash Can Remove button */}
+                <button
+                    onClick={handleRemove}
+                    className="absolute top-4 right-4 p-2 text-stone-400 hover:text-[#E61E25] hover:bg-red-50/50 rounded-full transition-all duration-200 bg-transparent border-none cursor-pointer flex items-center justify-center z-10"
+                    title="Remove from Wishlist"
                 >
-                    <div className="flex-1 h-full overflow-hidden">
+                    <FiTrash2 className="w-4 h-4 stroke-[2]" />
+                </button>
+
+                <div className="flex gap-4 items-start">
+                    {/* Bulk edit selection checkbox/circle */}
+                    {isEditMode && (
+                        <div
+                            onClick={(e) => { e.stopPropagation(); onSelectToggle(); }}
+                            className={`mt-14 shrink-0 w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all ${isSelected
+                                    ? 'bg-stone-900 border-stone-900 text-white scale-105'
+                                    : 'border-stone-300 hover:border-stone-450 bg-white hover:scale-102'
+                                }`}
+                        >
+                            {isSelected && <FiCheck className="w-3.5 h-3.5 stroke-[3]" />}
+                        </div>
+                    )}
+
+                    {/* Product Image Area */}
+                    <div
+                        onClick={handleRowClick}
+                        className="relative w-28 h-36 bg-slate-50 border border-slate-100 rounded-xl overflow-hidden shrink-0 cursor-pointer group shadow-2xs"
+                    >
                         <img
                             src={resolveImageUrl(uiItem.display_image || uiItem.image)}
                             alt={uiItem.name}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                     </div>
-                    {item.badge && (
-                        <div className="absolute top-1.5 left-1.5 z-10 pointer-events-none select-none flex flex-col gap-1">
-                            <span
-                                className="w-fit text-[8px] font-black uppercase px-1.5 py-0.5 rounded-[2px] tracking-wider leading-none shadow-3xs"
-                                style={{
-                                    backgroundColor: item.badge.background_color || '#E61E25',
-                                    color: item.badge.text_color || '#FFFFFF',
-                                }}
-                            >
-                                {item.badge.name}
-                            </span>
-                        </div>
-                    )}
-                    {/* Vertical brand text rotated 90 deg along the right edge */}
-                    <div className="w-6 h-full flex items-center justify-center bg-white border-l border-stone-150 select-none">
-                        <span
-                            className="text-[8px] font-black uppercase tracking-[0.2em] text-stone-400 whitespace-nowrap"
-                            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-                        >
-                            {stores?.store_name || storeName || 'AURA'}
-                        </span>
-                    </div>
-                </div>
 
-                {/* Details Area */}
-                <div className="flex-1 flex flex-col justify-between min-h-[128px] sm:min-h-[152px]">
-                    <div>
+                    {/* Details Area */}
+                    <div className="flex-1 min-w-0 pr-6">
+                        {/* Brand Label */}
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[#E61E25] block">
+                            {stores?.store_name || storeName}
+                        </span>
+
+                        {/* Product Title */}
+                        <h3
+                            onClick={handleRowClick}
+                            className="text-xs sm:text-sm font-extrabold text-stone-900 leading-tight mt-1 hover:text-[#E61E25] transition-colors cursor-pointer line-clamp-2"
+                        >
+                            {uiItem.name}
+                        </h3>
+
+
                         {/* Price Line: Red Price | Discount % | Original Compare Price */}
-                        <div className="flex items-baseline gap-2 flex-wrap font-mono">
+                        <div className="flex items-baseline gap-2 flex-wrap font-mono mt-2">
                             <span className="text-[#E61E25] text-xs sm:text-sm font-black">
                                 US ${itemPrice.toFixed(2)}
                             </span>
                             {discountLabel && (
-                                <span className="text-stone-400 text-[10px] font-bold">
-                                    {discountLabel}
+                                <span className="text-emerald-600 text-[10px] font-black bg-emerald-50 px-1.5 py-0.5 rounded-[4px] uppercase tracking-wide">
+                                    {discountLabel} OFF
                                 </span>
                             )}
                             {comparePrice && (
@@ -157,91 +158,65 @@ const LikedProductRow: React.FC<LikedProductRowProps> = ({
                                 </span>
                             )}
                         </div>
-
-                        {/* Product Title */}
-                        <h3
-                            onClick={handleRowClick}
-                            className="text-xs sm:text-sm font-black text-stone-900 uppercase tracking-wide mt-1.5 hover:text-[#E61E25] transition-colors cursor-pointer"
-                        >
-                            {uiItem.name}
-                        </h3>
-
-                        {/* Product Code */}
-                        <p className="text-[10px] text-stone-400 font-bold tracking-wide mt-0.5">
-                            Code. {uiItem.code || uiItem.id}
-                        </p>
-                    </div>
-
-                    {/* Color & Size Dropdown Selectors */}
-                    <div className="flex gap-3 mt-3 max-w-[280px]">
-                        {/* Color select dropdown */}
-                        <div className="flex flex-col gap-1.5 flex-1 relative">
-                            <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest block text-left">
-                                Color
-                            </label>
-                            <div className="relative">
-                                <select
-                                    value={selectedColor}
-                                    onChange={(e) => setSelectedColor(e.target.value)}
-                                    className="w-full appearance-none pl-3 pr-7 py-1.5 border border-stone-200 rounded-[2px] text-[10px] font-black uppercase tracking-wider text-stone-750 focus:outline-none focus:border-stone-900 bg-white cursor-pointer transition-colors"
-                                >
-                                    {colors.length > 0 ? (
-                                        colors.map((c: string) => (
-                                            <option key={c} value={c}>
-                                                {c}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option value="">No color</option>
-                                    )}
-                                </select>
-                                <FiChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none w-3.5 h-3.5" />
-                            </div>
-                        </div>
-
-                        {/* Size select dropdown */}
-                        <div className="flex flex-col gap-1.5 flex-1 relative">
-                            <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest block text-left">
-                                Size
-                            </label>
-                            <div className="relative">
-                                <select
-                                    value={selectedSize}
-                                    onChange={(e) => setSelectedSize(e.target.value)}
-                                    className="w-full appearance-none pl-3 pr-7 py-1.5 border border-stone-200 rounded-[2px] text-[10px] font-black uppercase tracking-wider text-stone-750 focus:outline-none focus:border-stone-900 bg-white cursor-pointer transition-colors"
-                                >
-                                    {sizes.length > 0 ? (
-                                        sizes.map((s: string) => (
-                                            <option key={s} value={s}>
-                                                {s}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option value="">No size</option>
-                                    )}
-                                </select>
-                                <FiChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none w-3.5 h-3.5" />
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                {/* Trash Can Remove button */}
-                <button
-                    onClick={handleRemove}
-                    className="p-1.5 text-stone-400 hover:text-red-500 transition-colors focus:outline-none bg-transparent border-none cursor-pointer"
-                    title="Remove from Wishlist"
-                >
-                    <FiTrash2 className="w-4.5 h-4.5 stroke-[2]" />
-                </button>
+                {/* Color Swatches */}
+                {colors.length > 0 && (
+                    <div className="flex flex-col gap-1 mt-4">
+                        <span className="text-[9px] font-extrabold text-stone-400 uppercase tracking-widest block text-left">
+                            Color: <span className="text-stone-800 font-black">{selectedColor}</span>
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 mt-0.5">
+                            {colors.map((c: string) => (
+                                <button
+                                    key={c}
+                                    type="button"
+                                    onClick={() => setSelectedColor(c)}
+                                    className={`px-3 py-1 text-[9px] font-black uppercase tracking-wider rounded-md border transition-all cursor-pointer ${selectedColor === c
+                                            ? 'bg-stone-950 text-white border-stone-950 shadow-2xs'
+                                            : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:bg-stone-55'
+                                        }`}
+                                >
+                                    {c}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Size Swatches */}
+                {sizes.length > 0 && (
+                    <div className="flex flex-col gap-1 mt-4">
+                        <span className="text-[9px] font-extrabold text-stone-400 uppercase tracking-widest block text-left">
+                            Size: <span className="text-stone-800 font-black">{selectedSize}</span>
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 mt-0.5">
+                            {sizes.map((s: string) => (
+                                <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => setSelectedSize(s)}
+                                    className={`px-3 py-1 text-[9px] font-black uppercase tracking-wider rounded-md border transition-all cursor-pointer ${selectedSize === s
+                                            ? 'bg-stone-950 text-white border-stone-950 shadow-2xs'
+                                            : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:bg-stone-55'
+                                        }`}
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Move to bag CTA button (full width) */}
             <button
                 onClick={handleMoveToBag}
-                className="w-full mt-4 py-2.5 bg-white border border-stone-900 hover:bg-stone-900 hover:text-white text-stone-900 font-bold text-xs uppercase tracking-widest transition-colors rounded-[2px] cursor-pointer"
+                className="w-full mt-6 py-3 bg-stone-950 hover:bg-stone-850 text-white font-extrabold text-xs uppercase tracking-widest transition-all rounded-xl cursor-pointer flex items-center justify-center gap-2 shadow-2xs hover:shadow-xs active:scale-98"
             >
-                Move to bag
+                <FiShoppingBag className="w-4 h-4" />
+                <span>Move to bag</span>
             </button>
         </div>
     );
@@ -338,35 +313,38 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
     };
 
     return (
-        <div className="bg-[#F9F9F9] min-h-screen pb-24 font-sans animate-fade-in text-stone-900">
-            <div className="max-w-4xl mx-auto px-4 pt-10">
+        <div className="bg-[#FAFBFD] min-h-screen pb-24 font-sans animate-fade-in text-stone-900">
+            <div className="max-w-5xl mx-auto px-4 pt-12">
 
                 {/* Header Bar */}
-                <div className="flex items-center justify-between border-b border-stone-200 pb-4 mb-6 relative">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200/60 pb-6 mb-8 relative">
                     {/* Wish List Count Title */}
-                    <div className="flex items-baseline gap-2">
-                        <h1 className="text-sm sm:text-base font-black uppercase tracking-widest text-stone-900">
-                            Wish List
-                        </h1>
-                        <span className="text-xs font-semibold text-stone-400">
-                            ({likedProducts.length} {likedProducts.length === 1 ? 'item' : 'items'})
-                        </span>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <FiHeart className="w-5 h-5 text-[#E61E25] fill-[#E61E25]" />
+                            <h1 className="text-base sm:text-lg font-black uppercase tracking-widest text-stone-900">
+                                My Wishlist
+                            </h1>
+                        </div>
+                        <p className="text-2xs font-extrabold text-stone-400 uppercase tracking-widest mt-1.5 block text-left">
+                            {likedProducts.length} {likedProducts.length === 1 ? 'item' : 'items'} saved
+                        </p>
                     </div>
 
                     {/* Right: Pencil Edit + Sort Dropdown */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 self-end sm:self-center">
                         {/* Bulk Deletion Trigger (visible in edit mode) */}
                         {isEditMode && likedProducts.length > 0 && (
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleSelectAll}
-                                    className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-[10px] uppercase tracking-wider transition-colors rounded-[2px] border-none cursor-pointer"
+                                    className="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 font-extrabold text-[10px] uppercase tracking-widest transition-colors rounded-full border-none cursor-pointer"
                                 >
                                     {sortedProducts.every((p) => selectedItemIds[String(p.id)]) ? 'Deselect All' : 'Select All'}
                                 </button>
                                 <button
                                     onClick={handleBulkDelete}
-                                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[10px] uppercase tracking-wider transition-colors rounded-[2px] border-none cursor-pointer"
+                                    className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-655 font-extrabold text-[10px] uppercase tracking-widest transition-colors rounded-full border-none cursor-pointer"
                                 >
                                     Delete Selected
                                 </button>
@@ -379,7 +357,9 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
                                 setIsEditMode(!isEditMode);
                                 setSelectedItemIds({});
                             }}
-                            className={`p-1.5 rounded-full hover:bg-stone-150 transition-colors focus:outline-none border-none bg-transparent cursor-pointer flex items-center justify-center ${isEditMode ? 'text-[#E61E25] bg-stone-100' : 'text-stone-600 hover:text-stone-900'
+                            className={`p-2.5 rounded-full hover:bg-stone-100 transition-all focus:outline-none border-none bg-transparent cursor-pointer flex items-center justify-center shadow-2xs ${isEditMode
+                                    ? 'text-[#E61E25] bg-red-50/50 border border-red-200'
+                                    : 'text-stone-600 hover:text-stone-900 bg-white border border-stone-200'
                                 }`}
                             title={isEditMode ? 'Done Editing' : 'Edit Wishlist'}
                         >
@@ -390,7 +370,7 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
                         <div className="relative">
                             <button
                                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="flex items-center justify-between gap-1.5 px-3 py-1.5 border border-stone-300 text-[10px] font-black uppercase tracking-wider text-stone-800 bg-white focus:outline-none rounded-[2px] transition-colors cursor-pointer min-w-[130px] hover:border-stone-900"
+                                className="flex items-center justify-between gap-2 px-4 py-2 border border-stone-200 text-2xs font-extrabold uppercase tracking-wider text-stone-800 bg-white focus:outline-none rounded-full transition-all cursor-pointer min-w-[150px] hover:border-stone-900 shadow-2xs"
                             >
                                 <span>{getSortLabel()}</span>
                                 <FiChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
@@ -403,13 +383,15 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
                                         className="fixed inset-0 z-40 bg-transparent"
                                         onClick={() => setDropdownOpen(false)}
                                     />
-                                    <div className="absolute right-0 top-full mt-1.5 w-44 bg-white border border-stone-200 rounded-[3px] shadow-lg z-50 py-1 divide-y divide-stone-50 overflow-hidden animate-fade-in">
+                                    <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-stone-100 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden animate-fade-in-down">
                                         <button
                                             onClick={() => {
                                                 setSortBy('recently');
                                                 setDropdownOpen(false);
                                             }}
-                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border-none cursor-pointer ${sortBy === 'recently' ? 'bg-stone-50 text-stone-950 font-extrabold' : 'bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-900'
+                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border-none cursor-pointer ${sortBy === 'recently'
+                                                    ? 'bg-stone-55 text-stone-950 font-extrabold'
+                                                    : 'bg-white text-stone-500 hover:bg-stone-55 hover:text-stone-900'
                                                 }`}
                                         >
                                             Recently added
@@ -419,7 +401,9 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
                                                 setSortBy('oldest');
                                                 setDropdownOpen(false);
                                             }}
-                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border-none cursor-pointer ${sortBy === 'oldest' ? 'bg-stone-50 text-stone-950 font-extrabold' : 'bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-900'
+                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border-none cursor-pointer ${sortBy === 'oldest'
+                                                    ? 'bg-stone-55 text-stone-955 font-extrabold'
+                                                    : 'bg-white text-stone-500 hover:bg-stone-55 hover:text-stone-950'
                                                 }`}
                                         >
                                             Long-standing
@@ -429,7 +413,9 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
                                                 setSortBy('low-stock');
                                                 setDropdownOpen(false);
                                             }}
-                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border-none cursor-pointer ${sortBy === 'low-stock' ? 'bg-stone-50 text-stone-950 font-extrabold' : 'bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-900'
+                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-wider transition-colors border-none cursor-pointer ${sortBy === 'low-stock'
+                                                    ? 'bg-stone-55 text-stone-955 font-extrabold'
+                                                    : 'bg-white text-stone-500 hover:bg-stone-55 hover:text-stone-955'
                                                 }`}
                                         >
                                             Low stock first
@@ -443,15 +429,15 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
 
                 {/* Grid/List of Liked items */}
                 {likedProducts.length === 0 ? (
-                    <div className="py-24 text-center space-y-4 bg-white border border-stone-200/50 rounded-[4px] shadow-3xs">
-                        <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto text-stone-400">
-                            <FiHeart className="w-8 h-8 stroke-[1.5]" />
+                    <div className="py-24 text-center space-y-5 bg-white border border-slate-100 rounded-3xl shadow-[0_4px_25px_rgba(0,0,0,0.02)]">
+                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto text-[#E61E25]">
+                            <FiHeart className="w-7 h-7 stroke-[2] fill-red-100" />
                         </div>
-                        <div>
-                            <h3 className="font-extrabold text-stone-800 text-sm uppercase tracking-wider">
+                        <div className="space-y-1">
+                            <h3 className="font-black text-stone-850 text-base uppercase tracking-wider">
                                 Your Wish List is Empty
                             </h3>
-                            <p className="text-stone-400 text-2xs font-semibold mt-1">
+                            <p className="text-stone-400 text-2xs font-extrabold uppercase tracking-widest">
                                 Save items you like here to purchase them later.
                             </p>
                         </div>
@@ -462,7 +448,7 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
                                     onNavigate(FASHION_ROUTES.getShop(ownerUserId, storeSlug));
                                 }
                             }}
-                            className="px-5 py-3 bg-stone-950 hover:bg-stone-850 text-white text-[10px] font-black uppercase tracking-widest transition-colors rounded-[2px] border-none cursor-pointer"
+                            className="px-6 py-3.5 bg-stone-950 hover:bg-stone-850 text-white text-[10px] font-black uppercase tracking-widest transition-all rounded-full border-none cursor-pointer shadow-sm hover:shadow-md active:scale-98"
                         >
                             Discover runway
                         </button>
@@ -490,4 +476,3 @@ export const ListProductLike: React.FC<ListProductLikeProps> = ({
         </div>
     );
 };
-

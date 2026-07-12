@@ -38,6 +38,15 @@ export interface ProductsResponse {
   discount_type?: string;
   shipping_cost?: string | number;
   multiply_qty_shipping?: boolean;
+  social_media_link?: SocialMediaLinks | null;
+}
+
+export interface SocialMediaLinks {
+  facebook?: string;
+  instagram?: string;
+  tiktok?: string;
+  telegram?: string;
+  youtube?: string;
 }
 
 /** Map image paths/JSON to absolute URL string based on server base */

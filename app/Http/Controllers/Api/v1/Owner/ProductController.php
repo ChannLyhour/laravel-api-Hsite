@@ -23,6 +23,16 @@ class ProductController extends Controller
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 
+        if ($request->has('social_media_link')) {
+            $val = $request->input('social_media_link');
+            if (is_string($val)) {
+                $decoded = json_decode($val, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $request->merge(['social_media_link' => $decoded]);
+                }
+            }
+        }
+
         // Detect if payload is legacy format or new structured format
         \Log::info('Product store payload: ' . json_encode($request->except(['image', 'images', 'imageFile'])));
         $isLegacy = ! $request->has('translations') && ! $request->has('variants');
@@ -38,6 +48,7 @@ class ProductController extends Controller
                 'is_special' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'created_by' => 'nullable|integer|exists:users,id',
+                'social_media_link' => 'nullable|array',
                 
                 // Addons
                 'addons' => 'nullable|array',
@@ -67,6 +78,7 @@ class ProductController extends Controller
                 'discount_type' => 'nullable|string|in:flat,percent',
                 'shipping_cost' => 'nullable|numeric|min:0',
                 'multiply_qty_shipping' => 'nullable|boolean',
+                'social_media_link' => 'nullable|array',
                 
                 // Translations
                 'translations' => 'required|array|min:1',
@@ -164,6 +176,7 @@ class ProductController extends Controller
                     'status' => $status,
                     'is_special' => filter_var($request->is_special ?? false, FILTER_VALIDATE_BOOLEAN),
                     'created_by' => $userId,
+                    'social_media_link' => $request->social_media_link ?? null,
                 ]);
 
                 // Create translation
@@ -219,6 +232,7 @@ class ProductController extends Controller
                     'discount_type' => $request->discount_type ?? 'flat',
                     'shipping_cost' => $request->shipping_cost ?? 0.00,
                     'multiply_qty_shipping' => $request->multiply_qty_shipping ?? false,
+                    'social_media_link' => $request->social_media_link ?? null,
                 ]);
 
                 foreach ($request->translations as $trans) {
@@ -423,6 +437,17 @@ class ProductController extends Controller
         }
 
         $product = Product::findOrFail($id);
+
+        if ($request->has('social_media_link')) {
+            $val = $request->input('social_media_link');
+            if (is_string($val)) {
+                $decoded = json_decode($val, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $request->merge(['social_media_link' => $decoded]);
+                }
+            }
+        }
+
         \Log::info('Product update payload for ID ' . $id . ': ' . json_encode($request->except(['image', 'images', 'imageFile'])));
         $isLegacy = ! $request->has('translations') && ! $request->has('variants');
 
@@ -436,6 +461,7 @@ class ProductController extends Controller
                 'status' => 'sometimes|required|in:available,unavailable,active,draft,archived',
                 'is_special' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
+                'social_media_link' => 'nullable|array',
                 
                 // Addons
                 'addons' => 'sometimes|array',
@@ -465,6 +491,7 @@ class ProductController extends Controller
                 'discount_type' => 'nullable|string|in:flat,percent',
                 'shipping_cost' => 'nullable|numeric|min:0',
                 'multiply_qty_shipping' => 'nullable|boolean',
+                'social_media_link' => 'nullable|array',
                 'variants' => 'sometimes|array',
                 'variants.*.id' => 'nullable|integer|exists:product_variants,id',
                 'variants.*.variant_sku' => 'required|string|max:100',
@@ -585,6 +612,7 @@ class ProductController extends Controller
                     'category_id' => $request->has('category_id') ? $request->category_id : $product->category_id,
                     'status' => $status,
                     'is_special' => $request->has('is_special') ? filter_var($request->is_special, FILTER_VALIDATE_BOOLEAN) : $product->is_special,
+                    'social_media_link' => $request->has('social_media_link') ? $request->social_media_link : $product->social_media_link,
                 ]);
 
                 // Update English Translation
@@ -648,7 +676,6 @@ class ProductController extends Controller
                 }
 
             } else {
-                // Advanced structured payload update
                 $product->update([
                     'sku' => $request->sku ?? $product->sku,
                     'barcode' => $request->has('barcode') ? $request->barcode : $product->barcode,
@@ -666,6 +693,7 @@ class ProductController extends Controller
                     'discount_type' => $request->discount_type ?? $product->discount_type,
                     'shipping_cost' => $request->shipping_cost ?? $product->shipping_cost,
                     'multiply_qty_shipping' => $request->multiply_qty_shipping ?? $product->multiply_qty_shipping,
+                    'social_media_link' => $request->has('social_media_link') ? $request->social_media_link : $product->social_media_link,
                 ]);
 
                 if ($request->has('translations')) {

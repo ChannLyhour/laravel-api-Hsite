@@ -1,6 +1,7 @@
 import { client, API_BASE_URL } from '../client';
 import type { Brand } from './brands';
 import type { ProductBadge } from './productBadges';
+import type { SocialMediaLinks } from './product';
 
 export interface CategoriesResponse {
   total: number;
@@ -109,6 +110,7 @@ export interface MenuItem {
   addons?: ProductAddon[];
   is_special?: boolean;
   category?: Category | null;
+  social_media_link?: SocialMediaLinks | null;
 }
 
 // Top Selling Types requested by user
@@ -146,6 +148,7 @@ export interface Root2 {
   addons?: ProductAddon[];
   is_special?: boolean;
   category?: Category | null;
+  social_media_link?: SocialMediaLinks | null;
 }
 
 // Shared raw API shape returned by backend CategoryResponse
@@ -357,6 +360,7 @@ export interface ProductsResponse {
   shipping_cost?: string | number;
   multiply_qty_shipping?: boolean;
   addons?: ProductAddon[];
+  social_media_link?: SocialMediaLinks | null;
   is_special?: boolean;
   category?: any;
 }
@@ -445,6 +449,17 @@ function mapProducts(item: ProductsResponse): MenuItem {
     addons: item.addons || [],
     is_special: !!item.is_special,
     category: item.category,
+    social_media_link: (() => {
+      if (!item.social_media_link) return null;
+      if (typeof item.social_media_link === 'string') {
+        try {
+          return JSON.parse(item.social_media_link);
+        } catch (e) {
+          return { facebook: item.social_media_link };
+        }
+      }
+      return item.social_media_link;
+    })(),
   };
 }
 
@@ -492,9 +507,13 @@ export const menuItemsService = {
     multiply_qty_shipping?: boolean;
     addons?: ProductAddon[];
     is_special?: boolean;
+    social_media_link?: SocialMediaLinks | null;
   }): Promise<MenuItem> {
     const fd = new FormData();
     fd.append('status', data.status === 'active' ? 'active' : 'draft');
+    if (data.social_media_link !== undefined && data.social_media_link !== null) {
+      fd.append('social_media_link', JSON.stringify(data.social_media_link));
+    }
     if (data.category_id !== undefined && data.category_id !== null && !isNaN(Number(data.category_id))) {
       fd.append('category_id', String(data.category_id));
     }
@@ -644,9 +663,13 @@ export const menuItemsService = {
     multiply_qty_shipping?: boolean;
     addons?: ProductAddon[];
     is_special?: boolean;
+    social_media_link?: SocialMediaLinks | null;
   }): Promise<MenuItem> {
     const fd = new FormData();
     fd.append('status', data.status === 'active' ? 'active' : 'draft');
+    if (data.social_media_link !== undefined && data.social_media_link !== null) {
+      fd.append('social_media_link', JSON.stringify(data.social_media_link));
+    }
     if (data.category_id !== undefined && data.category_id !== null && !isNaN(Number(data.category_id))) {
       fd.append('category_id', String(data.category_id));
     }

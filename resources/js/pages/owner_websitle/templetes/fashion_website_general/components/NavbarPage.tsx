@@ -337,14 +337,6 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 lg:h-20 flex items-center justify-between gap-4 relative py-[2px]">
 
-          {/* Left: Mobile Hamburger Toggle */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 -ml-2 text-stone-850 hover:text-stone-600 bg-transparent border-none cursor-pointer focus:outline-none flex items-center justify-center z-20"
-          >
-            {isMobileMenuOpen ? <FiX className="w-5 h-5" /> : <FiMenu className="w-5 h-5" />}
-          </button>
-
           {/* Left/Center Group: Logo + Nav Links */}
           <div className="flex-grow flex items-center h-full z-10">
             {/* Center: Brand Logo */}
@@ -774,10 +766,15 @@ export const NavbarPage: React.FC<NavbarPageProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (user) {
-                    setIsProfileDropdownOpen(prev => !prev);
+                  const isMobile = window.innerWidth < 1024;
+                  if (isMobile) {
+                    setIsMobileMenuOpen(prev => !prev);
                   } else {
-                    setAuthModal('login');
+                    if (user) {
+                      setIsProfileDropdownOpen(prev => !prev);
+                    } else {
+                      setAuthModal('login');
+                    }
                   }
                 }}
                 className="icon-scale-hover p-2 text-stone-850 hover:text-stone-600 bg-transparent border-none cursor-pointer transition-colors flex items-center justify-center focus:outline-none"

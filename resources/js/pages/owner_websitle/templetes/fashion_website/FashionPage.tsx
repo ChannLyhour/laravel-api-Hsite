@@ -707,7 +707,7 @@ export const FashionPage: React.FC<FashionPageProps> = ({
 
 
           {/* ─── TAGGED COLLECTIONS ────────────────────────────────────────────── */}
-          <section className="w-full max-w-7xl mx-auto px-1.5 sm:px-6 lg:px-8 overflow-hidden">
+          <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden">
             <ProductBagdeGrid
               items={displayItems}
               isLoading={loading}
