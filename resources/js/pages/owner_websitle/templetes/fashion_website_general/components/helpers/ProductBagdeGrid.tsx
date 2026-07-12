@@ -286,13 +286,15 @@ const BadgeGridRow: React.FC<BadgeGridRowProps> = ({
                   : 'w-full sm:w-[calc((100%-16px)/3)] lg:w-[calc((100%-24px)/4)] sm:shrink-0 sm:snap-start'
               }
             >
-              <div data-aos="fade-up" data-aos-duration="2000" data-aos-offset="10">
+              <div data-aos="fade-up" data-aos-duration="200" data-aos-offset="10">
                 <CardProduct
                   item={item}
                   ownerUserId={ownerUserId}
                   stores={stores}
                   storeName={storeName}
-                  onNavigate={onNavigate}
+                  onNavigate={(to) => {
+                    window.location.href = to;
+                  }}
                   addToCart={addToCart}
                   isFavorited={!!favorites[String(item.id)]}
                   onToggleFavorite={toggleFavorite}

@@ -9,7 +9,7 @@ use App\Helpers\UploadHelper;
 
 class BrandController extends Controller
 {
-    public function index(Request $request)
+    public function index (Request $request)
     {
         $skip = $request->query('skip', 0);
         $limit = $request->query('limit', 100);
@@ -28,9 +28,9 @@ class BrandController extends Controller
         return response()->json($brands);
     }
 
-    public function mine(Request $request)
+    public function mine (Request $request)
     {
-        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
+        if (!in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 
@@ -56,20 +56,29 @@ class BrandController extends Controller
         return response()->json($brands);
     }
 
-    public function show($id)
+    public function show ($id)
     {
         $brand = Brand::findOrFail($id);
         return response()->json($brand);
     }
 
-    public function store(Request $request)
+    public function store (Request $request)
     {
-        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
+        if (!in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 
+        $createdBy = $request->created_by ?? $request->user()->id;
+
         $request->validate([
-            'name' => 'required|string|max:100|unique:brands,name',
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                \Illuminate\Validation\Rule::unique('brands', 'name')->where(function ($query) use ($createdBy) {
+                    return $query->where('created_by', $createdBy);
+                }),
+            ],
             'logo' => 'nullable',
             'alt_text' => 'nullable|string',
             'status' => 'boolean',
@@ -98,16 +107,28 @@ class BrandController extends Controller
         return response()->json($brand, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update (Request $request, $id)
     {
-        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
+        if (!in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 
         $brand = Brand::findOrFail($id);
 
+        $createdBy = $brand->created_by;
+
         $request->validate([
-            'name' => 'sometimes|required|string|max:100|unique:brands,name,' . $brand->id,
+            'name' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:100',
+                \Illuminate\Validation\Rule::unique('brands', 'name')
+                    ->ignore($brand->id)
+                    ->where(function ($query) use ($createdBy) {
+                        return $query->where('created_by', $createdBy);
+                    }),
+            ],
             'logo' => 'nullable',
             'alt_text' => 'nullable|string',
             'status' => 'boolean',
@@ -132,9 +153,9 @@ class BrandController extends Controller
         return response()->json($brand);
     }
 
-    public function uploadLogo(Request $request)
+    public function uploadLogo (Request $request)
     {
-        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
+        if (!in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Access denied.'], 403);
         }
 
@@ -153,9 +174,9 @@ class BrandController extends Controller
         return response()->json(['detail' => 'No file provided.'], 400);
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy (Request $request, $id)
     {
-        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
+        if (!in_array($request->user()->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only administrators are allowed.'], 403);
         }
 

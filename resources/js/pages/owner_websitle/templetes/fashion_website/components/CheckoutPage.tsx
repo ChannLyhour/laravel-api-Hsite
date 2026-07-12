@@ -1164,7 +1164,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     setCoupons(propCoupons);
                 } else {
                     const vendorId = ownerUserId || stores?.created_by;
-                    const data = await couponsService.getCoupons(vendorId ? { vendor_id: vendorId } : undefined);
+                    const data = await couponsService.getCoupons(vendorId ? { created_by: vendorId } : undefined);
                     const activeCoupons = data.filter(
                         c => c.is_active && (!c.customer_id || c.customer_id === user?.id)
                     );

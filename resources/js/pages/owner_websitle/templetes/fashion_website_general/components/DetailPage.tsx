@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FiMinus,
   FiPlus,
@@ -12,7 +12,9 @@ import {
   FiEye,
   FiArrowRight,
   FiX,
+  FiShare,
 } from 'react-icons/fi';
+import { LinkShareProduct } from './Graph/LinkShareProduct';
 import { toast } from '../utils/toast';
 import type { Root2 } from '@/api/owner/categories';
 import '../styles/animation.css';
@@ -35,6 +37,7 @@ import { SocialMediaGrid } from './SocialMediaGrid';
 import { FASHION_ROUTES } from '../routes';
 import { TextSp } from './helpers/TextSp';
 import { LineLoading } from './helpers/SkeletonSt';
+import { ImageDetailProduct } from './image-detail/image_detail_product';
 
 export const DetailPage: React.FC<DetailPageProps> = ({
   product: initialProduct,
@@ -58,6 +61,31 @@ export const DetailPage: React.FC<DetailPageProps> = ({
   const [product, setProduct] = useState<Root2>(initialProduct);
   const [isLoading, setIsLoading] = useState(false);
   const ownerUserId = stores?.created_by || product?.created_by || '';
+
+  // Share Popover State
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
+
+  // Product Image Detail State
+  const [isImageDetailOpen, setIsImageDetailOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setIsShareOpen(false);
+      }
+    };
+    if (isShareOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isShareOpen]);
+
+  const shareUrl = useMemo(() => {
+    return typeof window !== 'undefined' ? window.location.href : '';
+  }, [product.id]);
 
   const relatedProducts = useMemo(() => {
     if (!items || items.length === 0) return [];
@@ -153,7 +181,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
     const fetchCoupons = async () => {
       try {
         const vendorId = stores?.created_by || product?.created_by;
-        const data = await couponsService.getCoupons(vendorId ? { vendor_id: vendorId } : undefined);
+        const data = await couponsService.getCoupons(vendorId ? { created_by: vendorId } : undefined);
         const activeCoupons = data.filter(
           c => c.is_active && (!c.customer_id || c.customer_id === user?.id)
         );
@@ -536,7 +564,10 @@ export const DetailPage: React.FC<DetailPageProps> = ({
       {/* Left Column: Gallery */}
       <div className="w-full md:w-fit md:shrink-0 p-4 sm:p-5 md:p-6 flex flex-col gap-4 border-b md:border-b-0 md:border-r border-stone-100 dark:border-stone-800/60 overflow-hidden">
         {/* Main Large Image Container */}
-        <div className="relative w-full md:w-[420px] aspect-[4/3] sm:aspect-square md:aspect-auto h-auto md:h-[620px] max-h-[35vh] sm:max-h-[50vh] md:max-h-[70vh] max-w-full bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 rounded-xl overflow-hidden flex items-center justify-center group/main-image cursor-pointer shadow-xs transition-shadow duration-300 hover:shadow-sm">
+        <div 
+          onClick={() => setIsImageDetailOpen(true)}
+          className="relative w-full md:w-[420px] aspect-[4/3] sm:aspect-square md:aspect-auto h-auto md:h-[620px] max-h-[35vh] sm:max-h-[50vh] md:max-h-[70vh] max-w-full bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 rounded-xl overflow-hidden flex items-center justify-center group/main-image cursor-pointer shadow-xs transition-shadow duration-300 hover:shadow-sm"
+        >
           {/* Premium Price-Tag Badge */}
           {discount && (
             <div className="absolute top-4 right-4 z-20 pointer-events-none select-none">
@@ -691,8 +722,8 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           </div>
 
           {/* Title & Voucher Trigger */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div className="flex items-start justify-between gap-4 relative">
+            <div className="flex-1">
               <TextSp
                 as="h2"
                 size={{ mobile: 'xl', tablet: '2xl' }}
@@ -705,6 +736,27 @@ export const DetailPage: React.FC<DetailPageProps> = ({
               >
                 {product.name}
               </TextSp>
+            </div>
+
+            {/* Product Share Button & Popover */}
+            <div ref={shareRef} className="relative shrink-0 select-none">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsShareOpen(prev => !prev);
+                }}
+                className="w-10 h-10 rounded-md bg-stone-100 hover:bg-stone-200 dark:bg-stone-900 dark:hover:bg-stone-850 flex items-center justify-center text-stone-700 dark:text-stone-300 transition-all cursor-pointer border-none focus:outline-none"
+                aria-label="Share product"
+              >
+                <FiShare className="w-5 h-5" />
+              </button>
+
+              <LinkShareProduct
+                isOpen={isShareOpen}
+                shareUrl={shareUrl}
+                productName={product.name}
+              />
             </div>
           </div>
 
@@ -1065,12 +1117,6 @@ export const DetailPage: React.FC<DetailPageProps> = ({
         </div>
       )}
 
-      <SocialMediaGrid
-        storeName={storeName}
-        stores={stores}
-        ownerUserId={ownerUserId}
-        onNavigate={onNavigate}
-      />
 
       <section className="w-full max-w-7xl mx-auto px-4 mt-8 sm:px-6 lg:px-8 mb-16 overflow-hidden">
         <ProductBagdeGrid
@@ -1096,6 +1142,13 @@ export const DetailPage: React.FC<DetailPageProps> = ({
         copiedCode={copiedCode}
         onCopyCode={handleCopyCode}
         isLoggedIn={!!user}
+      />
+
+      <ImageDetailProduct
+        isOpen={isImageDetailOpen}
+        onClose={() => setIsImageDetailOpen(false)}
+        images={gallery.map((g: any) => g.url)}
+        productName={product.name}
       />
     </>
   );

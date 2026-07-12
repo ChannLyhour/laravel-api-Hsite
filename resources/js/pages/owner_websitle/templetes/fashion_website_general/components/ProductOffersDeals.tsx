@@ -208,30 +208,22 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
      }
 
      return (
-          <div className="w-full bg-[#F9F9F9] dark:bg-[#0c0c0c] min-h-[70vh] pb-16">
+          <div className="w-full bg-white dark:bg-[#0c0c0c] min-h-[70vh] pb-16">
                {/* Top Hero Heading */}
-               <div className="bg-white dark:bg-stone-950 border-b border-stone-100 dark:border-stone-900 py-4 sm:py-6">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-2 lg:px-8 text-center space-y-4">
-                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 dark:bg-red-950/20 text-[#E61E25] text-[10px] font-black uppercase tracking-wider rounded-full">
-                              <FiTag className="w-3.5 h-3.5" /> Exclusive Promotions
-                         </div>
-                         <TextSp
-                              as="h1"
-                              size={{ mobile: '2xl', tablet: '3xl', desktop: '4xl' }}
-                              weight="black"
-                              color="text-stone-900 dark:text-white"
-                              uppercase
-                              tracking="wider"
-                              className="leading-tight"
-                         >
+               <div className="bg-white dark:bg-stone-950 py-8 border-b border-stone-150 dark:border-stone-900">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-2 lg:px-8 text-center space-y-2 select-none">
+                         <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#E61E25]">
+                              Exclusive Promotions
+                         </span>
+                         <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-white uppercase tracking-wider leading-tight">
                               Runway Offers & Deals
-                         </TextSp>
+                         </h1>
                     </div>
                </div>
 
                {/* Tabs Selector Navigation */}
                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-                    <div className="flex items-center justify-start sm:justify-center overflow-x-auto pb-2 border-b border-stone-200/60 dark:border-stone-800 scrollbar-hide gap-1 sm:gap-2">
+                    <div className="flex items-center justify-start sm:justify-center overflow-x-auto pb-2 border-b border-stone-150 dark:border-stone-850/60 scrollbar-hide gap-1 sm:gap-2">
                          {[
                               { id: 'all', label: 'All Promotions' },
                               { id: 'coupons', label: 'Vouchers', count: coupons.length },
@@ -244,14 +236,14 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
                                    <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as any)}
-                                        className={`py-2 px-4 text-xs uppercase font-bold tracking-wider shrink-0 transition-all rounded-full border-none cursor-pointer flex items-center gap-1.5 active:scale-95 outline-none ${isActive
-                                             ? 'bg-stone-950 dark:bg-white text-white dark:text-stone-950 shadow-sm'
-                                             : 'bg-transparent text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-100/50 dark:hover:bg-stone-900/50'
+                                        className={`shrink-0 flex items-center px-3.5 py-1.5 border transition-all duration-300 cursor-pointer text-xs font-semibold rounded-[4px] focus:outline-none ${isActive
+                                             ? 'bg-white text-stone-950 border-stone-850 shadow-sm font-semibold'
+                                             : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:text-stone-900 shadow-2xs'
                                              }`}
                                    >
                                         {tab.label}
                                         {tab.count !== undefined && tab.count > 0 && (
-                                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black leading-none ${isActive ? 'bg-red-500 text-white' : 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400'}`}>
+                                             <span className={`ml-1.5 text-[9px] px-1.5 py-0.5 rounded-full font-bold leading-none ${isActive ? 'bg-[#E61E25] text-white' : 'bg-stone-100 text-stone-450'}`}>
                                                   {tab.count}
                                              </span>
                                         )}
@@ -277,11 +269,14 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
                          <div className="space-y-16 text-left">
                               {/* 1. VOUCHERS / COUPONS */}
                               {(activeTab === 'all' || activeTab === 'coupons') && coupons.length > 0 && (
-                                   <div className="space-y-5">
-                                        <div className="flex items-center gap-2 border-l-4 border-[#E61E25] pl-3">
-                                             <TextSp as="h2" size="lg" weight="black" uppercase tracking="widest" color="text-stone-900 dark:text-white">
+                                   <div className="space-y-6">
+                                        <div className="space-y-1 select-none text-left">
+                                             <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#E61E25]">
+                                                  Exclusive Offer
+                                             </span>
+                                             <h2 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-white tracking-tight uppercase leading-none">
                                                   Active Coupons & Vouchers
-                                             </TextSp>
+                                             </h2>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                              {coupons.map((coupon) => {
@@ -290,55 +285,38 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
                                                   return (
                                                        <div
                                                             key={coupon.id}
-                                                            className="relative bg-white dark:bg-stone-950 border border-stone-200/80 dark:border-stone-800/80 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex group"
+                                                            className="relative bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 rounded-xl p-5 shadow-3xs flex items-center justify-between gap-4 hover:shadow-2xs hover:border-stone-300 dark:hover:border-stone-700 transition-all group"
                                                        >
-                                                            {/* Left portion: Discount rate */}
-                                                            <div className="w-[100px] sm:w-[120px] bg-stone-950 dark:bg-stone-900 flex flex-col items-center justify-center text-white p-4 relative border-r-2 border-dashed border-stone-100 dark:border-stone-800">
-                                                                 {/* Top & Bottom Punch Holes */}
-                                                                 <div className="absolute -top-3 left-[calc(100%-6px)] w-3 h-3 rounded-full bg-[#F9F9F9] dark:bg-[#0c0c0c] z-10" />
-                                                                 <div className="absolute -bottom-3 left-[calc(100%-6px)] w-3 h-3 rounded-full bg-[#F9F9F9] dark:bg-[#0c0c0c] z-10" />
-
-                                                                 <FiGift className="w-5 h-5 text-red-500 mb-1" />
-                                                                 <span className="text-xl sm:text-2xl font-black text-white leading-none">
-                                                                      {coupon.discount_type === 'percentage' ? `${Math.round(discountVal)}%` : `$${Math.round(discountVal)}`}
+                                                            {/* Details Area */}
+                                                            <div className="text-left">
+                                                                 <span className="text-[#E61E25] bg-red-50 dark:bg-red-950/20 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-[4px] inline-block leading-none">
+                                                                      {coupon.discount_type === 'percentage' ? `${Math.round(discountVal)}%` : `$${Math.round(discountVal)}`} OFF
                                                                  </span>
-                                                                 <span className="text-[9px] uppercase tracking-wider font-extrabold text-stone-400 mt-1">OFF</span>
+                                                                 <h4 className="text-xs font-black uppercase text-stone-900 dark:text-stone-100 tracking-wider mt-2.5 mb-1 leading-tight">
+                                                                      {coupon.title || 'Store Discount'}
+                                                                 </h4>
+                                                                 <p className="text-stone-400 dark:text-stone-500 text-[10px] font-bold uppercase tracking-wider leading-none m-0">
+                                                                      Min Spend: ${parseFloat(String(coupon.minimum_purchase || 0)).toFixed(2)}
+                                                                 </p>
                                                             </div>
 
-                                                            {/* Right portion: Code info & copy */}
-                                                            <div className="flex-1 p-4 flex flex-col justify-between">
-                                                                 <div className="space-y-1">
-                                                                      <h4 className="text-xs font-black uppercase text-stone-900 dark:text-stone-100 tracking-wider">
-                                                                           {coupon.title || 'Store Discount'}
-                                                                      </h4>
-                                                                      <p className="text-stone-400 dark:text-stone-500 text-[10px] font-semibold leading-normal">
-                                                                           Min Spend: ${parseFloat(String(coupon.minimum_purchase || 0)).toFixed(2)}
-                                                                      </p>
-                                                                 </div>
-
-                                                                 <div className="flex items-center justify-between gap-2 mt-4 pt-2.5 border-t border-stone-100 dark:border-stone-900">
-                                                                      <code className="text-2xs font-mono font-black text-stone-800 dark:text-stone-200 uppercase tracking-widest select-all">
-                                                                           {coupon.code}
-                                                                      </code>
-                                                                      <button
-                                                                           type="button"
-                                                                           onClick={() => handleCopyCode(coupon.code)}
-                                                                           className={`px-3 py-1.5 rounded-lg border-none text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all flex items-center gap-1 active:scale-95 outline-none ${isCopied
-                                                                                ? 'bg-emerald-550 text-white'
-                                                                                : 'bg-stone-100 hover:bg-[#E61E25] dark:bg-stone-900 dark:hover:bg-[#E61E25] text-stone-700 hover:text-white dark:text-stone-300'
-                                                                                }`}
-                                                                      >
-                                                                           {isCopied ? (
-                                                                                <>
-                                                                                     <FiCheck className="w-3 h-3" /> Copied
-                                                                                </>
-                                                                           ) : (
-                                                                                <>
-                                                                                     <FiCopy className="w-3 h-3" /> Copy
-                                                                                </>
-                                                                           )}
-                                                                      </button>
-                                                                 </div>
+                                                            {/* Code & Copy Area */}
+                                                            <div className="flex items-center gap-2 border border-dashed border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950/50 rounded-lg px-3.5 py-2 shrink-0 select-none">
+                                                                 <code className="text-2xs font-mono font-black text-stone-800 dark:text-stone-200 uppercase tracking-widest select-all">
+                                                                      {coupon.code}
+                                                                 </code>
+                                                                 <button
+                                                                      type="button"
+                                                                      onClick={() => handleCopyCode(coupon.code)}
+                                                                      className="p-1 rounded-md hover:bg-stone-200/60 dark:hover:bg-stone-800 text-stone-500 hover:text-[#E61E25] transition-all cursor-pointer focus:outline-none border-none bg-transparent flex items-center justify-center"
+                                                                      title={isCopied ? "Copied" : "Copy Code"}
+                                                                 >
+                                                                      {isCopied ? (
+                                                                           <FiCheck className="w-3.5 h-3.5 text-emerald-550" />
+                                                                      ) : (
+                                                                           <FiCopy className="w-3.5 h-3.5" />
+                                                                      )}
+                                                                 </button>
                                                             </div>
                                                        </div>
                                                   );
@@ -350,19 +328,22 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
                               {/* 2. FLASH DEALS */}
                               {(activeTab === 'all' || activeTab === 'flash') && flashProducts.length > 0 && activeFlashDeal && (
                                    <div className="space-y-6">
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-[#E61E25] pl-3">
-                                             <div className="space-y-1">
-                                                  <TextSp as="h2" size="lg" weight="black" uppercase tracking="widest" color="text-stone-900 dark:text-white">
-                                                       {activeFlashDeal.title || '-'}
-                                                  </TextSp>
-                                                  <p className="text-stone-400 dark:text-stone-500 text-[11px] font-semibold">
-                                                       {activeFlashDeal.meta_description || '-'}
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-150 dark:border-stone-850/60 pb-4">
+                                             <div className="space-y-1 text-left">
+                                                  <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#E61E25]">
+                                                       Limited Time Only
+                                                  </span>
+                                                  <h2 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-white tracking-tight uppercase leading-none">
+                                                       {activeFlashDeal.title || 'Flash Deals'}
+                                                  </h2>
+                                                  <p className="text-stone-400 dark:text-stone-500 text-[11px] font-semibold mt-1">
+                                                       {activeFlashDeal.meta_description || ''}
                                                   </p>
                                              </div>
 
                                              {/* Countdown Timer */}
                                              <div className="flex items-center gap-2 bg-stone-950 dark:bg-white text-white dark:text-stone-950 px-4 py-2 rounded-xl shadow-xs self-start sm:self-center font-mono">
-                                                  <FiClock className="w-3.5 h-3.5 text-red-500 dark:text-red-600 animate-pulse shrink-0" />
+                                                  <FiClock className="w-3.5 h-3.5 text-red-500 dark:text-red-650 animate-pulse shrink-0" />
                                                   <span className="text-[10px] font-bold uppercase tracking-wider mr-1 select-none">Ends in:</span>
                                                   <span className="text-xs font-black">{String(timeLeft.days).padStart(2, '0')}d</span>
                                                   <span className="text-stone-500 dark:text-stone-300 font-extrabold">:</span>
@@ -400,16 +381,17 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
                                              if (!deal.products || deal.products.length === 0) return null;
                                              const mappedProducts = deal.products.map(p => mapToUIItem(p as any));
                                              return (
-                                                  <div key={deal.id} className="space-y-5">
-                                                       <div className="flex items-center justify-between border-l-4 border-[#E61E25] pl-3">
-                                                            <div className="space-y-1">
-                                                                 <TextSp as="h2" size="lg" weight="black" uppercase tracking="widest" color="text-stone-900 dark:text-white">
-                                                                      {deal.title || '-'}
-                                                                 </TextSp>
-                                                                 <p className="text-stone-400 dark:text-stone-500 text-[11px] font-semibold">
-                                                                      {deal.meta_description || '-'}
-                                                                 </p>
-                                                            </div>
+                                                  <div key={deal.id} className="space-y-6">
+                                                       <div className="space-y-1 text-left border-b border-stone-150 dark:border-stone-850/60 pb-4">
+                                                            <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#E61E25]">
+                                                                 Curated Collection
+                                                            </span>
+                                                            <h2 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-white tracking-tight uppercase leading-none">
+                                                                 {deal.title || 'Featured Deals'}
+                                                            </h2>
+                                                            <p className="text-stone-400 dark:text-stone-500 text-[11px] font-semibold mt-1">
+                                                                 {deal.meta_description || ''}
+                                                            </p>
                                                        </div>
 
                                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10">
@@ -440,16 +422,17 @@ export const ProductOffersDeals: React.FC<ProductOffersDealsProps> = ({
                                         {clearanceSales.map((sale) => {
                                              if (!sale.products || sale.products.length === 0) return null;
                                              return (
-                                                  <div key={sale.id} className="space-y-5">
-                                                       <div className="flex items-center justify-between border-l-4 border-[#E61E25] pl-3">
-                                                            <div className="space-y-1">
-                                                                 <TextSp as="h2" size="lg" weight="black" uppercase tracking="widest" color="text-stone-900 dark:text-white">
-                                                                      {sale.title || 'Clearance Runway Pieces'}
-                                                                 </TextSp>
-                                                                 <p className="text-stone-400 dark:text-stone-500 text-[11px] font-semibold">
-                                                                      {sale.meta_description || 'Last chance runway pieces and seasonal collections at final clearance rates.'}
-                                                                 </p>
-                                                            </div>
+                                                  <div key={sale.id} className="space-y-6">
+                                                       <div className="space-y-1 text-left border-b border-stone-150 dark:border-stone-850/60 pb-4">
+                                                            <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#E61E25]">
+                                                                 Last Chance
+                                                            </span>
+                                                            <h2 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-white tracking-tight uppercase leading-none">
+                                                                 {sale.title || 'Clearance Runway Pieces'}
+                                                            </h2>
+                                                            <p className="text-stone-400 dark:text-stone-500 text-[11px] font-semibold mt-1">
+                                                                 {sale.meta_description || 'Last chance runway pieces and seasonal collections at final clearance rates.'}
+                                                            </p>
                                                        </div>
 
                                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10">

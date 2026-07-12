@@ -17,7 +17,7 @@ import '@/pages/owner_manage/style/font.css';
 import { NavbarPage } from './components/NavbarPage';
 import { DetailPage } from './components/DetailPage';
 import { PopupDetailProduct } from './components/helpers/popupDetailProduct';
-import { HeroPage } from './components/HeroPage';
+import { HeroPage } from './components/Banners';
 import { FooterPage } from './components/FooterPage';
 import { ListProdoct } from './components/ShopPage';
 import { ListProductLike } from './components/ListProductLike';
@@ -43,6 +43,7 @@ import { CategoriesGrid } from './components/CategoriesGridPage';
 import { Special_Product } from './components/helpers/Special_Product';
 import { ModelCoupon } from './components/helpers/ModelCoupon';
 import { DotTechSc } from './components/helpers/DotTechSc';
+import { BrandGrid } from './components/brandGrid';
 
 import { mapToUIItem, resolveColorHex } from './utils/priceUtils';
 import { CheckoutPage } from './components/CheckoutPage';
@@ -481,7 +482,7 @@ export const FashionPage: React.FC<FashionPageProps> = ({
   const activeProduct = directProduct || displayItems.find(item => String(item.id) === urlProductId);
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] text-[#1C1C1C] font-sans antialiased flex flex-col min-h-screen relative">
+    <div className="min-h-screen bg-white text-[#1C1C1C] font-sans antialiased flex flex-col min-h-screen relative">
       <LineLoading isLoading={loading || isAuthLoading || isLoadingCart || loadingPromotions} />
       {/* Mega Menu Dropdown Navbar Component */}
       <NavbarPage
@@ -688,8 +689,10 @@ export const FashionPage: React.FC<FashionPageProps> = ({
             banners={banners}
           />
 
+          <BrandGrid ownerUserId={ownerUserId} />
+
           {/* Quick Links Row */}
-          <QuickLinks
+          {/* <QuickLinks
             categories={categories}
             ownerUserId={ownerUserId}
             storeName={storeName}
@@ -698,7 +701,7 @@ export const FashionPage: React.FC<FashionPageProps> = ({
             locale={locale}
             coupons={coupons}
             onCouponClick={() => setIsCouponModalOpen(true)}
-          />
+          /> */}
 
 
 

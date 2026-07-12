@@ -109,18 +109,18 @@ export const LineLoading: React.FC<LineLoadingProps> = ({ isLoading = false }) =
 
 export const SkeletonSocialMediaGrid: React.FC = () => {
      return (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 max-w-4xl mx-auto justify-center w-full">
-               {Array.from({ length: 6 }).map((_, i) => (
+          <div className="flex flex-wrap items-center justify-center gap-4 max-w-4xl mx-auto w-full">
+               {Array.from({ length: 4 }).map((_, i) => (
                     <div
                          key={i}
-                         className="relative rounded-xl border border-stone-200/50 dark:border-stone-850 bg-white dark:bg-stone-900 animate-pulse w-full aspect-square flex flex-col items-center justify-center p-3 space-y-2"
+                         className="flex items-center gap-3.5 px-4.5 py-3 bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-800 rounded-lg animate-pulse w-[150px] sm:w-[170px]"
                     >
                          {/* Circle Icon Placeholder */}
-                         <div className="w-10 h-10 rounded-full bg-stone-200 dark:bg-stone-850" />
+                         <div className="w-8.5 h-8.5 rounded-[4px] bg-stone-200 dark:bg-stone-800 shrink-0" />
                          {/* Text Placeholders */}
-                         <div className="space-y-1.5 w-full flex flex-col items-center">
-                              <div className="h-3 bg-stone-200 dark:bg-stone-850 rounded w-1/2" />
-                              <div className="h-2.5 bg-stone-200 dark:bg-stone-850 rounded w-1/3" />
+                         <div className="flex flex-col flex-1">
+                              <div className="h-3 bg-stone-200 dark:bg-stone-800 rounded w-4/5" />
+                              <div className="h-2 bg-stone-200 dark:bg-stone-800 rounded w-1/2 mt-1.5" />
                          </div>
                     </div>
                ))}

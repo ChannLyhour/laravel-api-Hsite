@@ -216,7 +216,7 @@ export const useCheckout = ({
                     setCoupons(propCoupons);
                 } else {
                     const resolvedVendor = nullOrRequest(ownerUserId) || nullOrRequest(stores?.created_by);
-                    const data = await couponsService.getCoupons(resolvedVendor ? { vendor_id: resolvedVendor } : undefined);
+                    const data = await couponsService.getCoupons(resolvedVendor ? { created_by: resolvedVendor } : undefined);
                     const activeCoupons = data.filter(
                         c => c.is_active && (!c.customer_id || c.customer_id === user?.id)
                     );

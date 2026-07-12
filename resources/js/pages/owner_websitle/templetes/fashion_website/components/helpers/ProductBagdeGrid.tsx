@@ -292,7 +292,9 @@ const BadgeGridRow: React.FC<BadgeGridRowProps> = ({
                   ownerUserId={ownerUserId}
                   stores={stores}
                   storeName={storeName}
-                  onNavigate={onNavigate}
+                  onNavigate={(to) => {
+                    window.location.href = to;
+                  }}
                   addToCart={addToCart}
                   isFavorited={!!favorites[String(item.id)]}
                   onToggleFavorite={toggleFavorite}

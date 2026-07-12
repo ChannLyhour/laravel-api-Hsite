@@ -52,7 +52,7 @@ export const usePromotions = (ownerUserId?: number | string, stores?: any) => {
       try {
         const startTime = Date.now();
         const [c, fd, feat, cs] = await Promise.allSettled([
-          client.get<CouponRow[]>(`/coupons?limit=5&skip=0`),
+          client.get<CouponRow[]>(`/coupons?created_by=${resolvedOwnerId}&limit=10&skip=0`),
           publicFlashDealsService.getFlashDealsByOwnerId(resolvedOwnerId, 0, 10),
           client.get<FeaturedDealRow[]>(`/featured-deals?owner_id=${resolvedOwnerId}&limit=10&skip=0`),
           client.get<ClearanceSaleRow[]>(`/clearance-sales?owner_id=${resolvedOwnerId}&limit=10&skip=0`),

@@ -91,7 +91,7 @@ function App() {
   const getInitialOwnerId = (): number | string => {
     try {
       const params = new URLSearchParams(window.location.search);
-      const isProductPage = window.location.pathname.startsWith('/product');
+      const isProductPage = window.location.pathname.startsWith('/product') || window.location.pathname.includes('/product');
       const urlOwnerId = params.get('owner') || (!isProductPage ? params.get('id') : null);
       if (urlOwnerId) {
         return isNaN(Number(urlOwnerId)) ? urlOwnerId : parseInt(urlOwnerId, 10);
@@ -214,7 +214,7 @@ function App() {
   // Whether we are currently viewing an owner-specific storefront (drives CompanyWebsite vs HomePage routing)
   const [hasOwnerParam, setHasOwnerParam] = useState<boolean>(() => {
     const params = new URLSearchParams(window.location.search);
-    const isProductPage = window.location.pathname.startsWith('/product');
+    const isProductPage = window.location.pathname.startsWith('/product') || window.location.pathname.includes('/product');
     return params.has('owner') || (!isProductPage && params.has('id'));
   });
 
@@ -251,7 +251,7 @@ function App() {
   // Synchronize path and store mapping updates to resolve the ownerUserId and storeName
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const isProductPage = currentPath.startsWith('/product');
+    const isProductPage = currentPath.startsWith('/product') || currentPath.includes('/product');
     const urlOwnerId = params.get('owner') || (!isProductPage ? params.get('id') : null);
 
     // If we are in the owner control panel and logged in, enforce the logged-in owner's ID
@@ -397,7 +397,7 @@ function App() {
   useEffect(() => {
     const newPath = location.pathname;
     const params = new URLSearchParams(location.search);
-    const isProductPage = newPath.startsWith('/product');
+    const isProductPage = newPath.startsWith('/product') || newPath.includes('/product');
     const urlOwnerId = params.get('owner') || (!isProductPage ? params.get('id') : null);
     const urlStoreName = params.get('store');
 
@@ -972,7 +972,7 @@ function App() {
   // Update document title and favicon based on current route and store context
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const isProductPage = currentPath.startsWith('/product');
+    const isProductPage = currentPath.startsWith('/product') || currentPath.includes('/product');
     const hasOwner = params.has('owner') || (!isProductPage && params.has('id')) || !!parseStorePath(currentPath);
 
     const updateTitleAndFavicon = async () => {

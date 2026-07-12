@@ -16,7 +16,7 @@ import { resolveImageUrl } from '../utils/imageUtils';
 import { FASHION_ROUTES } from '../routes';
 import { socialMediaService, type SocialMediaRow } from '@/api/owner/socialMedia';
 import { HeroBannerSlider } from './helpers/HeroBannerSlider';
-import { brandsService, type Brand } from '@/api/owner/brands';
+
 
 
 /* ── tiny platform-icon resolver (banner-only) ── */
@@ -68,7 +68,6 @@ const HeroPageInner: React.FC<HeroPageProps> = ({
 
   /* ── Social media links (compact banner strip) ── */
   const [socials, setSocials] = useState<SocialMediaRow[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
 
   useEffect(() => {
     if (ownerUserId) {
@@ -76,11 +75,6 @@ const HeroPageInner: React.FC<HeroPageProps> = ({
         .getPublicSocials(ownerUserId)
         .then((data) => setSocials((data || []).filter((s) => s.status)))
         .catch((err) => console.error('Failed to load socials:', err));
-
-      brandsService
-        .getBrands(100, 0, ownerUserId)
-        .then((data) => setBrands((data || []).filter((b) => b.status)))
-        .catch((err) => console.error('Failed to load brands:', err));
     }
   }, [ownerUserId]);
 
@@ -273,109 +267,78 @@ const HeroPageInner: React.FC<HeroPageProps> = ({
       <div className="w-full max-w-7xl mx-auto px-1.5 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div 
           onClick={handleClick}
-          className="relative h-[250px] sm:h-[450px] lg:h-[420px] w-full rounded-md overflow-hidden group/slider bg-[#EAEAEA] bg-[radial-gradient(#C5C5C5_1px,transparent_1px)] [background-size:16px_16px] border border-stone-200/20 cursor-pointer hover:shadow-lg transition-shadow duration-300 select-none"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleMouseUpOrLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="relative h-[250px] sm:h-[450px] lg:h-[420px] w-full rounded-md overflow-hidden group/slider bg-stone-100 border border-stone-200/20 cursor-pointer hover:shadow-lg transition-shadow duration-300 select-none touch-pan-y"
         >
-          {/* Collage Layer */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
-            {/* New Season Blue Badge Sticker */}
-            <div className="absolute top-[8%] left-[4%] sm:top-[12%] sm:left-[10%] z-20 bg-[#003CFF] text-white px-3 py-1 sm:px-6 sm:py-2.5 font-sans font-black text-lg sm:text-4xl uppercase tracking-tighter -rotate-[6deg] shadow-lg inline-block select-none pointer-events-none animate-bounce-slow">
-              New Season
-            </div>
-
-            {/* Black Leather Bag */}
-            <img 
-              src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=500&q=80"
-              className="absolute left-[1%] sm:left-[6%] top-[28%] sm:top-[22%] w-[80px] sm:w-[220px] h-auto object-contain z-10 filter grayscale contrast-[150%] mix-blend-darken select-none pointer-events-none"
-              alt="Fashion Bag"
+          {/* Background Images Layer */}
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <HeroBannerSlider
+              slides={slides}
+              loopSlides={loopSlides}
+              currentSlide={currentSlide}
+              dragOffset={dragOffset}
+              dragStartX={dragStartX}
+              transitionEnabled={transitionEnabled}
+              onTransitionEnd={handleTransitionEnd}
             />
-
-            {/* Black Jacket (Center) */}
-            <img 
-              src="https://images.unsplash.com/photo-1544923246-77307dd654cb?auto=format&fit=crop&w=600&q=80"
-              className="absolute left-1/2 top-[5%] -translate-x-1/2 w-[120px] sm:w-[350px] h-auto object-contain z-0 filter grayscale contrast-[140%] mix-blend-darken select-none pointer-events-none"
-              alt="Jacket"
-            />
-
-            {/* Black Baseball Cap (overlaps jacket bottom) */}
-            <img 
-              src="https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=400&q=80"
-              className="absolute left-[38%] sm:left-[45%] top-[55%] sm:top-[48%] w-[60px] sm:w-[170px] h-auto object-contain z-20 filter grayscale contrast-[160%] mix-blend-darken select-none pointer-events-none"
-              alt="Cap"
-            />
-
-            {/* White Sticker text on right */}
-            <div className="absolute right-[2%] sm:right-[10%] top-[25%] sm:top-[22%] z-20 bg-white text-black px-3 py-1 sm:px-5 sm:py-2.5 font-sans font-bold text-[8px] sm:text-xs tracking-wider uppercase rotate-[4deg] shadow-md border border-slate-200/40 select-none max-w-[100px] sm:max-w-[200px] text-center pointer-events-none">
-              Discover the latest arrivals, all in one place.
-            </div>
-
-            {/* Sneakers (Right side) */}
-            <img 
-              src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=500&q=80"
-              className="absolute right-[1%] sm:right-[5%] top-[35%] sm:top-[28%] w-[90px] sm:w-[260px] h-auto object-contain z-10 filter grayscale contrast-[140%] mix-blend-darken select-none pointer-events-none"
-              alt="Sneakers"
-            />
-
-            {/* Bottom buttons row */}
-            <div className="absolute bottom-[6%] sm:bottom-[8%] left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onNavigate) {
-                    onNavigate(FASHION_ROUTES.getShop(ownerUserId, storeSlug, { hash: '#men-fashion' }));
-                  }
-                }}
-                className="px-4 py-1.5 sm:px-6 sm:py-2 border border-black bg-white hover:bg-black hover:text-white text-black font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all cursor-pointer shadow-sm rounded-none"
-              >
-                Men
-              </button>
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onNavigate) {
-                    onNavigate(FASHION_ROUTES.getShop(ownerUserId, storeSlug, { hash: '#women-fashion' }));
-                  }
-                }}
-                className="px-4 py-1.5 sm:px-6 sm:py-2 border border-black bg-white hover:bg-black hover:text-white text-black font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all cursor-pointer shadow-sm rounded-none"
-              >
-                Women
-              </button>
-            </div>
           </div>
+
+          {/* Floating Social Icon Strip (right edge, vertical) */}
+          {socials.length > 0 && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-2 p-2 rounded-full bg-stone-950/35 backdrop-blur-md border border-white/10 shadow-xl select-none"
+            >
+              {socials.map((social, idx) => {
+                const { icon, bg } = getSocialIcon(social.name);
+                return (
+                  <a
+                    key={social.id}
+                    href={social.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={social.name}
+                    className={`w-9 h-9 rounded-full ${bg} flex items-center justify-center text-white shadow-md hover:scale-110 hover:shadow-lg active:scale-95 transition-all duration-300`}
+                    style={{ animationDelay: `${idx * 80}ms` }}
+                  >
+                    {icon}
+                  </a>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Pagination Dots Capsule */}
+          {slides.length > 1 && (
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-3 left-3 sm:bottom-6 sm:left-6 z-20 flex items-center gap-1.5 sm:gap-2.5 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-stone-950/45 backdrop-blur-md border border-white/10 shadow-lg select-none"
+            >
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    if (isDragging || activeDotIdx === index) return;
+                    setCurrentSlide(index);
+                  }}
+                  className={`rounded-full transition-all duration-500 cursor-pointer border-none ${
+                    activeDotIdx === index ? 'w-6 sm:w-7 bg-[#E61E25] h-1 sm:h-1.5' : 'w-1 sm:w-1.5 h-1 sm:h-1.5 bg-white/40 hover:bg-white/70'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Brand Logos Strip */}
-      <div className="w-full bg-white py-6 border-t border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 items-center justify-items-center">
-            {(brands.length > 0 ? brands : [
-              { id: 1, name: 'TEN & ELEVEN', logo: null },
-              { id: 2, name: 'ROUTINE', logo: null },
-              { id: 3, name: 'TAG SPACE', logo: null },
-              { id: 4, name: '361°', logo: null },
-              { id: 5, name: 'Pomelo.', logo: null },
-              { id: 6, name: 'GATONI', logo: null },
-            ]).map((brand, idx) => (
-              <div 
-                key={brand.id || idx} 
-                className="w-full max-w-[140px] aspect-[5/2] bg-black text-white flex items-center justify-center font-black tracking-widest text-[10px] sm:text-xs uppercase border border-neutral-900 select-none shadow-xs rounded-[2px]"
-              >
-                {brand.logo ? (
-                  <img 
-                    src={resolveImageUrl(brand.logo)} 
-                    alt={brand.name} 
-                    className="max-h-[75%] max-w-[85%] object-contain"
-                  />
-                ) : (
-                  <span className="font-sans font-black text-center px-2">{brand.name}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+
     </section>
   );
 };

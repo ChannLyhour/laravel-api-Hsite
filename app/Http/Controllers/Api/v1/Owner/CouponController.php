@@ -13,16 +13,20 @@ class CouponController extends Controller
      * Public list of active coupons.
      * Supports filters: vendor_id, customer_id, coupon_type
      */
-    public function index(Request $request)
+    public function index (Request $request)
     {
-        $skip     = $request->query('skip', 0);
-        $limit    = $request->query('limit', 100);
+        $skip = $request->query('skip', 0);
+        $limit = $request->query('limit', 100);
 
         $query = Coupon::where('is_active', true)
             ->with(['vendor:id,name', 'customer:id,name']);
 
         if ($request->filled('vendor_id')) {
-            $query->where('vendor_id', $request->query('vendor_id'));
+            $vendorId = $request->query('vendor_id');
+            $query->where(function ($q) use ($vendorId) {
+                $q->where('vendor_id', $vendorId)
+                    ->orWhere('created_by', $vendorId);
+            });
         }
         if ($request->filled('customer_id')) {
             $query->where('customer_id', $request->query('customer_id'));
@@ -44,14 +48,14 @@ class CouponController extends Controller
     /**
      * List all coupons created by the logged-in user (admin sees all).
      */
-    public function mine(Request $request)
+    public function mine (Request $request)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
+        if (!in_array($user->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Not authorized.'], 403);
         }
 
-        $skip  = $request->query('skip', 0);
+        $skip = $request->query('skip', 0);
         $limit = $request->query('limit', 100);
 
         $query = Coupon::with(['vendor:id,name', 'customer:id,name', 'creator:id,name']);
@@ -72,7 +76,7 @@ class CouponController extends Controller
     /**
      * Show a single coupon by ID (public).
      */
-    public function show($id)
+    public function show ($id)
     {
         $coupon = Coupon::with(['vendor:id,name', 'customer:id,name', 'creator:id,name'])
             ->findOrFail($id);
@@ -84,7 +88,7 @@ class CouponController extends Controller
      * Validate a coupon code (public).
      * GET /coupons/validate?code=XYZ
      */
-    public function validateCode(Request $request)
+    public function validateCode (Request $request)
     {
         $request->validate([
             'code' => 'required|string',
@@ -94,7 +98,7 @@ class CouponController extends Controller
             ->where('is_active', true)
             ->first();
 
-        if (! $coupon) {
+        if (!$coupon) {
             return response()->json(['detail' => 'Invalid or inactive coupon code.'], 404);
         }
 
@@ -169,27 +173,27 @@ class CouponController extends Controller
     /**
      * Create a new coupon (auth).
      */
-    public function store(Request $request)
+    public function store (Request $request)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
+        if (!in_array($user->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);
         }
 
         $data = $request->validate([
-            'title'            => 'required|string|max:255',
-            'code'             => 'nullable|string|max:100|unique:coupons,code',
-            'coupon_type'      => 'required|string|in:first_order,discount_on_purchase,free_delivery',
-            'vendor_id'        => 'nullable|integer|exists:users,id',
-            'customer_id'      => 'nullable|integer|exists:customers,id',
-            'discount_type'    => 'required|string|in:amount,percentage',
-            'discount_amount'  => 'required|numeric|min:0',
+            'title' => 'required|string|max:255',
+            'code' => 'nullable|string|max:100|unique:coupons,code',
+            'coupon_type' => 'required|string|in:first_order,discount_on_purchase,free_delivery',
+            'vendor_id' => 'nullable|integer|exists:users,id',
+            'customer_id' => 'nullable|integer|exists:customers,id',
+            'discount_type' => 'required|string|in:amount,percentage',
+            'discount_amount' => 'required|numeric|min:0',
             'minimum_purchase' => 'nullable|numeric|min:0',
-            'limit_same_user'  => 'nullable|integer|min:1',
-            'limit_total'      => 'nullable|integer|min:1',
-            'start_date'       => 'required|date',
-            'expire_date'      => 'required|date|after_or_equal:start_date',
-            'is_active'        => 'nullable|boolean',
+            'limit_same_user' => 'nullable|integer|min:1',
+            'limit_total' => 'nullable|integer|min:1',
+            'start_date' => 'required|date',
+            'expire_date' => 'required|date|after_or_equal:start_date',
+            'is_active' => 'nullable|boolean',
         ]);
 
         // Auto-generate code if not provided
@@ -209,10 +213,10 @@ class CouponController extends Controller
     /**
      * Update an existing coupon (auth).
      */
-    public function update(Request $request, $id)
+    public function update (Request $request, $id)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
+        if (!in_array($user->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);
         }
 
@@ -223,19 +227,19 @@ class CouponController extends Controller
         }
 
         $data = $request->validate([
-            'title'            => 'sometimes|required|string|max:255',
-            'code'             => 'sometimes|required|string|max:100|unique:coupons,code,' . $id,
-            'coupon_type'      => 'sometimes|required|string|in:first_order,discount_on_purchase,free_delivery',
-            'vendor_id'        => 'nullable|integer|exists:users,id',
-            'customer_id'      => 'nullable|integer|exists:customers,id',
-            'discount_type'    => 'sometimes|required|string|in:amount,percentage',
-            'discount_amount'  => 'sometimes|required|numeric|min:0',
+            'title' => 'sometimes|required|string|max:255',
+            'code' => 'sometimes|required|string|max:100|unique:coupons,code,' . $id,
+            'coupon_type' => 'sometimes|required|string|in:first_order,discount_on_purchase,free_delivery',
+            'vendor_id' => 'nullable|integer|exists:users,id',
+            'customer_id' => 'nullable|integer|exists:customers,id',
+            'discount_type' => 'sometimes|required|string|in:amount,percentage',
+            'discount_amount' => 'sometimes|required|numeric|min:0',
             'minimum_purchase' => 'nullable|numeric|min:0',
-            'limit_same_user'  => 'nullable|integer|min:1',
-            'limit_total'      => 'nullable|integer|min:1',
-            'start_date'       => 'sometimes|required|date',
-            'expire_date'      => 'sometimes|required|date|after_or_equal:start_date',
-            'is_active'        => 'nullable|boolean',
+            'limit_same_user' => 'nullable|integer|min:1',
+            'limit_total' => 'nullable|integer|min:1',
+            'start_date' => 'sometimes|required|date',
+            'expire_date' => 'sometimes|required|date|after_or_equal:start_date',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if (isset($data['code'])) {
@@ -255,10 +259,10 @@ class CouponController extends Controller
     /**
      * Toggle active/inactive status.
      */
-    public function toggle(Request $request, $id)
+    public function toggle (Request $request, $id)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
+        if (!in_array($user->role_id, [1, 2, 30003])) {
             return response()->json(['detail' => 'Not authorized.'], 403);
         }
 
@@ -268,7 +272,7 @@ class CouponController extends Controller
             return response()->json(['detail' => 'You do not own this coupon.'], 403);
         }
 
-        $coupon->update(['is_active' => ! $coupon->is_active]);
+        $coupon->update(['is_active' => !$coupon->is_active]);
 
         return response()->json($coupon);
     }
@@ -276,11 +280,12 @@ class CouponController extends Controller
     /**
      * Delete a coupon (auth).
      */
-    public function destroy(Request $request, $id)
+    public function destroy (Request $request, $id)
     {
         $user = $request->user();
-        if (! in_array($user->role_id, [1, 2, 30003])) {
-            return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);;
+        if (!in_array($user->role_id, [1, 2, 30003])) {
+            return response()->json(['detail' => 'Only store owners or administrators are allowed.'], 403);
+            ;
         }
 
         $coupon = Coupon::findOrFail($id);

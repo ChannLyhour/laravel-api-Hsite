@@ -34,6 +34,7 @@ import { ProductBagdeGrid } from './helpers/ProductBagdeGrid';
 import { SocialMediaGrid } from './SocialMediaGrid';
 import { FASHION_ROUTES } from '../routes';
 import { TextSp } from './helpers/TextSp';
+import { LineLoading } from './helpers/SkeletonSt';
 
 export const DetailPage: React.FC<DetailPageProps> = ({
   product: initialProduct,
@@ -55,6 +56,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
 }) => {
   // Local product state to handle refreshes
   const [product, setProduct] = useState<Root2>(initialProduct);
+  const [isLoading, setIsLoading] = useState(false);
   const ownerUserId = stores?.created_by || product?.created_by || '';
 
   const relatedProducts = useMemo(() => {
@@ -151,7 +153,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
     const fetchCoupons = async () => {
       try {
         const vendorId = stores?.created_by || product?.created_by;
-        const data = await couponsService.getCoupons(vendorId ? { vendor_id: vendorId } : undefined);
+        const data = await couponsService.getCoupons(vendorId ? { created_by: vendorId } : undefined);
         const activeCoupons = data.filter(
           c => c.is_active && (!c.customer_id || c.customer_id === user?.id)
         );
@@ -940,7 +942,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
 
             <button
               disabled={isSelectionComplete ? isOutOfStock : false}
-              onClick={() => {
+              onClick={async () => {
                 if (!isSelectionComplete) {
                   if (hasColors && !selectedColor) {
                     toast.error('Please select a color.');
@@ -950,33 +952,40 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                   return;
                 }
 
-                // Construct final color including addons
-                const addonParts: string[] = [];
-                if (product.addons && product.addons.length > 0) {
-                  Object.entries(selectedAddons).forEach(([addonId, checked]) => {
-                    if (checked) {
-                      const add = product.addons?.find((a: any) => String(a.id) === addonId);
-                      if (add) {
-                        const price = parseFloat(String(add.additional_price)) || 0;
-                        const disc = parseFloat(String(add.discount || 0)) || 0;
-                        const eff = add.discount_type === 'percent'
-                          ? Math.max(0, price - (price * disc / 100))
-                          : Math.max(0, price - disc);
-                        addonParts.push(`${add.addon_name} (+$${eff.toFixed(2)})`);
+                setIsLoading(true);
+                try {
+                  // Construct final color including addons
+                  const addonParts: string[] = [];
+                  if (product.addons && product.addons.length > 0) {
+                    Object.entries(selectedAddons).forEach(([addonId, checked]) => {
+                      if (checked) {
+                        const add = product.addons?.find((a: any) => String(a.id) === addonId);
+                        if (add) {
+                          const price = parseFloat(String(add.additional_price)) || 0;
+                          const disc = parseFloat(String(add.discount || 0)) || 0;
+                          const eff = add.discount_type === 'percent'
+                            ? Math.max(0, price - (price * disc / 100))
+                            : Math.max(0, price - disc);
+                          addonParts.push(`${add.addon_name} (+$${eff.toFixed(2)})`);
+                        }
                       }
-                    }
-                  });
-                }
-                const addonsString = addonParts.length > 0 ? `Addons: ${addonParts.join(', ')}` : '';
-                const finalColor = selectedColor && addonsString
-                  ? `${selectedColor} / ${addonsString}`
-                  : (addonsString || selectedColor);
+                    });
+                  }
+                  const addonsString = addonParts.length > 0 ? `Addons: ${addonParts.join(', ')}` : '';
+                  const finalColor = selectedColor && addonsString
+                    ? `${selectedColor} / ${addonsString}`
+                    : (addonsString || selectedColor);
 
-                addToCart(product, detailQuantity, selectedSize, finalColor, addonsPrice);
-                if (onNavigate) {
-                  const storeSlug = (stores?.store_name || storeName || 'store').replace(/\s+/g, '_');
-                  const ownerId = product.created_by || stores?.created_by || '';
-                  onNavigate(FASHION_ROUTES.getCheckout(ownerId, storeSlug));
+                  await addToCart(product, detailQuantity, selectedSize, finalColor, addonsPrice);
+                  if (onNavigate) {
+                    const storeSlug = (stores?.store_name || storeName || 'store').replace(/\s+/g, '_');
+                    const ownerId = product.created_by || stores?.created_by || '';
+                    onNavigate(FASHION_ROUTES.getCheckout(ownerId, storeSlug));
+                  }
+                } catch (err) {
+                  console.warn('Failed to checkout', err);
+                } finally {
+                  setIsLoading(false);
                 }
               }}
               className={`flex-1 py-3.5 sm:py-4 font-bold text-xs uppercase tracking-wider sm:tracking-widest rounded-xl transition-all duration-200 border-none shadow-sm hover:shadow-md hover:shadow-red-500/10 flex items-center justify-center gap-2 active:scale-[0.98] ${(isSelectionComplete ? isOutOfStock : false)
@@ -997,6 +1006,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
 
   return (
     <>
+      <LineLoading isLoading={isLoading} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 animate-fade-in text-left">
         <button
           onClick={() => {

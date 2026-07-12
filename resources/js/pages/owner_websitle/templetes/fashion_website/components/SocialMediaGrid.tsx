@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { FiShare2, FiExternalLink, FiGlobe } from 'react-icons/fi';
-import { 
-  FaFacebookF, 
-  FaTelegramPlane, 
-  FaTiktok, 
-  FaInstagram, 
-  FaYoutube, 
-  FaPinterest, 
-  FaTwitter, 
-  FaLinkedinIn 
+import {
+     FaFacebookF,
+     FaTelegramPlane,
+     FaTiktok,
+     FaInstagram,
+     FaYoutube,
+     FaPinterest,
+     FaTwitter,
+     FaLinkedinIn
 } from 'react-icons/fa';
 import { socialMediaService, type SocialMediaRow } from '@/api/owner/socialMedia';
 import type { StoreRow } from '@/api/owner/stores';
@@ -22,90 +22,90 @@ export interface SocialMediaGridProps {
 }
 
 const getPlatformConfig = (platform: string) => {
-  const name = platform.toLowerCase();
-  switch (name) {
-    case 'facebook':
-      return {
-        icon: <FaFacebookF className="w-5 h-5 text-white" />,
-        bgColor: 'bg-[#1877F2]',
-        hoverColor: 'hover:bg-[#1877F2]/90',
-        borderColor: 'border-[#1877F2]/10',
-        textColor: 'text-[#1877F2]',
-        label: 'Facebook',
-      };
-    case 'instagram':
-      return {
-        icon: <FaInstagram className="w-5 h-5 text-white" />,
-        bgColor: 'bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]',
-        hoverColor: 'hover:opacity-90',
-        borderColor: 'border-[#ee2a7b]/10',
-        textColor: 'text-[#ee2a7b]',
-        label: 'Instagram',
-      };
-    case 'tiktok':
-      return {
-        icon: <FaTiktok className="w-5 h-5 text-white" />,
-        bgColor: 'bg-black',
-        hoverColor: 'hover:bg-stone-900',
-        borderColor: 'border-black/10',
-        textColor: 'text-black dark:text-white',
-        label: 'TikTok',
-      };
-    case 'telegram':
-      return {
-        icon: <FaTelegramPlane className="w-5 h-5 text-white" />,
-        bgColor: 'bg-[#229ED9]',
-        hoverColor: 'hover:bg-[#229ED9]/90',
-        borderColor: 'border-[#229ED9]/10',
-        textColor: 'text-[#229ED9]',
-        label: 'Telegram',
-      };
-    case 'youtube':
-      return {
-        icon: <FaYoutube className="w-5 h-5 text-white" />,
-        bgColor: 'bg-[#FF0000]',
-        hoverColor: 'hover:bg-[#FF0000]/90',
-        borderColor: 'border-[#FF0000]/10',
-        textColor: 'text-[#FF0000]',
-        label: 'YouTube',
-      };
-    case 'pinterest':
-      return {
-        icon: <FaPinterest className="w-5 h-5 text-white" />,
-        bgColor: 'bg-[#BD081C]',
-        hoverColor: 'hover:bg-[#BD081C]/90',
-        borderColor: 'border-[#BD081C]/10',
-        textColor: 'text-[#BD081C]',
-        label: 'Pinterest',
-      };
-    case 'twitter':
-      return {
-        icon: <FaTwitter className="w-5 h-5 text-white" />,
-        bgColor: 'bg-[#1DA1F2]',
-        hoverColor: 'hover:bg-[#1DA1F2]/90',
-        borderColor: 'border-[#1DA1F2]/10',
-        textColor: 'text-[#1DA1F2]',
-        label: 'Twitter',
-      };
-    case 'linkedin':
-      return {
-        icon: <FaLinkedinIn className="w-5 h-5 text-white" />,
-        bgColor: 'bg-[#0A66C2]',
-        hoverColor: 'hover:bg-[#0A66C2]/90',
-        borderColor: 'border-[#0A66C2]/10',
-        textColor: 'text-[#0A66C2]',
-        label: 'LinkedIn',
-      };
-    default:
-      return {
-        icon: <FiGlobe className="w-5 h-5 text-white" />,
-        bgColor: 'bg-stone-500',
-        hoverColor: 'hover:bg-stone-600',
-        borderColor: 'border-stone-500/10',
-        textColor: 'text-stone-500',
-        label: platform,
-      };
-  }
+     const name = platform.toLowerCase();
+     switch (name) {
+          case 'facebook':
+               return {
+                    icon: <FaFacebookF className="w-5 h-5 text-white" />,
+                    bgColor: 'bg-[#1877F2]',
+                    hoverColor: 'hover:bg-[#1877F2]/90',
+                    borderColor: 'border-[#1877F2]/10',
+                    textColor: 'text-[#1877F2]',
+                    label: 'Facebook',
+               };
+          case 'instagram':
+               return {
+                    icon: <FaInstagram className="w-5 h-5 text-white" />,
+                    bgColor: 'bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]',
+                    hoverColor: 'hover:opacity-90',
+                    borderColor: 'border-[#ee2a7b]/10',
+                    textColor: 'text-[#ee2a7b]',
+                    label: 'Instagram',
+               };
+          case 'tiktok':
+               return {
+                    icon: <FaTiktok className="w-5 h-5 text-white" />,
+                    bgColor: 'bg-black',
+                    hoverColor: 'hover:bg-stone-900',
+                    borderColor: 'border-black/10',
+                    textColor: 'text-black dark:text-white',
+                    label: 'TikTok',
+               };
+          case 'telegram':
+               return {
+                    icon: <FaTelegramPlane className="w-5 h-5 text-white" />,
+                    bgColor: 'bg-[#229ED9]',
+                    hoverColor: 'hover:bg-[#229ED9]/90',
+                    borderColor: 'border-[#229ED9]/10',
+                    textColor: 'text-[#229ED9]',
+                    label: 'Telegram',
+               };
+          case 'youtube':
+               return {
+                    icon: <FaYoutube className="w-5 h-5 text-white" />,
+                    bgColor: 'bg-[#FF0000]',
+                    hoverColor: 'hover:bg-[#FF0000]/90',
+                    borderColor: 'border-[#FF0000]/10',
+                    textColor: 'text-[#FF0000]',
+                    label: 'YouTube',
+               };
+          case 'pinterest':
+               return {
+                    icon: <FaPinterest className="w-5 h-5 text-white" />,
+                    bgColor: 'bg-[#BD081C]',
+                    hoverColor: 'hover:bg-[#BD081C]/90',
+                    borderColor: 'border-[#BD081C]/10',
+                    textColor: 'text-[#BD081C]',
+                    label: 'Pinterest',
+               };
+          case 'twitter':
+               return {
+                    icon: <FaTwitter className="w-5 h-5 text-white" />,
+                    bgColor: 'bg-[#1DA1F2]',
+                    hoverColor: 'hover:bg-[#1DA1F2]/90',
+                    borderColor: 'border-[#1DA1F2]/10',
+                    textColor: 'text-[#1DA1F2]',
+                    label: 'Twitter',
+               };
+          case 'linkedin':
+               return {
+                    icon: <FaLinkedinIn className="w-5 h-5 text-white" />,
+                    bgColor: 'bg-[#0A66C2]',
+                    hoverColor: 'hover:bg-[#0A66C2]/90',
+                    borderColor: 'border-[#0A66C2]/10',
+                    textColor: 'text-[#0A66C2]',
+                    label: 'LinkedIn',
+               };
+          default:
+               return {
+                    icon: <FiGlobe className="w-5 h-5 text-white" />,
+                    bgColor: 'bg-stone-500',
+                    hoverColor: 'hover:bg-stone-600',
+                    borderColor: 'border-stone-500/10',
+                    textColor: 'text-stone-500',
+                    label: platform,
+               };
+     }
 };
 
 export const SocialMediaGrid: React.FC<SocialMediaGridProps> = ({

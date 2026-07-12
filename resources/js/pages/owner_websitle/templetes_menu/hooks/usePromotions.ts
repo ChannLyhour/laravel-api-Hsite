@@ -58,7 +58,7 @@ export const usePromotions = (ownerUserId?: number | string) => {
       try {
         const ownerIdParam = resolvedOwner ? `owner_id=${resolvedOwner}` : '';
         const [c, fd, feat, cs] = await Promise.allSettled([
-          client.get<CouponRow[]>(`/coupons?limit=5&skip=0`),
+          client.get<CouponRow[]>(`/coupons?created_by=${resolvedOwner}&limit=10&skip=0`),
           publicFlashDealsService.getFlashDealsByOwnerId(resolvedOwner, 0, 10),
           client.get<FeaturedDealRow[]>(`/featured-deals?${ownerIdParam}&limit=10&skip=0`),
           client.get<ClearanceSaleRow[]>(`/clearance-sales?${ownerIdParam}&limit=10&skip=0`),

@@ -1036,15 +1036,12 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
                           <React.Fragment key={sub.id}>
                             <button
                               onClick={() => handleCategorySelect(sub.id)}
-                              className={`shrink-0 px-2.5 py-1 rounded-full border text-[14px] font-black uppercase tracking-wide whitespace-nowrap cursor-pointer transition-all duration-200 focus:outline-none ${isActive
-                                ? 'bg-white text-stone-950 border-stone-950 ring-2 ring-stone-950/10 shadow-sm'
-                                : 'bg-white text-stone-500 border-stone-200 hover:border-stone-400 hover:text-stone-850'
+                              className={`shrink-0 flex items-center px-3 py-1 border transition-all duration-300 cursor-pointer text-sm font-medium rounded-[4px] focus:outline-none ${isActive
+                                ? 'bg-white text-stone-950 border-stone-850 shadow-sm font-semibold'
+                                : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400 hover:text-stone-900 shadow-2xs'
                                 }`}
                             >
-                              {sub.name}
-                              <span className={`ml-1 text-[8px] font-bold px-1 py-0.5 rounded-full ${isActive ? 'bg-stone-950 text-white' : 'bg-stone-100 text-stone-400'}`}>
-                                {subCount}
-                              </span>
+                              {sub.name} ({subCount})
                             </button>
 
                             {/* Show sub-sub categories inline if this sub is selected */}
@@ -1062,15 +1059,12 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
                                     <button
                                       key={subSub.id}
                                       onClick={() => handleCategorySelect(subSub.id)}
-                                      className={`shrink-0 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wide whitespace-nowrap cursor-pointer transition-all duration-200 focus:outline-none ${isSubSubActive
-                                        ? 'bg-white text-[#E61E25] border-[#E61E25] ring-2 ring-[#E61E25]/10 shadow-sm'
-                                        : 'bg-stone-50 text-stone-500 border-stone-200 hover:border-stone-400 hover:text-stone-700'
+                                      className={`shrink-0 flex items-center px-2.5 py-0.5 border transition-all duration-300 cursor-pointer text-xs font-medium rounded-[4px] focus:outline-none ${isSubSubActive
+                                        ? 'bg-white text-[#E61E25] border-[#E61E25] shadow-sm font-semibold'
+                                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-[#E61E25]/50 hover:text-[#E61E25]'
                                         }`}
                                     >
-                                      {subSub.name}
-                                      <span className={`ml-1 text-[7px] px-1 py-0.5 rounded-full ${isSubSubActive ? 'bg-[#E61E25] text-white' : 'bg-stone-100/80 text-stone-400'}`}>
-                                        {subSubCount}
-                                      </span>
+                                      {subSub.name} ({subSubCount})
                                     </button>
                                   );
                                 })}
