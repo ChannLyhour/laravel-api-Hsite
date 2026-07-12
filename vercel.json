@@ -58,7 +58,7 @@
     "DB_PORT": "4000",
     "DB_DATABASE": "hsite_system_api",
     "DB_USERNAME": "EqyMtPi63u9wFEb.root",
-    "DB_PASSWORD": "vDz5l9R1W4EZk4WB",
+    "DB_PASSWORD": "zWWeicsHRhaewUY0",
     "SESSION_DRIVER": "cookie",
     "CACHE_STORE": "database",
     "QUEUE_CONNECTION": "sync",

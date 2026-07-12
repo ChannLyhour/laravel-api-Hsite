@@ -58,10 +58,16 @@ export const FASHION_ROUTES = {
   /**
    * Generates the product detail page URL.
    */
-  getProduct: (productId: number | string, ownerUserId: number | string | undefined, storeSlug: string): string => {
+  getProduct: (skuOrId: number | string, ownerUserId: number | string | undefined, storeSlug: string): string => {
+    const isId = typeof skuOrId === 'number' || /^\d+$/.test(String(skuOrId));
+    if (isId) {
+      return storeSlug 
+        ? `/${storeSlug}/product?id=${skuOrId}`
+        : `/product?id=${skuOrId}&owner=${ownerUserId || ''}`;
+    }
     return storeSlug 
-      ? `/${storeSlug}/product?id=${productId}`
-      : `/product?id=${productId}&owner=${ownerUserId || ''}`;
+      ? `/${storeSlug}/${skuOrId}`
+      : `/${skuOrId}`;
   },
 
   /**

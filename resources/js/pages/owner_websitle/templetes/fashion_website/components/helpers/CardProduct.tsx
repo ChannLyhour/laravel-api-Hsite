@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiHeart, FiShoppingBag } from 'react-icons/fi';
 import { toast } from '../../utils/toast';
+import { FASHION_ROUTES } from '../../routes';
 import { resolveImageUrl, getHoverImage } from '../../utils/imageUtils';
 import { resolveColorHex } from '../../utils/priceUtils';
 import type { StoreRow } from '@/api/owner/stores';
@@ -36,6 +37,10 @@ export const CardProduct: React.FC<CardProductProps> = (props) => {
 
 const CardProductInner: React.FC<CardProductProps> = ({
     item,
+    ownerUserId,
+    stores,
+    storeName,
+    onNavigate,
     addToCart,
     isFavorited,
     onToggleFavorite,
@@ -248,7 +253,15 @@ const CardProductInner: React.FC<CardProductProps> = ({
     );
 
     const handleCardClick = () => {
-        window.dispatchEvent(new CustomEvent('open_product_popup', { detail: { productId: String(item.id) } }));
+        const storeSlug = (stores?.store_name || storeName || '').replace(/\s+/g, '_');
+        const skuOrId = item.sku || item.id;
+        const routeUrl = FASHION_ROUTES.getProduct(skuOrId, ownerUserId, storeSlug);
+
+        if (onNavigate) {
+            onNavigate(routeUrl);
+        } else {
+            window.dispatchEvent(new CustomEvent('open_product_popup', { detail: { productId: String(item.id) } }));
+        }
     };
 
     return (

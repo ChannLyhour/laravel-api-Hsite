@@ -43,7 +43,7 @@ import { ProductBagdeGrid } from './helpers/ProductBagdeGrid';
 import { SocialMediaGrid } from './SocialMediaGrid';
 import { FASHION_ROUTES } from '../routes';
 import { TextSp } from './helpers/TextSp';
-import { LineLoading } from './helpers/SkeletonSt';
+import { LineLoading, SkeletonProductDetail } from './helpers/SkeletonSt';
 import { ImageDetailProduct } from './image-detail/image_detail_product';
 
 export const DetailPage: React.FC<DetailPageProps> = ({
@@ -63,6 +63,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
   onNavigate,
   items = [],
   categories = [],
+  isLoading: isLoadingProp,
 }) => {
   // Local product state to handle refreshes
   const [product, setProduct] = useState<Root2>(initialProduct);
@@ -109,9 +110,9 @@ export const DetailPage: React.FC<DetailPageProps> = ({
     setProduct(initialProduct);
   }, [initialProduct]);
 
-  // useEffect(() => {
-  //   window.scrollTo({ top: 0, behavior: 'smooth' });
-  // }, [product.id]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [product.id]);
 
   useEffect(() => {
     const bc = new BroadcastChannel('data_updates');
@@ -1155,6 +1156,10 @@ export const DetailPage: React.FC<DetailPageProps> = ({
   );
 
   const productPriceTotal = price * detailQuantity;
+
+  if (isLoadingProp || !product) {
+    return <SkeletonProductDetail />;
+  }
 
   return (
     <>

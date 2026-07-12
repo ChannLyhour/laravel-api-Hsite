@@ -430,6 +430,14 @@ class ProductController extends Controller
         return response()->json($product);
     }
 
+    public function showBySku($sku)
+    {
+        $product = Product::with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons'])
+            ->where('sku', $sku)
+            ->firstOrFail();
+        return response()->json($product);
+    }
+
     public function update(Request $request, $id)
     {
         if (! in_array($request->user()->role_id, [1, 2, 30003])) {

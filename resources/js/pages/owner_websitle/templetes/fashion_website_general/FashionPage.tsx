@@ -443,31 +443,36 @@ export const FashionPage: React.FC<FashionPageProps> = ({
     return () => bc.close();
   }, [urlProductId]);
 
+  const isProductSkuRoute = currentPath !== '/' && !['/shop', '/checkout', '/profile', '/wishlist', '/categories', '/product', '/menu'].includes(currentPath);
+  const sku = isProductSkuRoute ? currentPath.substring(1) : null;
+
   useEffect(() => {
-    if (currentPath !== '/product' || !urlProductId) {
+    if ((currentPath !== '/product' && !sku) || (currentPath === '/product' && !urlProductId)) {
       setDirectProduct(null);
       return;
     }
 
-    // Check if we already have it in displayItems (which is also refreshed by its own hook)
-    const exists = displayItems.find(item => String(item.id) === urlProductId);
+    // Check if we already have it in displayItems
+    const exists = displayItems.find(item => {
+      if (sku) return String(item.sku).toLowerCase() === sku.toLowerCase();
+      return String(item.id) === urlProductId;
+    });
     if (exists) {
       setDirectProduct(exists as any);
-      // We don't return here if we want to ensure latest from API, 
-      // but displayItems is already being refreshed by useFashionItems hook.
-      // However, to be safe and ensure the specific product detail is fresh:
     }
 
     // Otherwise, fetch it directly
     const fetchDirect = async () => {
       try {
         setDirectLoading(true);
-        const res = await client.get<any>(`/products/${urlProductId}`);
+        const endpoint = sku ? `/products/sku/${sku}` : `/products/${urlProductId}`;
+        const res = await client.get<any>(endpoint);
         if (res) {
           const mapped = mapToUIItem(res) as any;
           setDirectProduct(mapped);
           if (typeof window !== 'undefined') {
-            sessionStorage.setItem(`product_${urlProductId}`, JSON.stringify(mapped));
+            const key = sku ? `product_sku_${sku}` : `product_${urlProductId}`;
+            sessionStorage.setItem(key, JSON.stringify(mapped));
           }
         }
       } catch (err) {
@@ -477,9 +482,12 @@ export const FashionPage: React.FC<FashionPageProps> = ({
       }
     };
     fetchDirect();
-  }, [urlProductId, currentPath, items]);
+  }, [urlProductId, sku, currentPath, items]);
 
-  const activeProduct = directProduct || displayItems.find(item => String(item.id) === urlProductId);
+  const activeProduct = directProduct || displayItems.find(item => {
+    if (sku) return String(item.sku).toLowerCase() === sku.toLowerCase();
+    return String(item.id) === urlProductId;
+  });
 
   return (
     <div className="min-h-screen bg-white text-[#1C1C1C] font-sans antialiased flex flex-col min-h-screen relative">
@@ -508,11 +516,12 @@ export const FashionPage: React.FC<FashionPageProps> = ({
         onChangeLanguage={onChangeLanguage}
       />
 
-      {currentPath === '/product' && !isPopupOpen ? (
+      {(currentPath === '/product' || isProductSkuRoute) && !isPopupOpen ? (
         <main className="flex-grow animate-fade-in">
           {activeProduct ? (
             <DetailPage
               product={activeProduct}
+              isLoading={directLoading}
               addToCart={addToCart}
               favorites={favorites}
               toggleFavorite={toggleFavorite}

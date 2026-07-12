@@ -139,6 +139,7 @@ export interface DetailPageProps {
   applyCoupon?: (code: string) => Promise<void>;
   removeCoupon?: () => void;
   coupons?: any[];
+  isLoading?: boolean;
 }
 
 export interface ListProdoctProps {

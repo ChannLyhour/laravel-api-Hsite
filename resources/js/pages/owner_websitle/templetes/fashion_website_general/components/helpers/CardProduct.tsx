@@ -253,9 +253,11 @@ const CardProductInner: React.FC<CardProductProps> = ({
     );
 
     const handleCardClick = () => {
+        const storeSlug = (stores?.store_name || storeName || '').replace(/\s+/g, '_');
+        const skuOrId = item.sku || item.id;
+        const routeUrl = FASHION_ROUTES.getProduct(skuOrId, ownerUserId, storeSlug);
+
         if (onNavigate) {
-            const storeSlug = (stores?.store_name || storeName || '').replace(/\s+/g, '_');
-            const routeUrl = FASHION_ROUTES.getProduct(item.id, ownerUserId, storeSlug);
             onNavigate(routeUrl);
         } else {
             window.dispatchEvent(new CustomEvent('open_product_popup', { detail: { productId: String(item.id) } }));

@@ -109,6 +109,7 @@ Route::middleware(['identify-store'])->group(function () {
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/top-selling', [ProductController::class, 'topSelling']);
     Route::get('/products/{id}', [ProductController::class, 'show'])->whereNumber('id');
+    Route::get('/products/sku/{sku}', [ProductController::class, 'showBySku']);
     Route::get('/products/{id}/ratings', [ProductRatingController::class, 'index'])->whereNumber('id');
     Route::get('/attributes', [ProductAttributeController::class, 'index']);
 

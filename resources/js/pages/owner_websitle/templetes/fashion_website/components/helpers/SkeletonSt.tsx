@@ -127,3 +127,79 @@ export const SkeletonSocialMediaGrid: React.FC = () => {
           </div>
      );
 };
+
+export const SkeletonProductDetail: React.FC = () => {
+     return (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-pulse">
+               {/* Breadcrumb Skeleton */}
+               <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-1/4 mb-8" />
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                    {/* Left: Product Images Skeleton */}
+                    <div className="flex flex-col space-y-4">
+                         {/* Main Image */}
+                         <div className="aspect-[4/5] w-full bg-stone-200 dark:bg-stone-800 rounded-lg" />
+                         {/* Thumbnails */}
+                         <div className="flex space-x-2">
+                              <div className="w-20 h-24 bg-stone-200 dark:bg-stone-800 rounded" />
+                              <div className="w-20 h-24 bg-stone-200 dark:bg-stone-800 rounded" />
+                              <div className="w-20 h-24 bg-stone-200 dark:bg-stone-800 rounded" />
+                              <div className="w-20 h-24 bg-stone-200 dark:bg-stone-800 rounded" />
+                         </div>
+                    </div>
+
+                    {/* Right: Product Info Skeleton */}
+                    <div className="space-y-6">
+                         {/* Product Name */}
+                         <div className="space-y-2">
+                              <div className="h-8 bg-stone-200 dark:bg-stone-800 rounded w-3/4" />
+                              <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-1/3" />
+                         </div>
+
+                         {/* Price Block */}
+                         <div className="flex items-center space-x-4">
+                              <div className="h-7 bg-stone-200 dark:bg-stone-800 rounded w-1/4" />
+                              <div className="h-5 bg-stone-200 dark:bg-stone-800 rounded w-1/6" />
+                              <div className="h-6 bg-stone-200 dark:bg-stone-800 rounded w-1/6" />
+                         </div>
+
+                         <hr className="border-stone-200 dark:border-stone-800" />
+
+                         {/* Description */}
+                         <div className="space-y-2">
+                              <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-full" />
+                              <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-full" />
+                              <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-2/3" />
+                         </div>
+
+                         {/* Colors Selector */}
+                         <div className="space-y-2.5">
+                              <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-1/6" />
+                              <div className="flex space-x-2">
+                                   <div className="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-800" />
+                                   <div className="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-800" />
+                                   <div className="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-800" />
+                              </div>
+                         </div>
+
+                         {/* Sizes Selector */}
+                         <div className="space-y-2.5">
+                              <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-1/6" />
+                              <div className="flex space-x-2">
+                                   <div className="w-12 h-10 bg-stone-200 dark:bg-stone-800 rounded" />
+                                   <div className="w-12 h-10 bg-stone-200 dark:bg-stone-800 rounded" />
+                                   <div className="w-12 h-10 bg-stone-200 dark:bg-stone-800 rounded" />
+                              </div>
+                         </div>
+
+                         {/* Add to Cart Actions */}
+                         <div className="flex space-x-4 pt-4">
+                              <div className="w-24 h-12 bg-stone-200 dark:bg-stone-800 rounded" />
+                              <div className="flex-grow h-12 bg-stone-200 dark:bg-stone-800 rounded" />
+                              <div className="w-12 h-12 bg-stone-200 dark:bg-stone-800 rounded-full" />
+                         </div>
+                    </div>
+               </div>
+          </div>
+     );
+};
