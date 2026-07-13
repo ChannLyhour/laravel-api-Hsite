@@ -15,13 +15,23 @@ class BannerController extends Controller
     public function index(Request $request)
     {
         $createdBy = $request->query('created_by') ?? $request->query('owner_id');
-        $query = Banner::where('is_active', true);
 
-        if ($createdBy !== null) {
-            $query->where('created_by', $createdBy);
-        }
+        $version = \Illuminate\Support\Facades\Cache::remember("banners_version_owner_{$createdBy}", 3600, function() {
+            return time();
+        });
+        $cacheKey = "banners_owner_{$createdBy}_v{$version}";
 
-        return response()->json($query->orderBy('id', 'desc')->get());
+        $banners = \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($createdBy) {
+            $query = Banner::where('is_active', true);
+
+            if ($createdBy !== null) {
+                $query->where('created_by', $createdBy);
+            }
+
+            return $query->orderBy('id', 'desc')->get();
+        });
+
+        return response()->json($banners);
     }
 
     /**
@@ -98,6 +108,7 @@ class BannerController extends Controller
             'created_by' => $request->created_by ?? $user->id,
         ]);
 
+        \Illuminate\Support\Facades\Cache::forget("banners_version_owner_" . $banner->created_by);
         return response()->json($banner, 201);
     }
 
@@ -156,6 +167,7 @@ class BannerController extends Controller
 
         $banner->update($updateData);
 
+        \Illuminate\Support\Facades\Cache::forget("banners_version_owner_" . $banner->created_by);
         return response()->json($banner);
     }
 
@@ -179,6 +191,7 @@ class BannerController extends Controller
             'is_active' => ! $banner->is_active
         ]);
 
+        \Illuminate\Support\Facades\Cache::forget("banners_version_owner_" . $banner->created_by);
         return response()->json($banner);
     }
 
@@ -205,6 +218,7 @@ class BannerController extends Controller
 
         $banner->delete();
 
+        \Illuminate\Support\Facades\Cache::forget("banners_version_owner_" . $banner->created_by);
         return response()->json(['detail' => 'Banner deleted successfully.']);
     }
 }

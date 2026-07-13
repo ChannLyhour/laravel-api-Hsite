@@ -15,16 +15,24 @@ class BrandController extends Controller
         $limit = $request->query('limit', 100);
         $createdBy = $request->get('current_store_owner_id') ?? $request->query('created_by');
 
-        $query = Brand::where('status', true)->withCount('products');
-
-        if ($createdBy !== null) {
-            $query->where('created_by', $createdBy);
-        }
-
-        $brands = $query->skip($skip)->take($limit)->get()->map(function ($brand) {
-            $brand->total_product = $brand->products_count;
-            return $brand;
+        $version = \Illuminate\Support\Facades\Cache::remember("brands_version_owner_{$createdBy}", 3600, function() {
+            return time();
         });
+        $cacheKey = "brands_owner_{$createdBy}_v{$version}_skip_{$skip}_limit_{$limit}";
+
+        $brands = \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($createdBy, $skip, $limit) {
+            $query = Brand::where('status', true)->withCount('products');
+
+            if ($createdBy !== null) {
+                $query->where('created_by', $createdBy);
+            }
+
+            return $query->skip($skip)->take($limit)->get()->map(function ($brand) {
+                $brand->total_product = $brand->products_count;
+                return $brand;
+            });
+        });
+
         return response()->json($brands);
     }
 
@@ -104,6 +112,7 @@ class BrandController extends Controller
             'created_by' => $request->created_by ?? $request->user()->id,
         ]);
 
+        \Illuminate\Support\Facades\Cache::forget("brands_version_owner_" . $brand->created_by);
         return response()->json($brand, 201);
     }
 
@@ -150,6 +159,7 @@ class BrandController extends Controller
             'status' => $request->has('status') ? $request->status : $brand->status,
         ]);
 
+        \Illuminate\Support\Facades\Cache::forget("brands_version_owner_" . $brand->created_by);
         return response()->json($brand);
     }
 
@@ -187,6 +197,7 @@ class BrandController extends Controller
             UploadHelper::deleteImage($brand->logo);
         }
 
+        \Illuminate\Support\Facades\Cache::forget("brands_version_owner_" . $brand->created_by);
         $brand->delete();
 
         return response()->json(['detail' => 'Brand deleted successfully.']);

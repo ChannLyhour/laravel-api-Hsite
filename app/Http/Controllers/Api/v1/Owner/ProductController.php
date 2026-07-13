@@ -379,6 +379,7 @@ class ProductController extends Controller
             } 
             
             $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
+            \Illuminate\Support\Facades\Cache::forget("products_version_owner_" . $product->created_by);
             return response()->json($product, 201);
         });
     }
@@ -387,26 +388,36 @@ class ProductController extends Controller
     {
         $skip = $request->query('skip', 0);
         $limit = $request->query('limit', 100);
+        $categoryId = $request->query('category_id');
 
         $user = $request->user();
-        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
-
         $createdBy = $request->get('current_store_owner_id') ?? $request->query('created_by');
 
+        $ownerIdForCache = $createdBy;
         if ($user && $user->role_id != 1) {
-            $query->where('created_by', $user->id);
-        } else {
-            if ($createdBy !== null) {
-                $query->where('created_by', $createdBy);
+            $ownerIdForCache = $user->id;
+        }
+
+        $version = \Illuminate\Support\Facades\Cache::remember("products_version_owner_{$ownerIdForCache}", 3600, function() {
+            return time();
+        });
+        $cacheKey = "products_owner_{$ownerIdForCache}_v{$version}_skip_{$skip}_limit_{$limit}_cat_{$categoryId}";
+
+        $items = \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($user, $ownerIdForCache, $categoryId, $skip, $limit) {
+            $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
+            if ($user && $user->role_id != 1) {
+                $query->where('created_by', $user->id);
+            } else {
+                if ($ownerIdForCache !== null) {
+                    $query->where('created_by', $ownerIdForCache);
+                }
             }
-        }
+            if ($categoryId !== null) {
+                $query->where('category_id', $categoryId);
+            }
+            return $query->skip($skip)->take($limit)->get();
+        });
 
-        $categoryId = $request->query('category_id');
-        if ($categoryId !== null) {
-            $query->where('category_id', $categoryId);
-        }
-
-        $items = $query->skip($skip)->take($limit)->get();
         return response()->json($items);
     }
 
@@ -415,12 +426,19 @@ class ProductController extends Controller
         $limit = $request->query('limit', 3);
         $createdBy = $request->get('current_store_owner_id') ?? $request->query('created_by');
 
-        $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
-        if ($createdBy !== null) {
-            $query->where('created_by', $createdBy);
-        }
+        $version = \Illuminate\Support\Facades\Cache::remember("products_version_owner_{$createdBy}", 3600, function() {
+            return time();
+        });
+        $cacheKey = "products_topselling_owner_{$createdBy}_v{$version}_limit_{$limit}";
 
-        $items = $query->limit($limit)->get();
+        $items = \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($createdBy, $limit) {
+            $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
+            if ($createdBy !== null) {
+                $query->where('created_by', $createdBy);
+            }
+            return $query->limit($limit)->get();
+        });
+
         return response()->json($items);
     }
 
@@ -942,6 +960,7 @@ class ProductController extends Controller
             }
 
             $product->load(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
+            \Illuminate\Support\Facades\Cache::forget("products_version_owner_" . $product->created_by);
             return response()->json($product);
         });
     }
@@ -959,6 +978,7 @@ class ProductController extends Controller
             UploadHelper::deleteImage($img->getRawOriginal('image'));
         }
 
+        \Illuminate\Support\Facades\Cache::forget("products_version_owner_" . $product->created_by);
         $product->delete();
 
         return response()->json(['detail' => 'Product deleted successfully.']);

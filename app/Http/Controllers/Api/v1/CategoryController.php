@@ -47,6 +47,7 @@ class CategoryController extends Controller
         ]);
 
         $category->load('parent.parent');
+        \Illuminate\Support\Facades\Cache::forget("categories_version_owner_" . $category->created_by);
 
         return response()->json($category, 201);
     }
@@ -57,14 +58,22 @@ class CategoryController extends Controller
         $limit = $request->query('limit', 100);
         $createdBy = $request->get('current_store_owner_id') ?? $request->query('created_by');
 
-        // Public lists only active categories (status=true)
-        $query = Category::where('status', true)->with('parent.parent');
+        $version = \Illuminate\Support\Facades\Cache::remember("categories_version_owner_{$createdBy}", 3600, function() {
+            return time();
+        });
+        $cacheKey = "categories_owner_{$createdBy}_v{$version}_skip_{$skip}_limit_{$limit}";
 
-        if ($createdBy !== null) {
-            $query->where('created_by', $createdBy);
-        }
+        $categories = \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($createdBy, $skip, $limit) {
+            // Public lists only active categories (status=true)
+            $query = Category::where('status', true)->with('parent.parent');
 
-        $categories = $query->skip($skip)->take($limit)->get();
+            if ($createdBy !== null) {
+                $query->where('created_by', $createdBy);
+            }
+
+            return $query->skip($skip)->take($limit)->get();
+        });
+
         return response()->json($categories);
     }
 
@@ -137,6 +146,7 @@ class CategoryController extends Controller
         ]);
 
         $category->load('parent.parent');
+        \Illuminate\Support\Facades\Cache::forget("categories_version_owner_" . $category->created_by);
         return response()->json($category);
     }
 
@@ -152,6 +162,7 @@ class CategoryController extends Controller
             UploadHelper::deleteImage($category->image);
         }
 
+        \Illuminate\Support\Facades\Cache::forget("categories_version_owner_" . $category->created_by);
         $category->delete();
 
         return response()->json(['detail' => 'Category deleted successfully.']);
