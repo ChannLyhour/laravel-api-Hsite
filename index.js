@@ -20,8 +20,8 @@ export default {
       });
     }
 
-    // Route API requests to the backend server
-    if (url.pathname.startsWith('/api/')) {
+    // Route API and Uploads requests to the backend server
+    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/uploads/')) {
       const backendUrl = env.BACKEND_URL || 'https://laravel-api-hsite.vercel.app';
       const targetUrl = new URL(url.pathname + url.search, backendUrl);
 
