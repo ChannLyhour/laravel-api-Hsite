@@ -146,84 +146,91 @@ class StoreController extends Controller
             $realOwnerId = !empty($decoded) ? $decoded[0] : null;
         }
 
+        if (!$realOwnerId) {
+            return response()->json(['detail' => 'Store not found.'], 404);
+        }
 
-        $storeSettings = Store::where('created_by', $realOwnerId)->get();
-        if ($storeSettings->isEmpty()) {
-            $user = \App\Models\User::find($realOwnerId);
-            $storeName = $user ? $user->name : "Store #{$realOwnerId}";
-            return response()->json([
+        $data = \Illuminate\Support\Facades\Cache::remember("stores_owner_{$realOwnerId}", 86400 * 30, function () use ($realOwnerId) {
+            $storeSettings = Store::where('created_by', $realOwnerId)->get();
+            if ($storeSettings->isEmpty()) {
+                $user = \App\Models\User::find($realOwnerId);
+                $storeName = $user ? $user->name : "Store #{$realOwnerId}";
+                return [
+                    'id' => intval($realOwnerId),
+                    'owner_id' => intval($realOwnerId),
+                    'created_by' => intval($realOwnerId),
+                    'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($realOwnerId)),
+                    'store_name' => $storeName,
+                    'store_email' => $user ? $user->email : '',
+                    'store_phone' => '',
+                    'store_address' => '',
+                    'store_latitude' => '',
+                    'store_longitude' => '',
+                    'location_store' => [
+                        'store_address' => '',
+                        'store_latitude' => '',
+                        'store_longitude' => '',
+                    ],
+                    'guest_checkout' => true,
+                    'payment_methods' => [],
+                ];
+            }
+            $dict = [
                 'id' => intval($realOwnerId),
                 'owner_id' => intval($realOwnerId),
                 'created_by' => intval($realOwnerId),
                 'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($realOwnerId)),
-                'store_name' => $storeName,
-                'store_email' => $user ? $user->email : '',
-                'store_phone' => '',
-                'store_address' => '',
-                'store_latitude' => '',
-                'store_longitude' => '',
-                'location_store' => [
-                    'store_address' => '',
-                    'store_latitude' => '',
-                    'store_longitude' => '',
-                ],
-                'guest_checkout' => true,
-                'payment_methods' => [],
-            ]);
-        }
-        $dict = [
-            'id' => intval($realOwnerId),
-            'owner_id' => intval($realOwnerId),
-            'created_by' => intval($realOwnerId),
-            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode(intval($realOwnerId)),
-        ];
-        foreach ($storeSettings as $item) {
-            $value = $item->value;
-            if (
-                in_array($item->key, [
-                    'payment_methods',
+            ];
+            foreach ($storeSettings as $item) {
+                $value = $item->value;
+                if (
+                    in_array($item->key, [
+                        'payment_methods',
+                        'brand_identity_operations',
+                        'financial_configurations',
+                        'store_operations_content',
+                        'checkout_form_visibility',
+                        'firebase_setup',
+                        'pusher_configuration',
+                        'marketing_tools_setup',
+                        'social_login_setup',
+                        'social_login_setup_oauth',
+                        'telegram_bot_notifications',
+                        'otp_email_configuration',
+                        'location_store'
+                    ])
+                ) {
+                    $value = json_decode($value, true) ?: [];
+                }
+                $dict[$item->key] = $value;
+                $dict[$this->toSnakeCase($item->key)] = $value;
+                if (in_array($item->key, [
                     'brand_identity_operations',
                     'financial_configurations',
                     'store_operations_content',
                     'checkout_form_visibility',
-                    'firebase_setup',
-                    'pusher_configuration',
-                    'marketing_tools_setup',
-                    'social_login_setup',
-                    'social_login_setup_oauth',
-                    'telegram_bot_notifications',
-                    'otp_email_configuration',
                     'location_store'
-                ])
-            ) {
-                $value = json_decode($value, true) ?: [];
-            }
-            $dict[$item->key] = $value;
-            $dict[$this->toSnakeCase($item->key)] = $value;
-            if (in_array($item->key, [
-                'brand_identity_operations',
-                'financial_configurations',
-                'store_operations_content',
-                'checkout_form_visibility',
-                'location_store'
-            ]) && is_array($value)) {
-                foreach ($value as $subKey => $subVal) {
-                    $dict[$subKey] = $subVal;
-                    $dict[$this->toSnakeCase($subKey)] = $subVal;
+                ]) && is_array($value)) {
+                    foreach ($value as $subKey => $subVal) {
+                        $dict[$subKey] = $subVal;
+                        $dict[$this->toSnakeCase($subKey)] = $subVal;
+                    }
                 }
             }
-        }
 
-        if (!isset($dict['location_store']) || empty($dict['location_store'])) {
-            $loc = [
-                'store_address' => $dict['store_address'] ?? '',
-                'store_latitude' => $dict['store_latitude'] ?? '',
-                'store_longitude' => $dict['store_longitude'] ?? '',
-            ];
-            $dict['location_store'] = $loc;
-        }
+            if (!isset($dict['location_store']) || empty($dict['location_store'])) {
+                $loc = [
+                    'store_address' => $dict['store_address'] ?? '',
+                    'store_latitude' => $dict['store_latitude'] ?? '',
+                    'store_longitude' => $dict['store_longitude'] ?? '',
+                ];
+                $dict['location_store'] = $loc;
+            }
 
-        return response()->json($dict);
+            return $dict;
+        });
+
+        return response()->json($data);
     }
 
     public function showMe (Request $request)
@@ -233,63 +240,71 @@ class StoreController extends Controller
             return response()->json(['detail' => 'Access denied. Store owner only.'], 403);
         }
 
-        $storeSettings = Store::where('created_by', $user->id)->get();
-        if ($storeSettings->isEmpty()) {
-            return response()->json(['detail' => 'You do not have a store profile configured yet.'], 404);
-        }
-        $dict = [
-            'id' => $user->id,
-            'owner_id' => $user->id,
-            'created_by' => $user->id,
-            'hashid' => \Vinkla\Hashids\Facades\Hashids::encode($user->id),
-        ];
-        foreach ($storeSettings as $item) {
-            $value = $item->value;
-            if (
-                in_array($item->key, [
-                    'payment_methods',
+        $data = \Illuminate\Support\Facades\Cache::remember("stores_me_{$user->id}", 86400 * 30, function () use ($user) {
+            $storeSettings = Store::where('created_by', $user->id)->get();
+            if ($storeSettings->isEmpty()) {
+                return null;
+            }
+            $dict = [
+                'id' => $user->id,
+                'owner_id' => $user->id,
+                'created_by' => $user->id,
+                'hashid' => \Vinkla\Hashids\Facades\Hashids::encode($user->id),
+            ];
+            foreach ($storeSettings as $item) {
+                $value = $item->value;
+                if (
+                    in_array($item->key, [
+                        'payment_methods',
+                        'brand_identity_operations',
+                        'financial_configurations',
+                        'store_operations_content',
+                        'checkout_form_visibility',
+                        'firebase_setup',
+                        'pusher_configuration',
+                        'marketing_tools_setup',
+                        'social_login_setup',
+                        'social_login_setup_oauth',
+                        'telegram_bot_notifications',
+                        'otp_email_configuration',
+                        'location_store'
+                    ])
+                ) {
+                    $value = json_decode($value, true) ?: [];
+                }
+                $dict[$item->key] = $value;
+                $dict[$this->toSnakeCase($item->key)] = $value;
+                if (in_array($item->key, [
                     'brand_identity_operations',
                     'financial_configurations',
                     'store_operations_content',
                     'checkout_form_visibility',
-                    'firebase_setup',
-                    'pusher_configuration',
-                    'marketing_tools_setup',
-                    'social_login_setup',
-                    'social_login_setup_oauth',
-                    'telegram_bot_notifications',
-                    'otp_email_configuration',
                     'location_store'
-                ])
-            ) {
-                $value = json_decode($value, true) ?: [];
-            }
-            $dict[$item->key] = $value;
-            $dict[$this->toSnakeCase($item->key)] = $value;
-            if (in_array($item->key, [
-                'brand_identity_operations',
-                'financial_configurations',
-                'store_operations_content',
-                'checkout_form_visibility',
-                'location_store'
-            ]) && is_array($value)) {
-                foreach ($value as $subKey => $subVal) {
-                    $dict[$subKey] = $subVal;
-                    $dict[$this->toSnakeCase($subKey)] = $subVal;
+                ]) && is_array($value)) {
+                    foreach ($value as $subKey => $subVal) {
+                        $dict[$subKey] = $subVal;
+                        $dict[$this->toSnakeCase($subKey)] = $subVal;
+                    }
                 }
             }
+
+            if (!isset($dict['location_store']) || empty($dict['location_store'])) {
+                $loc = [
+                    'store_address' => $dict['store_address'] ?? '',
+                    'store_latitude' => $dict['store_latitude'] ?? '',
+                    'store_longitude' => $dict['store_longitude'] ?? '',
+                ];
+                $dict['location_store'] = $loc;
+            }
+
+            return $dict;
+        });
+
+        if ($data === null) {
+            return response()->json(['detail' => 'You do not have a store profile configured yet.'], 404);
         }
 
-        if (!isset($dict['location_store']) || empty($dict['location_store'])) {
-            $loc = [
-                'store_address' => $dict['store_address'] ?? '',
-                'store_latitude' => $dict['store_latitude'] ?? '',
-                'store_longitude' => $dict['store_longitude'] ?? '',
-            ];
-            $dict['location_store'] = $loc;
-        }
-
-        return response()->json($dict);
+        return response()->json($data);
     }
 
     public function upsert (Request $request)
@@ -500,6 +515,8 @@ class StoreController extends Controller
 
         // Clear cached settings for owner
         \Illuminate\Support\Facades\Cache::forget("settings_owner_{$user->id}");
+        \Illuminate\Support\Facades\Cache::forget("stores_owner_{$user->id}");
+        \Illuminate\Support\Facades\Cache::forget("stores_me_{$user->id}");
 
         // Auto-register Telegram webhook if bot token is provided
         if ($request->has('telegram_bot_token') && $request->telegram_bot_token) {
@@ -654,6 +671,8 @@ class StoreController extends Controller
 
         // Clear cached settings for owner
         \Illuminate\Support\Facades\Cache::forget("settings_owner_{$ownerId}");
+        \Illuminate\Support\Facades\Cache::forget("stores_owner_{$ownerId}");
+        \Illuminate\Support\Facades\Cache::forget("stores_me_{$ownerId}");
 
         $storeSettings = Store::where('created_by', $ownerId)->get();
         $dict = [
@@ -874,6 +893,8 @@ class StoreController extends Controller
 
         // Clear cached settings for owner
         \Illuminate\Support\Facades\Cache::forget("settings_owner_{$ownerId}");
+        \Illuminate\Support\Facades\Cache::forget("stores_owner_{$ownerId}");
+        \Illuminate\Support\Facades\Cache::forget("stores_me_{$ownerId}");
 
         // Auto-register Telegram webhook if bot token is provided
         if ($request->has('telegram_bot_token') && $request->telegram_bot_token) {
