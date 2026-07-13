@@ -110,3 +110,20 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
     })->create();
+
+if (isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || env('VERCEL')) {
+    $app->useStoragePath('/tmp');
+    $dirs = [
+        '/tmp/framework/views',
+        '/tmp/framework/cache/data',
+        '/tmp/framework/sessions',
+        '/tmp/logs'
+    ];
+    foreach ($dirs as $dir) {
+        if (!file_exists($dir)) {
+            mkdir($dir, 0755, true);
+        }
+    }
+}
+
+return $app;
