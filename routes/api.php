@@ -88,6 +88,7 @@ Route::post('/register-owner', [AuthController::class, 'registerOwner']);
 Route::post('/telegram/webhook', [\App\Http\Controllers\Api\v1\TelegramWebhookController::class, 'handle']);
 
 Route::get('/store/resolve-domain', [StoreController::class, 'resolveDomain']);
+Route::get('/tidb-rest/products', [\App\Http\Controllers\Api\v1\TiDBRestController::class, 'getProducts']);
 
 Route::middleware(['identify-store'])->group(function () {
     // Users (Public)
