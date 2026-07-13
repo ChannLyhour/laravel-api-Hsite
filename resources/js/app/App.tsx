@@ -47,7 +47,9 @@ const getTenantDomain = (): string | null => {
     'yourplatform.com',
     'laravel-api-hsite.vercel.app',
     'vhsite-platform-ecommerce.brohour00044.workers.dev',
-    'www.vhsite-platform-ecommerce.brohour00044.workers.dev'
+    'www.vhsite-platform-ecommerce.brohour00044.workers.dev',
+    'vhsitekh.site',
+    'www.vhsitekh.site'
   ];
 
   // If the hostname matches one of these platform roots exactly, it's the main platform site
