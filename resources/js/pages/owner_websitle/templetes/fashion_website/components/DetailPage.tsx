@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FiMinus,
   FiPlus,
@@ -12,8 +12,9 @@ import {
   FiEye,
   FiArrowRight,
   FiX,
+  FiShare,
 } from 'react-icons/fi';
-import { toast } from '../utils/toast';
+import { LinkShareProduct } from './Graph/LinkShareProduct';
 import {
   FaFacebookF,
   FaTelegramPlane,
@@ -21,6 +22,7 @@ import {
   FaTiktok,
   FaYoutube
 } from 'react-icons/fa';
+import { toast } from '../utils/toast';
 import type { Root2 } from '@/api/owner/categories';
 import '../styles/animation.css';
 import type { GalleryItem, DetailPageProps } from '../types';
@@ -42,6 +44,7 @@ import { SocialMediaGrid } from './SocialMediaGrid';
 import { FASHION_ROUTES } from '../routes';
 import { TextSp } from './helpers/TextSp';
 import { LineLoading, SkeletonProductDetail } from './helpers/SkeletonSt';
+import { ImageDetailProduct } from './image-detail/image_detail_product';
 
 export const DetailPage: React.FC<DetailPageProps> = ({
   product: initialProduct,
@@ -66,6 +69,31 @@ export const DetailPage: React.FC<DetailPageProps> = ({
   const [product, setProduct] = useState<Root2>(initialProduct);
   const [isLoading, setIsLoading] = useState(false);
   const ownerUserId = stores?.created_by || product?.created_by || '';
+
+  // Share Popover State
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
+
+  // Product Image Detail State
+  const [isImageDetailOpen, setIsImageDetailOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setIsShareOpen(false);
+      }
+    };
+    if (isShareOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isShareOpen]);
+
+  const shareUrl = useMemo(() => {
+    return typeof window !== 'undefined' ? window.location.href : '';
+  }, [product.id]);
 
   const relatedProducts = useMemo(() => {
     if (!items || items.length === 0) return [];
@@ -174,12 +202,19 @@ export const DetailPage: React.FC<DetailPageProps> = ({
     fetchCoupons();
   }, [stores, product, user, propCoupons]);
 
-  const handleVoucherClick = (code: string) => {
-    if (appliedCoupon?.code === code) {
-      removeCoupon?.();
-    } else {
-      applyCoupon?.(code);
-      handleCopyCode(code);
+  const handleVoucherClick = async (code: string) => {
+    setIsLoading(true);
+    try {
+      if (appliedCoupon?.code === code) {
+        await removeCoupon?.();
+      } else {
+        await applyCoupon?.(code);
+        handleCopyCode(code);
+      }
+    } catch (err) {
+      console.warn('Failed to handle coupon action', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -522,6 +557,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           : 'relative bg-white dark:bg-stone-950 w-full max-w-4xl rounded-2xl md:rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] border border-stone-100 dark:border-stone-800/80 overflow-hidden flex flex-col md:flex-row max-h-[90vh] md:max-h-[90vh] animate-slide-up z-10'
       }
     >
+      <LineLoading isLoading={isLoading} />
       {/* Close Button (Modal Only) */}
       {!isFullPage && onClose && (
         <button
@@ -536,7 +572,10 @@ export const DetailPage: React.FC<DetailPageProps> = ({
       {/* Left Column: Gallery */}
       <div className="w-full md:w-fit md:shrink-0 p-4 sm:p-5 md:p-6 flex flex-col gap-4 border-b md:border-b-0 md:border-r border-stone-100 dark:border-stone-800/60 overflow-hidden">
         {/* Main Large Image Container */}
-        <div className="relative w-full md:w-[420px] aspect-[4/3] sm:aspect-square md:aspect-auto h-auto md:h-[620px] max-h-[35vh] sm:max-h-[50vh] md:max-h-[70vh] max-w-full bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 rounded-xl overflow-hidden flex items-center justify-center group/main-image cursor-pointer shadow-xs transition-shadow duration-300 hover:shadow-sm">
+        <div 
+          onClick={() => setIsImageDetailOpen(true)}
+          className="relative w-full md:w-[420px] aspect-[4/3] sm:aspect-square md:aspect-auto h-auto md:h-[620px] max-h-[35vh] sm:max-h-[50vh] md:max-h-[70vh] max-w-full bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 rounded-xl overflow-hidden flex items-center justify-center group/main-image cursor-pointer shadow-xs transition-shadow duration-300 hover:shadow-sm"
+        >
           {/* Premium Price-Tag Badge */}
           {discount && (
             <div className="absolute top-4 right-4 z-20 pointer-events-none select-none">
@@ -590,9 +629,16 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2">
             <button
               type="button"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                toggleFavorite(String(product.id), product.name);
+                setIsLoading(true);
+                try {
+                  await toggleFavorite(String(product.id), product.name);
+                } catch (err) {
+                  console.warn('Failed to toggle favorite', err);
+                } finally {
+                  setIsLoading(false);
+                }
               }}
               className="w-10 h-10 rounded-full border border-stone-200/60 dark:border-stone-800 bg-white/80 dark:bg-stone-900/80 backdrop-blur-md hover:bg-white dark:hover:bg-stone-900 text-stone-800 dark:text-stone-200 shadow-sm hover:shadow-md transition-all flex items-center justify-center hover:scale-105 active:scale-95 cursor-pointer focus:outline-none"
             >
@@ -684,8 +730,8 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           </div>
 
           {/* Title & Voucher Trigger */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div className="flex items-start justify-between gap-4 relative">
+            <div className="flex-1">
               <TextSp
                 as="h2"
                 size={{ mobile: 'xl', tablet: '2xl' }}
@@ -698,6 +744,27 @@ export const DetailPage: React.FC<DetailPageProps> = ({
               >
                 {product.name}
               </TextSp>
+            </div>
+
+            {/* Product Share Button & Popover */}
+            <div ref={shareRef} className="relative shrink-0 select-none">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsShareOpen(prev => !prev);
+                }}
+                className="w-10 h-10 rounded-md bg-stone-100 hover:bg-stone-200 dark:bg-stone-900 dark:hover:bg-stone-850 flex items-center justify-center text-stone-700 dark:text-stone-300 transition-all cursor-pointer border-none focus:outline-none"
+                aria-label="Share product"
+              >
+                <FiShare className="w-5 h-5" />
+              </button>
+
+              <LinkShareProduct
+                isOpen={isShareOpen}
+                shareUrl={shareUrl}
+                productName={product.name}
+              />
             </div>
           </div>
 
@@ -971,7 +1038,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           <div className="flex gap-3">
             <button
               disabled={isSelectionComplete ? isOutOfStock : false}
-              onClick={(e) => {
+              onClick={async (e) => {
                 if (!isSelectionComplete) {
                   if (hasColors && !selectedColor) {
                     toast.error('Please select a color.');
@@ -981,34 +1048,41 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                   return;
                 }
 
-                // Construct final color including addons
-                const addonParts: string[] = [];
-                if (product.addons && product.addons.length > 0) {
-                  Object.entries(selectedAddons).forEach(([addonId, checked]) => {
-                    if (checked) {
-                      const add = product.addons?.find((a: any) => String(a.id) === addonId);
-                      if (add) {
-                        const price = parseFloat(String(add.additional_price)) || 0;
-                        const disc = parseFloat(String(add.discount || 0)) || 0;
-                        const eff = add.discount_type === 'percent'
-                          ? Math.max(0, price - (price * disc / 100))
-                          : Math.max(0, price - disc);
-                        addonParts.push(`${add.addon_name} (+$${eff.toFixed(2)})`);
+                setIsLoading(true);
+                try {
+                  // Construct final color including addons
+                  const addonParts: string[] = [];
+                  if (product.addons && product.addons.length > 0) {
+                    Object.entries(selectedAddons).forEach(([addonId, checked]) => {
+                      if (checked) {
+                        const add = product.addons?.find((a: any) => String(a.id) === addonId);
+                        if (add) {
+                          const price = parseFloat(String(add.additional_price)) || 0;
+                          const disc = parseFloat(String(add.discount || 0)) || 0;
+                          const eff = add.discount_type === 'percent'
+                            ? Math.max(0, price - (price * disc / 100))
+                            : Math.max(0, price - disc);
+                          addonParts.push(`${add.addon_name} (+$${eff.toFixed(2)})`);
+                        }
                       }
-                    }
-                  });
+                    });
+                  }
+                  const addonsString = addonParts.length > 0 ? `Addons: ${addonParts.join(', ')}` : '';
+                  const finalColor = selectedColor && addonsString
+                    ? `${selectedColor} / ${addonsString}`
+                    : (addonsString || selectedColor);
+
+                  await addToCart(product, detailQuantity, selectedSize, finalColor, addonsPrice);
+
+                  // Trigger flying cart animation
+                  const startX = e.clientX || e.currentTarget.getBoundingClientRect().left + 20;
+                  const startY = e.clientY || e.currentTarget.getBoundingClientRect().top + 20;
+                  window.dispatchEvent(new CustomEvent('animate_to_cart', { detail: { startX, startY } }));
+                } catch (err) {
+                  console.warn('Failed to add to cart', err);
+                } finally {
+                  setIsLoading(false);
                 }
-                const addonsString = addonParts.length > 0 ? `Addons: ${addonParts.join(', ')}` : '';
-                const finalColor = selectedColor && addonsString
-                  ? `${selectedColor} / ${addonsString}`
-                  : (addonsString || selectedColor);
-
-                addToCart(product, detailQuantity, selectedSize, finalColor, addonsPrice);
-
-                // Trigger flying cart animation
-                const startX = e.clientX || e.currentTarget.getBoundingClientRect().left + 20;
-                const startY = e.clientY || e.currentTarget.getBoundingClientRect().top + 20;
-                window.dispatchEvent(new CustomEvent('animate_to_cart', { detail: { startX, startY } }));
               }}
               className={`flex-1 py-3.5 sm:py-4 font-bold text-xs uppercase tracking-wider sm:tracking-widest rounded-xl transition-all duration-200 border-none shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98] ${(isSelectionComplete ? isOutOfStock : false)
                 ? 'bg-stone-100 dark:bg-stone-900 text-stone-400 dark:text-stone-600 cursor-not-allowed'
@@ -1089,7 +1163,6 @@ export const DetailPage: React.FC<DetailPageProps> = ({
 
   return (
     <>
-      <LineLoading isLoading={isLoading} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 animate-fade-in text-left">
         <button
           onClick={() => {
@@ -1159,8 +1232,13 @@ export const DetailPage: React.FC<DetailPageProps> = ({
         onCopyCode={handleCopyCode}
         isLoggedIn={!!user}
       />
+
+      <ImageDetailProduct
+        isOpen={isImageDetailOpen}
+        onClose={() => setIsImageDetailOpen(false)}
+        images={gallery.map((g: any) => g.url)}
+        productName={product.name}
+      />
     </>
   );
 }
-
-
