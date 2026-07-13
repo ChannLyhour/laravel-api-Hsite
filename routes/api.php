@@ -49,6 +49,14 @@ require __DIR__ . '/../routes/channels.php';
 |--------------------------------------------------------------------------
 */
 
+Route::get('/debug-route', function () {
+    return response()->json([
+        'source' => 'api.php',
+        'uri' => request()->getRequestUri(),
+        'path' => request()->path()
+    ]);
+});
+
 // General & Diagnostics
 Route::get('/', function () {
     return response()->json([

@@ -2,6 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 
+Route::get('/debug-route', function () {
+    return response()->json([
+        'uri' => request()->getRequestUri(),
+        'path' => request()->path(),
+        'method' => request()->method()
+    ]);
+});
+
 // Static Asset Router & Premium Unsplash Fallback
 Route::get('/static/{path}', function ($path) {
     $fullPath = public_path('static/' . $path);
