@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'tidb' => [
+        'public_key' => env('TIDB_REST_PUBLIC_KEY'),
+        'private_key' => env('TIDB_REST_PRIVATE_KEY'),
+        'app_id' => env('TIDB_REST_APP_ID'),
+        'base_url' => env('TIDB_REST_BASE_URL', 'https://ap-southeast-1.data.tidbcloud.com'),
+    ],
+
 ];
