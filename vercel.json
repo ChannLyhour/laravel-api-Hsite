@@ -1,16 +1,15 @@
 {
   "version": 2,
-  "framework": null,
+  "outputDirectory": "public",
+  "regions": [
+    "sin1"
+  ],
   "functions": {
-    "api/*.php": {
-      "runtime": "vercel-php@0.9.0"
+    "api/index.php": {
+      "runtime": "vercel-php@0.8.0"
     }
   },
   "routes": [
-    {
-      "src": "/(css|js|images|uploads)/(.*)",
-      "dest": "/public/$1/$2"
-    },
     {
       "src": "/(.*)",
       "dest": "/api/index.php"
@@ -18,19 +17,34 @@
   ],
   "build": {
     "env": {
-      "VERCEL_SUPPORT_LARGE_FUNCTIONS": "1"
+      "APP_ENV": "production",
+      "APP_DEBUG": "false"
     }
   },
   "env": {
-    "VERCEL_SUPPORT_LARGE_FUNCTIONS": "1",
+    "APP_NAME": "FoodOrderingAPI",
+    "APP_ENV": "production",
+    "APP_DEBUG": "false",
     "APP_KEY": "base64:431VmB8uVpGqkp8yjKIJpEjtUr8NjI5enqdbXYRWpIk=",
+    "APP_URL": "https://laravel-api-hsite.vercel.app",
+    "LOG_CHANNEL": "stderr",
+    "LOG_LEVEL": "error",
     "DB_CONNECTION": "mysql",
     "DB_HOST": "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
     "DB_PORT": "4000",
     "DB_DATABASE": "hsite_system_api",
     "DB_USERNAME": "EqyMtPi63u9wFEb.root",
-    "DB_PASSWORD": "zWWeicsHRhaewUY0",
-    "APP_ENV": "production",
-    "APP_DEBUG": "false"
+    "DB_PASSWORD": "vDz5l9R1W4EZk4WB",
+    "SESSION_DRIVER": "cookie",
+    "CACHE_STORE": "array",
+    "QUEUE_CONNECTION": "sync",
+    "BROADCAST_CONNECTION": "log",
+    "FILESYSTEM_DISK": "local",
+    "APP_CONFIG_CACHE": "/tmp/config.php",
+    "APP_EVENTS_CACHE": "/tmp/events.php",
+    "APP_PACKAGES_CACHE": "/tmp/packages.php",
+    "APP_ROUTES_CACHE": "/tmp/routes.php",
+    "APP_SERVICES_CACHE": "/tmp/services.php",
+    "VIEW_COMPILED_PATH": "/tmp"
   }
 }
