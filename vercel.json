@@ -3,17 +3,7 @@
   "framework": null,
   "functions": {
     "api/index.php": {
-      "runtime": "vercel-php@0.9.0",
-      "includeFiles": [
-        "app/**",
-        "bootstrap/**",
-        "config/**",
-        "database/**",
-        "public/**",
-        "routes/**",
-        "vendor/**",
-        "ca.pem.tidb"
-      ]
+      "runtime": "vercel-php@0.9.0"
     }
   },
   "routes": [
