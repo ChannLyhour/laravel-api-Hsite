@@ -217,7 +217,7 @@ export const CustomerDisplayPage: React.FC = () => {
                                         <div key={item.id + idx} className="flex gap-4 py-3 first:pt-0 last:pb-0">
                                             <div className="w-14 h-16 bg-slate-50 border border-slate-100 rounded-md overflow-hidden shrink-0">
                                                 <img
-                                                    src={item.selectedImage || item.image || 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=400'}
+                                                    src={item.selectedImage || item.image || ''}
                                                     alt={item.name}
                                                     className="w-full h-full object-cover"
                                                 />

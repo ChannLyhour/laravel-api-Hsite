@@ -645,12 +645,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const displayCartItems = cartItems && cartItems.length > 0
         ? cartItems.map(item => ({
             id: item.id || item.item?.id,
-            name: item.name || item.item?.name || 'Item Name',
-            code: item.code || item.item?.sku || item.item?.code || '22226022357',
-            variant: item.variant || [item.selectedSize, item.selectedColor].filter(Boolean).join(' / ') || 'Light Green Wash / 28',
+            name: item.name || item.item?.name || '',
+            code: item.code || item.item?.sku || item.item?.code || '',
+            variant: item.variant || [item.selectedSize, item.selectedColor].filter(Boolean).join(' / ') || '',
             qty: item.qty || 1,
             price: parseFloat(item.price || item.item?.price || '0'),
-            image: item.selectedImage || resolveImageUrl(item.item?.display_image || item.item?.image) || 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=400'
+            image: item.selectedImage || resolveImageUrl(item.item?.display_image || item.item?.image) || ''
         }))
         : [];
 

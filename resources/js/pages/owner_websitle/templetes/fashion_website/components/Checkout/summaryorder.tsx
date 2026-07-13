@@ -62,11 +62,11 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
 
      // Render the inner content of the summary card (reused for desktop and mobile modal)
      const renderSummaryCardContent = (isModal: boolean = false) => (
-          <div className="px-6 py-5 border border-stone-150 bg-stone-50 rounded-sm space-y-4 shadow-2xs relative">
+          <div className="px-6 py-6 border border-stone-100 bg-stone-50 rounded-3xl space-y-4 shadow-[0_8px_30px_rgba(0,0,0,0.025)] relative">
                {isModal && (
                     <button
                          onClick={() => setIsMobileModalOpen(false)}
-                         className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full hover:bg-stone-155 text-stone-500 border-none bg-transparent cursor-pointer z-20"
+                         className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full hover:bg-stone-200 text-stone-500 border-none bg-transparent cursor-pointer z-20 transition-all duration-200"
                     >
                          <FiX className="w-4 h-4" />
                     </button>
@@ -74,7 +74,7 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
 
                {/* Claim code inputs inside summary card */}
                <div className="space-y-3 pb-4 border-b border-stone-200/60">
-                    <h2 className="text-xs font-black text-stone-900 uppercase tracking-widest">
+                    <h2 className="text-xs font-black text-stone-950 uppercase tracking-widest">
                          Claim code
                     </h2>
                     <div className="flex gap-2">
@@ -88,12 +88,12 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                                    }
                               }}
                               placeholder="Claim code"
-                              className="flex-1 px-3 py-2 border border-stone-200 rounded-[3px] text-xs font-bold text-stone-855 uppercase placeholder:text-stone-300 focus:outline-none focus:border-stone-955 bg-white"
+                              className="flex-1 px-4 py-2.5 border border-stone-200 rounded-xl text-xs font-bold text-stone-900 uppercase placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-950/10 focus:border-stone-950 bg-white transition-all"
                          />
                          <button
                               onClick={handleApplyCode}
                               disabled={!claimCode.trim()}
-                              className="px-4 py-2 bg-white border border-stone-200 hover:bg-stone-950 hover:text-white rounded-[3px] text-xs font-black uppercase tracking-wider text-stone-900 transition-all cursor-pointer disabled:bg-stone-50 disabled:text-stone-300 disabled:border-stone-150"
+                              className="px-5 py-2.5 bg-white border border-stone-200 hover:bg-stone-950 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider text-stone-900 transition-all cursor-pointer disabled:bg-stone-50 disabled:text-stone-300 disabled:border-stone-150"
                          >
                               Apply
                          </button>
@@ -105,21 +105,21 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                               if (isModal) setIsMobileModalOpen(false);
                               setIsVoucherDrawerOpen(true);
                          }}
-                         className="ProductDetailsDescription_apply_voucher_txt__2Iss6 relative flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-stone-100 rounded-[3px] text-[10px] font-black uppercase tracking-wider text-stone-700 hover:text-stone-955 transition-all border border-stone-200 cursor-pointer shrink-0 select-none focus:outline-none w-fit"
+                         className="ProductDetailsDescription_apply_voucher_txt__2Iss6 relative flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-stone-100 rounded-xl text-[10px] font-black uppercase tracking-wider text-stone-700 hover:text-stone-955 transition-all border border-stone-200 cursor-pointer shrink-0 select-none focus:outline-none w-fit"
                     >
                          <span>{appliedCoupon ? `Code: ${appliedCoupon.code}` : 'Free Voucher'}</span>
                          <svg className="w-3.5 h-3.5 text-stone-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
                               <line x1="13" y1="5" x2="13" y2="19" />
                          </svg>
-                         <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#E61E25] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white shadow-xs">
+                         <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-[#E61E25] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white shadow-xs">
                               {appliedCoupon ? '✓' : coupons.length}
                          </span>
                     </button>
                </div>
 
                <div className="space-y-2.5 pt-1">
-                    <div className="flex justify-between items-center text-xs font-semibold text-stone-600">
+                    <div className="flex justify-between items-center text-xs font-bold text-stone-500">
                          <span>Subtotal</span>
                          <span className="font-mono font-bold text-stone-900">${subtotal.toFixed(2)}</span>
                     </div>
@@ -134,18 +134,18 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                          </div>
                     )}
 
-                    <div className="flex justify-between items-center text-xs font-semibold text-stone-600">
+                    <div className="flex justify-between items-center text-xs font-bold text-stone-500">
                          <span className="flex items-center gap-1">
-                              <span>Delivery fee ({stores?.store_name || storeSettings?.store_name})</span>
+                              <span>Delivery fee</span>
                               {appliedCoupon?.coupon_type === 'free_delivery' && (
                                    <span className="text-[9px] bg-green-100 text-green-700 px-1 rounded-sm uppercase font-bold">Coupon</span>
                               )}
                          </span>
-                         <span className="font-mono font-bold text-stone-905">{deliveryFee === 0 ? 'FREE' : `US $${deliveryFee.toFixed(2)}`}</span>
+                         <span className="font-mono font-bold text-stone-900">{deliveryFee === 0 ? 'FREE' : `US $${deliveryFee.toFixed(2)}`}</span>
                     </div>
                </div>
 
-               <div className="flex justify-between items-center text-sm font-black text-stone-900 border-t border-stone-200/60 pt-3">
+               <div className="flex justify-between items-center text-sm font-black text-stone-950 border-t border-stone-200/60 pt-3">
                     <span>Amount to pay</span>
                     <span className="text-base font-black font-mono">${totalAmount.toFixed(2)}</span>
                </div>
@@ -156,9 +156,9 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                          handleSubtotalAction();
                     }}
                     disabled={isActionButtonDisabled}
-                    className={`w-full py-4 rounded-[3px] font-black text-xs uppercase tracking-widest border-none transition-all shadow-sm mt-2 focus:outline-none ${isActionButtonDisabled
-                         ? 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'
-                         : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'
+                    className={`w-full py-3.5 rounded-xl font-black text-xs uppercase tracking-widest border-none transition-all duration-200 shadow-sm mt-2 focus:outline-none ${isActionButtonDisabled
+                         ? 'bg-stone-100 text-stone-400 cursor-not-allowed shadow-none'
+                         : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-[0_4px_14px_rgba(16,185,129,0.15)]'
                          }`}
                >
                     {actionButtonLabel}
@@ -174,12 +174,12 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                </div>
 
                {/* Mobile Layout: Sleek Sticky Bottom Action Bar */}
-               <div className="lg:hidden bg-white w-full px-4 py-3 flex items-center justify-between shadow-lg">
+               <div className="lg:hidden bg-white w-full px-5 py-4 flex items-center justify-between shadow-[0_-8px_30px_rgba(0,0,0,0.03)]">
                     <div className="flex flex-col text-left" onClick={() => setIsMobileModalOpen(true)}>
                          <span className="text-[9px] text-stone-400 uppercase font-black tracking-wider flex items-center gap-0.5 cursor-pointer">
                               Total Amount <FiChevronUp className="w-3.5 h-3.5 animate-bounce" />
                          </span>
-                         <span className="text-base font-black font-mono text-stone-900">
+                         <span className="text-base font-black font-mono text-stone-950">
                               ${totalAmount.toFixed(2)}
                          </span>
                     </div>
@@ -193,9 +193,9 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                               }
                          }}
                          disabled={isActionButtonDisabled}
-                         className={`px-6 py-3.5 rounded-[3px] font-black text-xs uppercase tracking-widest border-none transition-all shadow-xs shrink-0 ${isActionButtonDisabled
-                              ? 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'
-                              : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'
+                         className={`px-8 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest border-none transition-all duration-200 shrink-0 ${isActionButtonDisabled
+                              ? 'bg-stone-100 text-stone-400 cursor-not-allowed shadow-none'
+                              : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-[0_4px_14px_rgba(16,185,129,0.15)]'
                               }`}
                     >
                          {actionButtonLabel}
@@ -212,7 +212,7 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                          />
 
                          {/* Modal Content */}
-                         <div className="relative z-10 w-full max-w-sm rounded-sm bg-stone-50 overflow-hidden shadow-2xl animate-fade-in">
+                         <div className="relative z-10 w-full max-w-sm rounded-3xl bg-stone-50 overflow-hidden shadow-2xl animate-fade-in">
                               {renderSummaryCardContent(true)}
                          </div>
                     </div>,

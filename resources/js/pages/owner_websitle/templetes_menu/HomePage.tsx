@@ -190,11 +190,13 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   // Enforce customer auth on /profile
   useEffect(() => {
-    if (isProfileView && !token) {
+    const theme = storeInfo?.website_theme || settings?.website_theme;
+    const isTemplateTheme = ['fashion', 'fashion_website', 'fashion_website_general', 'cafe_shop'].includes(theme || '');
+    if (isProfileView && !token && !isTemplateTheme) {
       onNavigateLogin();
       onNavigate(buildStoreLink('/'));
     }
-  }, [isProfileView, token]);
+  }, [isProfileView, token, storeInfo?.website_theme, settings?.website_theme]);
 
   const activeTheme = getLightTheme(themes[settings?.website_theme || 'default'] || themes.default);
   const { buildLink: buildStoreLink } = useOwnerURL(

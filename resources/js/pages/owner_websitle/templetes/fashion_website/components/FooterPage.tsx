@@ -13,6 +13,8 @@ import { FASHION_ROUTES } from '../routes';
 import { client } from '@/api/client';
 import { publicFlashDealsService } from '@/api/created_by/getFlashDealsOwnerByid';
 import { resolveImageUrl } from '../utils/imageUtils';
+import { policiesApi } from '@/api/owner/policies';
+import type { Policy } from '@/api/owner/policies';
 import abaLogo from '@/pages/main_website/Company_bank/aba.png';
 import bakongLogo from '@/pages/main_website/Company_bank/bakong.png';
 import acledaLogo from '@/pages/main_website/Company_bank/acleda.png';
@@ -29,6 +31,7 @@ export const FooterPage: React.FC<FooterPageProps> = ({
   const [storeInfo, setStoreInfo] = useState<StoreRow | null>(stores || null);
   const [socials, setSocials] = useState<SocialMediaRow[]>([]);
   const [badges, setBadges] = useState<ProductBadge[]>([]);
+  const [policies, setPolicies] = useState<Policy[]>([]);
   const [promotions, setPromotions] = useState<{ id: string | number; title: string; link: string }[]>([]);
 
   useEffect(() => {
@@ -42,14 +45,21 @@ export const FooterPage: React.FC<FooterPageProps> = ({
 
     const fetchData = async () => {
       try {
-        const [storeData, socialData, badgeData] = await Promise.all([
+        const [storeData, socialData, badgeData, policiesData] = await Promise.all([
           storesService.getStoreByOwner(userId),
           socialMediaService.getPublicSocials(userId),
-          productBadgesService.getProductBadges(100, 0, userId)
+          productBadgesService.getProductBadges(100, 0, userId),
+          policiesApi.getPublicPoliciesList(userId).catch(err => {
+            console.warn('Failed to load policies in footer', err);
+            return { success: false, data: [] };
+          })
         ]);
         setStoreInfo(storeData);
         setSocials(socialData);
         setBadges(badgeData.filter(b => b.status));
+        if (policiesData && policiesData.success && Array.isArray(policiesData.data)) {
+          setPolicies(policiesData.data);
+        }
 
         const resolvedSlug = (storeData?.store_name || storeName).replace(/\s+/g, '_');
         const resolvedHomeUrl = FASHION_ROUTES.getHome(resolvedSlug, userId);
@@ -364,46 +374,24 @@ export const FooterPage: React.FC<FooterPageProps> = ({
 
           {/* Column 3: Customer Service */}
           <div className="space-y-4 text-left">
-            <h4 className="text-stone-900 font-black text-xs uppercase tracking-wider">Assistance</h4>
+            <h4 className="text-stone-900 font-black text-xs uppercase tracking-wider">Policies</h4>
             <ul className="space-y-3 text-xs font-semibold list-none p-0 m-0">
-              <li>
-                <a 
-                  href={`/policies/privacy-policy?id=${ownerUserId || storeInfo?.created_by}&store=${storeSlug}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onNavigate) {
-                      onNavigate(`/policies/privacy-policy?id=${ownerUserId || storeInfo?.created_by}&store=${storeSlug}`);
-                    }
-                  }}
-                  className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5"
-                >
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a 
-                  href={`/policies/refund-policy?id=${ownerUserId || storeInfo?.created_by}&store=${storeSlug}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onNavigate) {
-                      onNavigate(`/policies/refund-policy?id=${ownerUserId || storeInfo?.created_by}&store=${storeSlug}`);
-                    }
-                  }}
-                  className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5"
-                >
-                  Refund Policy
-                </a>
-              </li>
-              <li>
-                <a href="#size-guide" className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5">
-                  Size Guide
-                </a>
-              </li>
-              <li>
-                <a href="#faq" className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5">
-                  FAQ
-                </a>
-              </li>
+              {policies.map((p) => (
+                <li key={p.id}>
+                  <a 
+                    href={`/${storeSlug}/policies/${p.slug}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (onNavigate) {
+                        onNavigate(`/${storeSlug}/policies/${p.slug}`);
+                      }
+                    }}
+                    className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5"
+                  >
+                    {p.title}
+                  </a>
+                </li>
+              ))}              
             </ul>
           </div>
 
@@ -506,11 +494,7 @@ export const FooterPage: React.FC<FooterPageProps> = ({
             </div>
           )}
 
-          <div className="flex items-center gap-4 m-0 text-center lg:text-right">
-            <span className="cursor-pointer hover:text-stone-900 transition-colors">Privacy Policy</span>
-            <span className="text-stone-200 font-normal select-none">•</span>
-            <span className="cursor-pointer hover:text-stone-900 transition-colors">Terms of Service</span>
-          </div>
+          
         </div>
       </div>
     </footer>

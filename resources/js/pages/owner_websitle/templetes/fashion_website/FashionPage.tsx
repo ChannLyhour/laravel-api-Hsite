@@ -43,7 +43,7 @@ import { CategoriesGrid } from './components/CategoriesGridPage';
 import { Special_Product } from './components/helpers/Special_Product';
 import { ModelCoupon } from './components/helpers/ModelCoupon';
 import { DotTechSc } from './components/helpers/DotTechSc';
-import { PolicyPage } from '@/pages/owner_websitle/templetes_menu/components/PolicyPage';
+import { PolicyPage } from './components/policiesPage';
 
 import { mapToUIItem, resolveColorHex } from './utils/priceUtils';
 import { CheckoutPage } from './components/CheckoutPage';

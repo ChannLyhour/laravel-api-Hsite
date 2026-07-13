@@ -33,6 +33,10 @@ export const policiesApi = {
   /** Public: get a published policy by owner and slug */
   getPublicPolicy: (ownerId: string | number, slug: string) =>
     client.get<{ success: boolean; data: Policy }>(`/policies/public?owner_id=${ownerId}&slug=${slug}`),
+
+  /** Public: get all published policies for an owner */
+  getPublicPoliciesList: (ownerId: string | number) =>
+    client.get<{ success: boolean; data: Policy[] }>(`/policies/public?owner_id=${ownerId}`),
 };
 
 export const toSlug = (text: string): string => {

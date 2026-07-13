@@ -17,10 +17,10 @@ class PolicyController extends Controller
         $ownerId = $request->query('owner_id');
         $slug = $request->query('slug');
 
-        if (!$ownerId || !$slug) {
+        if (!$ownerId) {
             return response()->json([
                 'success' => false,
-                'message' => 'owner_id and slug query parameters are required.'
+                'message' => 'owner_id query parameter is required.'
             ], 400);
         }
 
@@ -37,21 +37,34 @@ class PolicyController extends Controller
             ], 400);
         }
 
-        $policy = Policy::where('created_by', $realOwnerId)
-            ->where('slug', strtolower($slug))
-            ->where('status', 'published')
-            ->first();
+        if ($slug) {
+            $policy = Policy::where('created_by', $realOwnerId)
+                ->where('slug', strtolower($slug))
+                ->where('status', 'published')
+                ->first();
 
-        if (!$policy) {
+            if (!$policy) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Policy not found.'
+                ], 404);
+            }
+
             return response()->json([
-                'success' => false,
-                'message' => 'Policy not found.'
-            ], 404);
+                'success' => true,
+                'data' => $policy
+            ]);
         }
+
+        // Return list of all published policies
+        $policies = Policy::where('created_by', $realOwnerId)
+            ->where('status', 'published')
+            ->select('id', 'title', 'slug', 'updated_at')
+            ->get();
 
         return response()->json([
             'success' => true,
-            'data' => $policy
+            'data' => $policies
         ]);
     }
 

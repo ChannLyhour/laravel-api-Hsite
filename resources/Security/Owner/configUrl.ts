@@ -25,6 +25,7 @@ export const STATIC_PATHS = [
   "/categories",
   "/auth",
   "/share",
+  "/policies",
 ];
 
 /**
