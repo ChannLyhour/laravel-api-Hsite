@@ -43,6 +43,7 @@ import { CategoriesGrid } from './components/CategoriesGridPage';
 import { Special_Product } from './components/helpers/Special_Product';
 import { ModelCoupon } from './components/helpers/ModelCoupon';
 import { DotTechSc } from './components/helpers/DotTechSc';
+import { PolicyPage } from '@/pages/owner_websitle/templetes_menu/components/PolicyPage';
 
 import { mapToUIItem, resolveColorHex } from './utils/priceUtils';
 import { CheckoutPage } from './components/CheckoutPage';
@@ -442,7 +443,9 @@ export const FashionPage: React.FC<FashionPageProps> = ({
     return () => bc.close();
   }, [urlProductId]);
 
-  const isProductSkuRoute = currentPath !== '/' && !['/shop', '/checkout', '/profile', '/wishlist', '/categories', '/product', '/menu'].includes(currentPath);
+  const isPolicyView = currentPath.includes('/policies/');
+  const policySlug = isPolicyView ? currentPath.split('/policies/')[1] : '';
+  const isProductSkuRoute = currentPath !== '/' && !['/shop', '/checkout', '/profile', '/wishlist', '/categories', '/product', '/menu'].includes(currentPath) && !isPolicyView;
   const sku = isProductSkuRoute ? currentPath.substring(1) : null;
 
   useEffect(() => {
@@ -686,6 +689,20 @@ export const FashionPage: React.FC<FashionPageProps> = ({
           // Redirect handled by useEffect above — render blank to avoid flash
           <main className="flex-grow" />
         )
+      ) : isPolicyView ? (
+        <main className="flex-grow animate-fade-in">
+          <PolicyPage
+            ownerUserId={ownerUserId}
+            slug={policySlug}
+            stores={stores}
+            onNavigate={onNavigate}
+            buildStoreLink={(path) => {
+              const storeSlug = (stores?.store_name || storeName).replace(/\s+/g, '_');
+              if (path === '/') return FASHION_ROUTES.getHome(storeSlug, ownerUserId);
+              return path;
+            }}
+          />
+        </main>
       ) : (
         <main className="flex-grow animate-fade-in">
           <HeroPage

@@ -24,6 +24,7 @@ import { useOwnerURL } from '@/app/OwnerURL';
 import { PageRenderer } from './components/PageRenderer';
 import { WishlistPage } from './components/wishlistPage';
 import { FooterPage } from './components/footerPage';
+import { PolicyPage } from './components/PolicyPage';
 import { ProfileSetting } from '../templetes/fashion_website/components/info/profilesetting';
 
 
@@ -184,6 +185,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   const isCheckoutView = currentPath.endsWith('/checkout');
   const isWishlistView = currentPath.endsWith('/wishlist');
   const isProfileView = currentPath.endsWith('/profile');
+  const isPolicyView = currentPath.includes('/policies/');
+  const policySlug = isPolicyView ? currentPath.split('/policies/')[1] : '';
 
   // Enforce customer auth on /profile
   useEffect(() => {
@@ -377,6 +380,14 @@ export const HomePage: React.FC<HomePageProps> = ({
               addToCart={addToCart}
             />
           </div>
+        ) : isPolicyView ? (
+          <PolicyPage
+            ownerUserId={ownerUserId}
+            slug={policySlug}
+            stores={{ ...settings, ...storeInfo }}
+            onNavigate={onNavigate}
+            buildStoreLink={buildStoreLink}
+          />
         ) : isProfileView ? (
           /* Customer Profile & Orders View */
           profile?.user ? (

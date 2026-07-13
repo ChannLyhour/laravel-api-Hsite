@@ -140,15 +140,24 @@ export const FooterPage: React.FC<FooterPageProps> = ({
                             </li>
                             <li>
                                 <a
-                                    href={buildStoreLink('/#services')}
-                                    onClick={(e) => { e.preventDefault(); onNavigate(buildStoreLink('/#services')); }}
+                                    href={buildStoreLink('/policies/privacy-policy')}
+                                    onClick={(e) => { e.preventDefault(); onNavigate(buildStoreLink('/policies/privacy-policy')); }}
                                     className={`group flex items-center space-x-2 text-slate-450 hover:${activeTheme.primaryText} transition-all duration-300`}
                                 >
                                     <span className={`w-1.5 h-1.5 rounded-full scale-0 group-hover:scale-100 transition-all duration-300 ease-out origin-left ${activeTheme.primaryBg}`}></span>
-                                    <span className="group-hover:translate-x-1 transition-transform duration-300">Why Us</span>
+                                    <span className="group-hover:translate-x-1 transition-transform duration-300">Privacy Policy</span>
                                 </a>
                             </li>
-
+                            <li>
+                                <a
+                                    href={buildStoreLink('/policies/refund-policy')}
+                                    onClick={(e) => { e.preventDefault(); onNavigate(buildStoreLink('/policies/refund-policy')); }}
+                                    className={`group flex items-center space-x-2 text-slate-450 hover:${activeTheme.primaryText} transition-all duration-300`}
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full scale-0 group-hover:scale-100 transition-all duration-300 ease-out origin-left ${activeTheme.primaryBg}`}></span>
+                                    <span className="group-hover:translate-x-1 transition-transform duration-300">Refund Policy</span>
+                                </a>
+                            </li>
                         </ul>
                     </div>
 

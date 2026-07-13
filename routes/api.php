@@ -125,6 +125,9 @@ Route::middleware(['identify-store'])->group(function () {
     // No-Code Custom Page Builder (Public)
     Route::get('/pages/public-builder', [\App\Http\Controllers\Api\v1\Owner\PageController::class, 'getPublicPage']);
 
+    // Policies (Public)
+    Route::get('/policies/public', [\App\Http\Controllers\Api\v1\Owner\PolicyController::class, 'getPublicPolicy']);
+
     Route::get('/pages/{identifier}', [CMSController::class, 'getPage']);
 
     Route::get('/posts', [CMSController::class, 'listPosts']);
@@ -369,6 +372,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/owner/pages-builder', [\App\Http\Controllers\Api\v1\Owner\PageController::class, 'index']);
         Route::post('/owner/pages-builder', [\App\Http\Controllers\Api\v1\Owner\PageController::class, 'store']);
         Route::delete('/owner/pages-builder/{id}', [\App\Http\Controllers\Api\v1\Owner\PageController::class, 'destroy'])->whereNumber('id');
+
+        // Policies Management (Owner)
+        Route::get('/owner/policies', [\App\Http\Controllers\Api\v1\Owner\PolicyController::class, 'index']);
+        Route::post('/owner/policies', [\App\Http\Controllers\Api\v1\Owner\PolicyController::class, 'store']);
+        Route::delete('/owner/policies/{id}', [\App\Http\Controllers\Api\v1\Owner\PolicyController::class, 'destroy'])->whereNumber('id');
         Route::post('/posts', [CMSController::class, 'createPost']);
         Route::put('/posts/{post_id}', [CMSController::class, 'updatePost'])->whereNumber('post_id');
         Route::delete('/posts/{post_id}', [CMSController::class, 'deletePost'])->whereNumber('post_id');

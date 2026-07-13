@@ -367,13 +367,31 @@ export const FooterPage: React.FC<FooterPageProps> = ({
             <h4 className="text-stone-900 font-black text-xs uppercase tracking-wider">Assistance</h4>
             <ul className="space-y-3 text-xs font-semibold list-none p-0 m-0">
               <li>
-                <a href="#shipping" className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5">
-                  Shipping & Delivery
+                <a 
+                  href={`/policies/privacy-policy?id=${ownerUserId || storeInfo?.created_by}&store=${storeSlug}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onNavigate) {
+                      onNavigate(`/policies/privacy-policy?id=${ownerUserId || storeInfo?.created_by}&store=${storeSlug}`);
+                    }
+                  }}
+                  className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5"
+                >
+                  Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="#returns" className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5">
-                  Returns & Exchanges
+                <a 
+                  href={`/policies/refund-policy?id=${ownerUserId || storeInfo?.created_by}&store=${storeSlug}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onNavigate) {
+                      onNavigate(`/policies/refund-policy?id=${ownerUserId || storeInfo?.created_by}&store=${storeSlug}`);
+                    }
+                  }}
+                  className="text-stone-500 hover:text-[#E61E25] transition-colors no-underline footer-link-draw block py-0.5"
+                >
+                  Refund Policy
                 </a>
               </li>
               <li>

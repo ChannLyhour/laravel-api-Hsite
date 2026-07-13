@@ -45,6 +45,7 @@ import { toast, setToastRef } from '../utils/toast';
 import { Toast } from 'primereact/toast';
 import { Storefront_ThemeTab } from '../components/Store_Settings/Storefront_ThemeTab';
 import { PagesBuilderTab } from '../components/PagesBuilderTab';
+import { PoliciesTab } from '../components/PoliciesTab';
 import { BrandsTab } from '../components/BrandsTab';
 import { ProductBadgesTab } from '../components/ProductBadgesTab';
 import { CustomersTab } from '../components/CustomersTab';
@@ -81,7 +82,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis';
 
 interface NotificationItem {
   id: string;
@@ -730,6 +731,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'orders-cancelled': return <OrdersTab ownerId={activeOwnerId} storeId={settings?.id} defaultStatusFilter="canceled" />;
       case 'posts': return <PostsTab ownerId={activeOwnerId} />;
       case 'pages-builder': return <PagesBuilderTab ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'policies': return <PoliciesTab ownerId={activeOwnerId} />;
       case 'theme': return <Storefront_ThemeTab ownerId={activeOwnerId} profile={profile} />;
       case 'customize-system': return <CustomizeSystemTab />;
       case 'settings': return <SettingsTab profile={profile} ownerId={activeOwnerId} />;
