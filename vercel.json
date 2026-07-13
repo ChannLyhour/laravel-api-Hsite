@@ -23,13 +23,13 @@
   },
   "env": {
     "VERCEL_SUPPORT_LARGE_FUNCTIONS": "1",
+    "APP_KEY": "base64:431VmB8uVpGqkp8yjKIJpEjtUr8NjI5enqdbXYRWpIk=",
     "DB_CONNECTION": "mysql",
     "DB_HOST": "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
     "DB_PORT": "4000",
     "DB_DATABASE": "hsite_system_api",
     "DB_USERNAME": "EqyMtPi63u9wFEb.root",
     "DB_PASSWORD": "zWWeicsHRhaewUY0",
-    "MYSQL_ATTR_SSL_CA": "ca.pem.tidb",
     "APP_ENV": "production",
     "APP_DEBUG": "false"
   }
