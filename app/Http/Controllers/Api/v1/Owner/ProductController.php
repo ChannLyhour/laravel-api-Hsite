@@ -386,6 +386,8 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
+        $start = microtime(true);
+
         $skip = $request->query('skip', 0);
         $limit = $request->query('limit', 100);
         $categoryId = $request->query('category_id');
@@ -398,12 +400,14 @@ class ProductController extends Controller
             $ownerIdForCache = $user->id;
         }
 
-        $version = \Illuminate\Support\Facades\Cache::remember("products_version_owner_{$ownerIdForCache}", 3600, function() {
+        $version = \Illuminate\Support\Facades\Cache::remember("products_version_owner_{$ownerIdForCache}", 86400 * 365, function() {
             return time();
         });
         $cacheKey = "products_owner_{$ownerIdForCache}_v{$version}_skip_{$skip}_limit_{$limit}_cat_{$categoryId}";
 
-        $items = \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($user, $ownerIdForCache, $categoryId, $skip, $limit) {
+        $isCacheHit = \Illuminate\Support\Facades\Cache::has($cacheKey);
+
+        $items = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400 * 30, function () use ($user, $ownerIdForCache, $categoryId, $skip, $limit) {
             $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
             if ($user && $user->role_id != 1) {
                 $query->where('created_by', $user->id);
@@ -418,6 +422,14 @@ class ProductController extends Controller
             return $query->skip($skip)->take($limit)->get();
         });
 
+        $duration = (microtime(true) - $start) * 1000;
+        \Log::info(sprintf(
+            "ProductController@index execution: %.2f ms | Cache: %s | Key: %s",
+            $duration,
+            $isCacheHit ? 'HIT' : 'MISS',
+            $cacheKey
+        ));
+
         return response()->json($items);
     }
 
@@ -426,12 +438,12 @@ class ProductController extends Controller
         $limit = $request->query('limit', 3);
         $createdBy = $request->get('current_store_owner_id') ?? $request->query('created_by');
 
-        $version = \Illuminate\Support\Facades\Cache::remember("products_version_owner_{$createdBy}", 3600, function() {
+        $version = \Illuminate\Support\Facades\Cache::remember("products_version_owner_{$createdBy}", 86400 * 365, function() {
             return time();
         });
         $cacheKey = "products_topselling_owner_{$createdBy}_v{$version}_limit_{$limit}";
 
-        $items = \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($createdBy, $limit) {
+        $items = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400 * 30, function () use ($createdBy, $limit) {
             $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
             if ($createdBy !== null) {
                 $query->where('created_by', $createdBy);
