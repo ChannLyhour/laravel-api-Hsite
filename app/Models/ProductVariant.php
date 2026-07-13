@@ -9,6 +9,8 @@ class ProductVariant extends Model
 {
     use HasFactory;
 
+    protected $with = ['attributeValues.attribute'];
+
     protected $fillable = [
         'product_id',
         'variant_sku',

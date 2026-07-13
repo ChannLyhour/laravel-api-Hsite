@@ -3,7 +3,7 @@ import { FiHeart, FiShoppingBag } from 'react-icons/fi';
 import { toast } from '../../utils/toast';
 import { FASHION_ROUTES } from '../../routes';
 import { resolveImageUrl, getHoverImage } from '../../utils/imageUtils';
-import { resolveColorHex } from '../../utils/priceUtils';
+import { resolveColorHex, getProductColors, getProductSizes } from '../../utils/priceUtils';
 import type { StoreRow } from '@/api/owner/stores';
 import { TextSp } from './TextSp';
 import { SkeletonCard } from './SkeletonSt';
@@ -54,6 +54,8 @@ const CardProductInner: React.FC<CardProductProps> = ({
     disableAos = false,
 }) => {
     const fontClass = font ? (font === 'sans' ? 'font-sans' : font === 'kontomruy' ? 'font-kontomruy' : font) : 'font-sans';
+    const colors = item.colors || getProductColors(item) || [];
+    const sizes = item.sizes || getProductSizes(item) || [];
 
     const containerRef = React.useRef<HTMLDivElement>(null);
     const [currentImgIdx, setCurrentImgIdx] = React.useState(0);
@@ -503,39 +505,45 @@ const CardProductInner: React.FC<CardProductProps> = ({
                 </TextSp>
 
 
-                {/* Colors swatches preview */}
-                {item.colors && item.colors.length > 0 && (
-                    <div className="h-3.5 flex items-center pt-0.5 select-none text-left">
-                        <div className="flex items-center space-x-1">
-                            {item.colors.slice(0, 3).map((col: string, cIdx: number) => (
-                                <span
-                                    key={cIdx}
-                                    className="w-4 h-3 rounded-[3px] border border-stone-200/80 shrink-0"
-                                    style={{ backgroundColor: resolveColorHex(item, col) }}
-                                />
-                            ))}
-                            {item.colors.length > 3 && (
-                                <span className="text-[8px] text-stone-400 font-extrabold leading-none">
-                                    +{item.colors.length - 3}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                )}
+                {/* Colors & Sizes preview */}
+                {(colors.length > 0 || sizes.length > 0) && (
+                    <div className="flex items-center justify-between pt-1 select-none">
+                        {/* Colors swatches */}
+                        {colors.length > 0 && (
+                            <div className="flex items-center gap-1.5">
+                                {colors.slice(0, 4).map((col: string, cIdx: number) => (
+                                    <span
+                                        key={cIdx}
+                                        className="w-3.5 h-3.5 rounded-[3px] border border-stone-250 shrink-0 shadow-3xs hover:scale-110 transition-transform duration-200"
+                                        style={{ backgroundColor: resolveColorHex(item, col) }}
+                                    />
+                                ))}
+                                {colors.length > 4 && (
+                                    <span className="text-[8px] text-stone-400 font-extrabold leading-none">
+                                        +{colors.length - 4}
+                                    </span>
+                                )}
+                            </div>
+                        )}
 
-                {/* Sizing Label preview */}
-                {item.sizes && item.sizes.length > 0 && (
-                    <div className="h-4 flex items-center select-none text-left">
-                        <div className="flex flex-wrap gap-1">
-                            {item.sizes.slice(0, 3).map((sz: string, szIdx: number) => (
-                                <span
-                                    key={szIdx}
-                                    className="text-[8px] font-black text-stone-400 bg-stone-50 border border-stone-200/40 px-1 py-0.5 rounded-[2px] uppercase leading-none"
-                                >
-                                    {sz}
-                                </span>
-                            ))}
-                        </div>
+                        {/* Sizing Labels */}
+                        {sizes.length > 0 && (
+                            <div className="flex items-center gap-1">
+                                {sizes.slice(0, 3).map((sz: string, szIdx: number) => (
+                                    <span
+                                        key={szIdx}
+                                        className="text-[8px] font-black text-stone-400 bg-stone-50 border border-stone-200/50 px-1.5 py-0.5 rounded-[2px] uppercase leading-none"
+                                    >
+                                        {sz}
+                                    </span>
+                                ))}
+                                {sizes.length > 3 && (
+                                    <span className="text-[8px] text-stone-400 font-extrabold leading-none">
+                                        +{sizes.length - 3}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

@@ -3,7 +3,7 @@ import { FiHeart, FiShoppingBag } from 'react-icons/fi';
 import { toast } from '../../utils/toast';
 import { FASHION_ROUTES } from '../../routes';
 import { resolveImageUrl, getHoverImage } from '../../utils/imageUtils';
-import { resolveColorHex } from '../../utils/priceUtils';
+import { resolveColorHex, getProductColors, getProductSizes } from '../../utils/priceUtils';
 import type { StoreRow } from '@/api/owner/stores';
 import { TextSp } from './TextSp';
 import { SkeletonCard } from './SkeletonSt';
@@ -54,6 +54,8 @@ const CardProductInner: React.FC<CardProductProps> = ({
     disableAos = false,
 }) => {
     const fontClass = font ? (font === 'sans' ? 'font-sans' : font === 'kontomruy' ? 'font-kontomruy' : font) : 'font-sans';
+    const colors = item.colors || getProductColors(item) || [];
+    const sizes = item.sizes || getProductSizes(item) || [];
 
     const containerRef = React.useRef<HTMLDivElement>(null);
     const [currentImgIdx, setCurrentImgIdx] = React.useState(0);
@@ -503,19 +505,40 @@ const CardProductInner: React.FC<CardProductProps> = ({
 
 
                 {/* Colors swatches preview */}
-                {item.colors && item.colors.length > 0 && (
+                {colors && colors.length > 0 && (
                     <div className="h-5 flex items-center pt-0.5 select-none text-left">
                         <div className="flex items-center space-x-1.5">
-                            {item.colors.slice(0, 5).map((col: string, cIdx: number) => (
+                            {colors.slice(0, 5).map((col: string, cIdx: number) => (
                                 <span
                                     key={cIdx}
                                     className="w-4 h-4 rounded-[4px] border border-stone-300 shrink-0 shadow-3xs"
                                     style={{ backgroundColor: resolveColorHex(item, col) }}
                                 />
                             ))}
-                            {item.colors.length > 5 && (
+                            {colors.length > 5 && (
                                 <span className="text-[8px] text-stone-400 font-extrabold leading-none">
-                                    +{item.colors.length - 5}
+                                    +{colors.length - 5}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Sizing Label preview */}
+                {sizes && sizes.length > 0 && (
+                    <div className="h-4 flex items-center select-none text-left pt-0.5">
+                        <div className="flex flex-wrap gap-1">
+                            {sizes.slice(0, 3).map((sz: string, szIdx: number) => (
+                                <span
+                                    key={szIdx}
+                                    className="text-[8px] font-black text-stone-400 bg-stone-50 border border-stone-200/40 px-1.5 py-0.5 rounded-[2px] uppercase leading-none"
+                                >
+                                    {sz}
+                                </span>
+                            ))}
+                            {sizes.length > 3 && (
+                                <span className="text-[8px] text-stone-400 font-extrabold leading-none">
+                                    +{sizes.length - 3}
                                 </span>
                             )}
                         </div>
