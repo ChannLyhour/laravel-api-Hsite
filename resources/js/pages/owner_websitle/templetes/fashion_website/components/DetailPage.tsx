@@ -594,7 +594,8 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                   key={idx}
                   src={item.url || ''}
                   alt={product.name}
-                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover/main-image:scale-105 ${isDisplay ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+                  onClick={() => setIsImageDetailOpen(true)}
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover/main-image:scale-105 ${isDisplay ? 'opacity-100 z-10 cursor-zoom-in' : 'opacity-0 z-0 pointer-events-none'}`}
                   style={hasDuplicate ? getThumbnailStyle(idx) : {}}
                 />
               );
