@@ -389,7 +389,7 @@ class ProductController extends Controller
         $start = microtime(true);
 
         $skip = $request->query('skip', 0);
-        $limit = $request->query('limit', 100);
+        $limit = $request->query('limit', 24);
         $categoryId = $request->query('category_id');
 
         $user = $request->user();
@@ -405,10 +405,26 @@ class ProductController extends Controller
         });
         $cacheKey = "products_owner_{$ownerIdForCache}_v{$version}_skip_{$skip}_limit_{$limit}_cat_{$categoryId}";
 
+        $totalCacheKey = "products_owner_{$ownerIdForCache}_v{$version}_total_cat_{$categoryId}";
+        $total = \Illuminate\Support\Facades\Cache::remember($totalCacheKey, 86400 * 30, function () use ($user, $ownerIdForCache, $categoryId) {
+            $query = Product::query();
+            if ($user && $user->role_id != 1) {
+                $query->where('created_by', $user->id);
+            } else {
+                if ($ownerIdForCache !== null) {
+                    $query->where('created_by', $ownerIdForCache);
+                }
+            }
+            if ($categoryId !== null) {
+                $query->where('category_id', $categoryId);
+            }
+            return $query->count();
+        });
+
         $isCacheHit = \Illuminate\Support\Facades\Cache::has($cacheKey);
 
         $items = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400 * 30, function () use ($user, $ownerIdForCache, $categoryId, $skip, $limit) {
-            $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
+            $query = Product::query()->with(['translations', 'variants', 'images', 'brand', 'badge']);
             if ($user && $user->role_id != 1) {
                 $query->where('created_by', $user->id);
             } else {
@@ -430,7 +446,9 @@ class ProductController extends Controller
             $cacheKey
         ));
 
-        return response()->json($items);
+        return response()->json($items)
+            ->header('X-Total-Count', $total)
+            ->header('Access-Control-Expose-Headers', 'X-Total-Count');
     }
 
     public function topSelling(Request $request)
