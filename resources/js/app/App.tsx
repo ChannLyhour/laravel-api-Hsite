@@ -1180,7 +1180,7 @@ function App() {
   const MAIN_WEBSITE_PATHS = ['/', '/about', '/restaurants', '/features', '/join', '/pricing', '/register-owner'];
   const isMainWebsitePath = MAIN_WEBSITE_PATHS.includes(currentPath);
 
-  console.log('App Render State: ' + JSON.stringify({ currentPath, hasOwnerParam, ownerUserId, isMainWebsitePath, settingsTheme: settings?.website_theme }));
+
 
   if (isMainWebsitePath && !hasOwnerParam) {
     return (

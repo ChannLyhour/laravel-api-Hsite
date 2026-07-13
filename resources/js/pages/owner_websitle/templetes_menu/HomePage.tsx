@@ -54,7 +54,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onOwnerChange,
   storeName = '',
 }) => {
-  console.log('HomePageOnline Render Props:', { settingsTheme: settings?.website_theme, storeInfoTheme: storeInfo?.website_theme, currentPath });
+
   const [profile, setProfile] = useState<UserResponse | null>(null);
   const [locale, setLocale] = useState<'en' | 'km'>(() => {
     if (typeof window !== 'undefined') {
