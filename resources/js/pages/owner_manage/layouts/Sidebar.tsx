@@ -37,6 +37,7 @@ import { ordersService } from '@/api/owner/orders';
 import { stockManagementService } from '@/api/owner/stockManagement';
 import { useTranslation } from '../lang/i18n';
 import { getStoreUrl, slugifyStoreName } from '@Security/Owner/configUrl';
+import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
 type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis';
 
@@ -71,6 +72,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   unreadChatCount = 0,
 }) => {
   const { t } = useTranslation();
+
+  const getActivePlanFeatures = (): string[] => {
+    const tier = stores?.subscription_tier || 'free';
+    try {
+      const saved = localStorage.getItem('biteflow_plan_features');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed[tier]) return parsed[tier];
+      }
+    } catch (_) {}
+    
+    return defaultPlanFeatures[tier as keyof typeof defaultPlanFeatures] || defaultPlanFeatures.free;
+  };
+
+  const isFeatureEnabled = (featureName: string): boolean => {
+    const activeFeatures = getActivePlanFeatures();
+    return activeFeatures.includes(featureName);
+  };
+
   const [orderCounts, setOrderCounts] = useState({
     pending: 0,
     processing: 0,
@@ -151,9 +171,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
     dashboardCardBorder,
     dashboardCardText,
     dashboardHeaderBg,
-    dashboardHeaderBorder,
-    dashboardHeaderText
   ]);
+
+  useEffect(() => {
+    const fetchPlanFeatures = async () => {
+      try {
+        const res = await fetch('/api/subscriptions/features');
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem('biteflow_plan_features', JSON.stringify(data));
+        }
+      } catch (_) {}
+    };
+    fetchPlanFeatures();
+  }, []);
 
   const handleSaveTheme = () => {
     setCookie('sidebar_menu_bg', sidebarBg);
@@ -278,14 +309,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const leftMenuItems = [
     { id: 'dashboard', label: t('sidebar.dashboard'), icon: <FiHome className="w-[18px] h-[18px]" /> },
     { id: 'catalog', label: t('sidebar.catalog'), icon: <FiLayers className="w-[18px] h-[18px]" /> },
-    { id: 'stock', label: 'Stock Manage', icon: <FiBox className="w-[18px] h-[18px]" /> },
+    isFeatureEnabled('Inventory Management') ? { id: 'stock', label: 'Stock Manage', icon: <FiBox className="w-[18px] h-[18px]" /> } : null,
     { id: 'orders', label: t('sidebar.orders'), icon: <FiCheckSquare className="w-[18px] h-[18px]" /> },
     { id: 'inbox', label: 'Customer Chat', icon: <FiMessageSquare className="w-[18px] h-[18px]" /> },
-    { id: 'marketing', label: t('sidebar.marketing'), icon: <FiVolume2 className="w-[18px] h-[18px]" /> },
+    (isFeatureEnabled('Coupons & Discounts') || isFeatureEnabled('Email Campaigns')) ? { id: 'marketing', label: t('sidebar.marketing'), icon: <FiVolume2 className="w-[18px] h-[18px]" /> } : null,
     { id: 'people', label: t('sidebar.people'), icon: <FiUsers className="w-[18px] h-[18px]" /> },
-    { id: 'delivery', label: 'Delivery', icon: <FiTruck className="w-[18px] h-[18px]" /> },
+    isFeatureEnabled('Delivery Zones') ? { id: 'delivery', label: 'Delivery', icon: <FiTruck className="w-[18px] h-[18px]" /> } : null,
     { id: 'settings', label: t('sidebar.settings'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
-  ];
+  ].filter(Boolean) as { id: string; label: string; icon: React.ReactNode }[];
 
   const handleLeftItemClick = (id: string) => {
     switch (id) {
@@ -337,7 +368,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     window.dispatchEvent(new CustomEvent('reset_order_view'));
   };
 
-  const showSubmenu = (!sidebarCollapsed || mobile) && activeCategory !== 'inbox';
+  const showSubmenu = (!sidebarCollapsed || mobile) && activeCategory !== 'inbox' && stores?.subsidebar_status !== false;
 
 
 
@@ -543,21 +574,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </div>
                     </button>
 
-                    <button
-                      onClick={() => { setActiveTab('pos'); setIsMobileMenuOpen(false); }}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer relative ${
-                        activeTab === 'pos'
-                          ? 'bg-white/10 text-white font-extrabold'
-                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        {activeTab === 'pos' && (
-                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-r-[4px]" style={{ backgroundColor: 'var(--sidebar-active-color, #ff6b35)' }} />
-                        )}
-                        <span className={activeTab === 'pos' ? 'pl-2' : ''}>POS</span>
-                      </div>
-                    </button>
+                    {isFeatureEnabled('POS System') && (
+                      <button
+                        onClick={() => { setActiveTab('pos'); setIsMobileMenuOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer relative ${
+                          activeTab === 'pos'
+                            ? 'bg-white/10 text-white font-extrabold'
+                            : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          {activeTab === 'pos' && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-r-[4px]" style={{ backgroundColor: 'var(--sidebar-active-color, #ff6b35)' }} />
+                          )}
+                          <span className={activeTab === 'pos' ? 'pl-2' : ''}>POS</span>
+                        </div>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -777,113 +810,115 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {activeCategory === 'marketing' && (
               <div className="space-y-3">
-                <div>
-                  <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-1">
-                    {t('sidebar.promotions')}
-                  </p>
-                  <button
-                    onClick={() => { setActiveTab('marketing-banners'); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-banners'
-                        ? 'bg-white/10 text-white'
-                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                  >
-                    <FiLayers className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                    <span>{t('sidebar.banner_setup')}</span>
-                  </button>
-
-                  <div className="space-y-0.5 mt-1">
+                {isFeatureEnabled('Coupons & Discounts') && (
+                  <div>
+                    <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-1">
+                      {t('sidebar.promotions')}
+                    </p>
                     <button
-                      onClick={() => setIsOffersDealsOpen(!isOffersDealsOpen)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold text-indigo-100 hover:text-white hover:bg-white/5 border-none bg-transparent cursor-pointer"
+                      onClick={() => { setActiveTab('marketing-banners'); setIsMobileMenuOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-banners'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                        }`}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <FiShoppingBag className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                        <span>{t('sidebar.offers_deals')}</span>
-                      </div>
-                      <FiChevronDown 
-                        className={`w-[14px] h-[14px] transition-transform duration-200 ${isOffersDealsOpen ? 'rotate-180' : 'text-indigo-200/80'}`} 
-                        style={isOffersDealsOpen ? { color: 'var(--sidebar-active-color, #ff6b35)' } : undefined}
-                      />
+                      <FiLayers className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                      <span>{t('sidebar.banner_setup')}</span>
                     </button>
 
-                    <div className={`grid transition-all duration-300 ease-in-out ${isOffersDealsOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 pointer-events-none'}`}>
-                      <div className="overflow-hidden pl-3 space-y-0.5 border-l border-indigo-600/50 ml-5">
-                        <button
-                          onClick={() => { setActiveTab('marketing-coupons'); setIsMobileMenuOpen(false); }}
-                          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-coupons' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
-                            }`}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                          <span>{t('sidebar.coupon')}</span>
-                        </button>
-                        <button
-                          onClick={() => { setActiveTab('marketing-flash-deals'); setIsMobileMenuOpen(false); }}
-                          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-flash-deals' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
-                            }`}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
-                          <span>{t('sidebar.flash_deals')}</span>
-                        </button>
+                    <div className="space-y-0.5 mt-1">
+                      <button
+                        onClick={() => setIsOffersDealsOpen(!isOffersDealsOpen)}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold text-indigo-100 hover:text-white hover:bg-white/5 border-none bg-transparent cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <FiShoppingBag className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                          <span>{t('sidebar.offers_deals')}</span>
+                        </div>
+                        <FiChevronDown 
+                          className={`w-[14px] h-[14px] transition-transform duration-200 ${isOffersDealsOpen ? 'rotate-180' : 'text-indigo-200/80'}`} 
+                          style={isOffersDealsOpen ? { color: 'var(--sidebar-active-color, #ff6b35)' } : undefined}
+                        />
+                      </button>
 
-                        <button
-                          onClick={() => { setActiveTab('marketing-featured-deal'); setIsMobileMenuOpen(false); }}
-                          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-featured-deal' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
-                            }`}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                          <span>{t('sidebar.featured_deal')}</span>
-                        </button>
-                        <button
-                          onClick={() => { setActiveTab('marketing-clearance-sale'); setIsMobileMenuOpen(false); }}
-                          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-clearance-sale' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
-                            }`}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                          <span>{t('sidebar.clearance_sale')}</span>
-                        </button>
+                      <div className={`grid transition-all duration-300 ease-in-out ${isOffersDealsOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 pointer-events-none'}`}>
+                        <div className="overflow-hidden pl-3 space-y-0.5 border-l border-indigo-600/50 ml-5">
+                          <button
+                            onClick={() => { setActiveTab('marketing-coupons'); setIsMobileMenuOpen(false); }}
+                            className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-coupons' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
+                              }`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                            <span>{t('sidebar.coupon')}</span>
+                          </button>
+                          <button
+                            onClick={() => { setActiveTab('marketing-flash-deals'); setIsMobileMenuOpen(false); }}
+                            className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-flash-deals' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
+                              }`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                            <span>{t('sidebar.flash_deals')}</span>
+                          </button>
+
+                          <button
+                            onClick={() => { setActiveTab('marketing-featured-deal'); setIsMobileMenuOpen(false); }}
+                            className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-featured-deal' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
+                              }`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                            <span>{t('sidebar.featured_deal')}</span>
+                          </button>
+                          <button
+                            onClick={() => { setActiveTab('marketing-clearance-sale'); setIsMobileMenuOpen(false); }}
+                            className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'marketing-clearance-sale' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
+                              }`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                            <span>{t('sidebar.clearance_sale')}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                <div>
-                  <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-1">
-                    {t('sidebar.communication')}
-                  </p>
-                  <button
-                    onClick={() => { setActiveTab('marketing-send-notification'); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'marketing-send-notification'
-                        ? 'bg-white/10 text-white'
-                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                  >
-                    <FiVolume2 className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                    <span>{t('sidebar.send_notification')}</span>
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab('marketing-push-notification'); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'marketing-push-notification'
-                        ? 'bg-white/10 text-white'
-                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                  >
-                    <FiSettings className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                    <span>{t('sidebar.push_notifications')}</span>
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab('marketing-announcement'); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'marketing-announcement'
-                        ? 'bg-white/10 text-white'
-                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                  >
-                    <FiVolume2 className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                    <span>{t('sidebar.announcement')}</span>
-                  </button>
-                </div>
-
-
+                {isFeatureEnabled('Email Campaigns') && (
+                  <div>
+                    <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-1">
+                      {t('sidebar.communication')}
+                    </p>
+                    <button
+                      onClick={() => { setActiveTab('marketing-send-notification'); setIsMobileMenuOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'marketing-send-notification'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      <FiVolume2 className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                      <span>{t('sidebar.send_notification')}</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('marketing-push-notification'); setIsMobileMenuOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'marketing-push-notification'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      <FiSettings className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                      <span>{t('sidebar.push_notifications')}</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('marketing-announcement'); setIsMobileMenuOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'marketing-announcement'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      <FiVolume2 className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                      <span>{t('sidebar.announcement')}</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1103,16 +1138,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {t('sidebar.third_party_setup')}
                 </p>
 
-                <button
-                  onClick={() => { setActiveTab('settings-thirdparty-payment'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'settings-thirdparty-payment'
-                      ? 'bg-white/10 text-white'
-                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <FiSettings className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span>{t('sidebar.payment_methods')}</span>
-                </button>
+                {isFeatureEnabled('QR Payment') && (
+                  <button
+                    onClick={() => { setActiveTab('settings-thirdparty-payment'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'settings-thirdparty-payment'
+                        ? 'bg-white/10 text-white'
+                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                      }`}
+                  >
+                    <FiSettings className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                    <span>{t('sidebar.payment_methods')}</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => { setActiveTab('settings-thirdparty-firebase'); setIsMobileMenuOpen(false); }}

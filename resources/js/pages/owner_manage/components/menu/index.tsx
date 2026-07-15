@@ -14,6 +14,7 @@ import { CreatePage } from './create';
 import { EditPage } from './edit';
 import { ShowPage } from './show';
 import { useTranslation } from '../../lang/i18n';
+import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
 const strLimit = (str: string, limit: number = 25): string => {
   if (!str) return '';
@@ -194,6 +195,52 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
   useEffect(() => {
     loadData();
   }, [ownerId, storeId]);
+
+  useEffect(() => {
+    const fetchPlanFeatures = async () => {
+      try {
+        const res = await fetch('/api/subscriptions/features');
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem('biteflow_plan_features', JSON.stringify(data));
+        }
+      } catch (_) {}
+    };
+    fetchPlanFeatures();
+  }, []);
+
+  const getProductsLimit = (): number => {
+    let tier = 'free';
+    try {
+      const savedSettings = localStorage.getItem('store_settings');
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        tier = parsed.subscription_tier || 'free';
+      }
+    } catch (_) {}
+
+    let featuresList: string[] = [];
+    try {
+      const savedFeatures = localStorage.getItem('biteflow_plan_features');
+      if (savedFeatures) {
+        const parsed = JSON.parse(savedFeatures);
+        if (parsed[tier]) featuresList = parsed[tier];
+      }
+    } catch (_) {}
+
+    if (featuresList.length === 0) {
+      featuresList = defaultPlanFeatures[tier as keyof typeof defaultPlanFeatures] || defaultPlanFeatures.free;
+    }
+
+    const limitStr = featuresList.find(f => f.startsWith('Products Limit:'));
+    if (limitStr) {
+      const val = limitStr.split(':')[1];
+      if (val.toLowerCase().includes('unlimited')) return Infinity;
+      const num = parseInt(val, 10);
+      if (!isNaN(num)) return num;
+    }
+    return 10; // Default fallback for Free plan
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -744,7 +791,14 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
         }}
         addButton={{
           label: t('menu.add_product'),
-          onClick: () => setView('create')
+          onClick: () => {
+            const limit = getProductsLimit();
+            if (items.length >= limit) {
+              toast.error(`Product creation limit reached (${limit} products max for your current plan). Please upgrade your subscription tier.`);
+              return;
+            }
+            setView('create');
+          }
         }}
 
         renderRow={(item, index) => {

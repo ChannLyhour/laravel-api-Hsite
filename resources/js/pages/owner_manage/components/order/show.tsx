@@ -18,8 +18,10 @@ import { resolveImageUrl } from '@/api/imageUtils';
 import '@/pages/owner_manage/style/font.css';
 
 export interface OrderItem {
+  id?: string | number;
   name: string;
   qty: number;
+  quantity?: number;
   price: string;
   image?: string;
 }
@@ -31,6 +33,8 @@ export interface Order {
   storeId?: number | string;
   customerId?: number;
   customer: string;
+  customerName?: string;
+  customer_name?: string;
   email: string;
   customer_email?: string | null;
   phone: string;
@@ -39,6 +43,7 @@ export interface Order {
   total: string;
   status: 'pending' | 'confirm' | 'processing' | 'canceled' | 'cancelled' | 'complete' | 'delivering';
   time: string;
+  created_at?: string;
   store: string;
   storePhone?: string;
   storeAddress?: string;
@@ -47,6 +52,8 @@ export interface Order {
   couponCode?: string;
   discountAmount?: string;
   taxAmount?: string;
+  taxPercentage?: number | string;
+  tax?: number | string;
   orderType?: string;
   shippingFee?: string;
   notes?: string;

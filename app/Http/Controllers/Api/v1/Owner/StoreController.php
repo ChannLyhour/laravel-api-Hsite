@@ -29,7 +29,9 @@ class StoreController extends Controller
             ];
             foreach ($items as $item) {
                 $value = $item->value;
-                if (
+                if (in_array($item->key, ['sidebar_status', 'subsidebar_status'])) {
+                    $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                } elseif (
                     in_array($item->key, [
                         'payment_methods',
                         'brand_identity_operations',
@@ -62,6 +64,14 @@ class StoreController extends Controller
                         $dict[$this->toSnakeCase($subKey)] = $subVal;
                     }
                 }
+            }
+            if (!isset($dict['sidebar_status'])) {
+                $dict['sidebar_status'] = true;
+                $dict['sidebarStatus'] = true;
+            }
+            if (!isset($dict['subsidebar_status'])) {
+                $dict['subsidebar_status'] = true;
+                $dict['subsidebarStatus'] = true;
             }
             if (!isset($dict['location_store']) || empty($dict['location_store'])) {
                 $loc = [
@@ -183,7 +193,9 @@ class StoreController extends Controller
             ];
             foreach ($storeSettings as $item) {
                 $value = $item->value;
-                if (
+                if (in_array($item->key, ['sidebar_status', 'subsidebar_status'])) {
+                    $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                } elseif (
                     in_array($item->key, [
                         'payment_methods',
                         'brand_identity_operations',
@@ -216,6 +228,14 @@ class StoreController extends Controller
                         $dict[$this->toSnakeCase($subKey)] = $subVal;
                     }
                 }
+            }
+            if (!isset($dict['sidebar_status'])) {
+                $dict['sidebar_status'] = true;
+                $dict['sidebarStatus'] = true;
+            }
+            if (!isset($dict['subsidebar_status'])) {
+                $dict['subsidebar_status'] = true;
+                $dict['subsidebarStatus'] = true;
             }
 
             if (!isset($dict['location_store']) || empty($dict['location_store'])) {
@@ -253,7 +273,9 @@ class StoreController extends Controller
             ];
             foreach ($storeSettings as $item) {
                 $value = $item->value;
-                if (
+                if (in_array($item->key, ['sidebar_status', 'subsidebar_status'])) {
+                    $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                } elseif (
                     in_array($item->key, [
                         'payment_methods',
                         'brand_identity_operations',
@@ -286,6 +308,14 @@ class StoreController extends Controller
                         $dict[$this->toSnakeCase($subKey)] = $subVal;
                     }
                 }
+            }
+            if (!isset($dict['sidebar_status'])) {
+                $dict['sidebar_status'] = true;
+                $dict['sidebarStatus'] = true;
+            }
+            if (!isset($dict['subsidebar_status'])) {
+                $dict['subsidebar_status'] = true;
+                $dict['subsidebarStatus'] = true;
             }
 
             if (!isset($dict['location_store']) || empty($dict['location_store'])) {
@@ -321,6 +351,8 @@ class StoreController extends Controller
             'location_store',
             'tax_percentage',
             'subscription_tier',
+            'sidebar_status',
+            'subsidebar_status',
             'store_type',
             'custom_domain',
             'logo_url',
@@ -532,10 +564,20 @@ class StoreController extends Controller
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
-            if ($item->key === 'payment_methods') {
+            if (in_array($item->key, ['sidebar_status', 'subsidebar_status'])) {
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            } elseif ($item->key === 'payment_methods') {
                 $value = json_decode($value, true) ?: [];
             }
             $dict[$item->key] = $value;
+        }
+        if (!isset($dict['sidebar_status'])) {
+            $dict['sidebar_status'] = true;
+            $dict['sidebarStatus'] = true;
+        }
+        if (!isset($dict['subsidebar_status'])) {
+            $dict['subsidebar_status'] = true;
+            $dict['subsidebarStatus'] = true;
         }
         return response()->json($dict);
     }
@@ -558,6 +600,8 @@ class StoreController extends Controller
             'location_store',
             'tax_percentage',
             'subscription_tier',
+            'sidebar_status',
+            'subsidebar_status',
             'store_type',
             'custom_domain',
             'logo_url',
@@ -683,11 +727,21 @@ class StoreController extends Controller
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
-            if (in_array($item->key, ['payment_methods', 'location_store'])) {
+            if (in_array($item->key, ['sidebar_status', 'subsidebar_status'])) {
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            } elseif (in_array($item->key, ['payment_methods', 'location_store'])) {
                 $value = json_decode($value, true) ?: [];
             }
             $dict[$item->key] = $value;
             $dict[$this->toSnakeCase($item->key)] = $value;
+        }
+        if (!isset($dict['sidebar_status'])) {
+            $dict['sidebar_status'] = true;
+            $dict['sidebarStatus'] = true;
+        }
+        if (!isset($dict['subsidebar_status'])) {
+            $dict['subsidebar_status'] = true;
+            $dict['subsidebarStatus'] = true;
         }
         if (!isset($dict['location_store']) || empty($dict['location_store'])) {
             $loc = [
@@ -738,6 +792,8 @@ class StoreController extends Controller
             'location_store',
             'tax_percentage',
             'subscription_tier',
+            'sidebar_status',
+            'subsidebar_status',
             'store_type',
             'custom_domain',
             'logo_url',
@@ -910,11 +966,21 @@ class StoreController extends Controller
         ];
         foreach ($storeSettings as $item) {
             $value = $item->value;
-            if (in_array($item->key, ['payment_methods', 'location_store'])) {
+            if (in_array($item->key, ['sidebar_status', 'subsidebar_status'])) {
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            } elseif (in_array($item->key, ['payment_methods', 'location_store'])) {
                 $value = json_decode($value, true) ?: [];
             }
             $dict[$item->key] = $value;
             $dict[$this->toSnakeCase($item->key)] = $value;
+        }
+        if (!isset($dict['sidebar_status'])) {
+            $dict['sidebar_status'] = true;
+            $dict['sidebarStatus'] = true;
+        }
+        if (!isset($dict['subsidebar_status'])) {
+            $dict['subsidebar_status'] = true;
+            $dict['subsidebarStatus'] = true;
         }
         if (!isset($dict['location_store']) || empty($dict['location_store'])) {
             $loc = [

@@ -566,6 +566,32 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
     };
   }, [profile]);
 
+  const toggleSidebarAccess = async () => {
+    if (!settings) return;
+    const newStatus = settings.sidebar_status !== false ? false : true;
+    try {
+      const activeOwnerId = settings.created_by || settings.owner_id || (localStorage.getItem('selected_owner_id'));
+      await storesService.updateStore({ sidebar_status: newStatus }, activeOwnerId);
+      setSettings((prev: any) => ({ ...prev, sidebar_status: newStatus }));
+      toast.success(`Sidebar access updated: ${newStatus ? 'ENABLED' : 'DISABLED'}`);
+    } catch (err) {
+      toast.error('Failed to update sidebar status.');
+    }
+  };
+
+  const toggleSubsidebarAccess = async () => {
+    if (!settings) return;
+    const newStatus = settings.subsidebar_status !== false ? false : true;
+    try {
+      const activeOwnerId = settings.created_by || settings.owner_id || (localStorage.getItem('selected_owner_id'));
+      await storesService.updateStore({ subsidebar_status: newStatus }, activeOwnerId);
+      setSettings((prev: any) => ({ ...prev, subsidebar_status: newStatus }));
+      toast.success(`Subsidebar access updated: ${newStatus ? 'ENABLED' : 'DISABLED'}`);
+    } catch (err) {
+      toast.error('Failed to update subsidebar status.');
+    }
+  };
+
   const handleLogoutClick = async () => {
     const confirmed = await confirm({
       title: 'Sign Out Admin Console',
@@ -789,32 +815,34 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
     >
 
       {/* ── Desktop Sidebar ─────────────────────────────────── */}
-      <aside
-        className={`relative z-40 hidden md:flex flex-col border-r shrink-0 h-screen transition-[width] duration-300 ease-in-out ${sidebarCollapsed ? 'w-[70px]' : 'w-[270px]'
-          }`}
-        style={{
-          backgroundColor: 'var(--sidebar-menu-bg, #3f51b5)',
-          borderColor: 'color-mix(in srgb, var(--sidebar-text-color, #e0e7ff) 10%, transparent)'
-        }}
-      >
-        <Sidebar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          sidebarCollapsed={sidebarCollapsed}
-          setSidebarCollapsed={setSidebarCollapsed}
-          profile={profile}
-          stores={settings}
-          isCategorySetupOpen={isCategorySetupOpen}
-          setIsCategorySetupOpen={setIsCategorySetupOpen}
-          isMobileMenuOpen={isMobileMenuOpen}
-          setIsMobileMenuOpen={setIsMobileMenuOpen}
-          onLogout={handleLogoutClick}
-          unreadChatCount={unreadChatCount}
-        />
-      </aside>
+      {settings?.sidebar_status !== false && (
+        <aside
+          className={`relative z-40 hidden md:flex flex-col border-r shrink-0 h-screen transition-[width] duration-300 ease-in-out ${sidebarCollapsed ? 'w-[70px]' : 'w-[270px]'
+            }`}
+          style={{
+            backgroundColor: 'var(--sidebar-menu-bg, #3f51b5)',
+            borderColor: 'color-mix(in srgb, var(--sidebar-text-color, #e0e7ff) 10%, transparent)'
+          }}
+        >
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarCollapsed={setSidebarCollapsed}
+            profile={profile}
+            stores={settings}
+            isCategorySetupOpen={isCategorySetupOpen}
+            setIsCategorySetupOpen={setIsCategorySetupOpen}
+            isMobileMenuOpen={isMobileMenuOpen}
+            setIsMobileMenuOpen={setIsMobileMenuOpen}
+            onLogout={handleLogoutClick}
+            unreadChatCount={unreadChatCount}
+          />
+        </aside>
+      )}
 
       {/* ── Mobile Overlay ──────────────────────────────────── */}
-      {isMobileMenuOpen && (
+      {isMobileMenuOpen && settings?.sidebar_status !== false && (
         <div
           className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
@@ -822,37 +850,39 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       )}
 
       {/* ── Mobile Drawer ───────────────────────────────────── */}
-      <aside
-        className={`fixed top-0 bottom-0 left-0 ${activeTab === 'inbox' ? 'w-[70px]' : 'w-[270px]'} border-r flex flex-col z-[210] md:hidden transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        style={{
-          backgroundColor: 'var(--sidebar-menu-bg, #3f51b5)',
-          borderColor: 'color-mix(in srgb, var(--sidebar-text-color, #e0e7ff) 10%, transparent)'
-        }}
-      >
-        {activeTab !== 'inbox' && (
-          <div className="absolute top-4 right-4">
-            <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 rounded-[5px] hover:bg-slate-100 text-slate-400 cursor-pointer">
-              <FiX className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-        <Sidebar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          sidebarCollapsed={sidebarCollapsed}
-          setSidebarCollapsed={setSidebarCollapsed}
-          profile={profile}
-          stores={settings}
-          isCategorySetupOpen={isCategorySetupOpen}
-          setIsCategorySetupOpen={setIsCategorySetupOpen}
-          isMobileMenuOpen={isMobileMenuOpen}
-          setIsMobileMenuOpen={setIsMobileMenuOpen}
-          onLogout={handleLogoutClick}
-          mobile
-          unreadChatCount={unreadChatCount}
-        />
-      </aside>
+      {settings?.sidebar_status !== false && (
+        <aside
+          className={`fixed top-0 bottom-0 left-0 ${activeTab === 'inbox' ? 'w-[70px]' : 'w-[270px]'} border-r flex flex-col z-[210] md:hidden transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          style={{
+            backgroundColor: 'var(--sidebar-menu-bg, #3f51b5)',
+            borderColor: 'color-mix(in srgb, var(--sidebar-text-color, #e0e7ff) 10%, transparent)'
+          }}
+        >
+          {activeTab !== 'inbox' && (
+            <div className="absolute top-4 right-4">
+              <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 rounded-[5px] hover:bg-slate-100 text-slate-400 cursor-pointer">
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarCollapsed={setSidebarCollapsed}
+            profile={profile}
+            stores={settings}
+            isCategorySetupOpen={isCategorySetupOpen}
+            setIsCategorySetupOpen={setIsCategorySetupOpen}
+            isMobileMenuOpen={isMobileMenuOpen}
+            setIsMobileMenuOpen={setIsMobileMenuOpen}
+            onLogout={handleLogoutClick}
+            mobile
+            unreadChatCount={unreadChatCount}
+          />
+        </aside>
+      )}
 
       {/* ── Main Content ────────────────────────────────────── */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
@@ -863,23 +893,27 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
           {/* Left: sidebar toggle + breadcrumb */}
           <div className="flex items-center gap-3">
             {/* Desktop collapse toggle */}
-            <button
-              onClick={() => setSidebarCollapsed(p => !p)}
-              className="hidden md:flex w-8 h-8 items-center justify-center rounded-[8px] hover:bg-black/[0.04] text-inherit transition-all cursor-pointer border-none bg-transparent"
-            >
-              {sidebarCollapsed ? (
-                <FiChevronRight className="w-[18px] h-[18px]" />
-              ) : (
-                <FiChevronLeft className="w-[18px] h-[18px]" />
-              )}
-            </button>
+            {settings?.sidebar_status !== false && (
+              <button
+                onClick={() => setSidebarCollapsed(p => !p)}
+                className="hidden md:flex w-8 h-8 items-center justify-center rounded-[8px] hover:bg-black/[0.04] text-inherit transition-all cursor-pointer border-none bg-transparent"
+              >
+                {sidebarCollapsed ? (
+                  <FiChevronRight className="w-[18px] h-[18px]" />
+                ) : (
+                  <FiChevronLeft className="w-[18px] h-[18px]" />
+                )}
+              </button>
+            )}
             {/* Mobile drawer toggle */}
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="md:hidden w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-black/[0.04] text-inherit cursor-pointer border-none bg-transparent"
-            >
-              <FiMenu className="w-[18px] h-[18px]" />
-            </button>
+            {settings?.sidebar_status !== false && (
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="md:hidden w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-black/[0.04] text-inherit cursor-pointer border-none bg-transparent"
+              >
+                <FiMenu className="w-[18px] h-[18px]" />
+              </button>
+            )}
 
             {/* Breadcrumb */}
             <nav className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
@@ -906,6 +940,30 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
               <div className="h-4 w-px bg-slate-200 shrink-0" />
 
               <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={toggleSidebarAccess}
+                  className={`px-2 py-1 rounded-[5px] font-bold transition-all cursor-pointer flex items-center space-x-1 border text-[11px] ${
+                    settings?.sidebar_status !== false
+                      ? 'bg-emerald-50 border-emerald-250 text-emerald-600 hover:bg-emerald-100/70'
+                      : 'bg-rose-50 border-rose-250 text-rose-600 hover:bg-rose-100/70'
+                  }`}
+                  title="Super Admin toggle for store main sidebar visibility"
+                >
+                  <span>Sidebar: {settings?.sidebar_status !== false ? 'ON' : 'OFF'}</span>
+                </button>
+
+                <button
+                  onClick={toggleSubsidebarAccess}
+                  className={`px-2 py-1 rounded-[5px] font-bold transition-all cursor-pointer flex items-center space-x-1 border text-[11px] ${
+                    settings?.subsidebar_status !== false
+                      ? 'bg-emerald-50 border-emerald-250 text-emerald-600 hover:bg-emerald-100/70'
+                      : 'bg-rose-50 border-rose-250 text-rose-600 hover:bg-rose-100/70'
+                  }`}
+                  title="Super Admin toggle for store submenu subsidebar visibility"
+                >
+                  <span>Subsidebar: {settings?.subsidebar_status !== false ? 'ON' : 'OFF'}</span>
+                </button>
+
                 <button
                   onClick={() => {
                     const activeOwnerId = settings?.hashid || settings?.owner_id || settings?.created_by || (profile?.user?.role === 'admin'

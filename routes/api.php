@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\Admin\UserController;
 use App\Http\Controllers\Api\v1\Admin\SettingController;
+use App\Http\Controllers\Api\v1\Admin\SubscriptionController;
 use App\Http\Controllers\Api\v1\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\v1\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\v1\CategoryController;
@@ -136,6 +137,7 @@ Route::middleware(['identify-store'])->group(function () {
 
     // System Settings (Public)
     Route::get('/settings', [SettingController::class, 'getSettings']);
+    Route::get('/subscriptions/features', [SubscriptionController::class, 'getFeatures']);
 
     // Shared layout configurations (Public)
     Route::post('/save-share', [ShareController::class, 'save']);
@@ -240,6 +242,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Global Dashboard Stats
         Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
+
+        // Global Subscription Plan Features Settings
+        Route::put('/admin/subscriptions/features', [SubscriptionController::class, 'updateFeatures']);
 
         // Global System Settings Management
         Route::put('/settings', [SettingController::class, 'updateSettings']);

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { client } from '@/api/client';
 import { SettingTab } from '../components/SettingTab';
 import { Sidebar } from './Sidebar';
 import { TranslationProvider } from '../lang/i18n';
+import { SubscriptionsTab, defaultPlanFeatures } from '../components/subscriptions/index';
+import type { PlanFeatures } from '../components/subscriptions/index';
 import {
   FiCreditCard,
   FiMenu,
@@ -40,13 +42,8 @@ interface Merchant {
   status: 'active' | 'suspended';
   joinedDate: string;
   createdBy?: number | string;
-}
-
-interface PlanFeatures {
-  free: string[];
-  basic: string[];
-  standard: string[];
-  premium: string[];
+  sidebarStatus?: boolean;
+  subsidebarStatus?: boolean;
 }
 
 const DashboardContent: React.FC<AdminDashboardProps> = ({
@@ -81,6 +78,8 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
         status: (store.owner?.state === 'active' ? 'active' : 'suspended') as 'active' | 'suspended',
         joinedDate: store.created_at ? store.created_at.split(' ')[0] : new Date().toISOString().split('T')[0],
         createdBy: store.created_by,
+        sidebarStatus: store.sidebar_status !== false, // default true
+        subsidebarStatus: store.subsidebar_status !== false, // default true
       }));
       setMerchants(mapped);
     } catch (err: any) {
@@ -184,75 +183,49 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
 
   // ─── SUBSCRIPTION PLAN FEATURES STATE ─────────────────────────────────────────
   // Pre-configured features matching standard listings
-  const [planFeatures, setPlanFeatures] = useState<PlanFeatures>(() => {
-    const saved = localStorage.getItem('biteflow_plan_features');
-    if (saved) return JSON.parse(saved);
-    return {
-      free: [
-        'Products Limit:10 Products',
-        'Categories Limit:2 Categories',
-        'Orders Limit:10 Orders/mo',
-        'Staff Limit:0 Staff',
-        'Online Ordering',
-        'Customer Reviews',
-        'QR Payment',
-      ],
-      basic: [
-        'Products Limit:35 Products',
-        'Categories Limit:4 Categories',
-        'Orders Limit:Unlimited Orders/mo',
-        'Staff Limit:Unlimited Staff',
-        'Online Ordering',
-        'Customer Reviews',
-        'Reservations',
-        'Analytics & Reports',
-        'QR Payment',
-      ],
-      standard: [
-        'Products Limit:150 Products',
-        'Categories Limit:10 Categories',
-        'Orders Limit:Unlimited Orders/mo',
-        'Staff Limit:Unlimited Staff',
-        'Online Ordering',
-        'Customer Reviews',
-        'Reservations',
-        'Analytics & Reports',
-        'Delivery Zones',
-        'Coupons & Discounts',
-        'QR Payment',
-        'Staff Accounts',
-        'POS System',
-        'AI Features',
-      ],
-      premium: [
-        'Products Limit:Unlimited Products',
-        'Categories Limit:Unlimited Categories',
-        'Orders Limit:Unlimited Orders/mo',
-        'Staff Limit:Unlimited Staff',
-        'Online Ordering',
-        'Customer Reviews',
-        'Reservations',
-        'Analytics & Reports',
-        'Delivery Zones',
-        'Coupons & Discounts',
-        'QR Payment',
-        'Email Campaigns',
-        'Loyalty Program',
-        'Custom Domain',
-        'Inventory Management',
-        'Staff Accounts',
-        'POS System',
-        'AR (Augmented Reality) Model',
-        'AR Table Cards',
-        'AI Features',
-      ],
-    };
-  });
+  const [planFeatures, setPlanFeatures] = useState<PlanFeatures>(defaultPlanFeatures);
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
+    const loadPlanFeatures = async () => {
+      try {
+        const data = await client.get<PlanFeatures>('/subscriptions/features');
+        if (data) {
+          // Filter out deleted features if any exist in backend data
+          const deletedKeys = ['AR (Augmented Reality) Model', 'AR Table Cards', 'AI Features'];
+          const cleaned = { ...data };
+          Object.keys(cleaned).forEach(tier => {
+            if (Array.isArray(cleaned[tier as keyof PlanFeatures])) {
+              cleaned[tier as keyof PlanFeatures] = cleaned[tier as keyof PlanFeatures].filter((f: string) => !deletedKeys.includes(f));
+            }
+          });
+          setPlanFeatures(cleaned);
+        }
+      } catch (err) {
+        console.error('Failed to load plan features from backend:', err);
+      } finally {
+        isInitialLoad.current = false;
+      }
+    };
+    loadPlanFeatures();
+  }, []);
+
+  useEffect(() => {
+    if (isInitialLoad.current) return;
+    
+    // Save to localStorage for instant local access
     localStorage.setItem('biteflow_plan_features', JSON.stringify(planFeatures));
-    // Trigger global event so the client websites pick up pricing config changes
     window.dispatchEvent(new Event('plan_features_updated'));
+
+    // Save to Backend API
+    const saveToBackend = async () => {
+      try {
+        await client.put('/admin/subscriptions/features', planFeatures);
+      } catch (err) {
+        console.error('Failed to sync plan features with backend:', err);
+      }
+    };
+    saveToBackend();
   }, [planFeatures]);
 
   // ─── EDIT / ADD MERCHANT MODAL STATES ────────────────────────────────────────
@@ -322,6 +295,8 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
         store_phone: currentMerchant.phone || null,
         store_email: currentMerchant.email,
         subscription_tier: currentMerchant.tier,
+        sidebar_status: currentMerchant.sidebarStatus !== false,
+        subsidebar_status: currentMerchant.subsidebarStatus !== false,
       });
 
       toast.success('Merchant profile and store settings updated successfully.');
@@ -334,69 +309,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  // ─── PLAN MANAGEMENT (20 features) ──────────────────────────────────────────
-  const [activePlanTab, setActivePlanTab] = useState<'free' | 'basic' | 'standard' | 'premium'>('free');
 
-  const allFeaturesConfig = [
-    { key: 'Products Limit', label: 'Products Limit', type: 'select', options: ['10 Products', '35 Products', '150 Products', 'Unlimited Products'] },
-    { key: 'Categories Limit', label: 'Categories Limit', type: 'select', options: ['2 Categories', '4 Categories', '10 Categories', 'Unlimited Categories'] },
-    { key: 'Orders Limit', label: 'Orders Limit', type: 'select', options: ['10 Orders/mo', 'Unlimited Orders/mo'] },
-    { key: 'Staff Limit', label: 'Staff Limit', type: 'select', options: ['0 Staff', 'Unlimited Staff'] },
-    { key: 'Online Ordering', label: 'Online Ordering', type: 'toggle' },
-    { key: 'Customer Reviews', label: 'Customer Reviews', type: 'toggle' },
-    { key: 'Reservations', label: 'Reservations', type: 'toggle' },
-    { key: 'Analytics & Reports', label: 'Analytics & Reports', type: 'toggle' },
-    { key: 'Delivery Zones', label: 'Delivery Zones', type: 'toggle' },
-    { key: 'Coupons & Discounts', label: 'Coupons & Discounts', type: 'toggle' },
-    { key: 'QR Payment', label: 'QR Payment', type: 'toggle' },
-    { key: 'Email Campaigns', label: 'Email Campaigns', type: 'toggle' },
-    { key: 'Loyalty Program', label: 'Loyalty Program', type: 'toggle' },
-    { key: 'Custom Domain', label: 'Custom Domain', type: 'toggle' },
-    { key: 'Inventory Management', label: 'Inventory Management', type: 'toggle' },
-    { key: 'Staff Accounts', label: 'Staff Accounts', type: 'toggle' },
-    { key: 'POS System', label: 'POS System', type: 'toggle' },
-    { key: 'AR (Augmented Reality) Model', label: 'AR (Augmented Reality) Model', type: 'toggle' },
-    { key: 'AR Table Cards', label: 'AR Table Cards', type: 'toggle' },
-    { key: 'AI Features', label: 'AI Features', type: 'toggle' },
-  ];
-
-
-  const getFeatureValue = (plan: 'free' | 'basic' | 'standard' | 'premium', key: string) => {
-    const found = planFeatures[plan].find(f => f.startsWith(key + ':'));
-    return found ? found.split(':')[1] : '';
-  };
-
-  const handleToggleFeature = (plan: 'free' | 'basic' | 'standard' | 'premium', key: string) => {
-    const list = [...planFeatures[plan]];
-    const index = list.findIndex(f => f === key || f.startsWith(key + ':'));
-
-    if (index > -1) {
-      // Feature enabled → disable it
-      list.splice(index, 1);
-      toast.error(`Feature "${key}" disabled for ${plan.toUpperCase()} tier.`);
-    } else {
-      // Feature disabled → enable it
-      list.push(key);
-      toast.success(`Feature "${key}" enabled for ${plan.toUpperCase()} tier.`);
-    }
-
-    setPlanFeatures({ ...planFeatures, [plan]: list });
-  };
-
-  const handleSelectFeatureValue = (plan: 'free' | 'basic' | 'standard' | 'premium', key: string, val: string) => {
-    const list = [...planFeatures[plan]];
-    const index = list.findIndex(f => f.startsWith(key + ':'));
-    const entry = `${key}:${val}`;
-
-    if (index > -1) {
-      list[index] = entry;
-    } else {
-      list.push(entry);
-    }
-
-    setPlanFeatures({ ...planFeatures, [plan]: list });
-    toast.success(`Updated ${key} to "${val}" for ${plan.toUpperCase()} tier.`);
-  };
 
   // ─── BILLING / PAYMENTS TRANSACTIONS ─────────────────────────────────────────
   const transactions = [
@@ -648,117 +561,10 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
 
           {/* ── SUBSCRIPTIONS TAB (20-Feature Grid Toggles) ───── */}
           {activeTab === 'subscriptions' && (
-            <div className="space-y-6">
-              {/* Plan Tabs Selector */}
-              <div className="flex space-x-1 bg-white p-1 rounded-[5px] border border-slate-200/60 shadow-sm max-w-md">
-                {(['free', 'basic', 'standard', 'premium'] as const).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setActivePlanTab(p)}
-                    className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-[5px] transition-all cursor-pointer border-none ${activePlanTab === p
-                        ? 'bg-primary text-white shadow-sm'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-
-              {/* Checklist details matching uploaded screenshot */}
-              <div className="bg-white p-6 rounded-[5px] border border-slate-200/60 shadow-sm space-y-4 max-w-xl">
-                <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider capitalize">{activePlanTab} Feature Grid Toggles</h3>
-                    <p className="text-[10px] font-bold text-slate-400 mt-0.5">Toggle rows to adjust feature access for {activePlanTab} plan.</p>
-                  </div>
-                  <span className="text-[10px] font-black text-primary bg-orange-50 uppercase tracking-widest px-2.5 py-1 rounded-[5px]">
-                    {planFeatures[activePlanTab].length} Toggles ON
-                  </span>
-                </div>
-
-                {/* 20-Feature List Grid */}
-                <div className="divide-y divide-slate-100">
-                  {allFeaturesConfig.map((feat) => {
-                    const isSelect = feat.type === 'select';
-                    const isEnabled = isSelect
-                      ? planFeatures[activePlanTab].some(f => f.startsWith(feat.key + ':'))
-                      : planFeatures[activePlanTab].includes(feat.key);
-
-                    const selectVal = isSelect ? getFeatureValue(activePlanTab, feat.key) : '';
-
-                    return (
-                      <div key={feat.key} className="py-3 flex items-center justify-between text-xs font-semibold">
-                        <div className="flex items-center gap-3">
-                          {/* Check / Cross visual exactly matching screenshot */}
-                          {isEnabled ? (
-                            <span
-                              onClick={() => {
-                                if (isSelect) {
-                                  // toggle select key completely off
-                                  const list = planFeatures[activePlanTab].filter(f => !f.startsWith(feat.key + ':'));
-                                  setPlanFeatures({ ...planFeatures, [activePlanTab]: list });
-                                  toast.error(`Disabled ${feat.key} for ${activePlanTab} tier.`);
-                                } else {
-                                  handleToggleFeature(activePlanTab, feat.key);
-                                }
-                              }}
-                              className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 inline-flex items-center justify-center shrink-0 cursor-pointer border border-transparent hover:border-emerald-300"
-                            >
-                              <FiCheck className="w-3.5 h-3.5" />
-                            </span>
-                          ) : (
-                            <span
-                              onClick={() => {
-                                if (isSelect) {
-                                  // toggle select key completely on (default first value)
-                                  handleSelectFeatureValue(activePlanTab, feat.key, feat.options![0]);
-                                } else {
-                                  handleToggleFeature(activePlanTab, feat.key);
-                                }
-                              }}
-                              className="w-5 h-5 rounded-full bg-slate-100 text-slate-400 inline-flex items-center justify-center shrink-0 cursor-pointer border border-transparent hover:border-slate-300"
-                            >
-                              <FiX className="w-2.5 h-2.5" />
-                            </span>
-                          )}
-
-                          {/* Stack label */}
-                          <span className={`${isEnabled ? 'text-slate-800 font-bold' : 'text-slate-400'}`}>{feat.label}</span>
-                        </div>
-
-                        {/* Interactive Toggle Control or Option Box Selector */}
-                        <div className="flex items-center space-x-2">
-                          {isSelect && isEnabled ? (
-                            <select
-                              value={selectVal}
-                              onChange={(e) => handleSelectFeatureValue(activePlanTab, feat.key, e.target.value)}
-                              className="bg-slate-50 border border-slate-200 rounded-[5px] px-2 py-1 text-[11px] font-black focus:outline-none focus:border-primary text-slate-800"
-                            >
-                              {feat.options?.map(opt => (
-                                <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                            </select>
-                          ) : isSelect ? (
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Disabled</span>
-                          ) : (
-                            <button
-                              onClick={() => handleToggleFeature(activePlanTab, feat.key)}
-                              className={`px-3 py-1 rounded-[5px] text-[10px] font-black uppercase tracking-widest cursor-pointer transition-colors border ${isEnabled
-                                  ? 'bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100/70'
-                                  : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-                                }`}
-                            >
-                              {isEnabled ? 'Disable' : 'Enable'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+            <SubscriptionsTab
+              planFeatures={planFeatures}
+              setPlanFeatures={setPlanFeatures}
+            />
           )}
 
           {/* ── PAYMENTS TAB ────────────────────────────────── */}
@@ -1089,6 +895,30 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                 >
                   <option value="active">Active</option>
                   <option value="suspended">Suspended</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sidebar Access</label>
+                <select
+                  value={currentMerchant.sidebarStatus !== false ? 'true' : 'false'}
+                  onChange={(e) => setCurrentMerchant({ ...currentMerchant, sidebarStatus: e.target.value === 'true' })}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-[5px] text-xs font-semibold text-slate-800"
+                >
+                  <option value="true">Open</option>
+                  <option value="false">Closed</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subsidebar Access</label>
+                <select
+                  value={currentMerchant.subsidebarStatus !== false ? 'true' : 'false'}
+                  onChange={(e) => setCurrentMerchant({ ...currentMerchant, subsidebarStatus: e.target.value === 'true' })}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-[5px] text-xs font-semibold text-slate-800"
+                >
+                  <option value="true">Open</option>
+                  <option value="false">Closed</option>
                 </select>
               </div>
 

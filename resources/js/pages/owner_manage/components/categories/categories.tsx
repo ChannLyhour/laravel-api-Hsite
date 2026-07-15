@@ -11,6 +11,7 @@ import { HelperTable } from '../../helper/HelperTable';
 import type { HelperTableColumn } from '../../helper/HelperTable';
 import { ButtonToggleStatus } from '../../helper/buttonToggleStatus';
 import { useTranslation } from '../../lang/i18n';
+import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
 interface CategoriesTabProps {
      ownerId?: number | string;
@@ -76,6 +77,19 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({ ownerId, storeId }
           loadCategories();
      }, [ownerId, storeId]);
 
+     useEffect(() => {
+          const fetchPlanFeatures = async () => {
+               try {
+                    const res = await fetch('/api/subscriptions/features');
+                    if (res.ok) {
+                         const data = await res.json();
+                         localStorage.setItem('biteflow_plan_features', JSON.stringify(data));
+                    }
+               } catch (_) {}
+          };
+          fetchPlanFeatures();
+     }, []);
+
      const loadCategories = async () => {
           setLoading(true);
           try {
@@ -90,7 +104,47 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({ ownerId, storeId }
           }
      };
 
+     const getCategoriesLimit = (): number => {
+          let tier = 'free';
+          try {
+               const savedSettings = localStorage.getItem('store_settings');
+               if (savedSettings) {
+                    const parsed = JSON.parse(savedSettings);
+                    tier = parsed.subscription_tier || 'free';
+               }
+          } catch (_) {}
+
+          let featuresList: string[] = [];
+          try {
+               const savedFeatures = localStorage.getItem('biteflow_plan_features');
+               if (savedFeatures) {
+                    const parsed = JSON.parse(savedFeatures);
+                    if (parsed[tier]) featuresList = parsed[tier];
+               }
+          } catch (_) {}
+
+          if (featuresList.length === 0) {
+               featuresList = defaultPlanFeatures[tier as keyof typeof defaultPlanFeatures] || defaultPlanFeatures.free;
+          }
+
+          const limitStr = featuresList.find(f => f.startsWith('Categories Limit:'));
+          if (limitStr) {
+               const val = limitStr.split(':')[1];
+               if (val.toLowerCase().includes('unlimited')) return Infinity;
+               const num = parseInt(val, 10);
+               if (!isNaN(num)) return num;
+          }
+          return 2; // Default fallback for Free plan
+     };
+
      const handleOpenCreateModal = () => {
+          const limit = getCategoriesLimit();
+          const mainCategories = categories.filter(c => !c.parent_id);
+          if (mainCategories.length >= limit) {
+               toast.error(`Category creation limit reached (${limit} categories max for your current plan). Please upgrade your subscription tier.`);
+               return;
+          }
+
           setEditingCategory(null);
           setCategoryName('');
           setCategoryDesc('');

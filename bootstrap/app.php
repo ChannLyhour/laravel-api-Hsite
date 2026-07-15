@@ -4,7 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
@@ -110,5 +110,15 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
     })->create();
+
+// Manually load the default .env file first so variables are loaded, 
+// preventing empty config issues when .env.local exists.
+if (file_exists(dirname(__DIR__).'/.env')) {
+    \Dotenv\Dotenv::create(
+        \Illuminate\Support\Env::getRepository(),
+        dirname(__DIR__),
+        '.env'
+    )->safeLoad();
+}
 
 return $app;

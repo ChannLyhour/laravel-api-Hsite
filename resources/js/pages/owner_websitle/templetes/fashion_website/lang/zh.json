@@ -117,5 +117,29 @@
     "phonePlaceholder": "手机号码",
     "newPasswordPlaceholder": "至少 6 个字符",
     "confirmPasswordPlaceholder": "验证新密码"
+  },
+  "invoice": {
+    "title": "交易发票",
+    "summary": "订单发票摘要",
+    "contactInfo": "联系信息",
+    "phone": "电话",
+    "email": "邮箱",
+    "address": "地址",
+    "invoiceNo": "发票",
+    "customer": "收件人",
+    "payMethod": "付款方式",
+    "deliveryMethod": "配送方式",
+    "dateTime": "日期/时间",
+    "item": "商品",
+    "price": "金额",
+    "subtotal": "小计",
+    "couponDiscount": "优惠折扣",
+    "shipping": "配送费用",
+    "vatTax": "增值税 (VAT)",
+    "totalAmount": "实付金额",
+    "thankYou": "感谢您在我们的商店购物！",
+    "poweredBy": "系统支持由",
+    "downloadReceipt": "下载发票",
+    "close": "关闭"
   }
 }

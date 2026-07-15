@@ -9,12 +9,14 @@ import {
      FiClock,
      FiCheckCircle,
      FiXCircle,
+     FiPrinter,
 } from 'react-icons/fi';
 import { toast } from '../../../utils/toast';
 import { customerOrdersService } from '@/api/created_by/getOrderCustomerbyid';
 import type { Order } from '@/pages/owner_manage/components/order/show';
 import { useTranslation } from '../../../utils/translate';
 import { OrderHistoryShow, resolveItemImage } from './show';
+import { Receipt } from './Receipt/Receipt';
 
 interface OrderHistoryIndexProps {
      user: any;
@@ -78,6 +80,7 @@ export const OrderHistoryIndex: React.FC<OrderHistoryIndexProps> = ({ user, owne
      const [orders, setOrders] = useState<Order[]>([]);
      const [isLoadingOrders, setIsLoadingOrders] = useState(false);
      const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
      const [currentPage, setCurrentPage] = useState(1);
      const itemsPerPage = 5;
 
@@ -304,21 +307,38 @@ export const OrderHistoryIndex: React.FC<OrderHistoryIndexProps> = ({ user, owne
                return (
                     <div className="space-y-8 animate-fade-in text-left">
                          {/* Sticky Detail Header */}
-                         <div className="sticky top-14 z-30 bg-white -mx-4 px-4 sm:-mx-5 sm:px-5 pt-4 pb-4 border-b border-stone-200 flex items-center gap-3">
-                              <button
-                                   onClick={handleBackToList}
-                                   className="p-1.5 hover:bg-stone-100 rounded-full text-stone-700 transition-colors border-none bg-transparent cursor-pointer flex items-center justify-center animate-fade-in"
-                                   title={t('orders.backToOrders')}
-                              >
-                                   <FiArrowLeft className="w-5 h-5" />
-                              </button>
-                              <div>
-                                   <h2 className="text-lg font-black text-stone-900 tracking-tight">Order #{selectedOrder.order_no || selectedOrder.id}</h2>
-                                   <p className="text-xs text-stone-500 mt-0.5 font-medium">{t('orders.placedOn')} {formatOrderDate(selectedOrder.time)}</p>
+                         <div className="sticky top-14 z-30 bg-white -mx-4 px-4 sm:-mx-5 sm:px-5 pt-4 pb-4 border-b border-stone-200 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                   <button
+                                        onClick={handleBackToList}
+                                        className="p-1.5 hover:bg-stone-100 rounded-full text-stone-700 transition-colors border-none bg-transparent cursor-pointer flex items-center justify-center animate-fade-in"
+                                        title={t('orders.backToOrders')}
+                                   >
+                                        <FiArrowLeft className="w-5 h-5" />
+                                   </button>
+                                   <div>
+                                        <h2 className="text-lg font-black text-stone-900 tracking-tight">Order #{selectedOrder.order_no || selectedOrder.id}</h2>
+                                        <p className="text-xs text-stone-500 mt-0.5 font-medium">{t('orders.placedOn')} {formatOrderDate(selectedOrder.time)}</p>
+                                   </div>
                               </div>
+
+                              <button
+                                   onClick={() => setIsReceiptOpen(true)}
+                                   className="px-3.5 py-1.5 rounded-[5px] bg-stone-900 hover:bg-stone-800 text-white font-extrabold text-xs transition-all border-none cursor-pointer flex items-center gap-1.5 shrink-0"
+                              >
+                                   <FiPrinter className="w-3.5 h-3.5" />
+                                   <span>View Invoice</span>
+                              </button>
                          </div>
 
                          <OrderHistoryShow order={selectedOrder} locale={locale} />
+
+                         <Receipt
+                              isOpen={isReceiptOpen}
+                              onClose={() => setIsReceiptOpen(false)}
+                              order={selectedOrder}
+                              locale={locale}
+                         />
                     </div>
                );
           }

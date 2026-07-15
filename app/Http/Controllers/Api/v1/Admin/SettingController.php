@@ -91,6 +91,8 @@ class SettingController extends Controller
             'location_store',
             'tax_percentage',
             'subscription_tier',
+            'sidebar_status',
+            'subsidebar_status',
             'custom_domain',
             'logo_url',
             'favicon_url',

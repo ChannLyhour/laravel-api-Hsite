@@ -297,17 +297,17 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
         {/* Top KPI Cards Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: t('overview.total_order'), value: loading ? '—' : orderStats.total, icon: <FiShoppingCart className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
-            { label: t('overview.total_products'), value: loading ? '—' : menuItemCount, icon: <FiBox className="w-4.5 h-4.5" />, color: 'bg-purple-500/10 text-purple-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-purple-500' },
-            { label: t('overview.total_categories'), value: loading ? '—' : categoryCount, icon: <FiPackage className="w-4.5 h-4.5" />, color: 'bg-orange-500/10 text-orange-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-orange-500' },
-            { label: t('overview.total_customers'), value: loading ? '—' : customerCount, icon: <FiUsers className="w-4.5 h-4.5" />, color: 'bg-emerald-500/10 text-emerald-500 border-none', bgClass: 'custom-card-container border-l-4 border-l-emerald-500' },
+            { label: t('overview.total_order'), value: loading ? '—' : orderStats.total, icon: <FiShoppingCart className="w-5 h-5" />, color: 'text-orange-600 bg-white/80 dark:bg-slate-900 dark:text-orange-400 shadow-2xs', bgClass: 'bg-orange-500/10 dark:bg-orange-500/5 border-orange-500/20 dark:border-orange-500/10' },
+            { label: t('overview.total_products'), value: loading ? '—' : menuItemCount, icon: <FiBox className="w-5 h-5" />, color: 'text-purple-600 bg-white/80 dark:bg-slate-900 dark:text-purple-400 shadow-2xs', bgClass: 'bg-purple-500/10 dark:bg-purple-500/5 border-purple-500/20 dark:border-purple-500/10' },
+            { label: t('overview.total_categories'), value: loading ? '—' : categoryCount, icon: <FiPackage className="w-5 h-5" />, color: 'text-blue-600 bg-white/80 dark:bg-slate-900 dark:text-blue-400 shadow-2xs', bgClass: 'bg-blue-500/10 dark:bg-blue-500/5 border-blue-500/20 dark:border-blue-500/10' },
+            { label: t('overview.total_customers'), value: loading ? '—' : customerCount, icon: <FiUsers className="w-5 h-5" />, color: 'text-emerald-600 bg-white/80 dark:bg-slate-900 dark:text-emerald-400 shadow-2xs', bgClass: 'bg-emerald-500/10 dark:bg-emerald-500/5 border-emerald-500/20 dark:border-emerald-500/10' },
           ].map((card, i) => (
-            <div key={i} className={`rounded-[5px] border p-5 shadow-2xs hover:shadow-xs transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-between ${card.bgClass}`}>
+            <div key={i} className={`rounded-[12px] border p-5 shadow-2xs hover:shadow-xs transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-between ${card.bgClass}`}>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{card.label}</p>
-                <p className="text-2xl font-black text-slate-900 tracking-tight leading-none">{card.value}</p>
+                <p className="text-[16px] font-bold text-slate-900 dark:text-slate-900 mb-1.5">{card.label}</p>
+                <p className="text-[26px] font-black text-slate-900 dark:text-white tracking-tight leading-none">{card.value}</p>
               </div>
-              <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 ${card.color}`}>
+              <div className={`w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0 ${card.color}`}>
                 {card.icon}
               </div>
             </div>
@@ -317,18 +317,18 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
         {/* Order Status Cards Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: t('overview.pending_orders'), value: orderStats.pending, icon: <FiClock className="w-4 h-4" />, color: 'text-white bg-amber-500 border-transparent' },
-            { label: t('overview.confirmed_orders'), value: orderStats.confirmed, icon: <FiCheckCircle className="w-4 h-4" />, color: 'text-white bg-blue-500 border-transparent' },
-            { label: t('overview.canceled_orders'), value: orderStats.cancelled, icon: <FiXCircle className="w-4 h-4" />, color: 'text-white bg-rose-500 border-transparent' },
-            { label: t('overview.complete_orders'), value: orderStats.complete, icon: <FiCheckCircle className="w-4 h-4" />, color: 'text-white bg-emerald-500 border-transparent' },
+            { label: t('overview.pending_orders'), value: orderStats.pending, icon: <FiClock className="w-4 h-4" />, color: 'text-amber-600 bg-white/80 dark:bg-slate-900 dark:text-amber-400 shadow-3xs', bgClass: 'bg-amber-500/10 dark:bg-amber-500/5 border-amber-500/20 dark:border-amber-500/10' },
+            { label: t('overview.confirmed_orders'), value: orderStats.confirmed, icon: <FiCheckCircle className="w-4 h-4" />, color: 'text-blue-600 bg-white/80 dark:bg-slate-900 dark:text-blue-400 shadow-3xs', bgClass: 'bg-blue-500/10 dark:bg-blue-500/5 border-blue-500/20 dark:border-blue-500/10' },
+            { label: t('overview.canceled_orders'), value: orderStats.cancelled, icon: <FiXCircle className="w-4 h-4" />, color: 'text-rose-600 bg-white/80 dark:bg-slate-900 dark:text-rose-400 shadow-3xs', bgClass: 'bg-rose-500/10 dark:bg-rose-500/5 border-rose-500/20 dark:border-rose-500/10' },
+            { label: t('overview.complete_orders'), value: orderStats.complete, icon: <FiCheckCircle className="w-4 h-4" />, color: 'text-emerald-600 bg-white/80 dark:bg-slate-900 dark:text-emerald-400 shadow-3xs', bgClass: 'bg-emerald-500/10 dark:bg-emerald-500/5 border-emerald-500/20 dark:border-emerald-500/10' },
           ].map((s, i) => (
-            <div key={i} className="rounded-[5px] border p-4 shadow-3xs flex items-center gap-3.5 hover:shadow-2xs transition-shadow custom-card-container">
-              <div className={`w-9 h-9 rounded-[8px] border flex items-center justify-center shrink-0 ${s.color}`}>
+            <div key={i} className={`rounded-[12px] border p-4 shadow-3xs flex items-center gap-3.5 hover:shadow-2xs transition-all duration-300 hover:-translate-y-0.5 ${s.bgClass}`}>
+              <div className={`w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0 ${s.color}`}>
                 {s.icon}
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{s.label}</p>
-                <p className="text-base font-black text-slate-900 leading-none">{loading ? '—' : s.value}</p>
+                <p className="text-[12px] font-bold text-slate-900 dark:text-slate-900">{s.label}</p>
+                <p className="text-[20px] font-black text-slate-900 dark:text-white leading-none">{loading ? '—' : s.value}</p>
               </div>
             </div>
           ))}

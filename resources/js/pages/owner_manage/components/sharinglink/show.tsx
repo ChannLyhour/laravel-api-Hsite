@@ -211,14 +211,14 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
      ];
 
      return (
-          <div className="space-y-6 font-kuntomruy animate-fade-in w-full text-left">
+          <div className="bg-white border border-slate-100 p-6 sm:p-8 rounded-[8px] shadow-xs space-y-8 animate-fade-in font-kuntomruy custom-card-container w-full text-left">
                {/* Header */}
                <div>
-                    <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2.5">
-                         <FiExternalLink className="text-orange-500" />
+                    <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
+                         <FiExternalLink className="text-orange-500 w-6 h-6" />
                          <span>ផ្សព្វផ្សាយហាងទំនិញ (Online Store QR)</span>
                     </h2>
-                    <p className="text-slate-500 text-xs sm:text-sm mt-1">
+                    <p className="text-slate-400 text-xs sm:text-sm mt-1">
                          បង្កើត កែច្នៃ និងទាញយកកូដ QR សម្រាប់គេហទំព័រលក់ទំនិញអនឡាញផ្លូវការរបស់ហាងអ្នក។
                     </p>
                </div>
@@ -227,19 +227,19 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
                     {/* Left 2/3 - URL & Customizer Panel */}
                     <div className="lg:col-span-2 space-y-6">
                          {/* Store URL info card */}
-                         <div className="bg-white rounded-[10px] p-6 border shadow-[0_2px_8px_rgba(0,0,0,0.02)] space-y-4">
+                         <div className="bg-white rounded-[8px] p-6 border border-slate-100 shadow-xs space-y-4">
                               <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wider pb-2 border-b">
                                    Storefront Web Address
                               </h3>
 
                               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                                   <div className="flex-1 bg-slate-50 border px-4 py-3 rounded-[6px] text-xs font-bold text-slate-700 break-all select-all select-none">
+                                   <div className="flex-1 bg-slate-50 border border-slate-200 px-4 py-3 rounded-[6px] text-xs font-bold text-slate-700 break-all select-all select-none">
                                         {shareUrl}
                                    </div>
                                    <div className="flex items-center gap-2 shrink-0">
                                         <button
                                              onClick={handleCopyLink}
-                                             className="px-4 py-3 border border-orange-200/80 text-orange-600 hover:bg-orange-50 rounded-[6px] text-xs font-black transition-colors cursor-pointer flex items-center justify-center gap-2"
+                                             className="px-4 py-3 border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-[6px] text-xs font-black transition-colors cursor-pointer flex items-center justify-center gap-2"
                                         >
                                              <FiCopy className="w-4 h-4" />
                                              <span>Copy Link</span>
@@ -248,7 +248,7 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
                                              href={shareUrl}
                                              target="_blank"
                                              rel="noreferrer"
-                                             className="px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-[6px] text-xs font-black transition-colors cursor-pointer flex items-center justify-center gap-2 border-none no-underline shadow-3xs"
+                                             className="px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-[6px] text-xs font-black transition-colors cursor-pointer flex items-center justify-center gap-2 border-none no-underline shadow-2xs active:scale-98"
                                         >
                                              <FiExternalLink className="w-4 h-4" />
                                              <span>Visit Shop</span>
@@ -258,7 +258,7 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
                          </div>
 
                          {/* QR Customizer */}
-                         <div className="bg-white rounded-[10px] p-6 border shadow-[0_2px_8px_rgba(0,0,0,0.02)] space-y-5">
+                         <div className="bg-white rounded-[8px] p-6 border border-slate-100 shadow-xs space-y-5">
                               <div className="flex justify-between items-center pb-2 border-b">
                                    <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wider">
                                         Customize QR Code Style
@@ -269,7 +269,7 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
                                    >
                                         <FiRotateCcw className="w-3.5 h-3.5" />
                                         <span>Reset</span>
-                                   </button>
+                                    </button>
                               </div>
 
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -313,7 +313,7 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
                     </div>
 
                     {/* Right 1/3 - Preview & Action Panel */}
-                    <div className="bg-white rounded-[10px] p-6 border shadow-[0_2px_8px_rgba(0,0,0,0.02)] space-y-6 flex flex-col items-center">
+                    <div className="bg-white rounded-[8px] p-6 border border-slate-100 shadow-xs space-y-6 flex flex-col items-center">
                          <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wider pb-2 border-b w-full text-center">
                               QR Code Live Preview
                          </h3>
@@ -336,7 +336,7 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
                          <div className="space-y-2.5 w-full pt-4 border-t">
                               <button
                                    onClick={handleDownloadPNG}
-                                   className="w-full py-2.5 bg-slate-900 hover:bg-black text-white rounded-[6px] text-xs font-black transition-colors cursor-pointer flex items-center justify-center gap-2 border-none shadow-3xs"
+                                   className="w-full py-2.5 bg-slate-900 hover:bg-black text-white rounded-[6px] text-xs font-black transition-colors cursor-pointer flex items-center justify-center gap-2 border-none shadow-2xs active:scale-98"
                               >
                                    <FiDownload className="w-4 h-4" />
                                    <span>Download PNG Image</span>
@@ -344,7 +344,7 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
 
                               <button
                                    onClick={handlePrintStandee}
-                                   className="w-full py-2.5 border border-orange-200/80 text-orange-600 hover:bg-orange-50 rounded-[6px] text-xs font-black transition-colors cursor-pointer flex items-center justify-center gap-2"
+                                   className="w-full py-2.5 border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-[6px] text-xs font-black transition-colors cursor-pointer flex items-center justify-center gap-2 active:scale-98"
                               >
                                    <FiPrinter className="w-4 h-4" />
                                    <span>Print Table Standee</span>

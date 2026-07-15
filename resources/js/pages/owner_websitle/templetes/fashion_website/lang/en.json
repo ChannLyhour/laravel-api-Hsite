@@ -117,5 +117,29 @@
     "phonePlaceholder": "Phone number",
     "newPasswordPlaceholder": "At least 6 characters",
     "confirmPasswordPlaceholder": "Verify new password"
+  },
+  "invoice": {
+    "title": "Transaction Invoice",
+    "summary": "Order Invoice Summary",
+    "contactInfo": "Contact Info",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "invoiceNo": "Invoice",
+    "customer": "Customer",
+    "payMethod": "Pay Method",
+    "deliveryMethod": "Delivery Method",
+    "dateTime": "Date/Time",
+    "item": "Item",
+    "price": "Price",
+    "subtotal": "Subtotal",
+    "couponDiscount": "Coupon Discount",
+    "shipping": "Shipping",
+    "vatTax": "VAT Tax",
+    "totalAmount": "Total Amount",
+    "thankYou": "Thank you for ordering with us!",
+    "poweredBy": "Software powered by",
+    "downloadReceipt": "Download Receipt",
+    "close": "Close"
   }
 }

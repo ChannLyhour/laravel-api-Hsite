@@ -117,5 +117,29 @@
     "phonePlaceholder": "លេខទូរស័ព្ទ",
     "newPasswordPlaceholder": "យ៉ាងហោចណាស់ ៦ ខ្ទង់",
     "confirmPasswordPlaceholder": "ផ្ទៀងផ្ទាត់ពាក្យសម្ងាត់ថ្មី"
+  },
+  "invoice": {
+    "title": "វិក្កយបត្រលក់",
+    "summary": "សេចក្តីសង្ខេបវិក្កយបត្រកុម្មង់",
+    "contactInfo": "ព័ត៌មានទំនាក់ទំនង",
+    "phone": "ទូរស័ព្ទ",
+    "email": "អ៊ីមែល",
+    "address": "អាសយដ្ឋាន",
+    "invoiceNo": "វិក្កយបត្រ",
+    "customer": "អតិថិជន",
+    "payMethod": "វិធីសាស្ត្របង់ប្រាក់",
+    "deliveryMethod": "វិធីដឹកជញ្ជូន",
+    "dateTime": "កាលបរិច្ឆេទ/ម៉ោង",
+    "item": "ទំនិញ",
+    "price": "តម្លៃ",
+    "subtotal": "សរុបរង",
+    "couponDiscount": "បញ្ចុះតម្លៃពីគូប៉ុង",
+    "shipping": "សេវាដឹកជញ្ជូន",
+    "vatTax": "ពន្ធអាករ (VAT)",
+    "totalAmount": "ទឹកប្រាក់សរុប",
+    "thankYou": "សូមអរគុណសម្រាប់ការបញ្ជាទិញជាមួយយើងខ្ញុំ!",
+    "poweredBy": "កម្មវិធីដំណើរការដោយ",
+    "downloadReceipt": "ទាញយកវិក្កយបត្រ",
+    "close": "បិទ"
   }
 }
