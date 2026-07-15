@@ -316,6 +316,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/products/{id}/variants', [ProductVariantController::class, 'store'])->whereNumber('id');
         Route::put('/products/variants/{id}', [ProductVariantController::class, 'update'])->whereNumber('id');
         Route::delete('/products/variants/{id}', [ProductVariantController::class, 'destroy'])->whereNumber('id');
+        Route::put('/products/variants/batches/{id}', [ProductVariantController::class, 'updateBatch'])->whereNumber('id');
+        Route::delete('/products/variants/batches/{id}', [ProductVariantController::class, 'destroyBatch'])->whereNumber('id');
 
         // Product Dynamic Attributes Manager
         Route::post('/attributes', [ProductAttributeController::class, 'store']);

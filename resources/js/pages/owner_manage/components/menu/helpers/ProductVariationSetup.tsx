@@ -5,6 +5,7 @@ import type { ProductAttribute, ProductAttributeValue } from '@/api/owner/catego
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { HelperTable } from '@/pages/owner_manage/helper/HelperTable';
 import type { HelperTableColumn } from '@/pages/owner_manage/helper/HelperTable';
+import '../style/index.css';
 
 async function compressImage(file: File, maxWidth = 800, quality = 0.7): Promise<File> {
   return new Promise((resolve) => {
@@ -821,7 +822,7 @@ export const ProductVariationSetup: React.FC<ProductVariationSetupProps> = ({
                             }
                           }
                         }}
-                        className="flex-1 min-w-[100px] text-xs font-semibold focus:outline-none bg-transparent h-6"
+                        className="search-tag-input-field flex-1 min-w-[100px] text-xs font-semibold focus:outline-none bg-transparent h-6"
                       />
                       {currentVal.trim() && (
                         <button

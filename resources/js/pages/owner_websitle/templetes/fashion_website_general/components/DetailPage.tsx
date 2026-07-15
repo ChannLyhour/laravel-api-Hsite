@@ -144,7 +144,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
     }
     return initialAddons;
   });
-  const [detailQuantity, setDetailQuantity] = useState(1);
+  const [detailQuantity, setDetailQuantity] = useState(() => (initialProduct?.min_order_qty && initialProduct.min_order_qty > 1) ? initialProduct.min_order_qty : 1);
 
   const addonsPrice = useMemo(() => {
     if (!product.addons || product.addons.length === 0) return 0;
@@ -398,7 +398,8 @@ export const DetailPage: React.FC<DetailPageProps> = ({
     setSelectedSize('');
     setSelectedColor('');
     setActiveGalleryIndex(0);
-    setDetailQuantity(1);
+    const minQty = product?.min_order_qty && product.min_order_qty > 1 ? product.min_order_qty : 1;
+    setDetailQuantity(minQty);
 
     const initialAddons: Record<number | string, boolean> = {};
     if (product?.addons) {
@@ -928,7 +929,10 @@ export const DetailPage: React.FC<DetailPageProps> = ({
             <div className="flex items-center w-[120px] rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 p-0.5 overflow-hidden">
               <button
                 type="button"
-                onClick={() => setDetailQuantity(prev => Math.max(1, prev - 1))}
+                onClick={() => {
+                  const minQty = product.min_order_qty && product.min_order_qty > 1 ? product.min_order_qty : 1;
+                  setDetailQuantity(prev => Math.max(minQty, prev - 1));
+                }}
                 className="w-8 h-8 rounded-md hover:bg-stone-200/60 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white transition-all flex items-center justify-center font-semibold border-none cursor-pointer text-xs active:scale-90"
               >
                 <FiMinus />
@@ -944,6 +948,11 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                 <FiPlus />
               </button>
             </div>
+            {product.min_order_qty && product.min_order_qty > 1 && (
+              <span className="text-[#E61E25] text-[10px] font-bold uppercase tracking-wider block mt-1">
+                ⚠️ Order minimum for Customer: {product.min_order_qty} units
+              </span>
+            )}
           </div>
 
           {/* Collapsible item description */}

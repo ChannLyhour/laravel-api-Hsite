@@ -138,56 +138,56 @@ export const StockOverview: React.FC<StockOverviewProps> = ({
       {/* Overview Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Total Products */}
-        <div className="bg-blue-50/40 border border-blue-100 rounded-[10px] p-5 shadow-[0_2px_8px_rgba(59,130,246,0.02)] flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-[8px] bg-white border border-blue-100 flex items-center justify-center text-blue-500 shrink-0">
-            <FiLayers className="w-6 h-6" />
+        <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] flex items-center space-x-4.5 hover:-translate-y-1 hover:shadow-md transition-all duration-300 group">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/15 flex items-center justify-center text-blue-600 shrink-0 shadow-3xs group-hover:scale-110 duration-300 transition-transform">
+            <FiLayers className="w-5.5 h-5.5" />
           </div>
           <div>
-            <p className="text-2xs font-black text-black uppercase tracking-wider">Total Products</p>
-            <h3 className="text-xl sm:text-2xl font-extrabold text-black mt-1">{totalProducts}</h3>
-            <p className="text-slate-500 text-3xs font-semibold mt-0.5">{totalVariants} unique variants</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Products</p>
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{totalProducts}</h3>
+            <p className="text-slate-450 text-4xs font-bold mt-0.5">{totalVariants} unique variants</p>
           </div>
         </div>
 
         {/* Total Units */}
-        <div className="bg-emerald-50/40 border border-emerald-100 rounded-[10px] p-5 shadow-[0_2px_8px_rgba(16,185,129,0.02)] flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-[8px] bg-white border border-emerald-100 flex items-center justify-center text-emerald-500 shrink-0">
-            <FiBox className="w-6 h-6" />
+        <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] flex items-center space-x-4.5 hover:-translate-y-1 hover:shadow-md transition-all duration-300 group">
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-600 shrink-0 shadow-3xs group-hover:scale-110 duration-300 transition-transform">
+            <FiBox className="w-5.5 h-5.5" />
           </div>
           <div>
-            <p className="text-2xs font-black text-black uppercase tracking-wider">Total Stock Qty</p>
-            <h3 className="text-xl sm:text-2xl font-extrabold text-black mt-1">{totalStockUnits}</h3>
-            <p className="text-slate-500 text-3xs font-semibold mt-0.5">Physical items in hand</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Stock Qty</p>
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{totalStockUnits}</h3>
+            <p className="text-slate-450 text-4xs font-bold mt-0.5">Physical items in hand</p>
           </div>
         </div>
 
         {/* Low Stock Items */}
         <div 
           onClick={() => onNavigateToTab('low')}
-          className="bg-amber-50/40 border border-amber-100 rounded-[10px] p-5 shadow-[0_2px_8px_rgba(245,158,11,0.02)] flex items-center space-x-4 cursor-pointer hover:border-amber-300 transition-colors group"
+          className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] flex items-center space-x-4.5 cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all duration-300 group hover:border-amber-300"
         >
-          <div className="w-12 h-12 rounded-[8px] bg-white border border-amber-100 flex items-center justify-center text-amber-500 shrink-0 group-hover:bg-amber-50/30">
-            <FiAlertTriangle className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/15 flex items-center justify-center text-amber-600 shrink-0 shadow-3xs group-hover:scale-110 duration-300 transition-transform">
+            <FiAlertTriangle className="w-5.5 h-5.5" />
           </div>
           <div>
-            <p className="text-2xs font-black text-black uppercase tracking-wider">Low Stock Items</p>
-            <h3 className="text-xl sm:text-2xl font-extrabold text-black mt-1">{lowStockCount}</h3>
-            <p className="text-amber-600 text-3xs font-black mt-0.5 hover:underline">Requires Attention &rarr;</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Low Stock Items</p>
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{lowStockCount}</h3>
+            <p className="text-amber-600 text-4xs font-bold mt-0.5 group-hover:underline flex items-center gap-0.5">Requires Attention &rarr;</p>
           </div>
         </div>
 
         {/* Out of Stock */}
         <div 
           onClick={() => onNavigateToTab('low')}
-          className="bg-rose-50/40 border border-rose-100 rounded-[10px] p-5 shadow-[0_2px_8px_rgba(239,68,68,0.02)] flex items-center space-x-4 cursor-pointer hover:border-rose-300 transition-colors group"
+          className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] flex items-center space-x-4.5 cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all duration-300 group hover:border-rose-350"
         >
-          <div className="w-12 h-12 rounded-[8px] bg-white border border-rose-100 flex items-center justify-center text-rose-500 shrink-0 group-hover:bg-rose-50/30">
-            <FiAlertTriangle className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/15 flex items-center justify-center text-rose-600 shrink-0 shadow-3xs group-hover:scale-110 duration-300 transition-transform">
+            <FiAlertTriangle className="w-5.5 h-5.5" />
           </div>
           <div>
-            <p className="text-2xs font-black text-black uppercase tracking-wider">Out of Stock</p>
-            <h3 className="text-xl sm:text-2xl font-extrabold text-black mt-1">{outOfStockCount}</h3>
-            <p className="text-rose-600 text-3xs font-black mt-0.5 hover:underline">Needs Reorder &rarr;</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Out of Stock</p>
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{outOfStockCount}</h3>
+            <p className="text-rose-600 text-4xs font-bold mt-0.5 group-hover:underline flex items-center gap-0.5">Needs Reorder &rarr;</p>
           </div>
         </div>
       </div>

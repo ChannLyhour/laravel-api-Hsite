@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiBox, FiLayers, FiAlertTriangle, FiActivity, FiTrendingUp } from 'react-icons/fi';
+import { FiBox, FiLayers, FiAlertTriangle, FiActivity, FiTrendingUp, FiSliders } from 'react-icons/fi';
 import { stockManagementService } from '@/api/owner/stockManagement';
 import type { MenuItem, ProductVariant } from '@/api/owner/categories';
 import { toast } from '@/pages/owner_manage/utils/toast';
@@ -7,11 +7,12 @@ import { StockOverview } from './StockOverview';
 import { StockItems } from './StockItems';
 import { StockLowAlerts } from './StockLowAlerts';
 import { StockAbcAnalysis } from './StockAbcAnalysis';
+import { StockFifoBatches } from './StockFifoBatches';
 import { HelperFilter, type FilterSection } from '../../helper/HelperFilter';
 import '@/pages/owner_manage/style/font.css';
 
 interface StockManagementProps {
-  defaultView?: 'overview' | 'items' | 'low' | 'movements' | 'abc';
+  defaultView?: 'overview' | 'items' | 'low' | 'movements' | 'abc' | 'fifo';
   ownerId?: number | string;
   storeId?: number;
 }
@@ -21,7 +22,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   ownerId,
   storeId,
 }) => {
-  const [view, setView] = useState<'overview' | 'items' | 'low' | 'movements' | 'abc'>(defaultView);
+  const [view, setView] = useState<'overview' | 'items' | 'low' | 'movements' | 'abc' | 'fifo'>(defaultView);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,12 +84,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     fetchItems();
   }, [ownerId, storeId]);
 
-  const handleUpdateStock = async (variantId: number, qty: number, threshold: number | null) => {
+  const handleUpdateStock = async (variantId: number, qty: number, threshold: number | null, purchasePrice?: number) => {
     try {
-      await stockManagementService.updateVariantStock(variantId, {
+      const payload: any = {
         stock_qty: qty,
-        low_stock_threshold: threshold
-      });
+        purchase_price: purchasePrice
+      };
+      if (threshold !== null && threshold !== undefined) {
+        payload.low_stock_threshold = threshold;
+      }
+      await stockManagementService.updateVariantStock(variantId, payload);
       toast.success('Stock level updated successfully!');
       
       // Update local state instead of full refetch to be ultra smooth
@@ -99,7 +104,12 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               ...item,
               variants: item.variants.map(v => 
                 v.id === variantId 
-                  ? { ...v, stock_qty: qty, low_stock_threshold: threshold }
+                  ? { 
+                      ...v, 
+                      stock_qty: qty, 
+                      low_stock_threshold: threshold,
+                      ...(purchasePrice !== undefined ? { purchase_price: String(purchasePrice) } : {})
+                    }
                   : v
               )
             };
@@ -149,8 +159,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       {/* Header section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2.5">
-            <FiBox className="text-orange-500" />
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
+            <FiBox className="text-orange-500 w-6 h-6 shrink-0" />
             <span>គ្រប់គ្រងស្តុក (Stock Management)</span>
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm mt-1">
@@ -159,73 +169,25 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         </div>
       </div>
 
-      {/* Navigation Sub-Tabs */}
-      <div className="bg-slate-50 p-1 rounded-[5px] inline-flex">
-        <nav className="flex flex-wrap gap-1">
-          <button
-            onClick={() => setView('overview')}
-            className={`px-3.5 py-2 text-xs font-black rounded-[4px] transition-all flex items-center gap-1.5 cursor-pointer border-none ${
-              view === 'overview'
-                ? 'bg-orange-600 text-white shadow-3xs'
-                : 'bg-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <FiBox className="w-4 h-4" />
-            <span>Overview</span>
-          </button>
-          <button
-            onClick={() => setView('items')}
-            className={`px-3.5 py-2 text-xs font-black rounded-[4px] transition-all flex items-center gap-1.5 cursor-pointer border-none ${
-              view === 'items'
-                ? 'bg-orange-600 text-white shadow-3xs'
-                : 'bg-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <FiLayers className="w-4 h-4" />
-            <span>Stock Items</span>
-          </button>
-          <button
-            onClick={() => setView('low')}
-            className={`px-3.5 py-2 text-xs font-black rounded-[4px] transition-all flex items-center gap-1.5 cursor-pointer border-none ${
-              view === 'low'
-                ? 'bg-orange-600 text-white shadow-3xs'
-                : 'bg-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <FiAlertTriangle className="w-4 h-4" />
-            <span>Low Stock Alerts</span>
-          </button>
-          <button
-            onClick={() => setView('movements')}
-            className={`px-3.5 py-2 text-xs font-black rounded-[4px] transition-all flex items-center gap-1.5 cursor-pointer border-none ${
-              view === 'movements'
-                ? 'bg-orange-600 text-white shadow-3xs'
-                : 'bg-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <FiActivity className="w-4 h-4" />
-            <span>Stock Movements</span>
-          </button>
-          <button
-            onClick={() => setView('abc')}
-            className={`px-3.5 py-2 text-xs font-black rounded-[4px] transition-all flex items-center gap-1.5 cursor-pointer border-none ${
-              view === 'abc'
-                ? 'bg-orange-600 text-white shadow-3xs'
-                : 'bg-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <FiTrendingUp className="w-4 h-4" />
-            <span>ABC Analysis</span>
-          </button>
-        </nav>
-      </div>
-
       {/* Render subcomponents based on selected view */}
       {view === 'overview' && (
         <StockOverview
           items={items}
           onQuickRestock={handleQuickRestock}
-          onNavigateToTab={(tab) => setView(tab)}
+          onNavigateToTab={(tab) => {
+            const sidebarTabs: Record<string, string> = {
+              overview: 'stock-overview',
+              items: 'stock-items',
+              low: 'stock-low',
+              movements: 'stock-movements',
+              abc: 'stock-abc-analysis',
+              fifo: 'stock-fifo'
+            };
+            const targetTab = sidebarTabs[tab];
+            if (targetTab) {
+              window.dispatchEvent(new CustomEvent('change_admin_tab', { detail: targetTab }));
+            }
+          }}
         />
       )}
 
@@ -274,6 +236,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         <StockAbcAnalysis
           items={items}
           loading={loading}
+        />
+      )}
+
+      {view === 'fifo' && (
+        <StockFifoBatches
+          items={items}
+          loading={loading}
+          onUpdateStock={handleUpdateStock}
+          onRefresh={fetchItems}
         />
       )}
 

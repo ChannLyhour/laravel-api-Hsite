@@ -1331,6 +1331,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     };
 
     const executeOrderSubmission = async () => {
+        // Validate min_order_qty for each cart item before submission
+        for (const ci of (cartItems || [])) {
+            const minQty = ci.item?.min_order_qty && ci.item.min_order_qty > 1 ? ci.item.min_order_qty : 1;
+            if ((ci.qty || 1) < minQty) {
+                toast.error(`"${ci.item?.name || 'Item'}" requires a minimum order of ${minQty} units.`);
+                return;
+            }
+        }
+
         // Prepare order data with strict validation
         const validItems = (cartItems || []).map(ci => {
             // Priority: ci.item.id -> ci.productId -> parse from ci.id

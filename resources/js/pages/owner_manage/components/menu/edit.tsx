@@ -10,6 +10,7 @@ import { ProductGalleryUpload } from './helpers/ProductGalleryUpload';
 import type { GalleryImage } from './helpers/ProductGalleryUpload';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import '@/pages/owner_manage/style/font.css';
+import './style/index.css';
 import { ProductVariationSetup } from './helpers/ProductVariationSetup';
 import type { GeneratedVariantRow } from './helpers/ProductVariationSetup';
 import { validateProductForm, scrollToFirstError, type ProductValidationErrors } from './validations/productValidation';
@@ -140,6 +141,7 @@ export const EditPage: React.FC<EditPageProps> = ({
   const [selectedBrandId, setSelectedBrandId] = useState<number | 'new' | ''>('');
   const [unit, setUnit] = useState('pc');
   const [searchTags, setSearchTags] = useState('');
+  const [tagInput, setTagInput] = useState('');
   const [minOrderQty, setMinOrderQty] = useState<number>(1);
   const [discountAmount, setDiscountAmount] = useState('0');
   const [discountType, setDiscountType] = useState('flat');
@@ -483,6 +485,7 @@ export const EditPage: React.FC<EditPageProps> = ({
   };
   const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
 
     const errs = validateProductForm({
       itemNameEn,
@@ -1472,13 +1475,91 @@ export const EditPage: React.FC<EditPageProps> = ({
                 {t('menu.search_tags')}
                 <span className="text-slate-400 cursor-help" title="Enter search keywords to help users find the product.">ℹ️</span>
               </label>
-              <input
-                type="text"
-                value={searchTags}
-                onChange={(e) => setSearchTags(e.target.value)}
-                placeholder="Enter tag"
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1455ac]/20 focus:border-[#1455ac] font-medium text-slate-800"
-              />
+              <div className="w-full p-2 border border-slate-200 rounded-[5px] focus-within:ring-2 focus-within:ring-[#1455ac]/20 focus-within:border-[#1455ac] bg-white min-h-[44px] flex flex-wrap gap-1.5 items-center">
+                {searchTags.split(',').map(t => t.trim()).filter(Boolean).map((tag, idx) => (
+                  <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-all">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentTags = searchTags.split(',').map(t => t.trim()).filter(Boolean);
+                        setSearchTags(currentTags.filter(t => t !== tag).join(','));
+                      }}
+                      className="w-3.5 h-3.5 rounded-full flex items-center justify-center bg-slate-200 hover:bg-slate-350/40 text-slate-500 hover:text-slate-700 border-none cursor-pointer p-0 text-[10px] font-bold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <div className="flex-1 flex gap-2 items-center min-w-[150px]">
+
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.includes(',')) {
+                        const parts = val.split(',');
+                        const last = parts.pop() || '';
+                        parts.forEach(part => {
+                          const clean = part.trim();
+                          if (clean) {
+                            const currentTags = searchTags ? searchTags.split(',').map(t => t.trim()).filter(Boolean) : [];
+                            if (!currentTags.includes(clean)) {
+                              currentTags.push(clean);
+                            }
+                            setSearchTags(currentTags.join(','));
+                          }
+                        });
+                        setTagInput(last);
+                      } else {
+                        setTagInput(val);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const clean = tagInput.trim();
+                        if (clean) {
+                          const currentTags = searchTags ? searchTags.split(',').map(t => t.trim()).filter(Boolean) : [];
+                          if (!currentTags.includes(clean)) {
+                            const updated = [...currentTags, clean].join(',');
+                            setSearchTags(updated);
+                          }
+                          setTagInput('');
+                        }
+                      } else if (e.key === 'Backspace' && !tagInput) {
+                        const currentTags = searchTags ? searchTags.split(',').map(t => t.trim()).filter(Boolean) : [];
+                        if (currentTags.length > 0) {
+                          currentTags.pop();
+                          setSearchTags(currentTags.join(','));
+                        }
+                      }
+                    }}
+                    placeholder={searchTags ? "" : "Enter tag"}
+                    className="search-tag-input-field flex-1 min-w-[100px] text-sm font-medium text-slate-800 py-0.5"
+                  />
+                  {tagInput.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const clean = tagInput.trim();
+                        if (clean) {
+                          const currentTags = searchTags ? searchTags.split(',').map(t => t.trim()).filter(Boolean) : [];
+                          if (!currentTags.includes(clean)) {
+                            const updated = [...currentTags, clean].join(',');
+                            setSearchTags(updated);
+                          }
+                          setTagInput('');
+                        }
+                      }}
+                      className="px-2.5 py-1 bg-[#1455ac]/10 hover:bg-[#1455ac]/20 text-[#1455ac] text-2xs font-extrabold uppercase tracking-wider rounded-md transition-all cursor-pointer border-none shrink-0"
+                    >
+                      Add
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
           </div>

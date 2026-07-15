@@ -39,7 +39,7 @@ import { useTranslation } from '../lang/i18n';
 import { getStoreUrl, slugifyStoreName } from '@Security/Owner/configUrl';
 import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis' | 'stock-fifo';
 
 interface SidebarProps {
   activeTab: TabId;
@@ -295,7 +295,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (activeTab === 'inbox') return 'inbox';
     if (activeTab.startsWith('orders')) return 'orders';
     if (['categories', 'sub-categories', 'sub-sub-categories', 'brands', 'product-badges', 'attributes', 'menu-items'].includes(activeTab)) return 'catalog';
-    if (['stock-overview', 'stock-items', 'stock-low', 'stock-movements', 'stock-abc-analysis'].includes(activeTab)) return 'stock';
+    if (['stock-overview', 'stock-items', 'stock-low', 'stock-movements', 'stock-abc-analysis', 'stock-fifo'].includes(activeTab)) return 'stock';
     if (activeTab.startsWith('marketing')) return 'marketing';
     if (['customers', 'customer-reviews', 'partner-stores'].includes(activeTab)) return 'people';
     if (['settings-delivery-methods', 'settings-delivery-zones'].includes(activeTab)) return 'delivery';
@@ -1025,6 +1025,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <FiTrendingUp className="w-4 h-4 text-indigo-200/80 shrink-0" />
                   <span>ABC Analysis</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('stock-fifo'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'stock-fifo'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiSliders className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span>FIFO Batches</span>
                 </button>
               </div>
             )}

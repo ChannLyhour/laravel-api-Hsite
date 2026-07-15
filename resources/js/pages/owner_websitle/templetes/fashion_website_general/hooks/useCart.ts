@@ -159,7 +159,10 @@ export const useCart = (initialSettings?: any, user?: any) => {
     }
   }, [orderMethod]);
 
-  const addToCart = async (item: Root2, qtyToAdd = 1, size?: string, color?: string, addonsPrice?: number) => {
+  const addToCart = async (item: Root2, qtyToAdd?: number, size?: string, color?: string, addonsPrice?: number) => {
+    const minQty = item.min_order_qty && item.min_order_qty > 1 ? item.min_order_qty : 1;
+    const effectiveQty = Math.max(qtyToAdd ?? minQty, minQty);
+
     const isGuestCheckoutEnabled = initialSettings?.guest_checkout !== false && initialSettings?.guest_checkout !== 'false';
     
     if (!user && !isGuestCheckoutEnabled) {
@@ -221,7 +224,7 @@ export const useCart = (initialSettings?: any, user?: any) => {
         await cartService.addToCart({
           product_id: item.id,
           product_variant_id: variantId,
-          quantity: qtyToAdd,
+          quantity: effectiveQty,
         });
         // Refresh cart from server to get accurate IDs and data
         const dbCart = await cartService.getCart();
@@ -236,7 +239,7 @@ export const useCart = (initialSettings?: any, user?: any) => {
         const existing = prev.find(ci => ci.id === cartItemId);
         if (existing) {
           return prev.map(ci =>
-            ci.id === cartItemId ? { ...ci, qty: ci.qty + qtyToAdd } : ci
+            ci.id === cartItemId ? { ...ci, qty: ci.qty + effectiveQty } : ci
           );
         }
 
@@ -258,7 +261,7 @@ export const useCart = (initialSettings?: any, user?: any) => {
               ...item,
               price: finalPrice,
             },
-            qty: qtyToAdd,
+            qty: effectiveQty,
             selectedSize: sizeVal || undefined,
             selectedColor: colorVal || undefined,
             selectedImage: resolveImageUrl(selectedImage) || undefined,
@@ -274,7 +277,8 @@ export const useCart = (initialSettings?: any, user?: any) => {
     const ci = cart.find(c => c.id === id);
     if (!ci) return;
 
-    const newQty = Math.max(1, ci.qty + delta);
+    const itemMinQty = ci.item.min_order_qty && ci.item.min_order_qty > 1 ? ci.item.min_order_qty : 1;
+    const newQty = Math.max(itemMinQty, ci.qty + delta);
 
     if (user && ci.dbId) {
       try {

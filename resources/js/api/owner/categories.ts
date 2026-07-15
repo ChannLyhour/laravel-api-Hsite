@@ -50,6 +50,7 @@ export interface ProductVariant {
   attribute_values?: any[];
   imageFile?: File;
   image_url?: string;
+  stock_batches?: any[];
 }
 
 export interface ProductImage {
@@ -149,6 +150,7 @@ export interface Root2 {
   is_special?: boolean;
   category?: Category | null;
   social_media_link?: SocialMediaLinks | null;
+  min_order_qty?: number;
 }
 
 // Shared raw API shape returned by backend CategoryResponse

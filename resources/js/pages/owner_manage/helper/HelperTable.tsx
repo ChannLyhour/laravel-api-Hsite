@@ -340,6 +340,9 @@ export function HelperTable<T>({
                       const rowElement = renderRow(item, index);
                       if (React.isValidElement(rowElement)) {
                         const validRowElement = rowElement as React.ReactElement<any>;
+                        if (validRowElement.type === React.Fragment) {
+                          return rowElement;
+                        }
                         const rowId = getRowId ? getRowId(item) : null;
 
                         // Get original children (tds) of the tr

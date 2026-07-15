@@ -89,13 +89,13 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 w-full text-left">
       {/* Overview/Warning Alert Header */}
-      <div className="bg-red-50/50 border border-red-100 rounded-[10px] p-4 flex items-start space-x-3.5">
-        <div className="w-10 h-10 rounded-full bg-red-100/80 flex items-center justify-center text-red-650 shrink-0">
-          <FiAlertTriangle className="w-5 h-5 text-red-500" />
+      <div className="bg-rose-500/5 border border-rose-500/10 rounded-2xl p-5 flex items-start space-x-4 shadow-[0_4px_20px_-4px_rgba(244,63,94,0.02)]">
+        <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600 shrink-0 shadow-3xs">
+          <FiAlertTriangle className="w-5 h-5 text-rose-500" />
         </div>
         <div>
-          <h4 className="text-xs sm:text-sm font-extrabold text-red-800">Critical Stock Warning!</h4>
-          <p className="text-slate-500 text-3xs font-semibold leading-relaxed mt-0.5">
+          <h4 className="text-xs sm:text-sm font-extrabold text-rose-800">Critical Stock Warning!</h4>
+          <p className="text-slate-500 text-3xs font-semibold leading-relaxed mt-1">
             The items listed below have fallen below safety threshold limits or are completely out of stock. Customers will not be able to purchase out-of-stock items, which could cause a decrease in store revenue. Please update stock levels immediately.
           </p>
         </div>
@@ -103,12 +103,12 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
 
       {/* Grid listing */}
       {loading ? (
-        <div className="py-20 text-center flex flex-col items-center justify-center space-y-3 bg-white border rounded-[10px]">
+        <div className="py-20 text-center flex flex-col items-center justify-center space-y-3 bg-white border rounded-2xl">
           <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-xs font-bold text-slate-400">Loading critical alerts...</p>
         </div>
       ) : lowStockRows.length === 0 ? (
-        <div className="py-20 text-center flex flex-col items-center justify-center space-y-2 text-slate-400 bg-white border rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+        <div className="py-20 text-center flex flex-col items-center justify-center space-y-2 text-slate-400 bg-white border rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
           <FiAlertCircle className="w-10 h-10 opacity-30 text-emerald-500" />
           <p className="text-xs font-bold text-slate-500">Perfect Status! No stock alerts found</p>
           <p className="text-3xs text-slate-400">All of your product variants have optimal quantity levels.</p>
@@ -124,15 +124,15 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
             return (
               <div 
                 key={row.variant.id} 
-                className={`bg-white border rounded-[10px] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-all flex flex-col justify-between space-y-4 ${
+                className={`bg-white border rounded-2xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] transition-all flex flex-col justify-between space-y-4 hover:-translate-y-0.5 hover:shadow-md duration-300 ${
                   row.isOutOfStock 
-                    ? 'border-l-4 border-l-rose-500 border-rose-100/60' 
-                    : 'border-l-4 border-l-amber-500 border-amber-100/60'
+                    ? 'border-l-4 border-l-rose-500 border-rose-100/70' 
+                    : 'border-l-4 border-l-amber-500 border-amber-100/70'
                 }`}
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-[5px] overflow-hidden bg-slate-50 border border-slate-150 shrink-0">
+                  <div className="flex items-center space-x-3.5">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-50 border border-slate-150 shrink-0 shadow-3xs">
                       <img
                         src={resolveImageUrl(row.variant.image_url || row.productImage)}
                         alt={row.productName}
@@ -144,13 +144,13 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
                     </div>
                     <div>
                       <h4 className="text-[13px] font-extrabold text-slate-800 leading-tight">{row.productName}</h4>
-                      <p className="text-slate-400 text-4xs font-bold mt-0.5">SKU: {row.variant.variant_sku}</p>
+                      <p className="text-slate-400 text-4xs font-semibold mt-0.5">SKU: {row.variant.variant_sku}</p>
                       {row.hasOptions && row.variant.attribute_values && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {row.variant.attribute_values.map((av: any, aIdx: number) => (
                             <span 
                               key={aIdx} 
-                              className="px-1.5 py-0.5 rounded-[3px] bg-slate-100 text-slate-500 text-[8px] font-black border border-slate-200"
+                              className="px-1.5 py-0.5 rounded-[3px] bg-slate-50 text-slate-500 text-[8px] font-black border border-slate-200"
                             >
                               {av.attribute?.name || 'Attr'}: {av.value?.includes('|') ? av.value.split('|')[0] : av.value}
                             </span>
@@ -162,28 +162,28 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
 
                   <span className={`px-2 py-0.5 rounded-[4px] text-4xs font-black uppercase tracking-wider ${
                     row.isOutOfStock 
-                      ? 'bg-rose-50 text-rose-500' 
-                      : 'bg-amber-50 text-amber-600'
+                      ? 'bg-rose-50 text-rose-600 border border-rose-100' 
+                      : 'bg-amber-50 text-amber-600 border border-amber-100'
                   }`}>
                     {row.isOutOfStock ? 'Out of Stock' : 'Low Stock'}
                   </span>
                 </div>
 
                 {/* Stock values summary */}
-                <div className="grid grid-cols-3 gap-3 bg-slate-50/50 p-3 rounded-[6px] border border-slate-100 text-center">
+                <div className="grid grid-cols-3 gap-3 bg-slate-50/50 p-3 rounded-lg border border-slate-100/70 text-center">
                   <div>
-                    <p className="text-[9px] font-black text-slate-450 uppercase tracking-wider">Current Qty</p>
-                    <p className={`text-sm sm:text-base font-black mt-1 ${row.isOutOfStock ? 'text-rose-500' : 'text-amber-600'}`}>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Current Qty</p>
+                    <p className={`text-sm sm:text-base font-black mt-0.5 ${row.isOutOfStock ? 'text-rose-600' : 'text-amber-650'}`}>
                       {row.variant.stock_qty}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-slate-450 uppercase tracking-wider">Safety Limit</p>
-                    <p className="text-sm sm:text-base font-black text-slate-650 mt-1">{threshold}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Safety Limit</p>
+                    <p className="text-sm sm:text-base font-black text-slate-650 mt-0.5">{threshold}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-slate-450 uppercase tracking-wider">Suggested Add</p>
-                    <p className="text-sm sm:text-base font-black text-emerald-600 mt-1">+{suggestedReorder}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Suggested Add</p>
+                    <p className="text-sm sm:text-base font-black text-emerald-600 mt-0.5">+{suggestedReorder}</p>
                   </div>
                 </div>
 
@@ -197,20 +197,20 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
                         min="0"
                         value={editQty}
                         onChange={(e) => setEditQty(Math.max(0, parseInt(e.target.value) || 0))}
-                        className="w-20 px-2 py-1.5 text-center border rounded-[4px] outline-none text-xs font-bold text-slate-800"
+                        className="w-24 px-2 py-1.5 text-center border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 rounded-md outline-none text-xs font-bold text-slate-800 transition-all"
                         placeholder="Quantity"
                       />
                       <button
                         disabled={isSaving}
                         onClick={() => handleSaveEdit(row.variant)}
-                        className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-[4px] flex items-center justify-center cursor-pointer border-none shadow-3xs"
+                        className="w-9 h-9 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-md flex items-center justify-center cursor-pointer border-none shadow-3xs hover:scale-105 active:scale-95 duration-150 transition-all"
                       >
                         <FiCheck className="w-4 h-4" />
                       </button>
                       <button
                         disabled={isSaving}
                         onClick={() => setEditingVariantId(null)}
-                        className="w-8 h-8 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-500 rounded-[4px] flex items-center justify-center cursor-pointer border-none"
+                        className="w-9 h-9 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-500 rounded-md flex items-center justify-center cursor-pointer border-none hover:scale-105 active:scale-95 duration-150 transition-all"
                       >
                         <FiX className="w-4 h-4" />
                       </button>
@@ -218,9 +218,9 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
                   ) : (
                     <button
                       onClick={() => handleStartEdit(row.variant.id!, row.variant.stock_qty)}
-                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-[4px] text-4xs font-black cursor-pointer border-none flex items-center justify-center gap-1 w-full sm:w-auto"
+                      className="px-3.5 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg text-4xs font-black cursor-pointer bg-white transition-all hover:scale-105 active:scale-95 duration-150 flex items-center justify-center gap-1.5 w-full sm:w-auto shadow-3xs"
                     >
-                      <FiRefreshCw className="w-3 h-3 text-slate-500" />
+                      <FiRefreshCw className="w-3 h-3 text-slate-500 animate-spin-hover" />
                       <span>Custom Restock</span>
                     </button>
                   )}
@@ -231,7 +231,7 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
                       <button
                         disabled={isSaving}
                         onClick={() => handleQuickAdd(row.variant, suggestedReorder)}
-                        className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white rounded-[4px] text-4xs font-black shadow-3xs cursor-pointer border-none text-center flex-1 sm:flex-initial"
+                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 text-white rounded-lg text-4xs font-black shadow-sm shadow-orange-500/10 cursor-pointer border-none text-center flex-1 sm:flex-initial"
                       >
                         {isSaving ? 'Processing...' : `Add Suggested (+${suggestedReorder})`}
                       </button>

@@ -57,6 +57,7 @@ class ProductVariantController extends Controller
             }
 
             $variant->load('attributeValues.attribute');
+            \Illuminate\Support\Facades\Cache::forget("products_version_owner_" . $product->created_by);
             return response()->json($variant, 201);
         });
     }
@@ -99,6 +100,7 @@ class ProductVariantController extends Controller
             }
 
             $variant->load('attributeValues.attribute');
+            \Illuminate\Support\Facades\Cache::forget("products_version_owner_" . $variant->product->created_by);
             return response()->json($variant);
         });
     }
@@ -110,8 +112,77 @@ class ProductVariantController extends Controller
         }
 
         $variant = ProductVariant::findOrFail($id);
+        $ownerId = $variant->product->created_by;
         $variant->delete();
+        \Illuminate\Support\Facades\Cache::forget("products_version_owner_" . $ownerId);
 
         return response()->json(['detail' => 'Product variant deleted successfully.']);
+    }
+
+    public function updateBatch(Request $request, $id)
+    {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
+            return response()->json(['detail' => 'Only administrators are allowed.'], 403);
+        }
+
+        $batch = \App\Models\ProductVariantStockBatch::findOrFail($id);
+
+        $request->validate([
+            'initial_qty' => 'required|integer|min:0',
+            'remaining_qty' => 'required|integer|min:0',
+            'purchase_price' => 'required|numeric|min:0',
+        ]);
+
+        return DB::transaction(function () use ($request, $batch) {
+            $oldRemaining = $batch->remaining_qty;
+            $newRemaining = $request->remaining_qty;
+            $diff = $newRemaining - $oldRemaining;
+
+            $batch->update([
+                'initial_qty' => $request->initial_qty,
+                'remaining_qty' => $newRemaining,
+                'purchase_price' => $request->purchase_price,
+            ]);
+
+            $variant = $batch->productVariant;
+            if ($diff != 0 && $variant) {
+                $variant->stock_qty += $diff;
+                $variant->saveQuietly();
+            }
+
+            if ($variant) {
+                \Illuminate\Support\Facades\Cache::forget("products_version_owner_" . $variant->product->created_by);
+            }
+
+            return response()->json($batch);
+        });
+    }
+
+    public function destroyBatch(Request $request, $id)
+    {
+        if (! in_array($request->user()->role_id, [1, 2, 30003])) {
+            return response()->json(['detail' => 'Only administrators are allowed.'], 403);
+        }
+
+        $batch = \App\Models\ProductVariantStockBatch::findOrFail($id);
+
+        return DB::transaction(function () use ($batch) {
+            $variant = $batch->productVariant;
+            if ($variant) {
+                $variant->stock_qty -= $batch->remaining_qty;
+                if ($variant->stock_qty < 0) {
+                    $variant->stock_qty = 0;
+                }
+                $variant->saveQuietly();
+            }
+
+            $batch->delete();
+
+            if ($variant) {
+                \Illuminate\Support\Facades\Cache::forget("products_version_owner_" . $variant->product->created_by);
+            }
+
+            return response()->json(['detail' => 'Stock batch deleted successfully.']);
+        });
     }
 }

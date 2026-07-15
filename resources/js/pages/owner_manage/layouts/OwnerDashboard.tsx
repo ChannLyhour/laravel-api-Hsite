@@ -82,7 +82,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis' | 'stock-fifo';
 
 interface NotificationItem {
   id: string;
@@ -773,6 +773,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'stock-low': return <StockManagementTab defaultView="low" ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'stock-movements': return <StockManagementTab defaultView="movements" ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'stock-abc-analysis': return <StockManagementTab defaultView="abc" ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'stock-fifo': return <StockManagementTab defaultView="fifo" ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'settings-thirdparty-payment': return <Payment_Gateways_SetupTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-firebase': return <ThirdPartyFirebaseTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-pusher': return <Pusher_ConfigurationTab ownerId={activeOwnerId} profile={profile} />;
