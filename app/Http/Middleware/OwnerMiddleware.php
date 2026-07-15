@@ -17,7 +17,7 @@ class OwnerMiddleware
     {
         $user = $request->user();
 
-        if (!$user || (int)$user->role_id !== 30003) {
+        if (!$user || !in_array((int)$user->role_id, [1, 30003])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Access denied. Store Owner privileges required.',

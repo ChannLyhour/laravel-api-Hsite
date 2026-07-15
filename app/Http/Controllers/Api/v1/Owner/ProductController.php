@@ -400,50 +400,37 @@ class ProductController extends Controller
             $ownerIdForCache = $user->id;
         }
 
-        $version = \Illuminate\Support\Facades\Cache::remember("products_version_owner_{$ownerIdForCache}", 86400 * 365, function() {
-            return time();
-        });
-        $cacheKey = "products_owner_{$ownerIdForCache}_v{$version}_skip_{$skip}_limit_{$limit}_cat_{$categoryId}";
+        $query = Product::query();
+        if ($user && $user->role_id != 1) {
+            $query->where('created_by', $user->id);
+        } else {
+            if ($ownerIdForCache !== null) {
+                $query->where('created_by', $ownerIdForCache);
+            }
+        }
+        if ($categoryId !== null) {
+            $query->where('category_id', $categoryId);
+        }
 
-        $totalCacheKey = "products_owner_{$ownerIdForCache}_v{$version}_total_cat_{$categoryId}";
-        $total = \Illuminate\Support\Facades\Cache::remember($totalCacheKey, 86400 * 30, function () use ($user, $ownerIdForCache, $categoryId) {
-            $query = Product::query();
-            if ($user && $user->role_id != 1) {
-                $query->where('created_by', $user->id);
-            } else {
-                if ($ownerIdForCache !== null) {
-                    $query->where('created_by', $ownerIdForCache);
-                }
-            }
-            if ($categoryId !== null) {
-                $query->where('category_id', $categoryId);
-            }
-            return $query->count();
-        });
+        $total = (clone $query)->count();
 
-        $isCacheHit = \Illuminate\Support\Facades\Cache::has($cacheKey);
-
-        $items = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400 * 30, function () use ($user, $ownerIdForCache, $categoryId, $skip, $limit) {
-            $query = Product::query()->with(['translations', 'variants', 'images', 'brand', 'badge']);
-            if ($user && $user->role_id != 1) {
-                $query->where('created_by', $user->id);
-            } else {
-                if ($ownerIdForCache !== null) {
-                    $query->where('created_by', $ownerIdForCache);
-                }
-            }
-            if ($categoryId !== null) {
-                $query->where('category_id', $categoryId);
-            }
-            return $query->skip($skip)->take($limit)->get();
-        });
+        $items = $query->with([
+            'translations',
+            'variants' => function ($q) {
+                $q->without(['stockBatches']);
+            },
+            'images',
+            'brand',
+            'badge'
+        ])
+            ->skip($skip)
+            ->take($limit)
+            ->get();
 
         $duration = (microtime(true) - $start) * 1000;
         \Log::info(sprintf(
-            "ProductController@index execution: %.2f ms | Cache: %s | Key: %s",
-            $duration,
-            $isCacheHit ? 'HIT' : 'MISS',
-            $cacheKey
+            "ProductController@index execution: %.2f ms",
+            $duration
         ));
 
         return response()->json($items)
@@ -462,7 +449,16 @@ class ProductController extends Controller
         $cacheKey = "products_topselling_owner_{$createdBy}_v{$version}_limit_{$limit}";
 
         $items = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400 * 30, function () use ($createdBy, $limit) {
-            $query = Product::query()->with(['translations', 'variants.attributeValues.attribute', 'images', 'brand', 'badge', 'addons']);
+            $query = Product::query()->with([
+                'translations',
+                'variants' => function ($q) {
+                    $q->without(['stockBatches']);
+                },
+                'images',
+                'brand',
+                'badge',
+                'addons'
+            ]);
             if ($createdBy !== null) {
                 $query->where('created_by', $createdBy);
             }

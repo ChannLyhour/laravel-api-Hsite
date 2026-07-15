@@ -12,12 +12,12 @@ class OrderController extends Controller
     public function index (Request $request)
     {
         $user = $request->user();
-        if ($user->role_id !== 30003) {
+        if (!in_array((int) $user->role_id, [1, 30003])) {
             return response()->json(['detail' => 'Access denied.'], 403);
         }
 
         $skip = $request->query('skip', 0);
-        $limit = $request->query('limit', 100);
+        $limit = $request->query('limit', 50);
         $status = $request->query('status');
         $paymentStatus = $request->query('payment_status');
         $orderType = $request->query('order_type');
@@ -30,21 +30,18 @@ class OrderController extends Controller
 
         $query = Order::query()->with(['items.productVariant.product', 'store', 'shippingAddress']);
 
-        // Owner logic: ensure they only see their own store orders
-        $hasStore = Store::where('created_by', $user->id)->exists();
-
-        if (!$hasStore) {
-            return response()->json(['detail' => 'You do not have a store profile configured yet.'], 404);
-        }
-
-        if ($storeId) {
-            if ((int) $storeId === $user->id) {
-                $query->where('store_id', $user->id);
-            } else {
-                return response()->json(['detail' => 'You are not authorized to view orders for this store.'], 403);
+        if ($user->role_id === 30003) {
+            // Owner logic: ensure they only see their own store orders
+            $hasStore = Store::where('created_by', $user->id)->exists();
+            if (!$hasStore) {
+                return response()->json(['detail' => 'You do not have a store profile configured yet.'], 404);
             }
-        } else {
             $query->where('store_id', $user->id);
+        } else {
+            // Super Admin: can view any store's orders
+            if ($storeId) {
+                $query->where('store_id', $storeId);
+            }
         }
 
         if ($userId) {
@@ -132,16 +129,14 @@ class OrderController extends Controller
     public function show (Request $request, $id)
     {
         $user = $request->user();
-        if ($user->role_id !== 30003) {
-            return response()->json(['detail' => 'Access denied. Store owner only.'], 403);
+        if (!in_array((int) $user->role_id, [1, 30003])) {
+            return response()->json(['detail' => 'Access denied. Store owner or admin only.'], 403);
         }
 
         $order = Order::with(['items.productVariant.product', 'store'])->findOrFail($id);
 
-        // Authorization check
-        $isOwner = (int) $order->store_id === $user->id;
-
-        if (!$isOwner) {
+        // Authorization check: Omit for Super Admin, check for Store Owner
+        if ($user->role_id === 30003 && (int) $order->store_id !== $user->id) {
             return response()->json(['detail' => "You are not authorized to view this order."], 403);
         }
 
@@ -155,16 +150,14 @@ class OrderController extends Controller
         ]);
 
         $user = $request->user();
-        if ($user->role_id !== 30003) {
-            return response()->json(['detail' => 'Access denied. Store owner only.'], 403);
+        if (!in_array((int) $user->role_id, [1, 30003])) {
+            return response()->json(['detail' => 'Access denied. Store owner or admin only.'], 403);
         }
 
         $order = Order::findOrFail($id);
 
         // Authorization check
-        $isOwner = (int) $order->store_id === $user->id;
-
-        if (!$isOwner) {
+        if ($user->role_id === 30003 && (int) $order->store_id !== $user->id) {
             return response()->json(['detail' => 'You are not authorized to manage orders for this store.'], 403);
         }
 
@@ -226,16 +219,14 @@ class OrderController extends Controller
         ]);
 
         $user = $request->user();
-        if ($user->role_id !== 30003) {
-            return response()->json(['detail' => 'Access denied. Store owner only.'], 403);
+        if (!in_array((int) $user->role_id, [1, 30003])) {
+            return response()->json(['detail' => 'Access denied. Store owner or admin only.'], 403);
         }
 
         $order = Order::findOrFail($id);
 
         // Authorization check
-        $isOwner = (int) $order->store_id === $user->id;
-
-        if (!$isOwner) {
+        if ($user->role_id === 30003 && (int) $order->store_id !== $user->id) {
             return response()->json(['detail' => 'You are not authorized to manage orders for this store.'], 403);
         }
 
