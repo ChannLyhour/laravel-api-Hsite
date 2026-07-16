@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../lang/i18n';
 
 interface PricingFeature {
@@ -17,11 +17,48 @@ interface PricingComponentProps {
 export const PricingComponent: React.FC<PricingComponentProps> = React.memo(({ onNavigate }) => {
   const { t } = useTranslation();
 
+  const [prices, setPrices] = useState<Record<string, number>>({
+    free: 0,
+    basic: 5.99,
+    standard: 9.99,
+    premium: 14.99
+  });
+  const [dbFeatures, setDbFeatures] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchFeaturesAndPrices = async () => {
+      try {
+        const [resPrices, resFeatures] = await Promise.all([
+          fetch('/api/subscriptions/prices'),
+          fetch('/api/subscriptions/features')
+        ]);
+        
+        if (resPrices.ok) {
+          const data = await resPrices.json();
+          setPrices(data);
+        }
+        if (resFeatures.ok) {
+          const data = await resFeatures.json();
+          setDbFeatures(data);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch dynamic features or prices:', err);
+      }
+    };
+    fetchFeaturesAndPrices();
+  }, []);
+
+  const getDynamicLimitLabel = (tier: 'free' | 'basic' | 'standard' | 'premium', key: string, fallback: string) => {
+    if (!dbFeatures || !dbFeatures[tier]) return fallback;
+    const found = dbFeatures[tier].find((f: string) => f.startsWith(key + ':'));
+    return found ? found.split(':')[1] : fallback;
+  };
+
   const plans = [
     {
       id: 'free' as const,
       name: t('pricing.free'),
-      price: 'Free',
+      price: prices.free === 0 ? 'Free' : `$${prices.free}`,
       period: t('pricing.period_free'),
       cta: t('pricing.cta_register'),
       badge: null,
@@ -30,7 +67,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = React.memo(({ o
     {
       id: 'basic' as const,
       name: t('pricing.basic'),
-      price: '$3.99',
+      price: `$${prices.basic}`,
       period: t('pricing.period_mo'),
       cta: t('pricing.cta_get_started'),
       badge: null,
@@ -39,7 +76,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = React.memo(({ o
     {
       id: 'standard' as const,
       name: t('pricing.standard'),
-      price: '$5.99',
+      price: `$${prices.standard}`,
       period: t('pricing.period_mo'),
       cta: t('pricing.cta_get_started'),
       badge: t('pricing.popular'),
@@ -49,7 +86,7 @@ export const PricingComponent: React.FC<PricingComponentProps> = React.memo(({ o
     {
       id: 'premium' as const,
       name: t('pricing.premium'),
-      price: '$9.99',
+      price: `$${prices.premium}`,
       period: t('pricing.period_mo'),
       cta: t('pricing.cta_get_started'),
       badge: null,
@@ -67,10 +104,10 @@ export const PricingComponent: React.FC<PricingComponentProps> = React.memo(({ o
       ),
       availableIn: ['free', 'basic', 'standard', 'premium'],
       labelOverrides: {
-        free: `10 ${t('about.products')}`,
-        basic: `35 ${t('about.products')}`,
-        standard: `150 ${t('about.products')}`,
-        premium: `Unlimited ${t('about.products')}`,
+        free: getDynamicLimitLabel('free', 'Products Limit', `10 ${t('about.products')}`),
+        basic: getDynamicLimitLabel('basic', 'Products Limit', `35 ${t('about.products')}`),
+        standard: getDynamicLimitLabel('standard', 'Products Limit', `150 ${t('about.products')}`),
+        premium: getDynamicLimitLabel('premium', 'Products Limit', `Unlimited ${t('about.products')}`),
       }
     },
     {
@@ -82,10 +119,10 @@ export const PricingComponent: React.FC<PricingComponentProps> = React.memo(({ o
       ),
       availableIn: ['free', 'basic', 'standard', 'premium'],
       labelOverrides: {
-        free: '2 Categories',
-        basic: '4 Categories',
-        standard: '10 Categories',
-        premium: 'Unlimited Categories',
+        free: getDynamicLimitLabel('free', 'Categories Limit', '2 Categories'),
+        basic: getDynamicLimitLabel('basic', 'Categories Limit', '4 Categories'),
+        standard: getDynamicLimitLabel('standard', 'Categories Limit', '10 Categories'),
+        premium: getDynamicLimitLabel('premium', 'Categories Limit', 'Unlimited Categories'),
       }
     },
     {
@@ -97,10 +134,10 @@ export const PricingComponent: React.FC<PricingComponentProps> = React.memo(({ o
       ),
       availableIn: ['free', 'basic', 'standard', 'premium'],
       labelOverrides: {
-        free: '10 Orders/mo',
-        basic: 'Unlimited Orders/mo',
-        standard: 'Unlimited Orders/mo',
-        premium: 'Unlimited Orders/mo',
+        free: getDynamicLimitLabel('free', 'Orders Limit', '10 Orders/mo'),
+        basic: getDynamicLimitLabel('basic', 'Orders Limit', 'Unlimited Orders/mo'),
+        standard: getDynamicLimitLabel('standard', 'Orders Limit', 'Unlimited Orders/mo'),
+        premium: getDynamicLimitLabel('premium', 'Orders Limit', 'Unlimited Orders/mo'),
       }
     },
     {
@@ -112,10 +149,10 @@ export const PricingComponent: React.FC<PricingComponentProps> = React.memo(({ o
       ),
       availableIn: ['free', 'basic', 'standard', 'premium'],
       labelOverrides: {
-        free: '0 Staff',
-        basic: 'Unlimited Staff',
-        standard: 'Unlimited Staff',
-        premium: 'Unlimited Staff',
+        free: getDynamicLimitLabel('free', 'Staff Limit', '0 Staff'),
+        basic: getDynamicLimitLabel('basic', 'Staff Limit', 'Unlimited Staff'),
+        standard: getDynamicLimitLabel('standard', 'Staff Limit', 'Unlimited Staff'),
+        premium: getDynamicLimitLabel('premium', 'Staff Limit', 'Unlimited Staff'),
       }
     },
     {

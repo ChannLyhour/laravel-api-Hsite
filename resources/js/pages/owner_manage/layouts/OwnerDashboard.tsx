@@ -74,6 +74,8 @@ import { DeliveryZonesTab } from '../components/Delivery_Zones';
 import { ConfigOTPGmailTab } from '../components/gmailotp/configotpGmail';
 import { StockManagementTab } from '../components/StockManagementTab';
 import { SharingLinkShow } from '../components/sharinglink/show';
+import { UpgradePlanShow } from './upgrade_plan/show';
+import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
 interface AdminDashboardProps {
   token: string | null;
@@ -82,7 +84,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis' | 'stock-fifo';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis' | 'stock-fifo' | 'upgrade-plan';
 
 interface NotificationItem {
   id: string;
@@ -790,8 +792,49 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'marketing-push-notification': return <PushNotificationsSetupTab />;
       case 'marketing-announcement': return <AnnouncementTab />;
       case 'partner-stores': return <PartnerStoresTab onNavigate={onNavigate} />;
-      case 'inbox': return <ChatInboxTab ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'inbox': {
+        const currentTier = settings?.subscription_tier || 'free';
+        let activeFeatures: string[] = [];
+        try {
+          const savedFeatures = localStorage.getItem('biteflow_plan_features');
+          if (savedFeatures) {
+            const parsed = JSON.parse(savedFeatures);
+            if (parsed[currentTier]) {
+              activeFeatures = parsed[currentTier];
+            }
+          }
+        } catch (_) {}
+        
+        if (activeFeatures.length === 0) {
+          activeFeatures = defaultPlanFeatures[currentTier as keyof typeof defaultPlanFeatures] || defaultPlanFeatures.free;
+        }
+
+        const isLiveChatEnabled = activeFeatures.includes('Customer Live Chat');
+        if (!isLiveChatEnabled) {
+          return (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#F4F7FE] min-h-[60vh]">
+              <div className="max-w-md p-8 bg-white rounded-2xl border border-slate-200/80 shadow-md flex flex-col items-center gap-4">
+                <div className="p-4 bg-orange-50 rounded-full text-orange-500">
+                  <FiMessageSquare className="w-8 h-8" />
+                </div>
+                <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Premium Feature</h3>
+                <p className="text-[11px] text-slate-500 font-bold leading-relaxed">
+                  Customer Live Chat is a Premium subscription feature. Upgrade your plan to enable real-time messaging with your storefront visitors.
+                </p>
+                <button
+                  onClick={() => setActiveTab('upgrade-plan')}
+                  className="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-95 border-none cursor-pointer"
+                >
+                  Upgrade Store Plan
+                </button>
+              </div>
+            </div>
+          );
+        }
+        return <ChatInboxTab ownerId={activeOwnerId} storeId={settings?.id} />;
+      }
       case 'profile-owner': return <ProfileOwnerTab profile={profile} onProfileUpdate={handleProfileUpdate} />;
+      case 'upgrade-plan': return <UpgradePlanShow ownerId={activeOwnerId} storeSettings={settings} onUpdateSettings={setSettings} />;
     }
   };
 

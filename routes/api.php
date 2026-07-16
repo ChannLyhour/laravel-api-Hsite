@@ -137,6 +137,7 @@ Route::middleware(['identify-store'])->group(function () {
     // System Settings (Public)
     Route::get('/settings', [SettingController::class, 'getSettings']);
     Route::get('/subscriptions/features', [SubscriptionController::class, 'getFeatures']);
+    Route::get('/subscriptions/prices', [SubscriptionController::class, 'getPrices']);
 
     // Shared layout configurations (Public)
     Route::post('/save-share', [ShareController::class, 'save']);
@@ -234,6 +235,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user-status', [ChatController::class, 'getUserStatus']); // DB poll for online presence
     });
 
+    // Global Subscription Plan Features Settings (All authenticated roles can update)
+    Route::put('/admin/subscriptions/features', [SubscriptionController::class, 'updateFeatures']);
+    Route::put('/admin/subscriptions/prices', [SubscriptionController::class, 'updatePrices']);
+
     // ---------------------------------------------------------------------
     //   SUPER ADMIN ONLY ROUTES (Role 1)
     // ---------------------------------------------------------------------
@@ -241,9 +246,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Global Dashboard Stats
         Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
-
-        // Global Subscription Plan Features Settings
-        Route::put('/admin/subscriptions/features', [SubscriptionController::class, 'updateFeatures']);
 
         // Global System Settings Management
         Route::put('/settings', [SettingController::class, 'updateSettings']);

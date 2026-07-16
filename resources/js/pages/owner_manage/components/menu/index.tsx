@@ -720,6 +720,12 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
           {
             label: t('menu.edit_product'),
             onClick: async (ids) => {
+              const limit = getProductsLimit();
+              if (items.length + ids.length > limit) {
+                toast.error(`Duplicating would exceed your plan product limit (${limit} products max for your current plan). Please upgrade your subscription tier.`);
+                return;
+              }
+
               const confirmed = await confirm({
                 title: t('menu.duplicate_title'),
                 message: t('menu.duplicate_msg', { count: ids.length }),

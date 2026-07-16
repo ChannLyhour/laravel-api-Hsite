@@ -5,6 +5,7 @@ import {
   FiCheckSquare,
   FiUsers,
   FiStar,
+  FiZap,
   FiSettings,
   FiLogOut,
   FiFileText,
@@ -39,7 +40,7 @@ import { useTranslation } from '../lang/i18n';
 import { getStoreUrl, slugifyStoreName } from '@Security/Owner/configUrl';
 import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis' | 'stock-fifo';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis' | 'stock-fifo' | 'upgrade-plan';
 
 interface SidebarProps {
   activeTab: TabId;
@@ -311,7 +312,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'catalog', label: t('sidebar.catalog'), icon: <FiLayers className="w-[18px] h-[18px]" /> },
     isFeatureEnabled('Inventory Management') ? { id: 'stock', label: 'Stock Manage', icon: <FiBox className="w-[18px] h-[18px]" /> } : null,
     { id: 'orders', label: t('sidebar.orders'), icon: <FiCheckSquare className="w-[18px] h-[18px]" /> },
-    { id: 'inbox', label: 'Customer Chat', icon: <FiMessageSquare className="w-[18px] h-[18px]" /> },
+    isFeatureEnabled('Customer Live Chat') ? { id: 'inbox', label: 'Customer Chat', icon: <FiMessageSquare className="w-[18px] h-[18px]" /> } : null,
     (isFeatureEnabled('Coupons & Discounts') || isFeatureEnabled('Email Campaigns')) ? { id: 'marketing', label: t('sidebar.marketing'), icon: <FiVolume2 className="w-[18px] h-[18px]" /> } : null,
     { id: 'people', label: t('sidebar.people'), icon: <FiUsers className="w-[18px] h-[18px]" /> },
     isFeatureEnabled('Delivery Zones') ? { id: 'delivery', label: 'Delivery', icon: <FiTruck className="w-[18px] h-[18px]" /> } : null,
@@ -1291,6 +1292,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
 
           </div>
+
+          {/* Fixed bottom upgrade plan section */}
+          {showSubmenu && (
+            <div className="p-3 mx-3 mb-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-lg flex flex-col items-center gap-1.5 text-center animate-fade-in group">
+              <div className="p-2 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-lg shadow-sm group-hover:scale-110 transition-all duration-300">
+                <FiZap className="w-4 h-4 text-white" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-black text-indigo-200/50 uppercase tracking-widest">
+                  Current Plan
+                </span>
+                <h4 className="text-[11px] font-extrabold text-white capitalize">
+                  {(stores?.subscription_tier || 'free') === 'free' ? 'Free Trial' : (stores?.subscription_tier || 'free')} Plan
+                </h4>
+              </div>
+              <button
+                onClick={() => {
+                  setActiveTab('upgrade-plan');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full mt-1.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-95 border-none cursor-pointer text-center select-none shadow-xs hover:shadow-md animate-pulse"
+              >
+                Upgrade Store
+              </button>
+            </div>
+          )}
+
         </div>
 
       </div>

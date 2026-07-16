@@ -181,10 +181,17 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  // ─── SUBSCRIPTION PLAN FEATURES STATE ─────────────────────────────────────────
+  // ─── SUBSCRIPTION PLAN FEATURES & PRICING STATE ───────────────────────────────
   // Pre-configured features matching standard listings
   const [planFeatures, setPlanFeatures] = useState<PlanFeatures>(defaultPlanFeatures);
+  const [planPrices, setPlanPrices] = useState<Record<string, number>>({
+    free: 0,
+    basic: 5.99,
+    standard: 9.99,
+    premium: 14.99
+  });
   const isInitialLoad = useRef(true);
+  const isInitialPricesLoad = useRef(true);
 
   useEffect(() => {
     const loadPlanFeatures = async () => {
@@ -207,7 +214,22 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
         isInitialLoad.current = false;
       }
     };
+
+    const loadPlanPrices = async () => {
+      try {
+        const data = await client.get<Record<string, number>>('/subscriptions/prices');
+        if (data) {
+          setPlanPrices(data);
+        }
+      } catch (err) {
+        console.error('Failed to load plan prices from backend:', err);
+      } finally {
+        isInitialPricesLoad.current = false;
+      }
+    };
+
     loadPlanFeatures();
+    loadPlanPrices();
   }, []);
 
   useEffect(() => {
@@ -227,6 +249,19 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
     };
     saveToBackend();
   }, [planFeatures]);
+
+  useEffect(() => {
+    if (isInitialPricesLoad.current) return;
+
+    const savePricesToBackend = async () => {
+      try {
+        await client.put('/admin/subscriptions/prices', planPrices);
+      } catch (err) {
+        console.error('Failed to sync plan prices with backend:', err);
+      }
+    };
+    savePricesToBackend();
+  }, [planPrices]);
 
   // ─── EDIT / ADD MERCHANT MODAL STATES ────────────────────────────────────────
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -564,6 +599,8 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
             <SubscriptionsTab
               planFeatures={planFeatures}
               setPlanFeatures={setPlanFeatures}
+              planPrices={planPrices}
+              setPlanPrices={setPlanPrices}
             />
           )}
 
@@ -798,9 +835,9 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                   className="w-full p-2 bg-slate-50 border border-slate-200 rounded-[5px] text-xs font-semibold text-slate-800"
                 >
                   <option value="free">Free</option>
-                  <option value="basic">Basic ($3.99/mo)</option>
-                  <option value="standard">Standard ($5.99/mo)</option>
-                  <option value="premium">Premium ($9.99/mo)</option>
+                  <option value="basic">Basic (${planPrices.basic}/mo)</option>
+                  <option value="standard">Standard (${planPrices.standard}/mo)</option>
+                  <option value="premium">Premium (${planPrices.premium}/mo)</option>
                 </select>
               </div>
 
@@ -880,9 +917,9 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                   className="w-full p-2 bg-slate-50 border border-slate-200 rounded-[5px] text-xs font-semibold text-slate-800"
                 >
                   <option value="free">Free</option>
-                  <option value="basic">Basic ($3.99/mo)</option>
-                  <option value="standard">Standard ($5.99/mo)</option>
-                  <option value="premium">Premium ($9.99/mo)</option>
+                  <option value="basic">Basic (${planPrices.basic}/mo)</option>
+                  <option value="standard">Standard (${planPrices.standard}/mo)</option>
+                  <option value="premium">Premium (${planPrices.premium}/mo)</option>
                 </select>
               </div>
 

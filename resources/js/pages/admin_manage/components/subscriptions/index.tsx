@@ -63,6 +63,7 @@ export const defaultPlanFeatures: PlanFeatures = {
           'Inventory Management',
           'Staff Accounts',
           'POS System',
+          'Customer Live Chat',
      ],
 };
 
@@ -84,14 +85,22 @@ export const allFeaturesConfig = [
      { key: 'Inventory Management', label: 'Inventory Management', type: 'toggle' },
      { key: 'Staff Accounts', label: 'Staff Accounts', type: 'toggle' },
      { key: 'POS System', label: 'POS System', type: 'toggle' },
+     { key: 'Customer Live Chat', label: 'Customer Live Chat', type: 'toggle' },
 ];
 
 interface SubscriptionsTabProps {
      planFeatures: PlanFeatures;
      setPlanFeatures: React.Dispatch<React.SetStateAction<PlanFeatures>>;
+     planPrices?: Record<string, number>;
+     setPlanPrices?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }
 
-export const SubscriptionsTab: React.FC<SubscriptionsTabProps> = ({ planFeatures, setPlanFeatures }) => {
+export const SubscriptionsTab: React.FC<SubscriptionsTabProps> = ({ 
+     planFeatures, 
+     setPlanFeatures,
+     planPrices,
+     setPlanPrices
+}) => {
      const [activePlanTab, setActivePlanTab] = useState<'free' | 'basic' | 'standard' | 'premium'>('free');
 
      const getFeatureValue = (plan: 'free' | 'basic' | 'standard' | 'premium', key: string) => {
@@ -131,6 +140,37 @@ export const SubscriptionsTab: React.FC<SubscriptionsTabProps> = ({ planFeatures
 
      return (
           <div className="space-y-6">
+               {/* Dynamic Plan Prices Configurator */}
+               {planPrices && setPlanPrices && (
+                    <div className="bg-white p-6 rounded-[5px] border border-slate-200/60 shadow-sm max-w-xl space-y-4">
+                         <div>
+                              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Plan Pricing Configuration</h3>
+                              <p className="text-[10px] font-bold text-slate-400 mt-0.5">Modify pricing values for each subscription plan. Auto-saves to database.</p>
+                         </div>
+                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                              {(['free', 'basic', 'standard', 'premium'] as const).map(p => (
+                                   <div key={p} className="space-y-1.5">
+                                        <label className="text-[10px] font-black uppercase text-slate-400 block tracking-wider">{p} Price ($)</label>
+                                        <input
+                                             type="number"
+                                             min="0"
+                                             step="0.01"
+                                             value={planPrices[p] !== undefined ? planPrices[p] : 0}
+                                             onChange={(e) => {
+                                                  const val = parseFloat(e.target.value);
+                                                  setPlanPrices(prev => ({
+                                                       ...prev,
+                                                       [p]: isNaN(val) ? 0 : val
+                                                  }));
+                                             }}
+                                             className="w-full bg-slate-50 border border-slate-200 rounded-[5px] px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-primary"
+                                        />
+                                   </div>
+                              ))}
+                         </div>
+                    </div>
+               )}
+
                {/* Plan Tabs Selector */}
                <div className="flex space-x-1 bg-white p-1 rounded-[5px] border border-slate-200/60 shadow-sm max-w-md">
                     {(['free', 'basic', 'standard', 'premium'] as const).map(p => (

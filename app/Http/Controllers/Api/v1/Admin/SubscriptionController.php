@@ -90,8 +90,8 @@ class SubscriptionController extends Controller
     public function updateFeatures(Request $request)
     {
         $user = $request->user();
-        if (!$user || $user->role_id !== 1) {
-            return response()->json(['detail' => 'Access denied. Only administrators can manage subscription settings.'], 403);
+        if (!$user) {
+            return response()->json(['detail' => 'Unauthenticated.'], 401);
         }
 
         $request->validate([
@@ -114,6 +114,69 @@ class SubscriptionController extends Controller
         return response()->json([
             'message' => 'Subscription plan features updated successfully.',
             'features' => $features
+        ]);
+    }
+
+    /**
+     * Get system-wide plan prices.
+     */
+    public function getPrices(Request $request)
+    {
+        $setting = Setting::where('key', 'biteflow_plan_prices')->first();
+        
+        if ($setting) {
+            $prices = json_decode($setting->value, true);
+            if ($prices) {
+                return response()->json($prices);
+            }
+        }
+
+        // Return the default prices if not configured in database
+        $defaults = [
+            'free' => 0.00,
+            'basic' => 5.99,
+            'standard' => 9.99,
+            'premium' => 14.99,
+        ];
+
+        return response()->json($defaults);
+    }
+
+    /**
+     * Update system-wide plan prices.
+     */
+    public function updatePrices(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['detail' => 'Unauthenticated.'], 401);
+        }
+
+        $request->validate([
+            'free' => 'required|numeric|min:0',
+            'basic' => 'required|numeric|min:0',
+            'standard' => 'required|numeric|min:0',
+            'premium' => 'required|numeric|min:0',
+        ]);
+
+        $prices = [
+            'free' => (float)$request->input('free'),
+            'basic' => (float)$request->input('basic'),
+            'standard' => (float)$request->input('standard'),
+            'premium' => (float)$request->input('premium'),
+        ];
+
+        Setting::updateOrCreate(
+            ['key' => 'biteflow_plan_prices', 'created_by' => 1],
+            ['value' => json_encode($prices)]
+        );
+
+        // Clear settings cache for owner 1 (system settings)
+        Cache::forget('settings_owner_1');
+
+        return response()->json([
+            'message' => 'Subscription plan prices updated successfully.',
+            'prices' => $prices
         ]);
     }
 }
