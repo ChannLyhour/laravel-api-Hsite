@@ -245,10 +245,12 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
   const loadData = async () => {
     setLoading(true);
     try {
-      const catsResponse = await categoriesService.getMyCategories(100, 0, ownerId, storeId);
-      setCategories(catsResponse.categories);
+      const [catsResponse, itemsList] = await Promise.all([
+        categoriesService.getMyCategories(100, 0, ownerId, storeId),
+        menuItemsService.getMenuItems(200, 0, ownerId, storeId)
+      ]);
 
-      const itemsList = await menuItemsService.getMenuItems(200, 0, ownerId, storeId);
+      setCategories(catsResponse.categories);
       setItems(itemsList);
 
       // Sync active view item states with fresh data from itemsList to load addons/details
@@ -550,7 +552,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setShowingItem(item)}
+                    onClick={() => handleOpenShowModal(item)}
                     className="p-1.5 bg-white hover:bg-slate-50 text-slate-550 hover:text-slate-700 border border-slate-200 rounded-[5px] cursor-pointer shadow-3xs transition-all active:scale-95 flex items-center justify-center"
                     title="View details"
                   >
