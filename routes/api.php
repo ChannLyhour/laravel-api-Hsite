@@ -53,7 +53,7 @@ require __DIR__ . '/../routes/channels.php';
 // General & Diagnostics
 Route::get('/', function () {
     return response()->json([
-        'message' => 'Welcome to the TiDB Cloud + FastAPI service (Laravel Port)!',
+        'message' => 'Welcome to the Food Ordering System API!',
         'database' => 'food_ordering_system',
         'docs_url' => '/api/docs',
         'status' => 'Online'
@@ -89,7 +89,6 @@ Route::post('/register-owner', [AuthController::class, 'registerOwner']);
 Route::post('/telegram/webhook', [\App\Http\Controllers\Api\v1\TelegramWebhookController::class, 'handle']);
 
 Route::get('/store/resolve-domain', [StoreController::class, 'resolveDomain']);
-Route::get('/tidb-rest/products', [\App\Http\Controllers\Api\v1\TiDBRestController::class, 'getProducts']);
 
 Route::middleware(['identify-store'])->group(function () {
     // Users (Public)

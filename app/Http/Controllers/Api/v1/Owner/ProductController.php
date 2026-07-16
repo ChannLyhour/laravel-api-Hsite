@@ -400,32 +400,54 @@ class ProductController extends Controller
             $ownerIdForCache = $user->id;
         }
 
-        $query = Product::query();
-        if ($user && $user->role_id != 1) {
-            $query->where('created_by', $user->id);
-        } else {
-            if ($ownerIdForCache !== null) {
-                $query->where('created_by', $ownerIdForCache);
+        $ownerKey = $ownerIdForCache ?? 'all';
+
+        // Retrieve/remember the products cache version for this owner
+        $version = \Illuminate\Support\Facades\Cache::remember("products_version_owner_{$ownerKey}", 86400 * 365, function() {
+            return time();
+        });
+
+        // Construct a unique cache key based on query params and version
+        $cacheKey = "products_index_owner_{$ownerKey}_v{$version}_skip_{$skip}_limit_{$limit}_cat_{$categoryId}";
+
+        $result = \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($user, $ownerIdForCache, $categoryId, $skip, $limit) {
+            $query = Product::query();
+            
+            if ($user && $user->role_id != 1) {
+                $query->where('created_by', $user->id);
+            } else {
+                if ($ownerIdForCache !== null) {
+                    $query->where('created_by', $ownerIdForCache);
+                }
             }
-        }
-        if ($categoryId !== null) {
-            $query->where('category_id', $categoryId);
-        }
+            
+            if ($categoryId !== null) {
+                $query->where('category_id', $categoryId);
+            }
 
-        $total = (clone $query)->count();
+            $total = $query->count();
 
-        $items = $query->with([
-            'translations',
-            'variants' => function ($q) {
-                $q->without(['stockBatches']);
-            },
-            'images',
-            'brand',
-            'badge'
-        ])
-            ->skip($skip)
-            ->take($limit)
-            ->get();
+            $items = $query->with([
+                'translations',
+                'variants' => function ($q) {
+                    $q->without(['stockBatches']);
+                },
+                'images',
+                'brand',
+                'badge'
+            ])
+                ->skip($skip)
+                ->take($limit)
+                ->get();
+
+            return [
+                'total' => $total,
+                'items' => $items
+            ];
+        });
+
+        $items = $result['items'];
+        $total = $result['total'];
 
         $duration = (microtime(true) - $start) * 1000;
         \Log::info(sprintf(
