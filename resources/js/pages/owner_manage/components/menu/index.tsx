@@ -6,7 +6,7 @@ import { resolveImageUrl } from '@/api/imageUtils';
 import type { Category, MenuItem } from '@/api/owner/categories';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import '@/pages/owner_manage/style/font.css';
-import { HelperTable } from '../../helper/HelperTable';
+import { HelperTable, HelperTableActions } from '../../helper/HelperTable';
 import type { HelperTableColumn } from '../../helper/HelperTable';
 import { HelperFilter } from '../../helper/HelperFilter';
 import type { FilterSection } from '../../helper/HelperFilter';
@@ -155,6 +155,23 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
       localStorage.removeItem('menu_items_showing_item');
     }
   }, [showingItem]);
+
+  useEffect(() => {
+    const handleViewChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && ['list', 'create', 'edit', 'show'].includes(customEvent.detail)) {
+        setView(customEvent.detail);
+        if (customEvent.detail === 'create') {
+          setEditingItem(null);
+        } else if (customEvent.detail === 'list') {
+          setEditingItem(null);
+          setShowingItem(null);
+        }
+      }
+    };
+    window.addEventListener('menu_items_view_change', handleViewChange);
+    return () => window.removeEventListener('menu_items_view_change', handleViewChange);
+  }, []);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -401,10 +418,9 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
   const columns: HelperTableColumn[] = [
     { key: 'sl', label: 'SL', align: 'center', className: 'w-12' },
     { key: 'name', label: t('menu.title_label'), align: 'left', className: 'w-1/3', filterable: true },
-    { key: 'type', label: t('menu.product_type'), align: 'left' },
+    { key: 'type', label: t('sidebar.categories') || 'Category', align: 'left' },
     { key: 'price', label: t('menu.price'), align: 'left', filterable: true },
     { key: 'stock', label: t('menu.stock_qty'), align: 'center' },
-    { key: 'social_media_link', label: t('menu.social_links'), align: 'center' },
     { key: 'status', label: t('menu.status'), align: 'center' },
     { key: 'action', label: t('menu.actions'), align: 'right', className: 'w-36' }
   ];
@@ -912,23 +928,21 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
 
           return (
             <tr key={item.id} className="hover:bg-slate-50/40 transition-colors">
-              <td className="py-3.5 px-5 text-center font-bold text-slate-800">{sl}</td>
-              <td className="py-3.5 px-5">
+              <td className="text-center font-bold text-slate-800">{sl}</td>
+              <td>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-[5px] overflow-hidden bg-slate-100 border border-slate-200/50 shadow-2xs shrink-0">
-                    <img
-                      src={rowImageUrl}
-                      alt={item.name}
-                      className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
-                      }}
-                    />
-                  </div>
+                  <img
+                    src={rowImageUrl}
+                    alt={item.name}
+                    className="w-10 h-10 rounded-lg object-cover bg-slate-50 border border-slate-100 shrink-0"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+                    }}
+                  />
                   <div>
-                    <div className="text-slate-900 text-[12px] sm:text-[14px]" title={item.name}>
-                      {strLimit(item.name, 25)}
-                    </div>
+                    <p className="text-xs sm:text-sm font-extrabold text-slate-700 leading-snug" title={item.name}>
+                      {item.name}
+                    </p>
                     {/* <div className="text-slate-400 text-2xs font-semibold mt-0.5">Id # {item.id}</div> */}
                     {/* Render variant options preview */}
                     {hasVariants && (
@@ -996,91 +1010,25 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                   </div>
                 </div>
               </td>
-              <td className="py-3.5 px-5 font-bold text-slate-600">
+              <td className="text-xs font-bold text-slate-600">
                 {getCategoryName(item.category_id)}
               </td>
-              <td className="py-3.5 px-5 font-black text-slate-900">
+              <td className="text-xs font-black text-slate-700">
                 ${parseFloat(item.price).toFixed(2)}
               </td>
-              <td className="py-3.5 px-5 text-center font-bold text-slate-800">
-                {item.variants && item.variants.length > 0
-                  ? item.variants.reduce((sum, v) => sum + (v.stock_qty || 0), 0)
-                  : 0}
-              </td>
-              <td className="py-3.5 px-5 text-center">
+              <td className="text-center">
                 {(() => {
-                  const links = item.social_media_link;
-                  if (!links || !Object.values(links).some(v => !!v)) {
-                    return <span className="text-slate-400 font-normal">-</span>;
-                  }
+                  const totalStock = item.variants && item.variants.length > 0
+                    ? item.variants.reduce((sum, v) => sum + (v.stock_qty || 0), 0)
+                    : 0;
+                  const colorClass = 
+                    totalStock === 0 ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                    totalStock < 10 ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                    'bg-emerald-50 text-emerald-600 border-emerald-100';
                   return (
-                    <div className="flex items-center justify-center gap-1.5">
-                      {links.facebook && (
-                        <a
-                          href={links.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center w-6 h-6 text-[#1877F2] hover:bg-[#1877F2]/10 border border-[#1877F2]/20 rounded-full transition-all"
-                          title={`Facebook: ${links.facebook}`}
-                        >
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
-                          </svg>
-                        </a>
-                      )}
-                      {links.instagram && (
-                        <a
-                          href={links.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center w-6 h-6 text-[#E1306C] hover:bg-[#E1306C]/10 border border-[#E1306C]/20 rounded-full transition-all"
-                          title={`Instagram: ${links.instagram}`}
-                        >
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051C.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-                          </svg>
-                        </a>
-                      )}
-                      {links.tiktok && (
-                        <a
-                          href={links.tiktok}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center w-6 h-6 text-[#010101] hover:bg-[#010101]/10 border border-[#010101]/20 rounded-full transition-all"
-                          title={`TikTok: ${links.tiktok}`}
-                        >
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.07-2.89-.52-4.06-1.39v7.86c-.03 2.44-1.18 4.86-3.23 6.13-2.45 1.57-5.83 1.67-8.38.25-2.52-1.4-3.89-4.32-3.39-7.18.39-2.52 2.22-4.71 4.73-5.26.79-.17 1.61-.17 2.41-.02v4.08c-.89-.25-1.89-.13-2.67.36-.92.56-1.4 1.62-1.28 2.68.1 1.05.81 1.99 1.83 2.26 1.03.3 2.18-.08 2.77-.95.34-.52.48-1.14.47-1.76l-.02-12.42z"/>
-                          </svg>
-                        </a>
-                      )}
-                      {links.telegram && (
-                        <a
-                          href={links.telegram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center w-6 h-6 text-[#0088cc] hover:bg-[#0088cc]/10 border border-[#0088cc]/20 rounded-full transition-all"
-                          title={`Telegram: ${links.telegram}`}
-                        >
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-1-.65-.35-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.46-.42-1.4-.88.03-.24.37-.49 1.03-.75 4.04-1.76 6.74-2.92 8.09-3.48 3.85-1.6 4.64-1.88 5.17-1.89.11 0 .37.03.54.17.14.12.18.28.2.45-.02.07-.02.19-.03.29z"/>
-                          </svg>
-                        </a>
-                      )}
-                      {links.youtube && (
-                        <a
-                          href={links.youtube}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center w-6 h-6 text-[#FF0000] hover:bg-[#FF0000]/10 border border-[#FF0000]/20 rounded-full transition-all"
-                          title={`YouTube: ${links.youtube}`}
-                        >
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M23.498 6.163a3.003 3.003 0 00-2.11-2.108C19.53 3.5 12 3.5 12 3.5s-7.53 0-9.388.555a3.003 3.003 0 00-2.11 2.108C0 8.017 0 12 0 12s0 3.982.502 5.837a3.003 3.003 0 002.11 2.108C4.47 20.5 12 20.5 12 20.5s7.53 0 9.388-.555a3.003 3.003 0 002.11-2.108C24 15.982 24 12 24 12s0-3.983-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                          </svg>
-                        </a>
-                      )}
-                    </div>
+                    <span className={`inline-block px-2.5 py-1 rounded-[6px] text-3xs font-black uppercase tracking-wider border ${colorClass}`}>
+                      {totalStock}
+                    </span>
                   );
                 })()}
               </td>
@@ -1097,38 +1045,16 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                   />
                 </button>
               </td>
-              <td className="py-3.5 px-5 text-right">
-                <div className="flex justify-end items-center gap-1.5">
-                  <button
-                    onClick={() => toast.success(`Generated Barcode for ${item.name}`)}
-                    className="p-2 border border-amber-200/80 text-amber-500 hover:bg-amber-50 rounded-[5px] transition-colors cursor-pointer"
-                    title={t('menu.barcode')}
-                  >
-                    <FiTag className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleOpenShowModal(item)}
-                    className="p-2 border border-emerald-200/80 text-emerald-600 hover:bg-emerald-50 rounded-[5px] transition-colors cursor-pointer"
-                    title={t('menu.view')}
-                  >
-                    <FiEye className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleOpenEditModal(item)}
-                    className="p-2 border border-blue-200/80 text-blue-600 hover:bg-blue-50 rounded-[5px] transition-colors cursor-pointer animate-fade-in"
-                    title={t('menu.edit')}
-                  >
-                    <FiEdit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteItem(item.id, item.name)}
-                    className="p-2 border border-rose-200/80 text-rose-500 hover:bg-rose-50 rounded-[5px] transition-colors cursor-pointer animate-fade-in"
-                    title={t('menu.delete')}
-                  >
-                    <FiTrash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </td>
+              <HelperTableActions
+                onBarcode={() => toast.success(`Generated Barcode for ${item.name}`)}
+                onView={() => handleOpenShowModal(item)}
+                onEdit={() => handleOpenEditModal(item)}
+                onDelete={() => handleDeleteItem(item.id, item.name)}
+                barcodeTitle={t('menu.barcode')}
+                viewTitle={t('menu.view')}
+                editTitle={t('menu.edit')}
+                deleteTitle={t('menu.delete')}
+              />
             </tr>
           );
         }}

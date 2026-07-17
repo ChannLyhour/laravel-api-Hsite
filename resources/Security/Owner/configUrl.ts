@@ -29,6 +29,30 @@ export const STATIC_PATHS = [
 ];
 
 /**
+ * Checks if the application is currently running in subdomain routing mode.
+ */
+export function isSubdomainMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return false;
+  }
+  const platformDomains = [
+    'lvh.me',
+    'store-frontend-v-hsite.vercel.app',
+    'vhsite-storefront.vercel.app',
+    'vhsite.com',
+    'yourplatform.com',
+    'laravel-api-hsite.vercel.app',
+    'vhsite-platform-ecommerce.brohour00044.workers.dev',
+    'www.vhsite-platform-ecommerce.brohour00044.workers.dev',
+    'vhsitekh.site',
+    'www.vhsitekh.site'
+  ];
+  return !platformDomains.includes(hostname);
+}
+
+/**
  * Converts a raw store name to a URL slug.
  */
 export function slugifyStoreName(name: string): string {
@@ -51,7 +75,10 @@ export function getStoreUrl(
   storeName: string,
   ownerId?: number | string,
   forceLocal?: boolean,
+  forceAbsolute?: boolean,
 ): string {
+  let resolvedUrl = "";
+
   if (!forceLocal) {
     try {
       const saved = localStorage.getItem("store_settings");
@@ -67,51 +94,51 @@ export function getStoreUrl(
 
           // If it is a path slug (no dots), return it as a clean path
           if (!domain.includes(".")) {
-            return `/${domain}`;
-          }
-
-          if (!domain.startsWith("http://") && !domain.startsWith("https://")) {
-            domain = `http://${domain}`;
-          }
-
-          const isLocal =
-            typeof window !== "undefined" &&
-            (window.location.hostname === "localhost" ||
-              window.location.hostname === "127.0.0.1" ||
-              window.location.hostname.startsWith("192.168.") ||
-              window.location.hostname.startsWith("10.") ||
-              window.location.hostname.endsWith(".lvh.me"));
-
-          if (isLocal && typeof window !== "undefined") {
-            try {
-              const currentPort = window.location.port;
-              if (currentPort) {
-                const urlObj = new URL(domain);
-                urlObj.port = currentPort;
-                domain = urlObj.toString().replace(/\/$/, "");
-              }
-            } catch (e) {
-              console.warn("Failed to parse custom domain URL", e);
-            }
+            resolvedUrl = `/${domain}`;
           } else {
-            // In production, rewrite .lvh.me domains to path-based URL on Vercel
-            if (domain.includes(".lvh.me")) {
-              let slug = domain
-                .replace("http://", "")
-                .replace("https://", "")
-                .replace(".lvh.me", "");
-              if (slug.includes(":")) {
-                slug = slug.split(":")[0];
+            if (!domain.startsWith("http://") && !domain.startsWith("https://")) {
+              domain = `http://${domain}`;
+            }
+
+            const isLocal =
+              typeof window !== "undefined" &&
+              (window.location.hostname === "localhost" ||
+                window.location.hostname === "127.0.0.1" ||
+                window.location.hostname.startsWith("192.168.") ||
+                window.location.hostname.startsWith("10.") ||
+                window.location.hostname.endsWith(".lvh.me"));
+
+            if (isLocal && typeof window !== "undefined") {
+              try {
+                const currentPort = window.location.port;
+                if (currentPort) {
+                  const urlObj = new URL(domain);
+                  urlObj.port = currentPort;
+                  domain = urlObj.toString().replace(/\/$/, "");
+                }
+              } catch (e) {
+                console.warn("Failed to parse custom domain URL", e);
               }
-              const baseOrigin = typeof window !== "undefined" ? window.location.origin : "https://vhsite-platform-ecommerce.brohour00044.workers.dev";
-              domain = `${baseOrigin}/${slug}`;
             } else {
-              if (domain.startsWith("http://")) {
-                domain = domain.replace("http://", "https://");
+              // In production, rewrite .lvh.me domains to path-based URL on Vercel
+              if (domain.includes(".lvh.me")) {
+                let slug = domain
+                  .replace("http://", "")
+                  .replace("https://", "")
+                  .replace(".lvh.me", "");
+                if (slug.includes(":")) {
+                  slug = slug.split(":")[0];
+                }
+                const baseOrigin = typeof window !== "undefined" ? window.location.origin : "https://vhsite-platform-ecommerce.brohour00044.workers.dev";
+                domain = `${baseOrigin}/${slug}`;
+              } else {
+                if (domain.startsWith("http://")) {
+                  domain = domain.replace("http://", "https://");
+                }
               }
             }
+            resolvedUrl = domain;
           }
-          return domain;
         }
       }
     } catch (e) {
@@ -122,9 +149,60 @@ export function getStoreUrl(
     }
   }
 
-  const slug = slugifyStoreName(storeName);
-  if (!slug) return "/";
-  return `/${slug}`;
+  if (!resolvedUrl) {
+    const slug = slugifyStoreName(storeName);
+    if (!slug) return "/";
+
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const port = window.location.port;
+      const protocol = window.location.protocol;
+
+      const isLocal =
+        hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname.endsWith(".lvh.me") ||
+        hostname.startsWith("192.168.") ||
+        hostname.startsWith("10.");
+
+      if (isLocal) {
+        const portSuffix = port ? `:${port}` : "";
+        resolvedUrl = `${protocol}//${slug}.lvh.me${portSuffix}`;
+      } else {
+        const platformDomains = [
+          "store-frontend-v-hsite.vercel.app",
+          "vhsite-storefront.vercel.app",
+          "vhsite.com",
+          "yourplatform.com",
+          "laravel-api-hsite.vercel.app",
+          "vhsite-platform-ecommerce.brohour00044.workers.dev",
+          "vhsitekh.site"
+        ];
+
+        let baseDomain = hostname;
+        if (baseDomain.startsWith("www.")) {
+          baseDomain = baseDomain.substring(4);
+        }
+
+        const isPlatform = platformDomains.includes(baseDomain);
+        if (isPlatform) {
+          resolvedUrl = `${protocol}//${slug}.${baseDomain}`;
+        }
+      }
+    }
+
+    if (!resolvedUrl) {
+      resolvedUrl = `https://${slug}.vhsitekh.site`;
+    }
+  }
+
+  // If the resolved URL is absolute and matches the current origin, make it relative (unless forced absolute)
+  if (!forceAbsolute && typeof window !== "undefined" && resolvedUrl.startsWith(window.location.origin)) {
+    const relative = resolvedUrl.substring(window.location.origin.length);
+    return relative || "/";
+  }
+
+  return resolvedUrl;
 }
 
 /**
@@ -134,9 +212,11 @@ export function getStoreMenuUrl(
   storeName: string,
   ownerId?: number | string,
 ): string {
-  const slug = slugifyStoreName(storeName);
-  if (!slug) return "/menu";
-  return `/${slug}/menu`;
+  const storeUrl = getStoreUrl(storeName, ownerId);
+  if (storeUrl.startsWith("http://") || storeUrl.startsWith("https://")) {
+    return `${storeUrl.replace(/\/$/, "")}/menu`;
+  }
+  return `${storeUrl.replace(/\/$/, "")}/menu`.replace(/\/+/g, "/");
 }
 
 /**

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { slugifyStoreName } from '@Security/Owner/configUrl';
+import { slugifyStoreName, isSubdomainMode } from '@Security/Owner/configUrl';
 
 /**
  * Utility helper to generate URLs preserving the owner and store context.
@@ -10,6 +10,7 @@ export const OwnerURL = {
       * Generates the home page link with owner context.
       */
      getHome: (storeName: string, ownerId: number | string): string => {
+          if (isSubdomainMode()) return '/';
           const slug = slugifyStoreName(storeName);
           if (!slug) return '/';
           return `/${slug}`;
@@ -19,6 +20,7 @@ export const OwnerURL = {
       * Generates the menu/catalog page link.
       */
      getMenu: (storeName: string, ownerId: number | string): string => {
+          if (isSubdomainMode()) return '/menu';
           const slug = slugifyStoreName(storeName);
           if (!slug) return '/menu';
           return `/${slug}/menu`;
@@ -28,6 +30,7 @@ export const OwnerURL = {
       * Generates the product details page link.
       */
      getProduct: (productId: number | string, storeName: string, ownerId: number | string): string => {
+          if (isSubdomainMode()) return `/product?id=${productId}`;
           const slug = slugifyStoreName(storeName);
           return `/${slug}/product?id=${productId}`;
      },
@@ -36,8 +39,9 @@ export const OwnerURL = {
       * Generates the shop/collection search URL.
       */
      getShop: (storeName: string, ownerId: number | string, options?: { search?: string; categoryId?: number | string }): string => {
+          const isSubdomain = isSubdomainMode();
           const slug = slugifyStoreName(storeName);
-          let url = `/${slug}/shop`;
+          let url = isSubdomain ? '/shop' : `/${slug}/shop`;
           let query = '';
           if (options?.search) {
                query += `${query ? '&' : '?'}search=${encodeURIComponent(options.search)}`;
@@ -52,6 +56,7 @@ export const OwnerURL = {
       * Generates the checkout page link.
       */
      getCheckout: (storeName: string, ownerId: number | string): string => {
+          if (isSubdomainMode()) return '/checkout';
           const slug = slugifyStoreName(storeName);
           return `/${slug}/checkout`;
      },
@@ -60,6 +65,7 @@ export const OwnerURL = {
       * Generates the customer wishlist page link.
       */
      getWishlist: (storeName: string, ownerId: number | string): string => {
+          if (isSubdomainMode()) return '/wishlist';
           const slug = slugifyStoreName(storeName);
           return `/${slug}/wishlist`;
      },
@@ -68,8 +74,9 @@ export const OwnerURL = {
       * Generates the customer profile page link, with optional sub-tab selection (orders, chat, address, etc.).
       */
      getProfile: (storeName: string, ownerId: number | string, tab?: 'profile' | 'orders' | 'giftcard' | 'address' | 'chat'): string => {
+          const isSubdomain = isSubdomainMode();
           const slug = slugifyStoreName(storeName);
-          let url = `/${slug}/profile`;
+          let url = isSubdomain ? '/profile' : `/${slug}/profile`;
           if (tab) {
                url += `?tab=${tab}`;
           }
@@ -87,6 +94,7 @@ export const OwnerURL = {
       * Generates the share/QR storefront link.
       */
      getShareLink: (storeName: string, ownerId: number | string): string => {
+          if (isSubdomainMode()) return '/share';
           const slug = slugifyStoreName(storeName);
           return `/${slug}/share`;
      }
@@ -118,7 +126,7 @@ export function useOwnerURL(overrideOwnerId?: number | string, overrideStoreName
                storeName,
                storeSlug: slug,
                buildLink: (path: string) => {
-                    if (!storeName) return appendLocal(path);
+                    if (isSubdomainMode() || !storeName) return appendLocal(path);
                     const cleanPath = path.split('?')[0].split('#')[0];
                     const hash = path.includes('#') ? `#${path.split('#')[1]}` : '';
                     const search = path.includes('?') ? `?${path.split('?')[1].split('#')[0]}` : '';

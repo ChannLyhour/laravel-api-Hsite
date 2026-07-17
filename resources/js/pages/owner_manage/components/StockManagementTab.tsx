@@ -4,7 +4,7 @@ import { authService } from '@/api/auth';
 import { storesService } from '@/api/owner/stores';
 
 interface StockManagementTabProps {
-  defaultView?: 'overview' | 'items' | 'low' | 'movements' | 'abc' | 'fifo';
+  defaultView?: 'overview' | 'items' | 'low' | 'movements' | 'fifo';
   ownerId?: number | string;
   storeId?: number;
 }

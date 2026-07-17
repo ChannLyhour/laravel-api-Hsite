@@ -77,6 +77,12 @@ import { SharingLinkShow } from '../components/sharinglink/show';
 import { UpgradePlanShow } from './upgrade_plan/show';
 import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
+import { LimitedStockTab } from '../components/catalog/LimitedStockTab';
+import { RestockRequestsTab } from '../components/catalog/RestockRequestsTab';
+import { BulkImportTab } from '../components/catalog/BulkImportTab';
+import { VendorProductsTab } from '../components/catalog/VendorProductsTab';
+import { ProductGalleryTab } from '../components/catalog/ProductGalleryTab';
+
 interface AdminDashboardProps {
   token: string | null;
   currentPath: string;
@@ -84,7 +90,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis' | 'stock-fifo' | 'upgrade-plan';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'pages-builder' | 'posts' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-fifo' | 'upgrade-plan' | 'catalog-limited-stock' | 'catalog-restock-requests' | 'catalog-bulk-import' | 'catalog-vendor-new' | 'catalog-vendor-update' | 'catalog-vendor-approved' | 'catalog-vendor-denied' | 'catalog-product-gallery';
 
 interface NotificationItem {
   id: string;
@@ -288,7 +294,11 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       }
     };
     window.addEventListener('change_admin_tab', handleChangeTab as EventListener);
-    return () => window.removeEventListener('change_admin_tab', handleChangeTab as EventListener);
+    window.addEventListener('active_tab_change', handleChangeTab as EventListener);
+    return () => {
+      window.removeEventListener('change_admin_tab', handleChangeTab as EventListener);
+      window.removeEventListener('active_tab_change', handleChangeTab as EventListener);
+    };
   }, []);
 
   // Auto-open order details and execute actions from URL query parameter (Deep-linking)
@@ -690,7 +700,6 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
             { id: 'stock-items', label: 'Stock Items', icon: <span className="text-xs">•</span> },
             { id: 'stock-low', label: 'Low Stock Alerts', icon: <span className="text-xs">•</span> },
             { id: 'stock-movements', label: 'Stock Movements', icon: <span className="text-xs">•</span> },
-            { id: 'stock-abc-analysis', label: 'ABC Analysis', icon: <span className="text-xs">•</span> },
           ]
         }
       ]
@@ -774,7 +783,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'stock-items': return <StockManagementTab defaultView="items" ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'stock-low': return <StockManagementTab defaultView="low" ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'stock-movements': return <StockManagementTab defaultView="movements" ownerId={activeOwnerId} storeId={settings?.id} />;
-      case 'stock-abc-analysis': return <StockManagementTab defaultView="abc" ownerId={activeOwnerId} storeId={settings?.id} />;
+
       case 'stock-fifo': return <StockManagementTab defaultView="fifo" ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'settings-thirdparty-payment': return <Payment_Gateways_SetupTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-firebase': return <ThirdPartyFirebaseTab ownerId={activeOwnerId} profile={profile} />;
@@ -783,6 +792,16 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'settings-thirdparty-oauth': return <Social_Login_SetupTab ownerId={activeOwnerId} profile={profile} />;
       case 'settings-thirdparty-telegram': return <TelegramBotSettings ownerId={activeOwnerId} />;
       case 'settings-thirdparty-gmailotp': return <ConfigOTPGmailTab ownerId={activeOwnerId} profile={profile} />;
+
+      case 'catalog-limited-stock': return <LimitedStockTab ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'catalog-restock-requests': return <RestockRequestsTab ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'catalog-bulk-import': return <BulkImportTab />;
+      case 'catalog-vendor-new': return <VendorProductsTab defaultSubView="new" />;
+      case 'catalog-vendor-update': return <VendorProductsTab defaultSubView="update" />;
+      case 'catalog-vendor-approved': return <VendorProductsTab defaultSubView="approved" />;
+      case 'catalog-vendor-denied': return <VendorProductsTab defaultSubView="denied" />;
+      case 'catalog-product-gallery': return <ProductGalleryTab ownerId={activeOwnerId} storeId={settings?.id} />;
+
       case 'marketing-banners': return <BannersTab ownerId={activeOwnerId} />;
       case 'marketing-coupons': return <CouponsTab ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'marketing-flash-deals': return <FlashDealsTab ownerId={activeOwnerId} storeId={settings?.id} />;

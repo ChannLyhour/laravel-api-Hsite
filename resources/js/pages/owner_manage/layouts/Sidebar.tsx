@@ -11,7 +11,6 @@ import {
   FiFileText,
   FiEdit,
   FiHome,
-  FiShare2,
   FiSliders,
   FiLayout,
   FiChevronDown,
@@ -28,8 +27,12 @@ import {
   FiTruck,
   FiMapPin,
   FiBox,
-  FiTrendingUp,
   FiAlertTriangle,
+  FiPlus,
+  FiList,
+  FiImage,
+  FiDownload,
+  FiShare2,
 } from 'react-icons/fi';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import type { StoreRow } from '@/api/owner/stores';
@@ -39,8 +42,11 @@ import { stockManagementService } from '@/api/owner/stockManagement';
 import { useTranslation } from '../lang/i18n';
 import { getStoreUrl, slugifyStoreName } from '@Security/Owner/configUrl';
 import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
+import CopyShareLink from '../components/Quick_Links/copy_share_link';
+import VisitLiveStore from '../components/Quick_Links/visit_live_store';
+import LocalShopSale from '../components/Quick_Links/Local_Shop_Sale';
 
-type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-abc-analysis' | 'stock-fifo' | 'upgrade-plan';
+type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-fifo' | 'upgrade-plan' | 'catalog-limited-stock' | 'catalog-restock-requests' | 'catalog-bulk-import' | 'catalog-vendor-new' | 'catalog-vendor-update' | 'catalog-vendor-approved' | 'catalog-vendor-denied' | 'catalog-product-gallery';
 
 interface SidebarProps {
   activeTab: TabId;
@@ -100,6 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     canceled: 0,
   });
   const [lowStockCount, setLowStockCount] = useState<number>(0);
+  const [totalProductCount, setTotalProductCount] = useState<number>(0);
 
   const [isOffersDealsOpen, setIsOffersDealsOpen] = useState(false);
 
@@ -270,6 +277,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     stockManagementService.getStockItems(ownerId, stores?.id)
       .then(items => {
         if (items) {
+          setTotalProductCount(items.length);
           let lowCount = 0;
           items.forEach(item => {
             const vars = item.variants || [];
@@ -295,12 +303,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (activeTab === 'overview') return 'dashboard';
     if (activeTab === 'inbox') return 'inbox';
     if (activeTab.startsWith('orders')) return 'orders';
-    if (['categories', 'sub-categories', 'sub-sub-categories', 'brands', 'product-badges', 'attributes', 'menu-items'].includes(activeTab)) return 'catalog';
-    if (['stock-overview', 'stock-items', 'stock-low', 'stock-movements', 'stock-abc-analysis', 'stock-fifo'].includes(activeTab)) return 'stock';
+    if (['categories', 'sub-categories', 'sub-sub-categories', 'brands', 'product-badges', 'attributes', 'menu-items', 'catalog-limited-stock', 'catalog-restock-requests', 'catalog-bulk-import', 'catalog-vendor-new', 'catalog-vendor-update', 'catalog-vendor-approved', 'catalog-vendor-denied', 'catalog-product-gallery'].includes(activeTab)) return 'catalog';
+    if (['stock-overview', 'stock-items', 'stock-low', 'stock-movements', 'stock-fifo'].includes(activeTab)) return 'stock';
     if (activeTab.startsWith('marketing')) return 'marketing';
     if (['customers', 'customer-reviews', 'partner-stores'].includes(activeTab)) return 'people';
     if (['settings-delivery-methods', 'settings-delivery-zones'].includes(activeTab)) return 'delivery';
-    if (['theme', 'settings', 'policies', 'sharinglink', 'social-media', 'settings-thirdparty-payment', 'settings-thirdparty-firebase', 'settings-thirdparty-pusher', 'settings-thirdparty-marketing', 'settings-thirdparty-oauth', 'settings-thirdparty-telegram', 'settings-thirdparty-gmailotp', 'customize-system'].includes(activeTab)) return 'settings';
+    if (['theme', 'customize-system'].includes(activeTab)) return 'themes-layouts';
+    if (['settings', 'policies', 'sharinglink', 'social-media', 'settings-thirdparty-payment', 'settings-thirdparty-firebase', 'settings-thirdparty-pusher', 'settings-thirdparty-marketing', 'settings-thirdparty-oauth', 'settings-thirdparty-telegram', 'settings-thirdparty-gmailotp'].includes(activeTab)) return 'settings';
     return 'dashboard';
   };
 
@@ -316,6 +325,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     (isFeatureEnabled('Coupons & Discounts') || isFeatureEnabled('Email Campaigns')) ? { id: 'marketing', label: t('sidebar.marketing'), icon: <FiVolume2 className="w-[18px] h-[18px]" /> } : null,
     { id: 'people', label: t('sidebar.people'), icon: <FiUsers className="w-[18px] h-[18px]" /> },
     isFeatureEnabled('Delivery Zones') ? { id: 'delivery', label: 'Delivery', icon: <FiTruck className="w-[18px] h-[18px]" /> } : null,
+    { id: 'themes-layouts', label: 'Themes & Layouts', icon: <FiLayout className="w-[18px] h-[18px]" /> },
     { id: 'settings', label: t('sidebar.settings'), icon: <FiSettings className="w-[18px] h-[18px]" /> },
   ].filter(Boolean) as { id: string; label: string; icon: React.ReactNode }[];
 
@@ -336,9 +346,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         setIsMobileMenuOpen(false);
         break;
       case 'catalog':
-        setActiveTab('categories');
+        localStorage.setItem('menu_items_view', 'list');
+        window.dispatchEvent(new CustomEvent('menu_items_view_change', { detail: 'list' }));
+        setActiveTab('menu-items');
         setSidebarCollapsed(false);
-        setIsCategorySetupOpen(true);
+        setIsCategorySetupOpen(false);
         break;
       case 'stock':
         setActiveTab('stock-overview');
@@ -354,6 +366,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         break;
       case 'delivery':
         setActiveTab('settings-delivery-methods');
+        setSidebarCollapsed(false);
+        break;
+      case 'themes-layouts':
+        setActiveTab('theme');
         setSidebarCollapsed(false);
         break;
       case 'settings':
@@ -500,23 +516,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Bottom Actions: Theme Customizer & Logout */}
+        {/* Bottom Actions: Logout */}
         <div className="px-2 w-full flex flex-col items-center gap-3 relative">
-          <button
-            onClick={() => { setActiveTab('customize-system'); setSidebarCollapsed(false); }}
-            title="Customize Sidebar Theme"
-            className={`w-11 h-11 flex items-center justify-center rounded-[10px] transition-all border-none bg-transparent cursor-pointer relative ${
-              activeTab === 'customize-system' 
-                ? 'text-white shadow-md' 
-                : 'text-current/80 hover:text-white hover:bg-white/10'
-            }`}
-            style={activeTab === 'customize-system' ? {
-              backgroundColor: 'var(--sidebar-active-color, #ff6b35)',
-              boxShadow: '0 4px 12px color-mix(in srgb, var(--sidebar-active-color, #ff6b35) 25%, transparent)'
-            } : undefined}
-          >
-            <FiSliders className="w-[18px] h-[18px]" />
-          </button>
 
           <button
             onClick={onLogout}
@@ -599,39 +600,233 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {activeCategory === 'catalog' && (
               <div className="space-y-3">
+                {/* IN HOUSE PRODUCTS */}
                 <div>
                   <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-1">
-                    {t('sidebar.catalog')}
+                    IN HOUSE PRODUCTS
                   </p>
-                  <button
-                    onClick={() => {
-                      localStorage.setItem('menu_items_view', 'list');
-                      setActiveTab('menu-items');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'menu-items'
-                        ? 'bg-white/10 text-white'
-                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                  <div className="space-y-0.5">
+                    {/* Product List */}
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('menu_items_view', 'list');
+                        window.dispatchEvent(new CustomEvent('menu_items_view_change', { detail: 'list' }));
+                        setActiveTab('menu-items');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title="Product List"
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
+                        activeTab === 'menu-items' && localStorage.getItem('menu_items_view') !== 'create'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
                       }`}
-                  >
-                    <FiShoppingBag className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                    <span>{t('sidebar.product_list')}</span>
-                  </button>
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiList className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">Product List</span>
+                      </div>
+                      <span className="text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded-full shrink-0">
+                        {totalProductCount}
+                      </span>
+                    </button>
+
+                    {/* Add New Product */}
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('menu_items_view', 'create');
+                        window.dispatchEvent(new CustomEvent('menu_items_view_change', { detail: 'create' }));
+                        setActiveTab('menu-items');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title="Add New Product"
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
+                        activeTab === 'menu-items' && localStorage.getItem('menu_items_view') === 'create'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiPlus className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">Add New Product</span>
+                      </div>
+                    </button>
+
+                    {/* Limited Stock */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('catalog-limited-stock');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title="Limited Stock"
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
+                        activeTab === 'catalog-limited-stock'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiAlertTriangle className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">Limited Stock</span>
+                      </div>
+                      {lowStockCount > 0 && (
+                        <span className="text-[10px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded-full shrink-0">
+                          {lowStockCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Request Restock List */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('catalog-restock-requests');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title="Request Restock List"
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
+                        activeTab === 'catalog-restock-requests'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiClock className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">Request Restock List</span>
+                      </div>
+                    </button>
+
+                    {/* Bulk Import */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('catalog-bulk-import');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title="Bulk Import"
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
+                        activeTab === 'catalog-bulk-import'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiDownload className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">Bulk Import</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
 
+                {/* VENDOR PRODUCTS */}
+                <div>
+                  <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-1">
+                    VENDOR PRODUCTS
+                  </p>
+                  <div className="space-y-0.5">
+                    {/* New Products Request */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('catalog-vendor-new');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title="New Products Request"
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
+                        activeTab === 'catalog-vendor-new'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiClock className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">New Products Request</span>
+                      </div>
+                      <span className="text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded-full shrink-0">
+                        36
+                      </span>
+                    </button>
+
+                    {/* Product Update Request */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('catalog-vendor-update');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title="Product Update Request"
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
+                        activeTab === 'catalog-vendor-update'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiActivity className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">Product Update Request</span>
+                      </div>
+                      <span className="text-[10px] font-bold bg-white/25 text-white px-1.5 py-0.5 rounded-full shrink-0">
+                        0
+                      </span>
+                    </button>
+
+                    {/* Approved Products */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('catalog-vendor-approved');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title="Approved Products"
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
+                        activeTab === 'catalog-vendor-approved'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiCheckCircle className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">Approved Products</span>
+                      </div>
+                      <span className="text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded-full shrink-0">
+                        172
+                      </span>
+                    </button>
+
+                    {/* Denied Products */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('catalog-vendor-denied');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title="Denied Products"
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
+                        activeTab === 'catalog-vendor-denied'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiXCircle className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">Denied Products</span>
+                      </div>
+                      <span className="text-[10px] font-bold bg-white/25 text-white px-1.5 py-0.5 rounded-full shrink-0">
+                        0
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* ORGANIZATION */}
                 <div>
                   <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-1">
                     ORGANIZATION
                   </p>
 
                   <div className="space-y-0.5">
+                    {/* Category Setup */}
                     <button
                       onClick={() => setIsCategorySetupOpen(!isCategorySetupOpen)}
+                      title="Category Setup"
                       className="w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold text-indigo-100 hover:text-white hover:bg-white/5 border-none bg-transparent cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <FiLayers className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                        <span>{t('sidebar.category_setup')}</span>
+                        <span className="truncate">Category Setup</span>
                       </div>
                       <FiChevronDown 
                         className={`w-[14px] h-[14px] transition-transform duration-200 ${isCategorySetupOpen ? 'rotate-180' : 'text-indigo-200/80'}`} 
@@ -643,64 +838,79 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <div className="overflow-hidden pl-3 space-y-0.5 border-l border-indigo-600/50 ml-5">
                         <button
                           onClick={() => { setActiveTab('categories'); setIsMobileMenuOpen(false); }}
+                          title={t('sidebar.categories')}
                           className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'categories' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
                             }`}
                         >
                           <FiFolder className="w-3.5 h-3.5 text-indigo-200/80 shrink-0" />
-                          <span>{t('sidebar.categories')}</span>
+                          <span className="truncate">{t('sidebar.categories')}</span>
                         </button>
                         <button
                           onClick={() => { setActiveTab('sub-categories'); setIsMobileMenuOpen(false); }}
+                          title={t('sidebar.sub_categories')}
                           className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'sub-categories' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
                             }`}
                         >
                           <FiFolder className="w-3.5 h-3.5 text-indigo-200/80 shrink-0" />
-                          <span>{t('sidebar.sub_categories')}</span>
+                          <span className="truncate">{t('sidebar.sub_categories')}</span>
                         </button>
                         <button
                           onClick={() => { setActiveTab('sub-sub-categories'); setIsMobileMenuOpen(false); }}
+                          title={t('sidebar.sub_sub_categories')}
                           className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[5px] text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'sub-sub-categories' ? 'text-white bg-white/10' : 'text-indigo-200/80 hover:text-white'
                             }`}
                         >
                           <FiFolder className="w-3.5 h-3.5 text-indigo-200/80 shrink-0" />
-                          <span>{t('sidebar.sub_sub_categories')}</span>
+                          <span className="truncate">{t('sidebar.sub_sub_categories')}</span>
                         </button>
                       </div>
                     </div>
+
+                    {/* Brand Setup */}
+                    <button
+                      onClick={() => { setActiveTab('brands'); setIsMobileMenuOpen(false); }}
+                      title={t('sidebar.brand_setup')}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'brands'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiLayers className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">{t('sidebar.brand_setup')}</span>
+                      </div>
+                    </button>
+
+                    {/* Attribute Setup */}
+                    <button
+                      onClick={() => { setActiveTab('attributes'); setIsMobileMenuOpen(false); }}
+                      title={t('sidebar.product_attributes')}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'attributes'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiSliders className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">{t('sidebar.product_attributes')}</span>
+                      </div>
+                    </button>
+
+                    {/* Product Gallery */}
+                    <button
+                      onClick={() => { setActiveTab('catalog-product-gallery'); setIsMobileMenuOpen(false); }}
+                      title="Product Gallery"
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'catalog-product-gallery'
+                          ? 'bg-white/10 text-white'
+                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FiImage className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                        <span className="truncate">Product Gallery</span>
+                      </div>
+                    </button>
                   </div>
-
-                  <button
-                    onClick={() => { setActiveTab('brands'); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'brands'
-                        ? 'bg-white/10 text-white'
-                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                  >
-                    <FiLayers className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                    <span>{t('sidebar.brand_setup')}</span>
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('product-badges'); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'product-badges'
-                        ? 'bg-white/10 text-white'
-                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                  >
-                    <FiTag className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                    <span>{t('sidebar.product_badges') || 'Product Badges'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('attributes'); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer mt-1 ${activeTab === 'attributes'
-                        ? 'bg-white/10 text-white'
-                        : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                  >
-                    <FiSliders className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                    <span>{t('sidebar.product_attributes')}</span>
-                  </button>
                 </div>
               </div>
             )}
@@ -1017,16 +1227,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span>Stock Movements</span>
                 </button>
 
-                <button
-                  onClick={() => { setActiveTab('stock-abc-analysis'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'stock-abc-analysis'
-                      ? 'bg-white/10 text-white'
-                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <FiTrendingUp className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span>ABC Analysis</span>
-                </button>
 
                 <button
                   onClick={() => { setActiveTab('stock-fifo'); setIsMobileMenuOpen(false); }}
@@ -1073,6 +1273,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
 
+            {activeCategory === 'themes-layouts' && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-2">
+                  Themes & Layouts
+                </p>
+
+                <button
+                  onClick={() => { setActiveTab('theme'); setIsMobileMenuOpen(false); }}
+                  title={t('sidebar.storefront_themes')}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'theme'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiLayout className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span className="truncate">{t('sidebar.storefront_themes')}</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('customize-system'); setIsMobileMenuOpen(false); }}
+                  title="Sidebar Theme Customizer"
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'customize-system'
+                      ? 'bg-white/10 text-white'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <FiSliders className="w-4 h-4 text-indigo-200/80 shrink-0" />
+                  <span className="truncate">System Sidebar Customizer</span>
+                </button>
+              </div>
+            )}
+
             {activeCategory === 'settings' && (
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-2">
@@ -1102,17 +1334,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </button>
 
                 <button
-                  onClick={() => { setActiveTab('theme'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'theme'
-                      ? 'bg-white/10 text-white'
-                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <FiLayout className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span>{t('sidebar.storefront_themes')}</span>
-                </button>
-
-                <button
                   onClick={() => { setActiveTab('sharinglink'); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'sharinglink'
                       ? 'bg-white/10 text-white'
@@ -1132,17 +1353,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <FiShare2 className="w-4 h-4 text-indigo-200/80 shrink-0" />
                   <span>{t('sidebar.social_media')}</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('customize-system'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'customize-system'
-                      ? 'bg-white/10 text-white'
-                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <FiSliders className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span>Customize Sidebar</span>
                 </button>
 
                 {/* 3RD PARTY SETUP section */}
@@ -1243,51 +1453,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   Quick Links
                 </p>
 
-                <button
-                  onClick={() => {
-                    const ownerId = stores?.hashid || stores?.owner_id || stores?.created_by || (profile?.user?.role === 'admin'
-                      ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
-                      : (profile?.user?.hashid || profile?.user?.id));
-                    const path = getStoreUrl(stores?.store_name || profile?.user?.name || 'Store', ownerId);
-                    const shareUrl = path.startsWith('http') ? path : `${window.location.origin}${path}`;
-                    navigator.clipboard.writeText(shareUrl);
-                    toast.success('Storefront link copied!');
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-[5px] text-indigo-100 hover:text-white hover:bg-white/5 text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer"
-                >
-                  <FiShare2 className="w-4 h-4 text-indigo-200/80" />
-                  <span>{t('sidebar.copy_share_link')}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const ownerId = stores?.hashid || stores?.owner_id || stores?.created_by || (profile?.user?.role === 'admin'
-                      ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
-                      : (profile?.user?.hashid || profile?.user?.id));
-                    const path = getStoreUrl(stores?.store_name || profile?.user?.name || 'Store', ownerId);
-                    window.open(path, '_blank');
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-[5px] text-indigo-100 hover:text-white hover:bg-white/5 text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer"
-                >
-                  <FiHome className="w-4 h-4 text-indigo-200/80" />
-                  <span>{t('sidebar.visit_live_store')}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const ownerId = stores?.hashid || stores?.owner_id || stores?.created_by || (profile?.user?.role === 'admin'
-                      ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
-                      : (profile?.user?.hashid || profile?.user?.id));
-                    // 1. Open storefront cashier screen in a new tab
-                    const path = getStoreUrl(stores?.store_name || profile?.user?.name || 'Store', ownerId, true);
-                    const localPath = path.includes('?') ? `${path}&local=true` : `${path}?local=true`;
-                    window.open(localPath, 'cashier_display', 'width=1200,height=800,menubar=no,status=no,toolbar=no');
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-[5px] text-indigo-100 hover:text-white hover:bg-white/5 text-[11px] font-bold transition-all border-none bg-transparent cursor-pointer"
-                >
-                  <FiShoppingBag className="w-4 h-4 text-indigo-200/80" />
-                  <span>Local Shop Sale</span>
-                </button>
+                <CopyShareLink stores={stores} profile={profile} />
+                <VisitLiveStore stores={stores} profile={profile} />
+                <LocalShopSale stores={stores} profile={profile} />
               </div>
             )}
 

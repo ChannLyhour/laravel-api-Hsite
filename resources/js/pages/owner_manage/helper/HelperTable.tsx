@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiSearch, FiDownload, FiSliders, FiPlus, FiChevronLeft, FiChevronRight, FiGrid, FiList } from 'react-icons/fi';
+import { FiSearch, FiDownload, FiSliders, FiPlus, FiChevronLeft, FiChevronRight, FiGrid, FiList, FiTag, FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import '@/pages/owner_manage/style/font.css';
 import { useTranslation } from '@/pages/owner_manage/lang/i18n';
 
@@ -467,3 +467,68 @@ export function HelperTable<T>({
     </div>
   );
 }
+
+interface HelperTableActionsProps {
+  onBarcode?: () => void;
+  onView?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  barcodeTitle?: string;
+  viewTitle?: string;
+  editTitle?: string;
+  deleteTitle?: string;
+}
+
+export const HelperTableActions: React.FC<HelperTableActionsProps> = ({
+  onBarcode,
+  onView,
+  onEdit,
+  onDelete,
+  barcodeTitle = 'Barcode',
+  viewTitle = 'View',
+  editTitle = 'Edit',
+  deleteTitle = 'Delete',
+}) => {
+  return (
+    <td className="py-3.5 px-5 text-right">
+      <div className="flex justify-end items-center gap-1.5">
+        {onBarcode && (
+          <button
+            onClick={onBarcode}
+            className="p-2 border border-amber-200/80 text-amber-500 hover:bg-amber-50 rounded-[5px] transition-colors cursor-pointer"
+            title={barcodeTitle}
+          >
+            <FiTag className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {onView && (
+          <button
+            onClick={onView}
+            className="p-2 border border-emerald-200/80 text-emerald-600 hover:bg-emerald-50 rounded-[5px] transition-colors cursor-pointer"
+            title={viewTitle}
+          >
+            <FiEye className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className="p-2 border border-blue-200/80 text-blue-600 hover:bg-blue-50 rounded-[5px] transition-colors cursor-pointer animate-fade-in"
+            title={editTitle}
+          >
+            <FiEdit2 className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            className="p-2 border border-rose-200/80 text-rose-500 hover:bg-rose-50 rounded-[5px] transition-colors cursor-pointer animate-fade-in"
+            title={deleteTitle}
+          >
+            <FiTrash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+    </td>
+  );
+};

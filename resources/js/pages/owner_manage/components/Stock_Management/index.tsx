@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { FiBox, FiLayers, FiAlertTriangle, FiActivity, FiTrendingUp, FiSliders } from 'react-icons/fi';
+import { FiBox, FiLayers, FiAlertTriangle, FiActivity, FiSliders } from 'react-icons/fi';
 import { stockManagementService } from '@/api/owner/stockManagement';
 import type { MenuItem, ProductVariant } from '@/api/owner/categories';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { StockOverview } from './StockOverview';
 import { StockItems } from './StockItems';
 import { StockLowAlerts } from './StockLowAlerts';
-import { StockAbcAnalysis } from './StockAbcAnalysis';
 import { StockFifoBatches } from './StockFifoBatches';
 import { HelperFilter, type FilterSection } from '../../helper/HelperFilter';
 import '@/pages/owner_manage/style/font.css';
 
 interface StockManagementProps {
-  defaultView?: 'overview' | 'items' | 'low' | 'movements' | 'abc' | 'fifo';
+  defaultView?: 'overview' | 'items' | 'low' | 'movements' | 'fifo';
   ownerId?: number | string;
   storeId?: number;
 }
@@ -22,7 +21,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   ownerId,
   storeId,
 }) => {
-  const [view, setView] = useState<'overview' | 'items' | 'low' | 'movements' | 'abc' | 'fifo'>(defaultView);
+  const [view, setView] = useState<'overview' | 'items' | 'low' | 'movements' | 'fifo'>(defaultView);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -180,7 +179,6 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               items: 'stock-items',
               low: 'stock-low',
               movements: 'stock-movements',
-              abc: 'stock-abc-analysis',
               fifo: 'stock-fifo'
             };
             const targetTab = sidebarTabs[tab];
@@ -232,12 +230,6 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         </div>
       )}
 
-      {view === 'abc' && (
-        <StockAbcAnalysis
-          items={items}
-          loading={loading}
-        />
-      )}
 
       {view === 'fifo' && (
         <StockFifoBatches

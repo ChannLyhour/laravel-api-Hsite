@@ -1198,13 +1198,19 @@ class StoreController extends Controller
                     }
                 }
                 if ($subdomainSlug) {
-                    $storeSetting = Store::where('key', 'custom_domain')
-                        ->where(function ($q) use ($subdomainSlug) {
-                            $q->where('value', $subdomainSlug)
-                                ->orWhere('value', $subdomainSlug . '.lvh.me')
-                                ->orWhere('value', $subdomainSlug . '.store-frontend-v-hsite.vercel.app');
-                        })
-                        ->first();
+                    $storeSetting = Store::where(function ($query) use ($subdomainSlug) {
+                        $query->where(function ($q) use ($subdomainSlug) {
+                            $q->where('key', 'custom_domain')
+                                ->where(function ($sq) use ($subdomainSlug) {
+                                    $sq->where('value', $subdomainSlug)
+                                        ->orWhere('value', $subdomainSlug . '.lvh.me')
+                                        ->orWhere('value', $subdomainSlug . '.store-frontend-v-hsite.vercel.app');
+                                });
+                        })->orWhere(function ($q) use ($subdomainSlug) {
+                            $q->where('key', 'store_name')
+                                ->whereRaw("LOWER(REPLACE(value, ' ', '_')) = ?", [$subdomainSlug]);
+                        });
+                    })->first();
                     if ($storeSetting) {
                         $ownerId = $storeSetting->created_by;
                         $domainType = 'subdomain';
