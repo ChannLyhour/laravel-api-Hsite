@@ -1190,7 +1190,7 @@ class StoreController extends Controller
             // and the custom_domain setting is stored as just the prefix/slug (e.g. "our20s") or with suffix.
             if (!$ownerId) {
                 $subdomainSlug = null;
-                $platforms = ['lvh.me', 'store-frontend-v-hsite.vercel.app', 'vhsite-storefront.vercel.app', 'vhsite.com', 'yourplatform.com', config('app.platform_domain')];
+                $platforms = ['lvh.me', 'store-frontend-v-hsite.vercel.app', 'vhsite-storefront.vercel.app', 'vhsite.com', 'yourplatform.com', 'vhsitekh.site', config('app.platform_domain')];
                 foreach ($platforms as $plat) {
                     if ($plat && str_ends_with($domainWithoutPort, '.' . $plat)) {
                         $subdomainSlug = str_replace('.' . $plat, '', $domainWithoutPort);
