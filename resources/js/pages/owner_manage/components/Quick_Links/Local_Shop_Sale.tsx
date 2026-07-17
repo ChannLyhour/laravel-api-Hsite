@@ -1,6 +1,6 @@
 import React from 'react';
 import { FiShoppingBag } from 'react-icons/fi';
-import { getStoreUrl } from '@Security/Owner/configUrl';
+import { getStoreUrl, getStoreSlugFromDomain } from '@Security/Owner/configUrl';
 import type { StoreRow } from '@/api/owner/stores';
 
 interface LocalShopSaleProps {
@@ -14,7 +14,8 @@ export const LocalShopSale: React.FC<LocalShopSaleProps> = ({ stores, profile })
                ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
                : (profile?.user?.hashid || profile?.user?.id));
           // 1. Open storefront cashier screen in a new tab
-          const path = getStoreUrl(stores?.store_name || profile?.user?.name || 'Store', ownerId, true);
+          const resolvedStoreName = stores?.custom_domain ? getStoreSlugFromDomain(stores.custom_domain) : (stores?.store_name || 'Store');
+          const path = getStoreUrl(resolvedStoreName, ownerId, true);
           const localPath = path.includes('?') ? `${path}&local=true` : `${path}?local=true`;
           window.open(localPath, 'cashier_display', 'width=1200,height=800,menubar=no,status=no,toolbar=no');
      };

@@ -1200,15 +1200,45 @@ class StoreController extends Controller
                 if ($subdomainSlug) {
                     $storeSetting = Store::where(function ($query) use ($subdomainSlug) {
                         $query->where(function ($q) use ($subdomainSlug) {
+                            $slugWithUnderscores = str_replace('-', '_', $subdomainSlug);
+                            $slugWithoutDashes = str_replace(['-', '_'], '', $subdomainSlug);
+                            
+                            $possibleValues = [];
+                            $slugs = [$subdomainSlug, $slugWithUnderscores, $slugWithoutDashes];
+                            $platforms = ['lvh.me', 'store-frontend-v-hsite.vercel.app', 'vhsite-storefront.vercel.app', 'vhsite.com', 'yourplatform.com', 'vhsitekh.site', config('app.platform_domain')];
+                            
+                            foreach ($slugs as $s) {
+                                $possibleValues[] = $s;
+                                $possibleValues[] = $s . '/';
+                                $possibleValues[] = 'http://' . $s;
+                                $possibleValues[] = 'http://' . $s . '/';
+                                $possibleValues[] = 'https://' . $s;
+                                $possibleValues[] = 'https://' . $s . '/';
+                                
+                                foreach ($platforms as $plat) {
+                                    if (!$plat) continue;
+                                    $possibleValues[] = $s . '.' . $plat;
+                                    $possibleValues[] = $s . '.' . $plat . '/';
+                                    $possibleValues[] = 'http://' . $s . '.' . $plat;
+                                    $possibleValues[] = 'http://' . $s . '.' . $plat . '/';
+                                    $possibleValues[] = 'https://' . $s . '.' . $plat;
+                                    $possibleValues[] = 'https://' . $s . '.' . $plat . '/';
+                                }
+                            }
+                            
+                            $possibleValues = array_unique(array_map('strtolower', array_filter($possibleValues)));
+                            
                             $q->where('key', 'custom_domain')
-                                ->where(function ($sq) use ($subdomainSlug) {
-                                    $sq->where('value', $subdomainSlug)
-                                        ->orWhere('value', $subdomainSlug . '.lvh.me')
-                                        ->orWhere('value', $subdomainSlug . '.store-frontend-v-hsite.vercel.app');
-                                });
+                                ->whereIn(\Illuminate\Support\Facades\DB::raw('LOWER(value)'), $possibleValues);
                         })->orWhere(function ($q) use ($subdomainSlug) {
+                            $slugWithSpaces = str_replace('-', ' ', $subdomainSlug);
+                            $slugWithUnderscores = str_replace('-', '_', $subdomainSlug);
                             $q->where('key', 'store_name')
-                                ->whereRaw("LOWER(REPLACE(value, ' ', '_')) = ?", [$subdomainSlug]);
+                                ->where(function($sq) use ($slugWithSpaces, $slugWithUnderscores, $subdomainSlug) {
+                                    $sq->whereRaw("LOWER(value) = ?", [$slugWithSpaces])
+                                        ->orWhereRaw("LOWER(value) = ?", [$slugWithUnderscores])
+                                        ->orWhereRaw("LOWER(value) = ?", [$subdomainSlug]);
+                                });
                         });
                     })->first();
                     if ($storeSetting) {

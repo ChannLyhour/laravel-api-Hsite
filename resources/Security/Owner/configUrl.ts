@@ -69,6 +69,15 @@ export function deslugifyStoreName(slug: string): string {
 }
 
 /**
+ * Extracts the clean subdomain slug from a custom domain string.
+ */
+export function getStoreSlugFromDomain(customDomain: string): string {
+  if (!customDomain) return "";
+  let clean = customDomain.replace(/^(https?:\/\/)?(www\.)?/, "");
+  return clean.split(".")[0];
+}
+
+/**
  * Generates the storefront URL for a given store.
  */
 export function getStoreUrl(
@@ -165,9 +174,11 @@ export function getStoreUrl(
         hostname.startsWith("192.168.") ||
         hostname.startsWith("10.");
 
+      const subSlug = slug.replace(/_/g, "-");
+
       if (isLocal) {
         const portSuffix = port ? `:${port}` : "";
-        resolvedUrl = `${protocol}//${slug}.lvh.me${portSuffix}`;
+        resolvedUrl = `${protocol}//${subSlug}.lvh.me${portSuffix}`;
       } else {
         const platformDomains = [
           "store-frontend-v-hsite.vercel.app",
@@ -186,13 +197,13 @@ export function getStoreUrl(
 
         const isPlatform = platformDomains.includes(baseDomain);
         if (isPlatform) {
-          resolvedUrl = `${protocol}//${slug}.${baseDomain}`;
+          resolvedUrl = `${protocol}//${subSlug}.${baseDomain}`;
         }
       }
     }
 
     if (!resolvedUrl) {
-      resolvedUrl = `https://${slug}.vhsitekh.site`;
+      resolvedUrl = `https://${slug.replace(/_/g, "-")}.vhsitekh.site`;
     }
   }
 

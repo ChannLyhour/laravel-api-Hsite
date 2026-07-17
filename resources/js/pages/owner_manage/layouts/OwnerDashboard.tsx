@@ -65,7 +65,7 @@ import { Social_Login_SetupTab } from '../components/Store_Settings/Social_Login
 import { Pusher_ConfigurationTab } from '../components/Store_Settings/Pusher_ConfigurationTab';
 import { Payment_Gateways_SetupTab } from '../components/Store_Settings/Payment_Gateways_SetupTab';
 import { TranslationProvider, useTranslation } from '../lang/i18n';
-import { getStoreUrl } from '@Security/Owner/configUrl';
+import { getStoreUrl, getStoreSlugFromDomain } from '@Security/Owner/configUrl';
 import { resolveImageUrl } from '@/api/imageUtils';
 import { ProfileOwnerTab } from '../components/ProfileOwnerTab';
 import { CustomizeSystemTab } from '../components/Store_Settings/CustomizeSystemTab';
@@ -1032,8 +1032,9 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                     const activeOwnerId = settings?.hashid || settings?.owner_id || settings?.created_by || (profile?.user?.role === 'admin'
                       ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
                       : (profile?.user?.hashid || profile?.user?.id));
-                    const path = getStoreUrl(settings?.store_name || profile?.user?.name || 'Store', activeOwnerId);
-                    const shareUrl = path.startsWith('http') ? path : `${window.location.origin}${path}`;
+                    const resolvedStoreName = settings?.custom_domain ? getStoreSlugFromDomain(settings.custom_domain) : (settings?.store_name || 'Store');
+                    const path = getStoreUrl(resolvedStoreName, activeOwnerId, false, true);
+                    const shareUrl = path;
                     navigator.clipboard.writeText(shareUrl);
                     toast.success('Public storefront link copied!');
                   }}
@@ -1048,7 +1049,8 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                     const activeOwnerId = settings?.hashid || settings?.owner_id || settings?.created_by || (profile?.user?.role === 'admin'
                       ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
                       : (profile?.user?.hashid || profile?.user?.id));
-                    const path = getStoreUrl(settings?.store_name || profile?.user?.name || 'Store', activeOwnerId);
+                    const resolvedStoreName = settings?.custom_domain ? getStoreSlugFromDomain(settings.custom_domain) : (settings?.store_name || 'Store');
+                    const path = getStoreUrl(resolvedStoreName, activeOwnerId);
                     window.open(path, '_blank');
                   }}
                   className="bg-primary hover:bg-primary-hover text-white px-2.5 py-1 rounded-[5px] font-bold transition-all cursor-pointer flex items-center space-x-1 shadow-sm shadow-orange-500/10 active:scale-95 duration-200 border-none"

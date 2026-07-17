@@ -2,7 +2,7 @@ import React from 'react';
 import { FiShare2 } from 'react-icons/fi';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { useTranslation } from '../../lang/i18n';
-import { getStoreUrl } from '@Security/Owner/configUrl';
+import { getStoreUrl, getStoreSlugFromDomain } from '@Security/Owner/configUrl';
 import type { StoreRow } from '@/api/owner/stores';
 
 interface CopyShareLinkProps {
@@ -17,7 +17,8 @@ export const CopyShareLink: React.FC<CopyShareLinkProps> = ({ stores, profile })
     const ownerId = stores?.hashid || stores?.owner_id || stores?.created_by || (profile?.user?.role === 'admin'
       ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
       : (profile?.user?.hashid || profile?.user?.id));
-    const path = getStoreUrl(stores?.store_name || profile?.user?.name || 'Store', ownerId, false, true);
+    const resolvedStoreName = stores?.custom_domain ? getStoreSlugFromDomain(stores.custom_domain) : (stores?.store_name || 'Store');
+    const path = getStoreUrl(resolvedStoreName, ownerId, false, true);
     const shareUrl = path;
     navigator.clipboard.writeText(shareUrl);
     toast.success('Storefront link copied!');

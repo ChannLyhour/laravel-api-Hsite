@@ -6,7 +6,7 @@ import type { SmartPhoneThemeInfo } from './templates_smart_phone';
 import { FiCheck, FiLayout, FiStar, FiShoppingCart, FiEye, FiLock, FiCreditCard, FiX, FiInfo, FiMoon, FiAward, FiCompass, FiSmartphone, FiDownload } from 'react-icons/fi';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { templatesService, type TemplateData } from '@/api/owner/templates';
-import { getStoreUrl } from '@Security/Owner/configUrl';
+import { getStoreUrl, getStoreSlugFromDomain } from '@Security/Owner/configUrl';
 import '@/pages/owner_manage/style/font.css';
 
 interface ThemeSelectorPanelProps {
@@ -233,7 +233,7 @@ export const ThemeSelectorPanel: React.FC<ThemeSelectorPanelProps> = ({
     const resolvedOwnerId = ownerId || storeSettings?.hashid || storeSettings?.owner_id || storeSettings?.created_by || (profile?.user?.role === 'admin'
       ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
       : (profile?.user?.hashid || profile?.user?.id));
-    const resolvedStoreName = storeSettings?.store_name || profile?.user?.name || 'Store';
+    const resolvedStoreName = storeSettings?.custom_domain ? getStoreSlugFromDomain(storeSettings.custom_domain) : (storeSettings?.store_name || 'Store');
     
     if (resolvedOwnerId && resolvedStoreName && resolvedStoreName !== 'Store') {
       const path = getStoreUrl(resolvedStoreName, resolvedOwnerId);
@@ -333,7 +333,7 @@ export const ThemeSelectorPanel: React.FC<ThemeSelectorPanelProps> = ({
     const resolvedOwnerId = ownerId || storeSettings?.hashid || storeSettings?.owner_id || storeSettings?.created_by || (profile?.user?.role === 'admin'
       ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
       : (profile?.user?.hashid || profile?.user?.id));
-    const resolvedStoreName = storeSettings?.store_name || profile?.user?.name || 'Store';
+    const resolvedStoreName = storeSettings?.custom_domain ? getStoreSlugFromDomain(storeSettings.custom_domain) : (storeSettings?.store_name || 'Store');
     
     if (resolvedOwnerId && resolvedStoreName && resolvedStoreName !== 'Store') {
       const path = getStoreUrl(resolvedStoreName, resolvedOwnerId);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiHome } from 'react-icons/fi';
 import { useTranslation } from '../../lang/i18n';
-import { getStoreUrl } from '@Security/Owner/configUrl';
+import { getStoreUrl, getStoreSlugFromDomain } from '@Security/Owner/configUrl';
 import type { StoreRow } from '@/api/owner/stores';
 
 interface VisitLiveStoreProps {
@@ -16,7 +16,8 @@ export const VisitLiveStore: React.FC<VisitLiveStoreProps> = ({ stores, profile 
     const ownerId = stores?.hashid || stores?.owner_id || stores?.created_by || (profile?.user?.role === 'admin'
       ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
       : (profile?.user?.hashid || profile?.user?.id));
-    const path = getStoreUrl(stores?.store_name || profile?.user?.name || 'Store', ownerId);
+    const resolvedStoreName = stores?.custom_domain ? getStoreSlugFromDomain(stores.custom_domain) : (stores?.store_name || 'Store');
+    const path = getStoreUrl(resolvedStoreName, ownerId);
     window.open(path, '_blank');
   };
 

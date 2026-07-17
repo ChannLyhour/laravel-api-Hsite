@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FiCopy, FiExternalLink, FiDownload, FiPrinter, FiRotateCcw, FiCheck } from 'react-icons/fi';
 import { GenerateQRCode } from './qr/generateqrcode';
 import { toast } from '@/pages/owner_manage/utils/toast';
-import { getStoreUrl } from '@Security/Owner/configUrl';
+import { getStoreUrl, getStoreSlugFromDomain } from '@Security/Owner/configUrl';
 import { resolveImageUrl } from '@/api/imageUtils';
 
 interface SharingLinkShowProps {
@@ -17,13 +17,13 @@ export const SharingLinkShow: React.FC<SharingLinkShowProps> = ({ profile, setti
 
 
      // Resolve store details
-     const storeName = settings?.store_name || profile?.user?.name || 'My Store';
+     const storeName = settings?.custom_domain ? getStoreSlugFromDomain(settings.custom_domain) : (settings?.store_name || 'My Store');
      const activeOwnerId = settings?.hashid || settings?.owner_id || settings?.created_by || (profile?.user?.role === 'admin'
           ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
           : (profile?.user?.hashid || profile?.user?.id));
 
-     const path = getStoreUrl(storeName, activeOwnerId);
-     const shareUrl = path.startsWith('http') ? path : `${window.location.origin}${path}`;
+     const path = getStoreUrl(storeName, activeOwnerId, false, true);
+     const shareUrl = path;
      const logoUrl = settings?.logo || settings?.image_url || profile?.user?.image_url;
      const resolvedLogoUrl = logoUrl ? resolveImageUrl(logoUrl) : undefined;
 
