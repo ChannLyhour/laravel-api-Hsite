@@ -83,6 +83,15 @@ export const useGet = ({
 
     useEffect(() => {
         loadData();
+
+        const handleCacheCleared = () => {
+            loadData();
+        };
+
+        window.addEventListener("cache_cleared", handleCacheCleared);
+        return () => {
+            window.removeEventListener("cache_cleared", handleCacheCleared);
+        };
     }, [loadData]);
 
     // Keep localStorage cache in sync whenever categories or items change (create/edit/delete/toggle status)
