@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FiEdit2, FiTrash2, FiShoppingBag, FiTag, FiEye } from 'react-icons/fi';
 import { useConfirm } from '@/components/ConfirmProvider';
-import { categoriesService, menuItemsService } from '@/api/owner/categories';
+import { menuItemsService } from '@/api/owner/categories';
 import { resolveImageUrl } from '@/api/imageUtils';
 import type { Category, MenuItem } from '@/api/owner/categories';
 import { toast } from '@/pages/owner_manage/utils/toast';
+import { useGet } from './hooks/useGet';
 import '@/pages/owner_manage/style/font.css';
 import { HelperTable, HelperTableActions } from '../../helper/HelperTable';
 import type { HelperTableColumn } from '../../helper/HelperTable';
@@ -13,6 +14,7 @@ import type { FilterSection } from '../../helper/HelperFilter';
 import { CreatePage } from './create';
 import { EditPage } from './edit';
 import { ShowPage } from './show';
+import { ClearCacheButton } from './cache/clearcahe';
 import { useTranslation } from '../../lang/i18n';
 import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
@@ -30,9 +32,6 @@ interface MenuItemsTabProps {
 export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) => {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const [items, setItems] = useState<MenuItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [colFilters, setColFilters] = useState<Record<string, string>>({
     name: '',
@@ -54,6 +53,74 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
   const [appliedFilters, setAppliedFilters] = useState<FiltersState>(initialFilters);
   const [tempFilters, setTempFilters] = useState<FiltersState>(initialFilters);
   const [showAllCategories, setShowAllCategories] = useState(false);
+
+  // Navigation View State
+  const [view, setView] = useState<'list' | 'create' | 'edit' | 'show'>(() => {
+    const saved = localStorage.getItem('menu_items_view');
+    return (saved as any) || 'list';
+  });
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(() => {
+    const saved = localStorage.getItem('menu_items_editing_item');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (_) { }
+    }
+    return null;
+  });
+  const [showingItem, setShowingItem] = useState<MenuItem | null>(() => {
+    const saved = localStorage.getItem('menu_items_showing_item');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (_) { }
+    }
+    return null;
+  });
+
+  const {
+    items,
+    setItems,
+    categories,
+    setCategories,
+    loading,
+    loadData,
+  } = useGet({
+    ownerId,
+    storeId,
+    setEditingItem,
+    setShowingItem,
+  });
+
+  const getProductsLimit = (): number => {
+    let tier = 'free';
+    try {
+      const savedTier = localStorage.getItem('biteflow_subscription_tier');
+      if (savedTier) tier = savedTier.toLowerCase();
+    } catch (_) {}
+
+    let featuresList: string[] = [];
+    try {
+      const savedFeatures = localStorage.getItem('biteflow_plan_features');
+      if (savedFeatures) {
+        const parsed = JSON.parse(savedFeatures);
+        if (parsed[tier]) featuresList = parsed[tier];
+      }
+    } catch (_) {}
+
+    if (featuresList.length === 0) {
+      featuresList = defaultPlanFeatures[tier as keyof typeof defaultPlanFeatures] || defaultPlanFeatures.free;
+    }
+
+    const limitStr = featuresList.find(f => f.startsWith('Products Limit:'));
+    if (limitStr) {
+      const val = limitStr.split(':')[1];
+      if (val.toLowerCase().includes('unlimited')) return Infinity;
+      const num = parseInt(val, 10);
+      if (!isNaN(num)) return num;
+    }
+    return 10;
+  };
 
   const handleFilterChange = (sectionId: string, value: any) => {
     setTempFilters(prev => ({
@@ -77,7 +144,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
     setTempFilters(appliedFilters);
   };
 
-  const filterSections: FilterSection[] = [
+  const filterSections: FilterSection[] = useMemo(() => [
     {
       id: 'sorting',
       title: t('menu.sorting'),
@@ -110,31 +177,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
       seeMoreLabel: showAllCategories ? t('menu.see_less') : t('menu.see_more'),
       onSeeMoreClick: () => setShowAllCategories(p => !p),
     },
-  ];
-
-  // Navigation View State
-  const [view, setView] = useState<'list' | 'create' | 'edit' | 'show'>(() => {
-    const saved = localStorage.getItem('menu_items_view');
-    return (saved as any) || 'list';
-  });
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(() => {
-    const saved = localStorage.getItem('menu_items_editing_item');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (_) { }
-    }
-    return null;
-  });
-  const [showingItem, setShowingItem] = useState<MenuItem | null>(() => {
-    const saved = localStorage.getItem('menu_items_showing_item');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (_) { }
-    }
-    return null;
-  });
+  ], [t, showAllCategories, categories]);
 
   useEffect(() => {
     localStorage.setItem('menu_items_view', view);
@@ -208,123 +251,6 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, appliedFilters]);
-
-  useEffect(() => {
-    loadData();
-  }, [ownerId, storeId]);
-
-  // Keep localStorage cache in sync whenever categories or items change (create/edit/delete/toggle status)
-  useEffect(() => {
-    if (!loading) {
-      const cacheKeyCats = `menu_cats_${ownerId}_${storeId}`;
-      const cacheKeyItems = `menu_items_${ownerId}_${storeId}`;
-      try {
-        localStorage.setItem(cacheKeyCats, JSON.stringify(categories));
-        localStorage.setItem(cacheKeyItems, JSON.stringify(items));
-      } catch (_) {}
-    }
-  }, [items, categories, loading, ownerId, storeId]);
-
-  useEffect(() => {
-    const fetchPlanFeatures = async () => {
-      try {
-        const res = await fetch('/api/subscriptions/features');
-        if (res.ok) {
-          const data = await res.json();
-          localStorage.setItem('biteflow_plan_features', JSON.stringify(data));
-        }
-      } catch (_) {}
-    };
-    fetchPlanFeatures();
-  }, []);
-
-  const getProductsLimit = (): number => {
-    let tier = 'free';
-    try {
-      const savedSettings = localStorage.getItem('store_settings');
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        tier = parsed.subscription_tier || 'free';
-      }
-    } catch (_) {}
-
-    let featuresList: string[] = [];
-    try {
-      const savedFeatures = localStorage.getItem('biteflow_plan_features');
-      if (savedFeatures) {
-        const parsed = JSON.parse(savedFeatures);
-        if (parsed[tier]) featuresList = parsed[tier];
-      }
-    } catch (_) {}
-
-    if (featuresList.length === 0) {
-      featuresList = defaultPlanFeatures[tier as keyof typeof defaultPlanFeatures] || defaultPlanFeatures.free;
-    }
-
-    const limitStr = featuresList.find(f => f.startsWith('Products Limit:'));
-    if (limitStr) {
-      const val = limitStr.split(':')[1];
-      if (val.toLowerCase().includes('unlimited')) return Infinity;
-      const num = parseInt(val, 10);
-      if (!isNaN(num)) return num;
-    }
-    return 10; // Default fallback for Free plan
-  };
-
-  const loadData = async () => {
-    // Try to load cached data from localStorage first for instant display
-    const cacheKeyCats = `menu_cats_${ownerId}_${storeId}`;
-    const cacheKeyItems = `menu_items_${ownerId}_${storeId}`;
-    
-    try {
-      const cachedCats = localStorage.getItem(cacheKeyCats);
-      const cachedItems = localStorage.getItem(cacheKeyItems);
-      
-      if (cachedCats && cachedItems) {
-        setCategories(JSON.parse(cachedCats));
-        setItems(JSON.parse(cachedItems));
-        setLoading(false); // Hide spinner immediately because we have cached data
-      } else {
-        setLoading(true);
-      }
-    } catch (_) {
-      setLoading(true);
-    }
-
-    try {
-      // Fetch fresh data from API
-      const [catsResponse, itemsList] = await Promise.all([
-        categoriesService.getMyCategories(100, 0, ownerId, storeId),
-        menuItemsService.getMenuItems(200, 0, ownerId, storeId)
-      ]);
-
-      // Update React state with fresh data
-      setCategories(catsResponse.categories);
-      setItems(itemsList);
-
-      // Save fresh data to cache for the next page load
-      try {
-        localStorage.setItem(cacheKeyCats, JSON.stringify(catsResponse.categories));
-        localStorage.setItem(cacheKeyItems, JSON.stringify(itemsList));
-      } catch (_) {}
-
-      // Sync active view item states with fresh data from itemsList to load addons/details
-      setEditingItem(prev => {
-        if (!prev) return null;
-        const fresh = itemsList.find(i => i.id === prev.id);
-        return fresh ? fresh : prev;
-      });
-      setShowingItem(prev => {
-        if (!prev) return null;
-        const fresh = itemsList.find(i => i.id === prev.id);
-        return fresh ? fresh : prev;
-      });
-    } catch (e) {
-      console.error('Failed to load menu data:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOpenEditModal = (item: MenuItem) => {
     setEditingItem(item);
@@ -488,6 +414,9 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
           <p className="text-slate-500 text-xs sm:text-sm mt-1">
             {t('menu.subtitle')}
           </p>
+        </div>
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <ClearCacheButton onCleared={() => loadData()} />
         </div>
       </div>
 
@@ -690,8 +619,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                     }
                   })
                 );
-                const itemsList = await menuItemsService.getMenuItems(200, 0, ownerId, storeId);
-                setItems(itemsList);
+                await loadData();
                 setSelectedIds([]);
                 toast.success('Successfully activated selected dishes!');
                 window.dispatchEvent(new CustomEvent('data_updated'));
@@ -721,8 +649,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                     }
                   })
                 );
-                const itemsList = await menuItemsService.getMenuItems(200, 0, ownerId, storeId);
-                setItems(itemsList);
+                await loadData();
                 setSelectedIds([]);
                 toast.success('Successfully deactivated selected dishes!');
                 window.dispatchEvent(new CustomEvent('data_updated'));
@@ -800,8 +727,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                       }
                     })
                   );
-                  const itemsList = await menuItemsService.getMenuItems(200, 0, ownerId, storeId);
-                  setItems(itemsList);
+                  await loadData();
                   setSelectedIds([]);
                   toast.success('Successfully duplicated selected products!', { id: 'bulk-duplicate' });
                   window.dispatchEvent(new CustomEvent('data_updated'));
