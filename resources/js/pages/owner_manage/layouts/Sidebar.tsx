@@ -45,6 +45,7 @@ import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptio
 import CopyShareLink from '../components/Quick_Links/copy_share_link';
 import VisitLiveStore from '../components/Quick_Links/visit_live_store';
 import LocalShopSale from '../components/Quick_Links/Local_Shop_Sale';
+import { TotalProductCount } from './Badge_count/totalProductCount';
 
 type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-fifo' | 'upgrade-plan' | 'catalog-limited-stock' | 'catalog-restock-requests' | 'catalog-bulk-import' | 'catalog-vendor-new' | 'catalog-vendor-update' | 'catalog-vendor-approved' | 'catalog-vendor-denied' | 'catalog-product-gallery';
 
@@ -78,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   mobile = false,
   unreadChatCount = 0,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const getActivePlanFeatures = (): string[] => {
     const tier = stores?.subscription_tier || 'free';
@@ -393,70 +394,99 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div 
       className="flex h-full w-full select-none"
       style={{
-        backgroundColor: 'var(--sidebar-menu-bg, #3f51b5)',
-        color: 'var(--sidebar-text-color, #e0e7ff)'
+        backgroundColor: 'var(--sidebar-menu-bg, #ffffff)',
+        color: 'var(--sidebar-text-color, #0f172a)'
       }}
     >
       <style>{`
         .child-sidebar-container {
-          background-color: var(--sidebar-child-bg, var(--sidebar-menu-bg, #3f51b5)) !important;
-          color: var(--sidebar-child-text-color, var(--sidebar-text-color, #e0e7ff)) !important;
+          background-color: #ffffff !important;
+          color: #0f172a !important;
+          font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important;
+          font-optical-sizing: auto !important;
         }
         .child-sidebar-header {
-          border-color: color-mix(in srgb, var(--sidebar-child-text-color, var(--sidebar-text-color, #e0e7ff)) 10%, transparent) !important;
+          border-color: #f1f5f9 !important;
         }
         .child-sidebar-header span {
-          color: var(--sidebar-child-active-text-color, #ffffff) !important;
+          color: #0f172a !important;
+          font-weight: 800 !important;
+          font-size: 15px !important;
         }
         .child-sidebar-container p {
-          color: color-mix(in srgb, var(--sidebar-child-text-color, var(--sidebar-text-color, #e0e7ff)) 55%, transparent) !important;
+          color: #94a3b8 !important;
+          font-weight: 700 !important;
+          font-size: 10px !important;
+          letter-spacing: 0.05em !important;
         }
         .child-sidebar-container button {
-          color: var(--sidebar-child-text-color, var(--sidebar-text-color, #e0e7ff)) !important;
+          color: #475569 !important;
           background-color: transparent !important;
-          transition: all 0.2s ease-in-out !important;
+          transition: all 0.15s ease-in-out !important;
+          position: relative !important;
+          border-radius: 8px !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
         }
         .child-sidebar-container button svg {
-          color: color-mix(in srgb, var(--sidebar-child-text-color, var(--sidebar-text-color, #e0e7ff)) 80%, transparent) !important;
-          transition: color 0.2s ease-in-out !important;
+          color: #64748b !important;
+          transition: color 0.15s ease-in-out !important;
         }
         .child-sidebar-container button:hover {
-          background-color: color-mix(in srgb, var(--sidebar-child-active-bg, #ffffff) 8%, transparent) !important;
-          color: var(--sidebar-child-active-text-color, #ffffff) !important;
+          background-color: #f8fafc !important;
+          color: #0f172a !important;
         }
         .child-sidebar-container button:hover svg {
-          color: var(--sidebar-child-active-text-color, #ffffff) !important;
+          color: #0f172a !important;
         }
-        .child-sidebar-container button[class*="bg-white/10"] {
-          background-color: color-mix(in srgb, var(--sidebar-child-active-bg, #ffffff) 12%, transparent) !important;
-          color: var(--sidebar-child-active-text-color, #ffffff) !important;
-          font-weight: 800 !important;
+        .child-sidebar-container button.sub-active,
+        .child-sidebar-container button[class*="bg-white/10"],
+        .child-sidebar-container button[class*="bg-blue-50"],
+        .child-sidebar-container button[class*="bg-indigo-50"] {
+          background-color: #eff6ff !important;
+          color: #2563eb !important;
+          font-weight: 700 !important;
         }
-        .child-sidebar-container button[class*="bg-white/10"] svg {
-          color: var(--sidebar-child-active-text-color, #ffffff) !important;
+        .child-sidebar-container button.sub-active svg,
+        .child-sidebar-container button[class*="bg-white/10"] svg,
+        .child-sidebar-container button[class*="bg-blue-50"] svg,
+        .child-sidebar-container button[class*="bg-indigo-50"] svg {
+          color: #2563eb !important;
+        }
+        .child-sidebar-container button.sub-active::before,
+        .child-sidebar-container button[class*="bg-white/10"]::before,
+        .child-sidebar-container button[class*="bg-blue-50"]::before,
+        .child-sidebar-container button[class*="bg-indigo-50"]::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3.5px;
+          height: 18px;
+          background-color: #2563eb;
+          border-top-right-radius: 3px;
+          border-bottom-right-radius: 3px;
         }
         .child-sidebar-divider {
-          border-color: color-mix(in srgb, var(--sidebar-child-text-color, var(--sidebar-text-color, #e0e7ff)) 10%, transparent) !important;
+          border-color: #f1f5f9 !important;
         }
       `}</style>
 
       {/* ── Left Column: Main Icon Bar ──────────────────────── */}
       <div 
-        className="w-[70px] flex flex-col items-center border-r shrink-0 h-full py-4 justify-between relative"
+        className="w-[70px] flex flex-col items-center border-r shrink-0 h-full py-4 justify-between relative bg-white border-slate-100"
         style={{
-          backgroundColor: 'var(--sidebar-left-bg, #303f9f)',
-          borderColor: 'color-mix(in srgb, var(--sidebar-text-color, #e0e7ff) 10%, transparent)'
+          backgroundColor: '#ffffff',
+          borderColor: '#f1f5f9',
+          color: '#0f172a'
         }}
       >
 
         <div className="flex flex-col items-center w-full gap-5">
           {/* Circular Brand Logo */}
           <div 
-            className="w-10 h-10 rounded-[5px] flex items-center justify-center text-white font-black text-base shadow-sm overflow-hidden border"
-            style={{
-              backgroundColor: 'var(--sidebar-menu-bg, #3f51b5)',
-              borderColor: 'color-mix(in srgb, var(--sidebar-text-color, #e0e7ff) 30%, transparent)'
-            }}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-slate-900 font-black text-base shadow-xs overflow-hidden border border-slate-200 bg-slate-50"
           >
             {stores?.logo_url ? (
               <img src={resolveImageUrl(stores.logo_url)} alt="Logo" className="w-full h-full object-cover" />
@@ -466,7 +496,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           {/* Vertical Menu Icons */}
-          <div className="flex flex-col items-center w-full gap-2 px-2 mt-4">
+          <div className="flex flex-col items-center w-full gap-2 px-2 mt-2">
             {leftMenuItems.map(item => {
               const isActive = activeCategory === item.id;
               return (
@@ -474,13 +504,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   key={item.id}
                   onClick={() => handleLeftItemClick(item.id)}
                   title={item.label}
-                  className={`w-11 h-11 flex items-center justify-center rounded-[7px] transition-all duration-200 border-none cursor-pointer relative group ${isActive
-                      ? 'text-white shadow-md'
-                      : 'text-current/80 hover:text-white hover:bg-white/10 bg-transparent'
+                  className={`w-11 h-11 flex items-center justify-center rounded-[12px] transition-all duration-200 border-none cursor-pointer relative group ${isActive
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                      : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100 bg-transparent'
                     }`}
                   style={isActive ? {
-                    backgroundColor: 'var(--sidebar-active-color, #ff6b35)',
-                    boxShadow: '0 4px 12px color-mix(in srgb, var(--sidebar-active-color, #ff6b35) 25%, transparent)'
+                    backgroundColor: 'var(--sidebar-active-color, #2563eb)',
+                    boxShadow: '0 4px 12px color-mix(in srgb, var(--sidebar-active-color, #2563eb) 25%, transparent)'
                   } : undefined}
                 >
                   {item.icon}
@@ -522,7 +552,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onLogout}
             title={t('sidebar.sign_out')}
-            className="w-11 h-11 flex items-center justify-center text-current/80 hover:text-rose-455 hover:bg-rose-500/10 rounded-[10px] transition-all border-none bg-transparent cursor-pointer"
+            className="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-[10px] transition-all border-none bg-transparent cursor-pointer"
           >
             <FiLogOut className="w-[18px] h-[18px]" />
           </button>
@@ -542,10 +572,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div 
             className="h-16 flex items-center justify-between px-4 border-b shrink-0 child-sidebar-header"
             style={{
-              borderColor: 'color-mix(in srgb, var(--sidebar-text-color, #e0e7ff) 10%, transparent)'
+              borderColor: 'color-mix(in srgb, var(--sidebar-text-color, #0f172a) 10%, #e2e8f0)'
             }}
           >
-            <span className="text-[14px] font-black text-white capitalize tracking-tight">
+            <span className="text-[14px] font-black text-slate-900 capitalize tracking-tight">
               {activeCategory === 'dashboard' ? t('sidebar.dashboard') : leftMenuItems.find(m => m.id === activeCategory)?.label || activeCategory}
             </span>
           </div>
@@ -625,9 +655,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <FiList className="w-4 h-4 text-indigo-200/80 shrink-0" />
                         <span className="truncate">Product List</span>
                       </div>
-                      <span className="text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded-full shrink-0">
-                        {totalProductCount}
-                      </span>
+                      <TotalProductCount count={totalProductCount} />
                     </button>
 
                     {/* Add New Product */}
@@ -1289,18 +1317,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <FiLayout className="w-4 h-4 text-indigo-200/80 shrink-0" />
                   <span className="truncate">{t('sidebar.storefront_themes')}</span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('customize-system'); setIsMobileMenuOpen(false); }}
-                  title="Sidebar Theme Customizer"
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${activeTab === 'customize-system'
-                      ? 'bg-white/10 text-white'
-                      : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <FiSliders className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                  <span className="truncate">System Sidebar Customizer</span>
                 </button>
               </div>
             )}

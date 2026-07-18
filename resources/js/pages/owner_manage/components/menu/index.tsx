@@ -15,6 +15,7 @@ import { CreatePage } from './create';
 import { EditPage } from './edit';
 import { ShowPage } from './show';
 import { ClearCacheButton } from './cache/clearcahe';
+import { BadgeCountProduct } from './components/Badge_count_product';
 import { useTranslation } from '../../lang/i18n';
 import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
@@ -97,7 +98,30 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
     try {
       const savedTier = localStorage.getItem('biteflow_subscription_tier');
       if (savedTier) tier = savedTier.toLowerCase();
+
+      if (tier === 'free') {
+        const savedSettings = localStorage.getItem('store_settings');
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          const tVal = parsed.subscription_tier || parsed.tier || parsed.plan || parsed.package_plan || parsed.license_package_plan;
+          if (tVal) tier = String(tVal).toLowerCase();
+        }
+      }
+
+      if (tier === 'free') {
+        const savedUser = localStorage.getItem('owner_user') || localStorage.getItem('user');
+        if (savedUser) {
+          const parsed = JSON.parse(savedUser);
+          const tVal = parsed.subscription_tier || parsed.tier || parsed.plan || parsed.package_plan || parsed.license_package_plan;
+          if (tVal) tier = String(tVal).toLowerCase();
+        }
+      }
     } catch (_) {}
+
+    if (tier.includes('premium')) tier = 'premium';
+    else if (tier.includes('standard')) tier = 'standard';
+    else if (tier.includes('basic')) tier = 'basic';
+    else if (tier.includes('free')) tier = 'free';
 
     let featuresList: string[] = [];
     try {
@@ -407,9 +431,12 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
       {/* Menu Item Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
-            <FiShoppingBag className="text-orange-500" />
-            <span>{t('menu.title')}</span>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3 flex-wrap">
+            <div className="flex items-center space-x-2">
+              <FiShoppingBag className="text-orange-500" />
+              <span>{t('menu.title')}</span>
+            </div>
+            <BadgeCountProduct count={items.length} limit={getProductsLimit()} />
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm mt-1">
             {t('menu.subtitle')}
