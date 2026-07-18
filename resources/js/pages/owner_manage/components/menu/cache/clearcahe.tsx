@@ -9,22 +9,50 @@ export interface ClearCacheOptions {
 
 /**
  * Utility function to clear browser storage and CacheStorage API
+ * while preserving essential authentication and store configuration session tokens.
  */
 export const clearBrowserCache = async (options: ClearCacheOptions = {}) => {
   try {
-    // 1. Clear LocalStorage
+    // 1. Preserve essential session & authentication tokens
+    const keysToPreserve = [
+      'auth_token',
+      'token',
+      'aura_customer_token',
+      'store_settings',
+      'store_locale',
+      'owner_manage_lang',
+      'biteflow_subscription_tier',
+      'biteflow_plan_features',
+      'user',
+      'owner_user',
+    ];
+
+    const preservedData: Record<string, string> = {};
+    keysToPreserve.forEach((key) => {
+      const val = localStorage.getItem(key);
+      if (val !== null) {
+        preservedData[key] = val;
+      }
+    });
+
+    // 2. Clear LocalStorage
     localStorage.clear();
 
-    // 2. Clear SessionStorage
+    // 3. Restore preserved session keys
+    Object.entries(preservedData).forEach(([key, val]) => {
+      localStorage.setItem(key, val);
+    });
+
+    // 4. Clear SessionStorage
     sessionStorage.clear();
 
-    // 3. Clear CacheStorage API (Service Workers / HTTP Cache)
+    // 5. Clear CacheStorage API (Service Workers / HTTP Cache)
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map((name) => caches.delete(name)));
     }
 
-    // 4. Dispatch custom events so active components can refresh their state
+    // 6. Dispatch custom events so active components can refresh their state
     window.dispatchEvent(new CustomEvent('cache_cleared'));
     window.dispatchEvent(new CustomEvent('data_updated'));
 
@@ -41,7 +69,7 @@ export const clearBrowserCache = async (options: ClearCacheOptions = {}) => {
 
     toast.success('Browser cache cleared successfully!');
 
-    // 5. Reload page if requested
+    // 7. Reload page if requested
     if (options.reload) {
       setTimeout(() => {
         window.location.reload();
