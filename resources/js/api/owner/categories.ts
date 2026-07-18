@@ -51,6 +51,9 @@ export interface ProductVariant {
   imageFile?: File;
   image_url?: string;
   stock_batches?: any[];
+  variant?: string;
+  title?: string;
+  name?: string;
 }
 
 export interface ProductImage {

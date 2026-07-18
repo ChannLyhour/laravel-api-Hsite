@@ -280,6 +280,25 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
     const parsedColors = getProductColors(product);
     const colors = parsedColors.length > 0 ? parsedColors : (product as any).colors || [];
 
+    const nonColorAttributeName = useMemo(() => {
+        if (product.variants && product.variants.length > 0) {
+            for (const v of product.variants) {
+                if (v.attribute_values && v.attribute_values.length > 0) {
+                    for (const av of v.attribute_values) {
+                        const attrName = av.attribute?.name;
+                        if (attrName) {
+                            const lower = attrName.toLowerCase();
+                            if (lower !== 'color' && lower !== 'colour') {
+                                return attrName;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return 'Size';
+    }, [product.variants]);
+
     const filteredGallery = gallery;
 
     const hasColors = colors.length > 0;
@@ -632,9 +651,9 @@ export const PopupDetailProduct: React.FC<PopupDetailProductProps> = ({
                             {product.has_options && sizes.length > 0 && (
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 text-xs font-bold uppercase tracking-wider">
-                                        <span>Size</span>
+                                        <span>{nonColorAttributeName}</span>
                                         <span className="text-stone-400 dark:text-stone-500 text-[11px] font-medium lowercase tracking-normal">
-                                            select sizing
+                                            select {nonColorAttributeName.toLowerCase()}
                                         </span>
                                     </div>
                                     <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 sm:gap-2">

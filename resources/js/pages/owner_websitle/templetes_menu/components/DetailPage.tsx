@@ -316,6 +316,25 @@ export const DetailPage: React.FC<DetailPageProps> = ({
   const parsedColors = getProductColors(product);
   const colors = parsedColors.length > 0 ? parsedColors : (product as any).colors || [];
 
+  const nonColorAttributeName = useMemo(() => {
+    if (product.variants && product.variants.length > 0) {
+      for (const v of product.variants) {
+        if (v.attribute_values && v.attribute_values.length > 0) {
+          for (const av of v.attribute_values) {
+            const attrName = av.attribute?.name;
+            if (attrName) {
+              const lower = attrName.toLowerCase();
+              if (lower !== 'color' && lower !== 'colour') {
+                return attrName;
+              }
+            }
+          }
+        }
+      }
+    }
+    return 'Size';
+  }, [product.variants]);
+
   const filteredGallery = gallery;
 
   const hasColors = colors.length > 0;
@@ -647,13 +666,13 @@ export const DetailPage: React.FC<DetailPageProps> = ({
             </div>
           )}
 
-          {/* Size List */}
+          {/* Option / Size List */}
           {product.has_options && sizes.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-stone-500 text-2xs font-extrabold uppercase tracking-wider">
-                <span>Size</span>
+                <span>{nonColorAttributeName}</span>
                 <span className="text-stone-400 font-semibold lowercase tracking-normal">
-                  select sizing
+                  select {nonColorAttributeName.toLowerCase()}
                 </span>
               </div>
               <div className="grid grid-cols-5 gap-2">

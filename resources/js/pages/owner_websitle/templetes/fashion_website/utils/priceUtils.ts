@@ -100,23 +100,16 @@ export const getProductColors = (item: Root2) => {
   return colorsList;
 };
 
-/**
- * Extracts a unique list of size values from a product's variants.
- */
 export const getProductSizes = (item: Root2) => {
   const sizesList: string[] = [];
   if (item.variants && item.variants.length > 0) {
     item.variants.forEach((v: any) => {
-      if (v.attribute_values) {
+      if (v.attribute_values && v.attribute_values.length > 0) {
         v.attribute_values.forEach((av: any) => {
           const attrName = av.attribute?.name?.toLowerCase() || '';
-          const isSizeAttr = attrName.includes('size') || attrName === 'sz' || attrName === 'sizing';
-          const parsed = parseAttributeValue(
-            av.value,
-            av.attribute?.name?.toLowerCase() === 'color' ||
-            av.attribute?.name?.toLowerCase() === 'colour'
-          );
-          if (parsed.value && !parsed.isColor && isSizeAttr) {
+          const isColorAttr = attrName === 'color' || attrName === 'colour';
+          const parsed = parseAttributeValue(av.value, isColorAttr);
+          if (parsed.value && !parsed.isColor) {
             const exists = sizesList.some(
               s => s.toLowerCase() === parsed.value.toLowerCase()
             );
@@ -125,6 +118,19 @@ export const getProductSizes = (item: Root2) => {
             }
           }
         });
+      } else {
+        const vTitle = (v as any).variant || (v as any).title || (v as any).name;
+        if (vTitle && typeof vTitle === 'string') {
+          const parsed = parseAttributeValue(vTitle);
+          if (parsed.value && !parsed.isColor) {
+            const exists = sizesList.some(
+              s => s.toLowerCase() === parsed.value.toLowerCase()
+            );
+            if (!exists) {
+              sizesList.push(parsed.value);
+            }
+          }
+        }
       }
     });
   }
@@ -166,22 +172,27 @@ export const mapToUIItem = (item: Root2) => {
 
   if (item.variants && item.variants.length > 0) {
     item.variants.forEach(v => {
-      if (v.attribute_values) {
+      if (v.attribute_values && v.attribute_values.length > 0) {
         v.attribute_values.forEach((av: any) => {
           const attrName = av.attribute?.name?.toLowerCase() || '';
-          const isSizeAttr = attrName.includes('size') || attrName === 'sz' || attrName === 'sizing';
-          const parsed = parseAttributeValue(
-            av.value,
-            av.attribute?.name?.toLowerCase() === 'color' ||
-            av.attribute?.name?.toLowerCase() === 'colour'
-          );
+          const isColorAttr = attrName === 'color' || attrName === 'colour';
+          const parsed = parseAttributeValue(av.value, isColorAttr);
           if (parsed.isColor) {
-            // Prefer hex value for rendering; fall back to color name
             colorsSet.add(parsed.colorHex || parsed.colorName);
-          } else if (parsed.value && isSizeAttr) {
+          } else if (parsed.value) {
             sizesSet.add(parsed.value);
           }
         });
+      } else {
+        const vTitle = (v as any).variant || (v as any).title || (v as any).name;
+        if (vTitle && typeof vTitle === 'string') {
+          const parsed = parseAttributeValue(vTitle);
+          if (parsed.isColor) {
+            colorsSet.add(parsed.colorHex || parsed.colorName);
+          } else if (parsed.value) {
+            sizesSet.add(parsed.value);
+          }
+        }
       }
     });
   }

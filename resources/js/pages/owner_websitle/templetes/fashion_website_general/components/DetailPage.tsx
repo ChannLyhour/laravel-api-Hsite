@@ -242,11 +242,11 @@ export const DetailPage: React.FC<DetailPageProps> = ({
   };
 
   const isSizeAvailable = (sz: string) => {
-    if (!product.variants || product.variants.length === 0) return false;
+    if (!product.variants || product.variants.length === 0) return true;
     return product.variants.some((v: any) => {
       let matchSize = false;
       let matchColor = !selectedColor;
-      if (v.attribute_values) {
+      if (v.attribute_values && v.attribute_values.length > 0) {
         v.attribute_values.forEach((av: any) => {
           const val = av.value;
           const parsed = parseAttributeValue(
@@ -254,23 +254,29 @@ export const DetailPage: React.FC<DetailPageProps> = ({
             av.attribute?.name?.toLowerCase() === 'color' ||
             av.attribute?.name?.toLowerCase() === 'colour'
           );
-          if (parsed.value === sz) matchSize = true;
+          if (parsed.value.toLowerCase() === sz.toLowerCase() || val.toLowerCase() === sz.toLowerCase()) matchSize = true;
           if (selectedColor && parsed.isColor && parsed.colorName && parsed.colorName.toLowerCase() === selectedColor.toLowerCase()) {
             matchColor = true;
           }
         });
+      } else {
+        const vTitle = v.variant || v.title || v.name;
+        if (vTitle && typeof vTitle === 'string' && vTitle.toLowerCase() === sz.toLowerCase()) {
+          matchSize = true;
+        }
       }
-      return matchSize && matchColor && (v.stock_qty ?? 0) > 0;
+      const hasStock = v.stock_qty === undefined || v.stock_qty === null || Number(v.stock_qty) > 0;
+      return matchSize && matchColor && hasStock;
     });
   };
 
 
   const isSizeAvailableForColor = (sz: string, col: string) => {
-    if (!product.variants || product.variants.length === 0) return false;
+    if (!product.variants || product.variants.length === 0) return true;
     return product.variants.some((v: any) => {
       let matchSize = false;
       let matchColor = !col;
-      if (v.attribute_values) {
+      if (v.attribute_values && v.attribute_values.length > 0) {
         v.attribute_values.forEach((av: any) => {
           const val = av.value;
           const parsed = parseAttributeValue(
@@ -278,13 +284,19 @@ export const DetailPage: React.FC<DetailPageProps> = ({
             av.attribute?.name?.toLowerCase() === 'color' ||
             av.attribute?.name?.toLowerCase() === 'colour'
           );
-          if (parsed.value === sz) matchSize = true;
+          if (parsed.value.toLowerCase() === sz.toLowerCase() || val.toLowerCase() === sz.toLowerCase()) matchSize = true;
           if (col && parsed.isColor && parsed.colorName && parsed.colorName.toLowerCase() === col.toLowerCase()) {
             matchColor = true;
           }
         });
+      } else {
+        const vTitle = v.variant || v.title || v.name;
+        if (vTitle && typeof vTitle === 'string' && vTitle.toLowerCase() === sz.toLowerCase()) {
+          matchSize = true;
+        }
       }
-      return matchSize && matchColor && (v.stock_qty ?? 0) > 0;
+      const hasStock = v.stock_qty === undefined || v.stock_qty === null || Number(v.stock_qty) > 0;
+      return matchSize && matchColor && hasStock;
     });
   };
 
@@ -387,6 +399,25 @@ export const DetailPage: React.FC<DetailPageProps> = ({
   const parsedColors = getProductColors(product);
   const colors = parsedColors.length > 0 ? parsedColors : (product as any).colors || [];
 
+  const nonColorAttributeName = useMemo(() => {
+    if (product.variants && product.variants.length > 0) {
+      for (const v of product.variants) {
+        if (v.attribute_values && v.attribute_values.length > 0) {
+          for (const av of v.attribute_values) {
+            const attrName = av.attribute?.name;
+            if (attrName) {
+              const lower = attrName.toLowerCase();
+              if (lower !== 'color' && lower !== 'colour') {
+                return attrName;
+              }
+            }
+          }
+        }
+      }
+    }
+    return 'Size';
+  }, [product.variants]);
+
   const filteredGallery = gallery;
 
   const hasColors = colors.length > 0;
@@ -395,8 +426,11 @@ export const DetailPage: React.FC<DetailPageProps> = ({
 
   // Initial Configuration Autopopulate on mount or key reset
   useEffect(() => {
-    setSelectedSize('');
-    setSelectedColor('');
+    const defaultColor = colors.length > 0 ? colors[0] : '';
+    const defaultSize = sizes.length > 0 ? sizes[0] : '';
+
+    setSelectedColor(defaultColor);
+    setSelectedSize(defaultSize);
     setActiveGalleryIndex(0);
     const minQty = product?.min_order_qty && product.min_order_qty > 1 ? product.min_order_qty : 1;
     setDetailQuantity(minQty);
@@ -410,20 +444,17 @@ export const DetailPage: React.FC<DetailPageProps> = ({
       });
     }
     setSelectedAddons(initialAddons);
-  }, [product.id]);
+  }, [product.id, colors.length, sizes.length]);
 
   // Find matching variant if any
   const variant = useMemo(() => {
     if (!product.variants || product.variants.length === 0) return undefined;
     if (!product.has_options) return product.variants[0];
 
-    if (hasColors && !selectedColor) return undefined;
-    if (hasSizes && !selectedSize) return undefined;
-
-    return product.variants.find((v: any) => {
+    const match = product.variants.find((v: any) => {
       let matchSize = !hasSizes;
       let matchColor = !hasColors;
-      if (v.attribute_values) {
+      if (v.attribute_values && v.attribute_values.length > 0) {
         v.attribute_values.forEach((av: any) => {
           const val = av.value;
           const parsed = parseAttributeValue(
@@ -431,14 +462,23 @@ export const DetailPage: React.FC<DetailPageProps> = ({
             av.attribute?.name?.toLowerCase() === 'color' ||
             av.attribute?.name?.toLowerCase() === 'colour'
           );
-          if (hasSizes && parsed.value === selectedSize) matchSize = true;
+          if (hasSizes && (parsed.value.toLowerCase() === selectedSize.toLowerCase() || val.toLowerCase() === selectedSize.toLowerCase())) {
+            matchSize = true;
+          }
           if (hasColors && selectedColor && parsed.isColor && parsed.colorName && parsed.colorName.toLowerCase() === selectedColor.toLowerCase()) {
             matchColor = true;
           }
         });
+      } else {
+        const vTitle = v.variant || v.title || v.name;
+        if (hasSizes && vTitle && typeof vTitle === 'string' && vTitle.toLowerCase() === selectedSize.toLowerCase()) {
+          matchSize = true;
+        }
       }
       return matchSize && matchColor;
     });
+
+    return match || product.variants[0];
   }, [product.variants, product.has_options, selectedSize, selectedColor, hasColors, hasSizes]);
 
   const isOutOfStock = useMemo(() => {
@@ -812,13 +852,13 @@ export const DetailPage: React.FC<DetailPageProps> = ({
             </div>
           )}
 
-          {/* Size List */}
+          {/* Option / Size List */}
           {product.has_options && sizes.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 text-xs font-bold uppercase tracking-wider">
-                <span>Size</span>
+                <span>{nonColorAttributeName}</span>
                 <span className="text-stone-400 dark:text-stone-500 text-[11px] font-medium lowercase tracking-normal">
-                  select sizing
+                  select {nonColorAttributeName.toLowerCase()}
                 </span>
               </div>
               <div className="grid grid-cols-5 gap-2">
