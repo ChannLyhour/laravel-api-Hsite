@@ -17,7 +17,7 @@ export const VisitLiveStore: React.FC<VisitLiveStoreProps> = ({ stores, profile 
       ? (localStorage.getItem('selected_owner_id') || profile?.user?.hashid || profile?.user?.id)
       : (profile?.user?.hashid || profile?.user?.id));
     const resolvedStoreName = stores?.custom_domain ? getStoreSlugFromDomain(stores.custom_domain) : (stores?.store_name || 'Store');
-    const path = getStoreUrl(resolvedStoreName, ownerId);
+    const path = getStoreUrl(resolvedStoreName, ownerId, false, true);
     window.open(path, '_blank');
   };
 

@@ -22,7 +22,7 @@ import { resolveImageUrl } from '@/api/imageUtils';
 import type { StoreRow } from '@/api/owner/stores';
 import { Toaster } from 'react-hot-toast';
 import { OWNER_USER_ID } from '@/config';
-import { parseStorePath, deslugifyStoreName, getStoreMenuUrl } from '@Security/Owner/configUrl';
+import { parseStorePath, deslugifyStoreName, getStoreMenuUrl, getStoreUrl } from '@Security/Owner/configUrl';
 import { shareService } from '@/api/owner/share';
 import { toast } from 'react-hot-toast';
 import { storeBrandingService } from '@/api/created_by/getFaviconById';
@@ -764,34 +764,24 @@ function App() {
         return;
       }
 
-      const params = new URLSearchParams(location.search);
+      // If we are on the main domain (tenantDomain === null) and accessing a store URL (path slug or query param),
+      // redirect the user directly to the subdomain URL (e.g. https://our20s.vhsitekh.site)
       const storeRoute = parseStorePath(currentPath);
       const isOwnerPath = currentPath.startsWith('/owner') && currentPath !== '/owner/menu';
 
-      // Only redirect query-param URLs (/?id=...&store=...) or bare home/menu paths to clean slug URLs.
-      // Do NOT redirect sub-page paths like /{storeSlug}/shop, /{storeSlug}/product, etc. —
-      // those are already in the correct clean format and should be preserved.
-      const pathParts = currentPath.split('/').filter(Boolean);
-      const subPath = storeRoute && pathParts.length > 1 ? '/' + pathParts.slice(1).join('/') : '';
-      const isStoreSubPage = !!storeRoute && subPath !== '' && subPath !== '/menu';
-
-      const isCleanHomeOrMenu = currentPath === '/' || currentPath === '/menu' || (!!storeRoute && !isStoreSubPage);
-      const isStorefront = (hasOwnerParam || currentPath === '/menu' || currentPath === '/owner/menu' || !!storeRoute) && !isOwnerPath && isCleanHomeOrMenu && String(ownerUserId) !== '1';
-
-      if (isStorefront) {
-        // Enforce using the custom domain slug if it's a path slug (no dots), otherwise fallback to store_name slug
+      if ((hasOwnerParam || !!storeRoute) && !isOwnerPath && String(ownerUserId) !== '1') {
         let storeSlug = storeInfo.custom_domain?.trim();
         if (!storeSlug || storeSlug.includes('.')) {
           storeSlug = storeInfo.store_name.replace(/\s+/g, '_');
         }
 
-        const isMenu = currentPath.includes('/menu') || (storeRoute && storeRoute.isMenu);
-        const expectedPath = isMenu ? `/${storeSlug}/menu` : `/${storeSlug}`;
+        const subPath = storeRoute ? currentPath.substring(`/${storeRoute.storeSlug}`.length) : '';
+        const targetBaseUrl = getStoreUrl(storeSlug, ownerUserId, false, true);
+        const targetFullUrl = `${targetBaseUrl.replace(/\/$/, '')}${subPath}`;
 
-        if (currentPath !== expectedPath || location.search) {
-          // Replace query parameters with the clean pathname format
-          routerNavigate(expectedPath, { replace: true });
-          setStoreNameState(storeInfo.store_name);
+        if (typeof window !== 'undefined' && window.location.href !== targetFullUrl) {
+          window.location.replace(targetFullUrl);
+          return;
         }
       }
     }
