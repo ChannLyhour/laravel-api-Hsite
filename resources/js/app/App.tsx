@@ -965,11 +965,12 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const isProductPage = currentPath.startsWith('/product') || currentPath.includes('/product');
-    const hasOwner = params.has('owner') || (!isProductPage && params.has('id')) || !!parseStorePath(currentPath);
+    const isTenantSubdomain = getTenantDomain() !== null;
+    const hasOwner = isTenantSubdomain || params.has('owner') || (!isProductPage && params.has('id')) || !!parseStorePath(currentPath);
 
     const updateTitleAndFavicon = async () => {
       // Fetch platform settings for base branding
-      let platformName = 'BiteFlow';
+      let platformName = 'VHsite Platform';
       let platformFavicon = '/favicon.svg';
       try {
         const platformSettings = await adminSettingApi.getSettings();
