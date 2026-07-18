@@ -32,13 +32,37 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const t = (key: string, params?: Record<string, string | number>) => {
     const keys = key.split('.');
     let value = translations[language];
+    let found = true;
     
     for (const k of keys) {
-      if (value && value[k]) {
+      if (value && value[k] !== undefined) {
         value = value[k];
       } else {
-        return key; // Fallback to key if not found
+        found = false;
+        break;
       }
+    }
+
+    // Fallback to English if key is missing in current language
+    if (!found && language !== 'en') {
+      let fallbackValue = translations['en'];
+      let fallbackFound = true;
+      for (const k of keys) {
+        if (fallbackValue && fallbackValue[k] !== undefined) {
+          fallbackValue = fallbackValue[k];
+        } else {
+          fallbackFound = false;
+          break;
+        }
+      }
+      if (fallbackFound) {
+        value = fallbackValue;
+        found = true;
+      }
+    }
+
+    if (!found) {
+      return key; // Fallback to key string if not found anywhere
     }
     
     if (typeof value === 'string') {
