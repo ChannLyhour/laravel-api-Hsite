@@ -449,11 +449,11 @@ class ProductController extends Controller
         $items = $result['items'];
         $total = $result['total'];
 
-        $duration = (microtime(true) - $start) * 1000;
-        \Log::info(sprintf(
-            "ProductController@index execution: %.2f ms",
-            $duration
-        ));
+        // $duration = (microtime(true) - $start) * 1000;
+        // \Log::info(sprintf(
+        //     "ProductController@index execution: %.2f ms",
+        //     $duration
+        // ));
 
         return response()->json($items)
             ->header('X-Total-Count', $total)

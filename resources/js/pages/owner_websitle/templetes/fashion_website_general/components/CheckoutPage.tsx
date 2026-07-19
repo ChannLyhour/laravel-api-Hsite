@@ -24,6 +24,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useOrderPending } from '../hooks/useOrderPending';
 import { PopupPaymentKHQR } from './helpers/PopupPaymentKHQR';
 import { PopOtpVerifyTele } from './helpers/PopOtpVerifyTele';
+import { PopVerifyOTPGmail } from './helpers/PopVerifyOTPGmail';
 import { couponsService, type CouponRow } from '@/api/owner/coupons';
 import { ordersService } from '@/api/owner/orders';
 import { chatService } from '@/api/owner/chat';
@@ -1293,6 +1294,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [isKHQROpen, setIsKHQROpen] = useState(false);
     const [isOtpOpen, setIsOtpOpen] = useState(false);
+    const [otpMode, setOtpMode] = useState<'telegram' | 'gmail'>('telegram');
+    const [contactEmail, setContactEmail] = useState<string>('');
     const [pendingOrderId, setPendingOrderId] = useState<number | string | null>(null);
     const [pendingOrderNo, setPendingOrderNo] = useState<string | null>(null);
     const [telegramBotLink, setTelegramBotLink] = useState<string | null>(null);
@@ -1435,7 +1438,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             }
 
             if (order.otp_required) {
-                // Open OTP verification modal
+                const isEmailInput = rawPhone ? rawPhone.includes('@') : false;
+                if (isEmailInput) {
+                    setOtpMode('gmail');
+                    setContactEmail(rawPhone);
+                } else {
+                    setOtpMode('telegram');
+                }
                 setIsOtpOpen(true);
                 return;
             }
@@ -1708,8 +1717,42 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 paymentMethod={selectedPayment}
             />
 
+            {/* Gmail OTP Verification Modal */}
+            {isOtpOpen && otpMode === 'gmail' && createPortal(
+                <PopVerifyOTPGmail
+                    isOpen={isOtpOpen}
+                    orderId={pendingOrderId}
+                    email={contactEmail}
+                    onClose={() => {
+                        setIsOtpOpen(false);
+                    }}
+                    onSuccess={(token) => {
+                        setIsOtpOpen(false);
+
+                        // If token is returned, store it and trigger login
+                        if (token) {
+                            localStorage.setItem('aura_customer_token', token);
+                            window.dispatchEvent(new Event('aura_token_changed'));
+                        }
+
+                        // Now finalize checkout flow
+                        if (selectedPayment === 'aba' || selectedPayment === 'bakong') {
+                            setIsKHQROpen(true);
+                            return;
+                        }
+
+                        if (clearCart) clearCart();
+                        clearGuestCheckoutCache();
+
+                        sendOrderNotificationToChat(pendingOrderId!, pendingOrderNo, totalAmount, selectedPayment || 'cod');
+                        setOrderSuccess(true);
+                    }}
+                />,
+                document.body
+            )}
+
             {/* Telegram OTP Verification Modal */}
-            {isOtpOpen && createPortal(
+            {isOtpOpen && otpMode === 'telegram' && createPortal(
                 <PopOtpVerifyTele
                     isOpen={isOtpOpen}
                     orderId={pendingOrderId}
