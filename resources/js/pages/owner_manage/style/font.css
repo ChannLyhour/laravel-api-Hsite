@@ -133,3 +133,10 @@ h1, h2, h3, h4, h5, h6 {
 .custom-header-container [class*="hover:bg-gray-"] {
   background-color: color-mix(in srgb, var(--dashboard-header-text, #334155) 8%, transparent) !important;
 }
+
+/* ── Main Content Container ────────────────────────────────────────────────── */
+.main-content-container,
+.main-content-container * {
+  font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important;
+}
+

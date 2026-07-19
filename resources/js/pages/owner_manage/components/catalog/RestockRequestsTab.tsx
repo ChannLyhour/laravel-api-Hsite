@@ -23,6 +23,7 @@ interface RestockRequest {
   id: number;
   productId: number;
   productName: string;
+  variantSku?: string;
   image: string;
   currentStock: number;
   requestedQty: number;
@@ -40,6 +41,18 @@ export const RestockRequestsTab: React.FC<RestockRequestsTabProps> = ({ ownerId,
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [declinedIds, setDeclinedIds] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('declined_restock_variant_ids');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('declined_restock_variant_ids', JSON.stringify(declinedIds));
+  }, [declinedIds]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -48,52 +61,39 @@ export const RestockRequestsTab: React.FC<RestockRequestsTabProps> = ({ ownerId,
   const loadRequests = async () => {
     try {
       setLoading(true);
-      const items = await stockManagementService.getStockItems(ownerId, storeId);
+      const apiRequests = await stockManagementService.getRestockRequests(ownerId, storeId).catch(() => []);
       
-      // Seed some mock restock requests based on low stock or actual items
-      const mockRequests: RestockRequest[] = [];
-      const lowStockItems = items.filter(item => 
-        item.variants && item.variants.some(v => v.stock_qty < 10)
-      );
+      const realRequests: RestockRequest[] = [];
 
-      const names = ['John Smith (Store Manager)', 'Emily Davis (Sales Associate)', 'Sarah Connor (Kitchen Staff)', 'David Miller (Cashier)'];
-      
-      // If we have items, use them to generate realistic requests
-      const itemsToUse = lowStockItems.length > 0 ? lowStockItems : items.slice(0, 3);
-      
-      itemsToUse.forEach((item, index) => {
-        const variant = item.variants?.[0];
-        mockRequests.push({
-          id: 1000 + index,
-          productId: item.id,
-          variantId: variant?.id,
-          productName: item.name + (variant && getVariantOptionName(variant) ? ` (${getVariantOptionName(variant)})` : ''),
-          image: item.display_image || item.image || '',
-          currentStock: variant ? variant.stock_qty : 0,
-          requestedQty: Math.floor(Math.random() * 20) + 15,
-          requesterName: names[index % names.length],
-          requestedAt: new Date(Date.now() - (index + 1) * 8 * 3600 * 1000).toLocaleString(),
-          status: index === 0 ? 'pending' : (index === 1 ? 'completed' : 'declined'),
-          menuItem: item,
-        });
-      });
+      // Map backend database restock_requests ONLY
+      if (Array.isArray(apiRequests) && apiRequests.length > 0) {
+        apiRequests.forEach((dbReq: any) => {
+          const product = dbReq.product;
+          const variant = dbReq.variant;
+          const optName = variant ? getVariantOptionName(variant) : '';
+          const fullName = (product?.name || 'Product') + (optName ? ` (${optName})` : '');
+          const variantSku = variant?.variant_sku || product?.sku || `REQ-${dbReq.id}`;
 
-      // Default fallback if store is completely empty
-      if (mockRequests.length === 0) {
-        mockRequests.push({
-          id: 1001,
-          productId: 1,
-          productName: 'Pepperoni Pizza',
-          image: '',
-          currentStock: 2,
-          requestedQty: 50,
-          requesterName: 'John Smith (Store Manager)',
-          requestedAt: new Date().toLocaleString(),
-          status: 'pending'
+          realRequests.push({
+            id: dbReq.id,
+            productId: dbReq.product_id,
+            variantId: dbReq.product_variant_id,
+            productName: fullName,
+            variantSku: variantSku,
+            image: product?.display_image || product?.image || '',
+            currentStock: dbReq.current_stock ?? (variant?.stock_qty || 0),
+            requestedQty: dbReq.requested_qty || 15,
+            requesterName: dbReq.requester?.name || 'Staff Member',
+            requestedAt: dbReq.created_at
+              ? new Date(dbReq.created_at).toLocaleString()
+              : new Date().toLocaleString(),
+            status: dbReq.status || 'pending',
+            menuItem: product,
+          });
         });
       }
 
-      setRequests(mockRequests);
+      setRequests(realRequests);
     } catch (e) {
       console.error(e);
       toast.error('Failed to load restock requests.');
@@ -120,26 +120,25 @@ export const RestockRequestsTab: React.FC<RestockRequestsTabProps> = ({ ownerId,
   }, [ownerId, storeId]);
 
   const handleApprove = async (req: RestockRequest) => {
-    if (!req.variantId) {
-      // Just mock success if there's no real variant ID
-      setProcessingId(req.id);
-      setTimeout(() => {
-        setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'completed', currentStock: r.currentStock + r.requestedQty } : r));
-        toast.success(`Approved restock for ${req.productName}!`);
-        setProcessingId(null);
-      }, 800);
-      return;
-    }
-
     try {
       setProcessingId(req.id);
-      const newQty = req.currentStock + req.requestedQty;
-      await stockManagementService.updateVariantStock(req.variantId, {
-        stock_qty: newQty,
-        low_stock_threshold: 5,
-      });
+      
+      // Update variant stock in DB
+      if (req.variantId) {
+        const newQty = req.currentStock + req.requestedQty;
+        await stockManagementService.updateVariantStock(req.variantId, {
+          stock_qty: newQty,
+          low_stock_threshold: 5,
+        });
+        setDeclinedIds(prev => prev.filter(id => id !== req.variantId));
+      }
 
-      setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'completed', currentStock: newQty } : r));
+      // Approve restock request in backend API
+      if (req.id < 9000) {
+        await stockManagementService.approveRestockRequest(req.id).catch(() => {});
+      }
+
+      setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'completed', currentStock: r.currentStock + r.requestedQty } : r));
       toast.success(`Successfully restocked ${req.productName} by +${req.requestedQty} units!`);
       
       window.dispatchEvent(new CustomEvent('data_updated'));
@@ -152,28 +151,43 @@ export const RestockRequestsTab: React.FC<RestockRequestsTabProps> = ({ ownerId,
     }
   };
 
-  const handleDecline = (id: number) => {
-    setProcessingId(id);
-    setTimeout(() => {
-      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'declined' } : r));
-      toast.info('Restock request declined.');
+  const handleDecline = async (req: RestockRequest) => {
+    try {
+      setProcessingId(req.id);
+      
+      if (req.variantId) {
+        setDeclinedIds(prev => [...new Set([...prev, req.variantId!])]);
+      }
+
+      // Decline restock request in backend API
+      if (req.id < 9000) {
+        await stockManagementService.declineRestockRequest(req.id).catch(() => {});
+      }
+
+      setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'declined' } : r));
+      toast.info(`Restock request for ${req.productName} declined.`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to decline restock request.');
+    } finally {
       setProcessingId(null);
-    }, 500);
+    }
   };
 
   const filteredRequests = requests.filter(req => 
     req.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    req.requesterName.toLowerCase().includes(searchQuery.toLowerCase())
+    req.requesterName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (req.variantSku && req.variantSku.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const columns: HelperTableColumn[] = [
-    { key: 'id', label: 'Request ID', className: 'w-16' },
-    { key: 'product', label: 'Product Info' },
-    { key: 'requester', label: 'Requested By' },
-    { key: 'currentStock', label: 'Current Stock', className: 'w-36' },
-    { key: 'requestedQty', label: 'Request Qty', className: 'w-36' },
-    { key: 'status', label: 'Status', className: 'w-40' },
-    { key: 'action', label: 'Action', className: 'w-36', align: 'right' }
+    { key: 'sku', label: 'Variant SKU', align: 'center', className: 'w-28 text-slate-400 font-bold' },
+    { key: 'product', label: 'Product Info', align: 'left', className: 'w-1/3' },
+    { key: 'requester', label: 'Requested By', align: 'left' },
+    { key: 'currentStock', label: 'Current Stock', align: 'center', className: 'w-36' },
+    { key: 'requestedQty', label: 'Request Qty', align: 'center', className: 'w-36' },
+    { key: 'status', label: 'Status', align: 'center', className: 'w-40' },
+    { key: 'action', label: 'Action', align: 'right', className: 'w-36' }
   ];
 
   const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
@@ -217,64 +231,66 @@ export const RestockRequestsTab: React.FC<RestockRequestsTabProps> = ({ ownerId,
         onItemsPerPageChange={setItemsPerPage}
         emptyStateText="No restock requests currently active."
         renderRow={(req) => (
-          <tr key={req.id}>
-            <td className="text-xs font-black text-slate-400">#{req.id}</td>
-            <td>
+          <tr key={req.id} className="hover:bg-slate-50/20 transition-colors">
+            <td className="py-3.5 px-5 text-center text-[11px] font-bold text-slate-500">{req.variantSku || `#${req.id}`}</td>
+            <td className="py-3.5 px-5">
               <div className="flex items-center gap-3">
-                <img
-                  src={resolveImageUrl(req.image)}
-                  alt={req.productName}
-                  className="w-10 h-10 rounded-lg object-cover bg-slate-50 border border-slate-100"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&auto=format&fit=crop&q=60';
-                  }}
-                />
+                <div className="w-10 h-10 rounded-[5px] overflow-hidden bg-slate-50 border border-slate-150 shrink-0">
+                  <img
+                    src={resolveImageUrl(req.image)}
+                    alt={req.productName}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+                    }}
+                  />
+                </div>
                 <div>
-                  <p className="text-xs font-extrabold text-slate-700 leading-snug">{req.productName}</p>
-                  <p className="text-[9px] text-slate-400 font-semibold mt-0.5">{req.requestedAt}</p>
+                  <div className="text-[13px] font-bold text-slate-800 leading-tight">{req.productName}</div>
+                  <div className="text-[10px] text-slate-400 font-semibold mt-0.5">{req.requestedAt}</div>
                 </div>
               </div>
             </td>
-            <td className="text-xs font-bold text-slate-600">{req.requesterName}</td>
-            <td>
-              <span className={`px-2 py-0.5 rounded-[5px] text-3xs font-black uppercase tracking-wider ${
+            <td className="py-3.5 px-5 text-xs font-bold text-slate-600">{req.requesterName}</td>
+            <td className="py-3.5 px-5 text-center">
+              <span className={`px-2.5 py-0.5 rounded-[4px] text-xs font-black ${
                 req.currentStock === 0
-                  ? 'bg-rose-100 text-rose-600'
+                  ? 'bg-rose-50 text-rose-550 border border-rose-100'
                   : req.currentStock < 10
-                  ? 'bg-amber-100 text-amber-600'
-                  : 'bg-emerald-100 text-emerald-600'
+                  ? 'bg-amber-50 text-amber-650 border border-amber-100'
+                  : 'bg-emerald-50 text-emerald-650 border border-emerald-100'
               }`}>
                 {req.currentStock} Units
               </span>
             </td>
-            <td className="text-xs font-black text-indigo-600">+{req.requestedQty}</td>
-            <td>
-              <span className={`px-2.5 py-1 rounded-[6px] text-3xs font-black uppercase tracking-wider ${
+            <td className="py-3.5 px-5 text-center text-xs font-black text-indigo-600">+{req.requestedQty}</td>
+            <td className="py-3.5 px-5 text-center">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[10px] font-black uppercase tracking-wider ${
                 req.status === 'pending'
-                  ? 'bg-amber-100 text-amber-700'
+                  ? 'bg-amber-50 text-amber-500'
                   : req.status === 'completed'
-                  ? 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-emerald-50 text-emerald-500'
                   : 'bg-slate-100 text-slate-500'
               }`}>
                 {req.status}
               </span>
             </td>
-            <td className="text-right">
+            <td className="py-3.5 px-5 text-right w-36">
               <div className="flex items-center justify-end gap-1.5">
                 {req.status === 'pending' && (
                   <>
                     <button
                       onClick={() => handleApprove(req)}
                       disabled={processingId === req.id}
-                      className="p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all border-none cursor-pointer flex items-center justify-center"
+                      className="p-2 border border-emerald-250/70 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95 duration-150 bg-white"
                       title="Approve & Restock"
                     >
                       <FiCheck className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => handleDecline(req.id)}
+                      onClick={() => handleDecline(req)}
                       disabled={processingId === req.id}
-                      className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-all border-none cursor-pointer flex items-center justify-center"
+                      className="p-2 border border-rose-200/80 text-rose-500 hover:bg-rose-50 rounded-lg transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95 duration-150 bg-white"
                       title="Decline Request"
                     >
                       <FiX className="w-3.5 h-3.5" />
@@ -289,7 +305,7 @@ export const RestockRequestsTab: React.FC<RestockRequestsTabProps> = ({ ownerId,
                       window.dispatchEvent(new CustomEvent('menu_items_view_change', { detail: 'edit' }));
                       window.dispatchEvent(new CustomEvent('active_tab_change', { detail: 'menu-items' }));
                     }}
-                    className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-all border-none bg-transparent cursor-pointer inline-flex items-center"
+                    className="p-2 border border-blue-200/80 text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95 duration-150 bg-white shadow-3xs"
                     title="Edit Product"
                   >
                     <FiEdit2 className="w-3.5 h-3.5" />

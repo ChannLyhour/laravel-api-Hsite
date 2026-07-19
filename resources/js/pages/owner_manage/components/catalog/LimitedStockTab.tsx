@@ -162,13 +162,13 @@ export const LimitedStockTab: React.FC<LimitedStockTabProps> = ({ ownerId, store
   });
 
   const columns: HelperTableColumn[] = [
-    { key: 'sl', label: 'SL', className: 'w-16' },
-    { key: 'name', label: 'Product Name' },
-    { key: 'price', label: 'Unit Price' },
-    { key: 'qty', label: 'Quantity', className: 'w-48' },
-    { key: 'orders', label: 'Orders', className: 'w-24' },
-    { key: 'status', label: 'Active Status', className: 'w-32' },
-    { key: 'action', label: 'Action', className: 'w-24', align: 'right' },
+    { key: 'sl', label: 'SL', align: 'center', className: 'w-12' },
+    { key: 'name', label: 'Product Name', align: 'left', className: 'w-1/3', filterable: true },
+    { key: 'price', label: 'Unit Price', align: 'left', filterable: true },
+    { key: 'qty', label: 'Qty', align: 'center', className: 'w-48' },
+    { key: 'orders', label: 'Orders', align: 'center', className: 'w-24' },
+    { key: 'status', label: 'Status', align: 'center', className: 'w-32' },
+    { key: 'action', label: 'Action', align: 'right', className: 'w-36' },
   ];
 
   const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
@@ -214,25 +214,35 @@ export const LimitedStockTab: React.FC<LimitedStockTabProps> = ({ ownerId, store
         renderRow={(row, idx) => {
           const isEditing = editingVariantId === row.variant.id;
           const globalIdx = (currentPage - 1) * itemsPerPage + idx + 1;
+          const stockQty = row.variant.stock_qty;
+          const stockColorClass =
+            stockQty === 0
+              ? 'bg-rose-50 text-rose-600 border-rose-100'
+              : stockQty < 10
+              ? 'bg-amber-50 text-amber-600 border-amber-100'
+              : 'bg-emerald-50 text-emerald-600 border-emerald-100';
+
           return (
-            <tr key={row.variant.id}>
-              <td>{globalIdx}</td>
+            <tr key={row.variant.id} className="hover:bg-slate-50/40 transition-colors">
+              <td className="text-center font-bold text-slate-800">{globalIdx}</td>
               <td>
                 <div className="flex items-center gap-3">
                   <img
                     src={resolveImageUrl(row.productImage)}
                     alt={row.productName}
-                    className="w-10 h-10 rounded-lg object-cover bg-slate-50 border border-slate-100"
+                    className="w-10 h-10 rounded-lg object-cover bg-slate-50 border border-slate-100 shrink-0"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&auto=format&fit=crop&q=60';
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
                     }}
                   />
                   <div>
-                    <p className="text-xs font-extrabold text-slate-700 leading-snug">{row.productName}</p>
+                    <p className="text-xs sm:text-sm text-slate-700" title={row.productName}>{row.productName}</p>
                     {getVariantOptionName(row.variant) && (
-                      <p className="text-[10px] text-indigo-500 font-bold mt-0.5">
-                        Option: {getVariantOptionName(row.variant)}
-                      </p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-[4px] font-bold border border-slate-200/40">
+                          Option: {getVariantOptionName(row.variant)}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -240,9 +250,9 @@ export const LimitedStockTab: React.FC<LimitedStockTabProps> = ({ ownerId, store
               <td className="text-xs font-black text-slate-700">
                 ${row.price.toFixed(2)}
               </td>
-              <td>
+              <td className="text-center">
                 {isEditing ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <input
                       type="number"
                       min="0"
@@ -265,12 +275,8 @@ export const LimitedStockTab: React.FC<LimitedStockTabProps> = ({ ownerId, store
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2.5 py-1 rounded-[6px] text-3xs font-black uppercase tracking-wider ${
-                      row.variant.stock_qty === 0
-                        ? 'bg-rose-100 text-rose-600'
-                        : 'bg-amber-100 text-amber-600'
-                    }`}>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className={`inline-block px-2.5 py-1 rounded-[6px] text-3xs font-black uppercase tracking-wider border ${stockColorClass}`}>
                       {row.variant.stock_qty}
                     </span>
                     <button
@@ -278,26 +284,29 @@ export const LimitedStockTab: React.FC<LimitedStockTabProps> = ({ ownerId, store
                         setEditingVariantId(row.variant.id || null);
                         setEditQty(row.variant.stock_qty);
                       }}
-                      className="text-indigo-600 hover:text-indigo-800 text-3xs font-bold bg-transparent border-none cursor-pointer hover:underline"
+                      className="p-1.5 border border-indigo-200/80 text-indigo-600 hover:bg-indigo-50 rounded-[5px] transition-all cursor-pointer inline-flex items-center justify-center"
+                      title="Update Stock"
                     >
-                      Update Stock
+                      <FiEdit2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 )}
               </td>
-              <td className="text-xs font-bold text-slate-500">
+              <td className="text-center text-xs font-bold text-slate-500">
                 {Math.floor(row.productId * 3 % 20)}
               </td>
-              <td>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={row.status === 'active'}
-                    onChange={() => handleToggleStatus(row.menuItem)}
+              <td className="py-3.5 px-5 text-center">
+                <button
+                  type="button"
+                  onClick={() => handleToggleStatus(row.menuItem)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mx-auto ${row.status === 'active' ? 'bg-indigo-600 shadow-xs' : 'bg-slate-200'
+                    }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${row.status === 'active' ? 'translate-x-5' : 'translate-x-0'
+                      }`}
                   />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-                </label>
+                </button>
               </td>
               <td className="text-right">
                 <button
@@ -307,10 +316,10 @@ export const LimitedStockTab: React.FC<LimitedStockTabProps> = ({ ownerId, store
                     window.dispatchEvent(new CustomEvent('menu_items_view_change', { detail: 'edit' }));
                     window.dispatchEvent(new CustomEvent('active_tab_change', { detail: 'menu-items' }));
                   }}
-                  className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-all border-none bg-transparent cursor-pointer inline-flex items-center"
+                  className="p-2 border border-blue-200/80 text-blue-600 hover:bg-blue-50 rounded-[5px] transition-colors cursor-pointer animate-fade-in inline-flex items-center justify-center"
                   title="Edit Product"
                 >
-                  <FiEdit2 className="w-4 h-4" />
+                  <FiEdit2 className="w-3.5 h-3.5" />
                 </button>
               </td>
             </tr>

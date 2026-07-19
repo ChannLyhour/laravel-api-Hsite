@@ -893,7 +893,7 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                     }}
                   />
                   <div>
-                    <p className="text-xs sm:text-sm font-extrabold text-slate-700 leading-snug" title={item.name}>
+                    <p className="text-xs sm:text-sm text-slate-700 leading-snug" title={item.name}>
                       {item.name}
                     </p>
                     {/* <div className="text-slate-400 text-2xs font-semibold mt-0.5">Id # {item.id}</div> */}

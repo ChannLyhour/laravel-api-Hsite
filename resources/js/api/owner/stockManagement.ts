@@ -46,5 +46,46 @@ export const stockManagementService = {
    */
   async deleteStockBatch(batchId: number): Promise<any> {
     return client.delete(`/products/variants/batches/${batchId}`);
+  },
+
+  /**
+   * Fetch all restock requests from backend API.
+   * GET /api/restock-requests
+   */
+  async getRestockRequests(ownerId?: number | string, storeId?: number, status?: string): Promise<any[]> {
+    const params = new URLSearchParams();
+    if (storeId) params.append('store_id', storeId.toString());
+    if (status) params.append('status', status);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return client.get<any[]>(`/restock-requests${query}`);
+  },
+
+  /**
+   * Create a new restock request in backend API.
+   * POST /api/restock-requests
+   */
+  async createRestockRequest(data: {
+    product_id: number;
+    product_variant_id?: number;
+    requested_qty: number;
+    notes?: string;
+  }): Promise<any> {
+    return client.post('/restock-requests', data);
+  },
+
+  /**
+   * Approve a restock request in backend API.
+   * PUT /api/restock-requests/{id}/approve
+   */
+  async approveRestockRequest(id: number): Promise<any> {
+    return client.put(`/restock-requests/${id}/approve`, {});
+  },
+
+  /**
+   * Decline a restock request in backend API.
+   * PUT /api/restock-requests/{id}/decline
+   */
+  async declineRestockRequest(id: number): Promise<any> {
+    return client.put(`/restock-requests/${id}/decline`, {});
   }
 };

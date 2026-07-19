@@ -124,7 +124,11 @@ export function HelperTable<T>({
   };
 
   return (
-    <div ref={tableRef} className="space-y-4 font-kuntomruy animate-fade-in">
+    <div
+      ref={tableRef}
+      className="space-y-4 font-kuntomruy animate-fade-in"
+      style={{ fontFamily: "'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important" }}
+    >
       {/* ── Main Table Card ─────────────────────────────────── */}
       <div className="custom-card-container rounded-[5px] shadow-xs overflow-hidden border">
         {/* Top bar inside the card */}
@@ -132,7 +136,7 @@ export function HelperTable<T>({
           {/* Left: Title & Count */}
           <div className="flex items-center space-x-2 shrink-0 self-start md:self-auto">
             {title && (
-              <h3 className="text-sm sm:text-base font-extrabold tracking-tight">
+              <h3 className="text-sm sm:text-base">
                 {title}
               </h3>
             )}
@@ -270,7 +274,7 @@ export function HelperTable<T>({
                   onClick={() => onSelectionChange([])}
                   className="text-xs font-extrabold text-slate-500 hover:text-slate-700 bg-transparent border-none cursor-pointer"
                 >
-                  Clear Selection
+                  Clear
                 </button>
               </div>
             )}
@@ -335,7 +339,7 @@ export function HelperTable<T>({
                       })}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-900 text-[12px] sm:text-[14px]">
+                  <tbody className="divide-y divide-slate-100">
                     {data.map((item, index) => {
                       const rowElement = renderRow(item, index);
                       if (React.isValidElement(rowElement)) {

@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\v1\CartController;
 use App\Http\Controllers\Api\v1\ChatController;
 use App\Http\Controllers\Api\v1\BroadcastAuthController;
 use App\Http\Controllers\Api\v1\PaymentController;
+use App\Http\Controllers\Api\v1\Owner\RestockRequestController;
 use App\Http\Controllers\Api\v1\TemplateController;
 use Illuminate\Support\Facades\Route;
 
@@ -221,6 +222,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Global Order Retrieval (Unified for Admin, Owner, Customer)
     Route::get('/orders', [OwnerOrderController::class, 'index']);
+
+    // Restock Requests Management
+    Route::get('/restock-requests', [RestockRequestController::class, 'index']);
+    Route::post('/restock-requests', [RestockRequestController::class, 'store']);
+    Route::put('/restock-requests/{id}/approve', [RestockRequestController::class, 'approve']);
+    Route::put('/restock-requests/{id}/decline', [RestockRequestController::class, 'decline']);
+    Route::delete('/restock-requests/{id}', [RestockRequestController::class, 'destroy']);
 
     Route::prefix('chat')->group(function () {
         Route::get('/conversations', [ChatController::class, 'getConversations']);
