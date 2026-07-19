@@ -71,12 +71,14 @@ class OrderController extends Controller
                         $lastName = isset($parts[1]) ? implode(' ', array_slice($parts, 1)) : 'Customer';
 
                         $phone = $isEmail ? null : \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($loginValue);
-                        $email = $isEmail ? $loginValue : (preg_replace('/[^0-9]/', '', $phone) . '@temp-customer.com');
+                        $email = $isEmail ? $loginValue : null;
 
-                        // Check uniqueness
-                        $emailExists = \App\Models\User::where('email', $email)->exists();
-                        if ($emailExists) {
-                            $email = time() . '_' . $email;
+                        // Check uniqueness if email is provided
+                        if ($email) {
+                            $emailExists = \App\Models\User::where('email', $email)->exists();
+                            if ($emailExists) {
+                                $email = time() . '_' . $email;
+                            }
                         }
 
                         $newUser = \App\Models\User::create([
@@ -163,7 +165,7 @@ class OrderController extends Controller
                 $isEmail = $loginValue ? filter_var($loginValue, FILTER_VALIDATE_EMAIL) : false;
                 $custPhone = $isEmail ? null : \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($request->customer_phone);
                 $custEmail = $isEmail ? $loginValue : $request->customer_email;
-                $isRealEmail = $custEmail && !str_contains($custEmail, 'temp-customer.com');
+                $isRealEmail = !empty($custEmail);
 
                 $storeId = $request->store_id;
 
