@@ -8,179 +8,199 @@ use Illuminate\Support\Facades\Mail;
 
 class GmailOTPHelper
 {
-     /**
-      * Send OTP verification email to the customer.
-      *
-      * @param \App\Models\Order $order
-      * @param string|int $otpCode
-      * @return void
-      */
-     public static function sendOTP ($order, $otpCode)
-     {
-          $storeId = $order->store_id;
-          $recipientEmail = $order->customer_email;
+    /**
+     * Send OTP verification email to the customer.
+     *
+     * @param \App\Models\Order $order
+     * @param string|int $otpCode
+     * @return void
+     */
+    public static function sendOTP ($order, $otpCode)
+    {
+        $storeId = $order->store_id;
+        $recipientEmail = $order->customer_email;
 
-          Log::info("GmailOTPHelper::sendOTP called - Order ID: {$order->id}, Store ID: {$storeId}, Email: {$recipientEmail}, OTP: {$otpCode}");
+        Log::info("GmailOTPHelper::sendOTP called - Order ID: {$order->id}, Store ID: {$storeId}, Email: {$recipientEmail}, OTP: {$otpCode}");
 
-          if (!$storeId) {
-               Log::warning("GmailOTPHelper::sendOTP - No store_id, aborting.");
-               return;
-          }
+        if (!$storeId) {
+            Log::warning("GmailOTPHelper::sendOTP - No store_id, aborting.");
+            return;
+        }
 
-          if (!$recipientEmail) {
-               Log::warning("GmailOTPHelper::sendOTP - No customer email, aborting.");
-               return;
-          }
+        if (!$recipientEmail) {
+            Log::warning("GmailOTPHelper::sendOTP - No customer email, aborting.");
+            return;
+        }
 
-          if (str_contains($recipientEmail, '@temp-customer.com')) {
-               Log::info("GmailOTPHelper::sendOTP - Customer email is a temporary address, skipping email OTP.");
-               return;
-          }
+        if (str_contains($recipientEmail, '@temp-customer.com')) {
+            Log::info("GmailOTPHelper::sendOTP - Customer email is a temporary address, skipping email OTP.");
+            return;
+        }
 
-          try {
-               // Resolve actual store owner user ID
-               $isOwnerUser = Store::where('created_by', $storeId)->exists();
-               $ownerUserId = $isOwnerUser ? $storeId : (Store::where('id', $storeId)->value('created_by') ?: $storeId);
+        try {
+            // Resolve actual store owner user ID
+            $isOwnerUser = Store::where('created_by', $storeId)->exists();
+            $ownerUserId = $isOwnerUser ? $storeId : (Store::where('id', $storeId)->value('created_by') ?: $storeId);
 
-               // Retrieve store settings
-               $settings = Store::where('created_by', $ownerUserId)->get()->pluck('value', 'key');
+            // Retrieve store settings
+            $settings = Store::where('created_by', $ownerUserId)->get()->pluck('value', 'key');
 
-               $storeName = $settings->get('store_name') ?: 'Our Store';
+            $storeName = $settings->get('store_name') ?: 'Our Store';
 
-               // Generic SMTP configuration keys
-               $mailMailer = $settings->get('mail_mailer') ?: 'smtp';
-               $mailHost = $settings->get('mail_host');
-               $mailPort = $settings->get('mail_port') ?: 587;
-               $mailEncryption = $settings->get('mail_encryption') ?: 'tls';
-               $mailUsername = $settings->get('mail_username');
-               $mailPassword = $settings->get('mail_password');
-               $mailFromAddress = $settings->get('mail_from_address');
-               $mailFromName = $settings->get('mail_from_name') ?: $storeName;
+            // Support both flat keys and JSON `otp_email_configuration`
+            $otpConfigRaw = $settings->get('otp_email_configuration');
+            $otpConfig = [];
+            if (!empty($otpConfigRaw)) {
+                $otpConfig = is_string($otpConfigRaw) ? json_decode($otpConfigRaw, true) : (is_array($otpConfigRaw) ? $otpConfigRaw : []);
+            }
 
-               // Legacy Gmail fallback keys
-               $gmailEnabled = $settings->get('gmail_enabled');
-               $gmailEmail = $settings->get('gmail_email');
-               $gmailPassword = $settings->get('gmail_password');
+            // Extract mail_mailer setting without hardcoding 'smtp' fallback default
+            $mailMailer = $settings->get('mail_mailer') ?: ($otpConfig['mail_mailer'] ?? null);
+            $mailHost = $settings->get('mail_host') ?: ($otpConfig['mail_host'] ?? null);
+            $mailPort = $settings->get('mail_port') ?: ($otpConfig['mail_port'] ?? 587);
+            $mailEncryption = $settings->get('mail_encryption') ?: ($otpConfig['mail_encryption'] ?? 'tls');
+            $mailUsername = $settings->get('mail_username') ?: ($otpConfig['mail_username'] ?? null);
+            $mailPassword = $settings->get('mail_password') ?: ($otpConfig['mail_password'] ?? null);
+            $mailFromAddress = $settings->get('mail_from_address') ?: ($otpConfig['mail_from_address'] ?? null);
+            $mailFromName = $settings->get('mail_from_name') ?: ($otpConfig['mail_from_name'] ?? $storeName);
 
-               $cleanMailPassword = $mailPassword ? str_replace(' ', '', $mailPassword) : '';
-               $cleanGmailPassword = $gmailPassword ? str_replace(' ', '', $gmailPassword) : '';
+            // Legacy Gmail fallback keys
+            $gmailEnabled = $settings->get('gmail_enabled') ?: ($otpConfig['gmail_enabled'] ?? null);
+            $gmailEmail = $settings->get('gmail_email') ?: ($otpConfig['gmail_email'] ?? null);
+            $gmailPassword = $settings->get('gmail_password') ?: ($otpConfig['gmail_password'] ?? null);
 
-               $isStoreSmtpConfigured = $mailHost && $mailUsername && !empty($cleanMailPassword);
-               $isStoreGmailConfigured = ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') && $gmailEmail && !empty($cleanGmailPassword);
+            $cleanMailPassword = $mailPassword ? str_replace(' ', '', $mailPassword) : '';
+            $cleanGmailPassword = $gmailPassword ? str_replace(' ', '', $gmailPassword) : '';
 
-               // Final parameters for sending email
-               $finalFromEmail = null;
-               $finalFromName = $storeName;
+            $isStoreSendmail = (strtolower(trim((string) $mailMailer)) === 'sendmail');
+            $isStoreSmtpConfigured = $mailHost && $mailUsername && !empty($cleanMailPassword);
+            $isStoreGmailConfigured = ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') && $gmailEmail && !empty($cleanGmailPassword);
 
-               if ($isStoreSmtpConfigured) {
-                    Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store SMTP settings for owner user ID {$ownerUserId}.");
-                    config([
-                         'mail.default' => 'smtp',
-                         'mail.mailers.smtp.transport' => 'smtp',
-                         'mail.mailers.smtp.host' => $mailHost,
-                         'mail.mailers.smtp.port' => intval($mailPort ?: 587),
-                         'mail.mailers.smtp.encryption' => $mailEncryption ?: 'tls',
-                         'mail.mailers.smtp.username' => $mailUsername,
-                         'mail.mailers.smtp.password' => $cleanMailPassword,
-                         'mail.from.address' => $mailFromAddress ?: $mailUsername,
-                         'mail.from.name' => $mailFromName ?: $storeName,
-                    ]);
-                    Mail::purge('smtp');
-                    $finalFromEmail = $mailFromAddress ?: $mailUsername;
-                    $finalFromName = $mailFromName ?: $storeName;
-               } elseif ($isStoreGmailConfigured) {
-                    Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store Gmail settings for owner user ID {$ownerUserId}.");
-                    config([
-                         'mail.default' => 'smtp',
-                         'mail.mailers.smtp.transport' => 'smtp',
-                         'mail.mailers.smtp.host' => 'smtp.gmail.com',
-                         'mail.mailers.smtp.port' => 587,
-                         'mail.mailers.smtp.encryption' => 'tls',
-                         'mail.mailers.smtp.username' => $gmailEmail,
-                         'mail.mailers.smtp.password' => $cleanGmailPassword,
-                         'mail.from.address' => $gmailEmail,
-                         'mail.from.name' => $storeName,
-                    ]);
-                    Mail::purge('smtp');
-                    $finalFromEmail = $gmailEmail;
-                    $finalFromName = $storeName;
-               } else {
-                    Log::info("GmailOTPHelper::sendOTP - Using default system mailer configuration. Overriding 'from' name to: {$storeName}.");
-                    config([
-                         'mail.from.name' => $storeName,
-                    ]);
-                    Mail::purge();
-               }
+            // Final parameters for sending email
+            $finalFromEmail = null;
+            $finalFromName = $storeName;
 
-               $subject = "🔐 Order Verification Code - #{$order->order_no} | {$finalFromName}";
+            if ($isStoreSendmail) {
+                Log::info("GmailOTPHelper::sendOTP - Configuring dynamic Sendmail/Postfix for owner user ID {$ownerUserId}.");
+                config([
+                    'mail.default' => 'sendmail',
+                    'mail.mailers.sendmail.transport' => 'sendmail',
+                    'mail.mailers.sendmail.path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+                    'mail.from.address' => $mailFromAddress ?: 'noreply@' . (request()->getHost() ?: 'localhost'),
+                    'mail.from.name' => $mailFromName ?: $storeName,
+                ]);
+                Mail::purge('sendmail');
+                $finalFromEmail = $mailFromAddress;
+                $finalFromName = $mailFromName ?: $storeName;
+            } elseif ($isStoreSmtpConfigured) {
+                Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store SMTP settings for owner user ID {$ownerUserId}.");
+                config([
+                    'mail.default' => 'smtp',
+                    'mail.mailers.smtp.transport' => 'smtp',
+                    'mail.mailers.smtp.host' => $mailHost,
+                    'mail.mailers.smtp.port' => intval($mailPort ?: 587),
+                    'mail.mailers.smtp.encryption' => $mailEncryption ?: 'tls',
+                    'mail.mailers.smtp.username' => $mailUsername,
+                    'mail.mailers.smtp.password' => $cleanMailPassword,
+                    'mail.from.address' => $mailFromAddress ?: $mailUsername,
+                    'mail.from.name' => $mailFromName ?: $storeName,
+                ]);
+                Mail::purge('smtp');
+                $finalFromEmail = $mailFromAddress ?: $mailUsername;
+                $finalFromName = $mailFromName ?: $storeName;
+            } elseif ($isStoreGmailConfigured) {
+                Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store Gmail settings for owner user ID {$ownerUserId}.");
+                config([
+                    'mail.default' => 'smtp',
+                    'mail.mailers.smtp.transport' => 'smtp',
+                    'mail.mailers.smtp.host' => 'smtp.gmail.com',
+                    'mail.mailers.smtp.port' => 587,
+                    'mail.mailers.smtp.encryption' => 'tls',
+                    'mail.mailers.smtp.username' => $gmailEmail,
+                    'mail.mailers.smtp.password' => $cleanGmailPassword,
+                    'mail.from.address' => $gmailEmail,
+                    'mail.from.name' => $storeName,
+                ]);
+                Mail::purge('smtp');
+                $finalFromEmail = $gmailEmail;
+                $finalFromName = $storeName;
+            } else {
+                Log::info("GmailOTPHelper::sendOTP - Using default system mailer configuration. Overriding 'from' name to: {$storeName}.");
+                config([
+                    'mail.from.name' => $storeName,
+                ]);
+                Mail::purge();
+            }
 
-               // Send Email using Mail::send to allow inline attachment embedding
-               Mail::send([], [], function ($message) use ($recipientEmail, $subject, $finalFromName, $finalFromEmail, $order, $otpCode, $settings) {
-                    $message->to($recipientEmail)
-                         ->subject($subject);
+            $subject = "🔐 Order Verification Code - #{$order->order_no} | {$finalFromName}";
 
-                    if ($finalFromEmail) {
-                         $message->from($finalFromEmail, $finalFromName);
+            // Send Email using Mail::send to allow inline attachment embedding
+            Mail::send([], [], function ($message) use ($recipientEmail, $subject, $finalFromName, $finalFromEmail, $order, $otpCode, $settings) {
+                $message->to($recipientEmail)
+                    ->subject($subject);
+
+                if ($finalFromEmail) {
+                    $message->from($finalFromEmail, $finalFromName);
+                }
+
+                // Resolve logo URL - check if it can be embedded inline
+                $logoUrl = $settings->get('logo_url');
+                $resolvedLogo = '';
+
+                if ($logoUrl) {
+                    if (str_starts_with($logoUrl, 'http://') || str_starts_with($logoUrl, 'https://')) {
+                        $resolvedLogo = $logoUrl;
+                    } else {
+                        $logoPath = ltrim($logoUrl, '/');
+                        if (!str_starts_with($logoPath, 'uploads/') && !str_starts_with($logoPath, 'static/')) {
+                            $logoPath = 'uploads/' . $logoPath;
+                        }
+                        $localPath = public_path($logoPath);
+                        if (file_exists($localPath)) {
+                            $resolvedLogo = $message->embed($localPath);
+                        } else {
+                            $customDomain = $settings->get('custom_domain');
+                            $baseUrl = $customDomain ? "https://{$customDomain}" : url('/');
+                            $resolvedLogo = rtrim($baseUrl, '/') . '/' . $logoPath;
+                        }
                     }
+                }
 
-                    // Resolve logo URL - check if it can be embedded inline
-                    $logoUrl = $settings->get('logo_url');
-                    $resolvedLogo = '';
+                // Build HTML Content passing the resolved logo URL
+                $htmlContent = self::buildEmailTemplate($order, $otpCode, $settings, $finalFromName, $resolvedLogo);
 
-                    if ($logoUrl) {
-                         if (str_starts_with($logoUrl, 'http://') || str_starts_with($logoUrl, 'https://')) {
-                              $resolvedLogo = $logoUrl;
-                         } else {
-                              $logoPath = ltrim($logoUrl, '/');
-                              if (!str_starts_with($logoPath, 'uploads/') && !str_starts_with($logoPath, 'static/')) {
-                                   $logoPath = 'uploads/' . $logoPath;
-                              }
-                              $localPath = public_path($logoPath);
-                              if (file_exists($localPath)) {
-                                   $resolvedLogo = $message->embed($localPath);
-                              } else {
-                                   $customDomain = $settings->get('custom_domain');
-                                   $baseUrl = $customDomain ? "https://{$customDomain}" : url('/');
-                                   $resolvedLogo = rtrim($baseUrl, '/') . '/' . $logoPath;
-                              }
-                         }
-                    }
+                $message->html($htmlContent);
+            });
 
-                    // Build HTML Content passing the resolved logo URL
-                    $htmlContent = self::buildEmailTemplate($order, $otpCode, $settings, $finalFromName, $resolvedLogo);
+            Log::info("📧 [GMAIL OTP SENT] Order #{$order->id} (" . ($order->order_no ?? $order->id) . ") | OTP: {$otpCode} | Recipient: {$recipientEmail}");
+        } catch (\Exception $e) {
+            Log::error("❌ [GMAIL OTP FAILED] Order #{$order->id} to {$recipientEmail}: " . $e->getMessage());
+        }
+    }
 
-                    $message->html($htmlContent);
-               });
+    /**
+     * Build a premium, clean, responsive HTML email template for OTP verification.
+     */
+    private static function buildEmailTemplate ($order, $otpCode, $settings, $storeName, $resolvedLogo = '')
+    {
+        $orderNo = $order->order_no ?: $order->id;
+        $customerName = htmlspecialchars($order->customer_name ?? 'Valued Customer', ENT_QUOTES, 'UTF-8');
 
-               Log::info("📧 [GMAIL OTP SENT] Order #{$order->id} (" . ($order->order_no ?? $order->id) . ") | OTP: {$otpCode} | Recipient: {$recipientEmail}");
-          } catch (\Exception $e) {
-               Log::error("❌ [GMAIL OTP FAILED] Order #{$order->id} to {$recipientEmail}: " . $e->getMessage());
-          }
-     }
+        // Get Store contact details
+        $storePhone = $settings->get('store_phone') ?: '';
+        $storeAddress = $settings->get('store_address') ?: '';
+        $socialTelegram = $settings->get('social_telegram') ?: '';
+        $socialFacebook = $settings->get('social_facebook') ?: '';
+        $socialTiktok = $settings->get('social_tiktok') ?: '';
 
-     /**
-      * Build a premium, clean, responsive HTML email template for OTP verification.
-      */
-     private static function buildEmailTemplate ($order, $otpCode, $settings, $storeName, $resolvedLogo = '')
-     {
-          $orderNo = $order->order_no ?: $order->id;
-          $customerName = htmlspecialchars($order->customer_name ?? 'Valued Customer', ENT_QUOTES, 'UTF-8');
+        // Formulate order items rows
+        $itemsHtml = '';
+        $order->loadMissing('items');
+        foreach ($order->items as $index => $item) {
+            $subtotal = floatval($item->price) * intval($item->quantity);
+            $itemName = htmlspecialchars($item->name, ENT_QUOTES, 'UTF-8');
 
-          // Get Store contact details
-          $storePhone = $settings->get('store_phone') ?: '';
-          $storeAddress = $settings->get('store_address') ?: '';
-          $socialTelegram = $settings->get('social_telegram') ?: '';
-          $socialFacebook = $settings->get('social_facebook') ?: '';
-          $socialTiktok = $settings->get('social_tiktok') ?: '';
-
-          // Formulate order items rows
-          $itemsHtml = '';
-          $order->loadMissing('items');
-          foreach ($order->items as $index => $item) {
-               $subtotal = floatval($item->price) * intval($item->quantity);
-               $itemName = htmlspecialchars($item->name, ENT_QUOTES, 'UTF-8');
-
-               $itemsHtml .= "
+            $itemsHtml .= "
                 <tr style='border-bottom: 1px solid #f1f5f9;'>
                     <td style='padding: 12px 8px; font-size: 14px; color: #334155;'>
                         <div style='font-weight: 600; color: #1e293b;'>{$itemName}</div>
@@ -189,28 +209,28 @@ class GmailOTPHelper
                     <td style='padding: 12px 8px; font-size: 14px; color: #1e293b; text-align: right; font-weight: 500;'>$" . number_format($subtotal, 2) . "</td>
                 </tr>
             ";
-          }
+        }
 
-          // Price breakdown fields
-          $subtotalAmount = floatval($order->subtotal ?? $order->total_amount);
-          $taxAmount = floatval($order->tax ?? 0);
-          $shippingFee = floatval($order->shipping_fee ?? 0);
-          $discountAmount = floatval($order->discount_amount ?? 0);
-          $totalAmount = floatval($order->total_amount);
+        // Price breakdown fields
+        $subtotalAmount = floatval($order->subtotal ?? $order->total_amount);
+        $taxAmount = floatval($order->tax ?? 0);
+        $shippingFee = floatval($order->shipping_fee ?? 0);
+        $discountAmount = floatval($order->discount_amount ?? 0);
+        $totalAmount = floatval($order->total_amount);
 
-          // Social links HTML
-          $socialsHtml = '';
-          if ($socialTelegram) {
-               $socialsHtml .= "<a href='{$socialTelegram}' style='color: #64748b; text-decoration: none; margin: 0 10px; font-size: 13px; font-weight: 500;'>Telegram</a>";
-          }
-          if ($socialFacebook) {
-               $socialsHtml .= "<a href='{$socialFacebook}' style='color: #64748b; text-decoration: none; margin: 0 10px; font-size: 13px; font-weight: 500;'>Facebook</a>";
-          }
-          if ($socialTiktok) {
-               $socialsHtml .= "<a href='{$socialTiktok}' style='color: #64748b; text-decoration: none; margin: 0 10px; font-size: 13px; font-weight: 500;'>TikTok</a>";
-          }
+        // Social links HTML
+        $socialsHtml = '';
+        if ($socialTelegram) {
+            $socialsHtml .= "<a href='{$socialTelegram}' style='color: #64748b; text-decoration: none; margin: 0 10px; font-size: 13px; font-weight: 500;'>Telegram</a>";
+        }
+        if ($socialFacebook) {
+            $socialsHtml .= "<a href='{$socialFacebook}' style='color: #64748b; text-decoration: none; margin: 0 10px; font-size: 13px; font-weight: 500;'>Facebook</a>";
+        }
+        if ($socialTiktok) {
+            $socialsHtml .= "<a href='{$socialTiktok}' style='color: #64748b; text-decoration: none; margin: 0 10px; font-size: 13px; font-weight: 500;'>TikTok</a>";
+        }
 
-          return "
+        return "
         <!DOCTYPE html>
         <html>
         <head>
@@ -320,5 +340,5 @@ class GmailOTPHelper
         </body>
         </html>
         ";
-     }
+    }
 }
