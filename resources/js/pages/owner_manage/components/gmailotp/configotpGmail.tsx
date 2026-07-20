@@ -124,13 +124,19 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
      }, [activeOwnerId]);
 
      // Auto-presets helper
-     const applyPreset = (preset: 'gmail' | 'log' | 'custom') => {
+     const applyPreset = (preset: 'gmail' | 'sendmail' | 'log' | 'custom') => {
           if (preset === 'gmail') {
                setMailMailer('smtp');
                setMailHost('smtp.gmail.com');
                setMailPort('587');
                setMailEncryption('tls');
                toast.info('Gmail SMTP preset applied. Please fill in your Gmail email and App Password.');
+          } else if (preset === 'sendmail') {
+               setMailMailer('sendmail');
+               setMailHost('localhost');
+               setMailPort('25');
+               setMailEncryption('none');
+               toast.info('Ubuntu Postfix (Sendmail) preset applied.');
           } else if (preset === 'log') {
                setMailMailer('log');
                setMailHost('localhost');
@@ -242,6 +248,13 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                          </button>
                          <button
                               type="button"
+                              onClick={() => applyPreset('sendmail')}
+                              className="px-3.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-extrabold text-[11px] rounded-[4px] border-none cursor-pointer transition-all active:scale-98"
+                         >
+                              Ubuntu Postfix (Sendmail)
+                         </button>
+                         <button
+                              type="button"
                               onClick={() => applyPreset('log')}
                               className="px-3.5 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 font-extrabold text-[11px] rounded-[4px] border-none cursor-pointer transition-all active:scale-98"
                          >
@@ -270,6 +283,7 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                         required
                                    >
                                         <option value="smtp">{t('smtp.mailer_smtp')}</option>
+                                        <option value="sendmail">Sendmail / Ubuntu Postfix</option>
                                         <option value="log">{t('smtp.mailer_log')}</option>
                                    </select>
                               </div>
@@ -283,7 +297,7 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                         placeholder="e.g. smtp.gmail.com"
                                         className="w-full px-4 py-2.5 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                                         required={mailMailer === 'smtp'}
-                                        disabled={mailMailer === 'log'}
+                                        disabled={mailMailer === 'log' || mailMailer === 'sendmail'}
                                    />
                               </div>
 
@@ -296,7 +310,7 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                         placeholder="e.g. 587"
                                         className="w-full px-4 py-2.5 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                                         required={mailMailer === 'smtp'}
-                                        disabled={mailMailer === 'log'}
+                                        disabled={mailMailer === 'log' || mailMailer === 'sendmail'}
                                    />
                               </div>
 
@@ -307,7 +321,7 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                         onChange={e => setMailEncryption(e.target.value)}
                                         className="w-full px-4 py-2.5 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                                         required={mailMailer === 'smtp'}
-                                        disabled={mailMailer === 'log'}
+                                        disabled={mailMailer === 'log' || mailMailer === 'sendmail'}
                                    >
                                         <option value="tls">{t('smtp.encryption_tls')}</option>
                                         <option value="ssl">{t('smtp.encryption_ssl')}</option>

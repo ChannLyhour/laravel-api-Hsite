@@ -176,11 +176,14 @@ class OrderController extends Controller
                 $tgToken = Store::where('created_by', $ownerUserId)->where('key', 'telegram_bot_token')->value('value');
                 $isTgOTPEnabled = ($tgEnabled === '1' || $tgEnabled === 1 || $tgEnabled === 'true') && !empty($tgToken);
 
-                // Check if Gmail OTP is configured and enabled
+                // Check if Gmail/Sendmail OTP is configured and enabled
                 $gmailEnabled = Store::where('created_by', $ownerUserId)->where('key', 'gmail_enabled')->value('value');
                 $gmailUser = Store::where('created_by', $ownerUserId)->where('key', 'mail_username')->value('value');
                 $gmailHost = Store::where('created_by', $ownerUserId)->where('key', 'mail_host')->value('value');
-                $isGmailOTPEnabled = ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') || (!empty($gmailUser) && !empty($gmailHost));
+                $mailMailer = Store::where('created_by', $ownerUserId)->where('key', 'mail_mailer')->value('value');
+                $isGmailOTPEnabled = ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') 
+                    || (!empty($gmailUser) && !empty($gmailHost))
+                    || (strtolower(trim((string) $mailMailer)) === 'sendmail');
 
                 $otpRequiredForStore = ($isTgOTPEnabled && $custPhone) || ($isGmailOTPEnabled && $isRealEmail) || (!$userId && ($custPhone || $isRealEmail));
 
