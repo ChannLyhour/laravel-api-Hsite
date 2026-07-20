@@ -142,22 +142,22 @@ export const PopOtpVerifyTele: React.FC<PopOtpVerifyTeleProps> = ({
                          <p className="text-xs text-stone-500 leading-relaxed max-w-sm mx-auto">
                               We have sent a <strong className="font-extrabold text-stone-800">6-digit verification code</strong> to the Telegram Bot. Please enter the code below to complete your checkout.
                          </p>
-                         {telegramLink && (
-                              <div className="pt-1">
-                                   <a
-                                        href={(() => {
-                                             const cleanLink = telegramLink.split('?')[0];
-                                             return orderId ? `${cleanLink}?start=verify_${orderId}` : `${cleanLink}?start=true`;
-                                        })()}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#24A1DE] hover:bg-[#208ebd] text-white rounded-[4px] font-black text-2xs uppercase tracking-widest no-underline transition-all shadow-xs hover:shadow-sm"
-                                   >
-                                        <FaTelegramPlane className="w-3.5 h-3.5 shrink-0" />
-                                        Start Bot Telegram
-                                   </a>
-                              </div>
-                         )}
+                          {telegramLink && (
+                               <div className="pt-1">
+                                    <a
+                                         href={(() => {
+                                              const cleanLink = telegramLink.split('?')[0];
+                                              return orderId ? `${cleanLink}?start=verify_${orderId}` : `${cleanLink}?start=true`;
+                                         })()}
+                                         target="_blank"
+                                         rel="noopener noreferrer"
+                                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#24A1DE] hover:bg-[#208ebd] text-white rounded-[4px] font-black text-2xs uppercase tracking-widest no-underline transition-all shadow-xs hover:shadow-sm cursor-pointer"
+                                    >
+                                         <FaTelegramPlane className="w-3.5 h-3.5 shrink-0" />
+                                         Start Bot Telegram
+                                    </a>
+                               </div>
+                          )}
                     </div>
 
                     {/* Form Inputs */}
