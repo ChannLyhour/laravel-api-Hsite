@@ -277,39 +277,17 @@ class OrderController extends Controller
             $userId = $result['userId'];
             $ownerUserId = $result['ownerUserId'];
 
-            // Send Telegram notification to the store owner immediately (outside DB transaction)
-            if (!$otpRequiredForStore) {
-                try {
-                    \App\Helpers\TelegramHelper::sendOrderNotification($order);
-                } catch (\Exception $ex) {
-                    \Illuminate\Support\Facades\Log::warning("Telegram order notification failed: " . $ex->getMessage());
-                }
-            }
-
-            // Send OTP code via Telegram or Gmail if order requires verification (outside DB transaction)
-            if ($otpRequiredForStore) {
-                try {
-                    $otpCode = (string) rand(100000, 999999);
-                    \Illuminate\Support\Facades\Cache::put("order_otp_{$order->id}", $otpCode, 3600);
-                    \Illuminate\Support\Facades\Log::info("🔑 [OTP GENERATED] Order #{$order->id} ({$order->order_no}) | OTP: {$otpCode} | Phone: {$custPhone} | Email: {$custEmail}");
-                    
-                    if ($custPhone) {
-                        \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
-                    }
-                    
-                    if ($isRealEmail) {
-                        \App\Helpers\GmailOTPHelper::sendOTP($order, $otpCode);
-                    }
-                } catch (\Exception $ex) {
-                    \Illuminate\Support\Facades\Log::warning("❌ [OTP SENDING FAILED] Order #{$order->id}: " . $ex->getMessage());
-                }
-            }
-
             $token = null;
             $otpRequired = false;
             $telegramBotLink = null;
+            $otpCode = null;
+
             if ($otpRequiredForStore) {
                 $otpRequired = true;
+                $otpCode = (string) rand(100000, 999999);
+                \Illuminate\Support\Facades\Cache::put("order_otp_{$order->id}", $otpCode, 3600);
+                \Illuminate\Support\Facades\Log::info("🔑 [OTP GENERATED] Order #{$order->id} ({$order->order_no}) | OTP: {$otpCode} | Phone: {$custPhone} | Email: {$custEmail}");
+
                 if ($custPhone) {
                     $botToken = Store::where('created_by', $ownerUserId)->where('key', 'telegram_bot_token')->value('value');
                     $customBotLink = Store::where('created_by', $ownerUserId)->where('key', 'telegram_customer_bot_link')->value('value');
@@ -351,6 +329,32 @@ class OrderController extends Controller
                     }
                 }
             }
+
+            // Defer slow external notifications (Gmail SMTP / Telegram API) after returning fast HTTP response
+            register_shutdown_function(function () use ($order, $otpRequiredForStore, $custPhone, $isRealEmail, $otpCode) {
+                if (function_exists('fastcgi_finish_request')) {
+                    @fastcgi_finish_request();
+                }
+
+                if (!$otpRequiredForStore) {
+                    try {
+                        \App\Helpers\TelegramHelper::sendOrderNotification($order);
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::warning("Telegram order notification failed: " . $ex->getMessage());
+                    }
+                } else {
+                    try {
+                        if ($custPhone) {
+                            \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
+                        }
+                        if ($isRealEmail) {
+                            \App\Helpers\GmailOTPHelper::sendOTP($order, $otpCode);
+                        }
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::warning("❌ [OTP SENDING FAILED] Order #{$order->id}: " . $ex->getMessage());
+                    }
+                }
+            });
 
             return response()->json([
                 'success' => true,
