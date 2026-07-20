@@ -190,11 +190,11 @@ class TelegramWebhookController extends Controller
             $storeOwnerId = Store::where('key', 'telegram_bot_token')->where('value', $token)->value('created_by');
 
             if ($storeOwnerId) {
-                // Link actual Telegram phone number
-                Store::updateOrCreate(
-                    ['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $normalizedPhone],
-                    ['value' => $chatId]
-                );
+                $lastDigits = \App\Helpers\TelegramOTPAcc::extractLastDigits($phoneNumber);
+                Store::updateOrCreate(['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $normalizedPhone], ['value' => $chatId]);
+                Store::updateOrCreate(['created_by' => $storeOwnerId, 'key' => "tg_chat_" . ltrim($normalizedPhone, '+')], ['value' => $chatId]);
+                Store::updateOrCreate(['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $lastDigits], ['value' => $chatId]);
+                Store::updateOrCreate(['created_by' => $storeOwnerId, 'key' => "tg_chat_0" . $lastDigits], ['value' => $chatId]);
 
                 // Check if there was a start parameter stored in Cache for this chat ID
                 $startParam = \Illuminate\Support\Facades\Cache::get("tg_start_param_{$chatId}");

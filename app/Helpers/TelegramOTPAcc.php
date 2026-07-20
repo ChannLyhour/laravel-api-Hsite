@@ -147,10 +147,12 @@ class TelegramOTPAcc
 
                if ($pendingOrder) {
                     $otpCode = \Illuminate\Support\Facades\Cache::get("order_otp_{$pendingOrder->id}");
-                    Log::info("checkAndSendPendingOTP: Found order ID {$pendingOrder->id}, Cached OTP exists: " . ($otpCode ? 'Yes' : 'No'));
-                    if ($otpCode) {
-                         self::sendOTP($pendingOrder, $otpCode);
+                    if (!$otpCode) {
+                         $otpCode = (string) rand(100000, 999999);
+                         \Illuminate\Support\Facades\Cache::put("order_otp_{$pendingOrder->id}", $otpCode, 3600);
                     }
+                    Log::info("checkAndSendPendingOTP: Sending OTP {$otpCode} for order ID {$pendingOrder->id} for phone {$normalizedPhone}");
+                    self::sendOTP($pendingOrder, $otpCode);
                } else {
                     Log::info("checkAndSendPendingOTP: No pending order found for {$normalizedPhone}");
                }
