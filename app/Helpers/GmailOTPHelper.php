@@ -86,6 +86,13 @@ class GmailOTPHelper
                     'mail.default' => 'sendmail',
                     'mail.mailers.sendmail.transport' => 'sendmail',
                     'mail.mailers.sendmail.path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+                    'mail.mailers.sendmail.stream' => [
+                        'ssl' => [
+                            'allow_self_signed' => true,
+                            'verify_peer' => false,
+                            'verify_peer_name' => false,
+                        ],
+                    ],
                     'mail.from.address' => $mailFromAddress ?: 'noreply@' . (request()->getHost() ?: 'localhost'),
                     'mail.from.name' => $mailFromName ?: $storeName,
                 ]);
@@ -102,6 +109,13 @@ class GmailOTPHelper
                     'mail.mailers.smtp.encryption' => $mailEncryption ?: 'tls',
                     'mail.mailers.smtp.username' => $mailUsername,
                     'mail.mailers.smtp.password' => $cleanMailPassword,
+                    'mail.mailers.smtp.stream' => [
+                        'ssl' => [
+                            'allow_self_signed' => true,
+                            'verify_peer' => false,
+                            'verify_peer_name' => false,
+                        ],
+                    ],
                     'mail.from.address' => $mailFromAddress ?: $mailUsername,
                     'mail.from.name' => $mailFromName ?: $storeName,
                 ]);
