@@ -25,15 +25,18 @@ class TelegramOTPAcc
           }
 
           try {
-               $enabled = Store::where('created_by', $storeId)->where('key', 'telegram_enabled')->value('value');
+               $isOwnerUser = Store::where('created_by', $storeId)->exists();
+               $ownerUserId = $isOwnerUser ? $storeId : (Store::where('id', $storeId)->value('created_by') ?: $storeId);
+
+               $enabled = Store::where('created_by', $ownerUserId)->where('key', 'telegram_enabled')->value('value');
                Log::info("TelegramOTPAcc::sendOTP - telegram_enabled value: " . var_export($enabled, true));
                if ($enabled !== '1' && $enabled !== 1 && $enabled !== 'true') {
                     Log::warning("TelegramOTPAcc::sendOTP - Telegram not enabled for store {$storeId}, aborting.");
                     return;
                }
 
-               $botToken = Store::where('created_by', $storeId)->where('key', 'telegram_bot_token')->value('value');
-               $chatId = Store::where('created_by', $storeId)->where('key', 'telegram_chat_id')->value('value');
+               $botToken = Store::where('created_by', $ownerUserId)->where('key', 'telegram_bot_token')->value('value');
+               $chatId = Store::where('created_by', $ownerUserId)->where('key', 'telegram_chat_id')->value('value');
                Log::info("TelegramOTPAcc::sendOTP - botToken: " . ($botToken ? 'present' : 'NULL') . ", chatId: {$chatId}");
 
                if (!$botToken) {
@@ -79,9 +82,9 @@ class TelegramOTPAcc
                $message = implode("\n", $messageLines);
 
                $result = self::sendMessage($botToken, $targetChatId, $message);
-               Log::info("TelegramOTPAcc::sendOTP - sendMessage result: " . json_encode($result));
+               Log::info("📱 [TELEGRAM OTP SENT] Order #{$order->id} (" . ($order->order_no ?? $order->id) . ") | OTP: {$otpCode} | Target Chat ID: {$targetChatId} | Result: " . json_encode($result));
           } catch (\Exception $e) {
-               Log::error("TelegramOTPAcc sendOTP failed: " . $e->getMessage());
+               Log::error("❌ [TELEGRAM OTP FAILED] Order #{$order->id}: " . $e->getMessage());
           }
      }
 

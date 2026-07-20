@@ -1363,9 +1363,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             return;
         }
 
-        // Resolve the authoritative store ID
-        // Priority: stores.id -> storeSettings.id -> ownerUserId
-        const resolvedStoreId = Number(stores?.id || storeSettings?.id || ownerUserId);
+        // Priority: ownerUserId -> stores.created_by -> storeSettings.created_by -> stores.id
+        const resolvedStoreId = Number(ownerUserId || stores?.created_by || storeSettings?.created_by || stores?.id || storeSettings?.id);
 
         const orderNotes = selectedDeliveryMethod
             ? `[Delivery: ${selectedDeliveryMethod.name}] ${note || ''}`.trim()
@@ -1423,17 +1422,16 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 setTelegramBotLink(order.telegram_bot_link);
             }
 
-            if (order.otp_required) {
-                const isEmailInput = rawPhone ? rawPhone.includes('@') : false;
-                if (isEmailInput) {
-                    setOtpMode('gmail');
-                    setContactEmail(rawPhone);
-                } else {
-                    setOtpMode('telegram');
-                }
-                setIsOtpOpen(true);
-                return;
+            // Always pop up OTP modal before showing Order Placed
+            const isEmailInput = rawPhone ? rawPhone.includes('@') : false;
+            if (isEmailInput) {
+                setOtpMode('gmail');
+                setContactEmail(rawPhone);
+            } else {
+                setOtpMode('telegram');
             }
+            setIsOtpOpen(true);
+            return;
 
             // If OTP is not required
             if (selectedPayment === 'aba' || selectedPayment === 'bakong') {

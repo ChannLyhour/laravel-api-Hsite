@@ -38,8 +38,12 @@ class GmailOTPHelper
           }
 
           try {
+               // Resolve actual store owner user ID
+               $isOwnerUser = Store::where('created_by', $storeId)->exists();
+               $ownerUserId = $isOwnerUser ? $storeId : (Store::where('id', $storeId)->value('created_by') ?: $storeId);
+
                // Retrieve store settings
-               $settings = Store::where('created_by', $storeId)->get()->pluck('value', 'key');
+               $settings = Store::where('created_by', $ownerUserId)->get()->pluck('value', 'key');
 
                $storeName = $settings->get('store_name') ?: 'Our Store';
 
@@ -58,31 +62,34 @@ class GmailOTPHelper
                $gmailEmail = $settings->get('gmail_email');
                $gmailPassword = $settings->get('gmail_password');
 
-               $isStoreSmtpConfigured = $mailHost && $mailUsername && $mailPassword;
-               $isStoreGmailConfigured = ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') && $gmailEmail && $gmailPassword;
+               $cleanMailPassword = $mailPassword ? str_replace(' ', '', $mailPassword) : '';
+               $cleanGmailPassword = $gmailPassword ? str_replace(' ', '', $gmailPassword) : '';
+
+               $isStoreSmtpConfigured = $mailHost && $mailUsername && !empty($cleanMailPassword);
+               $isStoreGmailConfigured = ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') && $gmailEmail && !empty($cleanGmailPassword);
 
                // Final parameters for sending email
                $finalFromEmail = null;
                $finalFromName = $storeName;
 
                if ($isStoreSmtpConfigured) {
-                    Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store SMTP settings for owner user ID {$storeId}.");
+                    Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store SMTP settings for owner user ID {$ownerUserId}.");
                     config([
-                         'mail.default' => $mailMailer,
-                         "mail.mailers.{$mailMailer}.transport" => $mailMailer,
-                         "mail.mailers.{$mailMailer}.host" => $mailHost,
-                         "mail.mailers.{$mailMailer}.port" => intval($mailPort),
-                         "mail.mailers.{$mailMailer}.encryption" => $mailEncryption,
-                         "mail.mailers.{$mailMailer}.username" => $mailUsername,
-                         "mail.mailers.{$mailMailer}.password" => $mailPassword,
+                         'mail.default' => 'smtp',
+                         'mail.mailers.smtp.transport' => 'smtp',
+                         'mail.mailers.smtp.host' => $mailHost,
+                         'mail.mailers.smtp.port' => intval($mailPort ?: 587),
+                         'mail.mailers.smtp.encryption' => $mailEncryption ?: 'tls',
+                         'mail.mailers.smtp.username' => $mailUsername,
+                         'mail.mailers.smtp.password' => $cleanMailPassword,
                          'mail.from.address' => $mailFromAddress ?: $mailUsername,
-                         'mail.from.name' => $mailFromName,
+                         'mail.from.name' => $mailFromName ?: $storeName,
                     ]);
-                    Mail::purge($mailMailer);
+                    Mail::purge('smtp');
                     $finalFromEmail = $mailFromAddress ?: $mailUsername;
-                    $finalFromName = $mailFromName;
+                    $finalFromName = $mailFromName ?: $storeName;
                } elseif ($isStoreGmailConfigured) {
-                    Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store Gmail settings for owner user ID {$storeId}.");
+                    Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store Gmail settings for owner user ID {$ownerUserId}.");
                     config([
                          'mail.default' => 'smtp',
                          'mail.mailers.smtp.transport' => 'smtp',
@@ -90,7 +97,7 @@ class GmailOTPHelper
                          'mail.mailers.smtp.port' => 587,
                          'mail.mailers.smtp.encryption' => 'tls',
                          'mail.mailers.smtp.username' => $gmailEmail,
-                         'mail.mailers.smtp.password' => $gmailPassword,
+                         'mail.mailers.smtp.password' => $cleanGmailPassword,
                          'mail.from.address' => $gmailEmail,
                          'mail.from.name' => $storeName,
                     ]);
@@ -145,9 +152,9 @@ class GmailOTPHelper
                     $message->html($htmlContent);
                });
 
-               Log::info("GmailOTPHelper::sendOTP - OTP verification email sent successfully to {$recipientEmail}.");
+               Log::info("📧 [GMAIL OTP SENT] Order #{$order->id} (" . ($order->order_no ?? $order->id) . ") | OTP: {$otpCode} | Recipient: {$recipientEmail}");
           } catch (\Exception $e) {
-               Log::error("GmailOTPHelper::sendOTP failed: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+               Log::error("❌ [GMAIL OTP FAILED] Order #{$order->id} to {$recipientEmail}: " . $e->getMessage());
           }
      }
 
