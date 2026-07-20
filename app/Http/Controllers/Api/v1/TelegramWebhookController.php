@@ -257,6 +257,9 @@ class TelegramWebhookController extends Controller
             if ($param && str_starts_with($param, 'verify_')) {
                 $orderIdentifier = trim(substr($param, 7));
                 $storeOwnerId = Store::where('key', 'telegram_bot_token')->where('value', $token)->value('created_by');
+                if (!$storeOwnerId) {
+                    $storeOwnerId = Store::where('key', 'telegram_bot_token')->whereNotNull('value')->value('created_by');
+                }
 
                 $order = Order::where('store_id', $storeOwnerId)
                     ->where(function ($q) use ($orderIdentifier) {
