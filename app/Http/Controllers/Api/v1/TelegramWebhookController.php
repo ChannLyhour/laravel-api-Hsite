@@ -279,10 +279,12 @@ class TelegramWebhookController extends Controller
                     );
 
                     $otpCode = \Illuminate\Support\Facades\Cache::get("order_otp_{$order->id}");
-                    if ($otpCode) {
-                        \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
-                        return response()->json(['status' => 'verify_otp_sent']);
+                    if (!$otpCode) {
+                        $otpCode = (string) rand(100000, 999999);
+                        \Illuminate\Support\Facades\Cache::put("order_otp_{$order->id}", $otpCode, 3600);
                     }
+                    \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
+                    return response()->json(['status' => 'verify_otp_sent']);
                 }
             }
 
