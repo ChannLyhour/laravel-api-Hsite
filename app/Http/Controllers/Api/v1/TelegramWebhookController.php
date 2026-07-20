@@ -254,6 +254,38 @@ class TelegramWebhookController extends Controller
                 $param = trim($matches[1]);
             }
 
+            if ($param && str_starts_with($param, 'verify_')) {
+                $orderIdentifier = trim(substr($param, 7));
+                $storeOwnerId = Store::where('key', 'telegram_bot_token')->where('value', $token)->value('created_by');
+
+                $order = Order::where('store_id', $storeOwnerId)
+                    ->where(function ($q) use ($orderIdentifier) {
+                        $q->where('id', $orderIdentifier)
+                          ->orWhere('order_no', $orderIdentifier);
+                    })
+                    ->first();
+
+                if ($order && $order->customer_phone) {
+                    $normPhone = \App\Helpers\TelegramOTPAcc::normalizeCambodianPhone($order->customer_phone);
+                    $lastDigits = \App\Helpers\TelegramOTPAcc::extractLastDigits($order->customer_phone);
+
+                    Store::updateOrCreate(
+                        ['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $normPhone],
+                        ['value' => $chatId]
+                    );
+                    Store::updateOrCreate(
+                        ['created_by' => $storeOwnerId, 'key' => "tg_chat_" . $lastDigits],
+                        ['value' => $chatId]
+                    );
+
+                    $otpCode = \Illuminate\Support\Facades\Cache::get("order_otp_{$order->id}");
+                    if ($otpCode) {
+                        \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
+                        return response()->json(['status' => 'verify_otp_sent']);
+                    }
+                }
+            }
+
             if ($param && str_starts_with($param, 'check_')) {
                 $orderNo = substr($param, 6); // Extract the order number after "check_"
 
