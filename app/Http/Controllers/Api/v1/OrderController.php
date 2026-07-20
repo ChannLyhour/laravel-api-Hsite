@@ -330,31 +330,8 @@ class OrderController extends Controller
                 }
             }
 
-            // Defer slow external notifications (Gmail SMTP / Telegram API) after returning fast HTTP response
-            register_shutdown_function(function () use ($order, $otpRequiredForStore, $custPhone, $isRealEmail, $otpCode) {
-                if (function_exists('fastcgi_finish_request')) {
-                    @fastcgi_finish_request();
-                }
-
-                if (!$otpRequiredForStore) {
-                    try {
-                        \App\Helpers\TelegramHelper::sendOrderNotification($order);
-                    } catch (\Exception $ex) {
-                        \Illuminate\Support\Facades\Log::warning("Telegram order notification failed: " . $ex->getMessage());
-                    }
-                } else {
-                    try {
-                        if ($custPhone) {
-                            \App\Helpers\TelegramOTPAcc::sendOTP($order, $otpCode);
-                        }
-                        if ($isRealEmail) {
-                            \App\Helpers\GmailOTPHelper::sendOTP($order, $otpCode);
-                        }
-                    } catch (\Exception $ex) {
-                        \Illuminate\Support\Facades\Log::warning("❌ [OTP SENDING FAILED] Order #{$order->id}: " . $ex->getMessage());
-                    }
-                }
-            });
+            // Dispatch truly background CLI command for heavy external notifications (Gmail SMTP / Telegram API)
+            self::dispatchAsyncOrderOtp($order->id, $otpRequiredForStore ? $otpCode : null);
 
             return response()->json([
                 'success' => true,
@@ -555,5 +532,28 @@ class OrderController extends Controller
             'message' => 'Order verified successfully.',
             'token' => $token
         ]);
+    }
+
+    /**
+     * Dispatch an asynchronous background CLI command to process order OTP or notifications.
+     */
+    public static function dispatchAsyncOrderOtp($orderId, $otpCode = null)
+    {
+        try {
+            $artisanPath = base_path('artisan');
+            $phpBinary = defined('PHP_BINARY') && PHP_BINARY ? PHP_BINARY : 'php';
+            $otpArg = $otpCode ? " " . escapeshellarg($otpCode) : "";
+            $orderIdArg = escapeshellarg($orderId);
+
+            if (str_contains(strtoupper(PHP_OS), 'WIN')) {
+                $cmd = "start /B {$phpBinary} \"{$artisanPath}\" order:send-otp {$orderIdArg}{$otpArg} > NUL 2>&1";
+                pclose(popen($cmd, "r"));
+            } else {
+                $cmd = "{$phpBinary} \"{$artisanPath}\" order:send-otp {$orderIdArg}{$otpArg} > /dev/null 2>&1 &";
+                exec($cmd);
+            }
+        } catch (\Throwable $ex) {
+            \Illuminate\Support\Facades\Log::warning("dispatchAsyncOrderOtp failed: " . $ex->getMessage());
+        }
     }
 }
