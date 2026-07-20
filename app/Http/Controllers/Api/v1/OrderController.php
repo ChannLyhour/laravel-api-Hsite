@@ -541,15 +541,14 @@ class OrderController extends Controller
     {
         try {
             $artisanPath = base_path('artisan');
-            $phpBinary = defined('PHP_BINARY') && PHP_BINARY ? PHP_BINARY : 'php';
             $otpArg = $otpCode ? " " . escapeshellarg($otpCode) : "";
             $orderIdArg = escapeshellarg($orderId);
 
             if (str_contains(strtoupper(PHP_OS), 'WIN')) {
-                $cmd = "start /B {$phpBinary} \"{$artisanPath}\" order:send-otp {$orderIdArg}{$otpArg} > NUL 2>&1";
+                $cmd = "start /B php \"{$artisanPath}\" order:send-otp {$orderIdArg}{$otpArg} > NUL 2>&1";
                 pclose(popen($cmd, "r"));
             } else {
-                $cmd = "{$phpBinary} \"{$artisanPath}\" order:send-otp {$orderIdArg}{$otpArg} > /dev/null 2>&1 &";
+                $cmd = "php \"{$artisanPath}\" order:send-otp {$orderIdArg}{$otpArg} > /dev/null 2>&1 &";
                 exec($cmd);
             }
         } catch (\Throwable $ex) {
