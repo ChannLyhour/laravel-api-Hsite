@@ -49,7 +49,7 @@ class TelegramOTPAcc
 
                $normalizedPhone = self::normalizeCambodianPhone($customerPhone);
                $lastDigits = self::extractLastDigits($customerPhone);
-               $customerChatId = Store::where('created_by', $storeId)
+               $customerChatId = Store::where('created_by', $ownerUserId)
                     ->whereIn('key', [
                          "tg_chat_" . $normalizedPhone,
                          "tg_chat_" . ltrim($normalizedPhone, '+'),
