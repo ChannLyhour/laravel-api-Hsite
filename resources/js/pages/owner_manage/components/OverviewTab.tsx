@@ -15,6 +15,7 @@ import {
   FiTrendingUp,
   FiMapPin,
   FiTruck,
+  FiCheckSquare,
 } from 'react-icons/fi';
 import { categoriesService } from '@/api/owner/categories';
 import { ordersService } from '@/api/owner/orders';
@@ -23,6 +24,8 @@ import { storesService } from '@/api/owner/stores';
 import { chatService } from '@/api/owner/chat';
 import { resolveImageUrl } from '@/api/imageUtils';
 import { customersService } from '@/api/owner/customers';
+import { brandsService } from '@/api/owner/brands';
+import { deliveryMethodsService } from '@/api/owner/deliveryMethods';
 import { useTranslation } from '../lang/i18n';
 import { ShowLowStockProduct } from './dashboad/show_low_stock_product';
 
@@ -39,6 +42,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
   const [orderStats, setOrderStats] = useState({
     total: 0, pending: 0, confirmed: 0, cancelled: 0, complete: 0,
   });
+  const [setupProgressPercent, setSetupProgressPercent] = useState<number>(0);
   const [revenueStats, setRevenueStats] = useState({
     revenue: '$0.00', commission: '$0.00', delivery: '$0.00', tax: '$0.00'
   });
@@ -59,19 +63,24 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
 
   useEffect(() => {
     const load = async () => {
+      let storeSettings: any = {};
       // 1. Fetch menu item count
+      let itemsCount = 0;
       try {
         const url = ownerId !== undefined
           ? `/products?limit=200&created_by=${ownerId}`
           : '/products?limit=200';
         const items = await client.get<any[]>(url);
-        setMenuItemCount(Array.isArray(items) ? items.length : 0);
+        itemsCount = Array.isArray(items) ? items.length : 0;
+        setMenuItemCount(itemsCount);
       } catch { setMenuItemCount(0); }
 
       // 2. Fetch category count
+      let catCount = 0;
       try {
         const cats = await categoriesService.getMyCategories(100, 0, ownerId);
-        setCategoryCount(cats.total ?? 0);
+        catCount = cats.total ?? 0;
+        setCategoryCount(catCount);
       } catch { setCategoryCount(0); }
 
       // 3. Fetch orders, stats, and top products
@@ -160,8 +169,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
       try {
         if (ownerId !== undefined) {
           const data = await storesService.getStore(ownerId);
-          if (data && data.store_name) {
-            setStoreName(data.store_name);
+          if (data) {
+            storeSettings = data;
+            if (data.store_name) {
+              setStoreName(data.store_name);
+            }
           }
         }
       } catch (_) {}
@@ -174,6 +186,39 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ ownerId, storeId }) =>
         console.warn('[OverviewTab] Failed to fetch customer count:', err);
         setCustomerCount(0);
       }
+
+      // 7. Calculate Setup Guide progress percentage
+      let shippingMethod = false;
+      try {
+        const methods = await deliveryMethodsService.getMyDeliveryMethods();
+        shippingMethod = Array.isArray(methods) && methods.some(m => m.is_active);
+      } catch {}
+
+      const customerLogin = !!(
+        storeSettings.firebase_api_key || 
+        storeSettings.otp_email_configuration?.smtp_host ||
+        storeSettings.social_login_setup_oauth?.client_id ||
+        storeSettings.telegram_bot_notifications?.bot_token
+      );
+
+      const categorySetup = catCount > 0;
+      const addNewProduct = itemsCount > 0;
+      const generalSetup = !!(
+        storeSettings.store_name && 
+        storeSettings.store_name !== 'Store' &&
+        storeSettings.logo_url
+      );
+
+      const steps = [
+        shippingMethod,
+        customerLogin,
+        categorySetup,
+        addNewProduct,
+        generalSetup,
+      ];
+      const completedCount = steps.filter(Boolean).length;
+      const percentage = Math.round((completedCount / steps.length) * 100);
+      setSetupProgressPercent(percentage);
 
       setLoading(false);
     };

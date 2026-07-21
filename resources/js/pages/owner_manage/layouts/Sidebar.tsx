@@ -14,6 +14,7 @@ import {
   FiSliders,
   FiLayout,
   FiChevronDown,
+  FiChevronRight,
   FiClock,
   FiActivity,
   FiCheckCircle,
@@ -63,6 +64,7 @@ interface SidebarProps {
   onLogout: () => void;
   mobile?: boolean;
   unreadChatCount?: number;
+  setupProgressPercent?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -78,6 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   mobile = false,
   unreadChatCount = 0,
+  setupProgressPercent = 0,
 }) => {
   const { t, language } = useTranslation();
 
@@ -865,7 +868,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <FiCheckSquare className="w-4 h-4 text-indigo-200/80 shrink-0" />
                     <span>{t('sidebar.all_orders')}</span>
                   </div>
-                  <span className="bg-white/15 text-indigo-100 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
+                  <span className="bg-blue-100/80 text-blue-700 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
                     {Object.values(orderCounts).reduce((a, b) => a + b, 0)}
                   </span>
                 </button>
@@ -881,7 +884,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <FiClock className="w-4 h-4 text-indigo-200/80 shrink-0" />
                     <span>{t('sidebar.pending')}</span>
                   </div>
-                  <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
+                  <span className="bg-blue-100/80 text-blue-700 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
                     {orderCounts.pending}
                   </span>
                 </button>
@@ -897,7 +900,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <FiActivity className="w-4 h-4 text-indigo-200/80 shrink-0" />
                     <span>{t('sidebar.processing')}</span>
                   </div>
-                  <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
+                  <span className="bg-emerald-100/80 text-emerald-700 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
                     {orderCounts.processing}
                   </span>
                 </button>
@@ -913,7 +916,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <FiTruck className="w-4 h-4 text-indigo-200/80 shrink-0" />
                     <span>{t('sidebar.delivering')}</span>
                   </div>
-                  <span className="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
+                  <span className="bg-amber-100/80 text-amber-700 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
                     {orderCounts.delivering}
                   </span>
                 </button>
@@ -929,7 +932,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <FiCheckCircle className="w-4 h-4 text-indigo-200/80 shrink-0" />
                     <span>{t('sidebar.completed')}</span>
                   </div>
-                  <span className="bg-white/15 text-indigo-100 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
+                  <span className="bg-indigo-100/80 text-indigo-700 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
                     {orderCounts.complete}
                   </span>
                 </button>
@@ -945,7 +948,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <FiXCircle className="w-4 h-4 text-indigo-200/80 shrink-0" />
                     <span>{t('sidebar.cancelled')}</span>
                   </div>
-                  <span className="bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
+                  <span className="bg-rose-100/80 text-rose-700 px-2 py-0.5 rounded-[4px] text-[10px] font-black">
                     {orderCounts.canceled}
                   </span>
                 </button>
@@ -1381,6 +1384,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
 
           </div>
+
+          {/* Fixed bottom Setup Guide section */}
+          {showSubmenu && setupProgressPercent !== undefined && (
+            <div 
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('open_setup_guide'));
+              }}
+              className="py-3 px-3.5 mx-3 mb-3 text-white rounded-2xl shadow-xs flex items-center justify-between cursor-pointer transition-all active:scale-[0.98] select-none hover:shadow-md animate-fade-in"
+              style={{ backgroundColor: '#1b55e2' }}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+                  <svg className="w-6.5 h-6.5" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Board */}
+                    <rect x="7" y="7" width="18" height="20" rx="3.5" fill="#f43f5e" />
+                    {/* Clip */}
+                    <rect x="12" y="4" width="8" height="4" rx="1.5" fill="#f59e0b" />
+                    {/* Paper */}
+                    <rect x="10" y="10" width="12" height="15" rx="1" fill="#ffffff" />
+                    {/* Line 1 check & bar */}
+                    <path d="M12 14.5L13.5 16L16 13.5" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <rect x="17.5" y="14" width="3.5" height="1" rx="0.5" fill="#cbd5e1" />
+                    {/* Line 2 check & bar */}
+                    <path d="M12 19.5L13.5 21L16 18.5" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <rect x="17.5" y="19" width="3.5" height="1" rx="0.5" fill="#cbd5e1" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h4 className="text-[10px] font-black tracking-tight text-white leading-none">Setup Guide</h4>
+                  <span className="text-[9px] font-bold text-white/80 block mt-1.5">
+                    {setupProgressPercent}% Complete
+                  </span>
+                </div>
+              </div>
+              <div className="w-7 h-7 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center transition-all duration-300 shrink-0">
+                <FiChevronRight className="w-3.5 h-3.5 text-white" />
+              </div>
+            </div>
+          )}
 
           {/* Fixed bottom upgrade plan section */}
           {showSubmenu && (

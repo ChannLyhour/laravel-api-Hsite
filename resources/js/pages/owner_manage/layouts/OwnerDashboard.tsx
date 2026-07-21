@@ -54,6 +54,11 @@ import { PosTab } from '../components/PosTab';
 import { Sidebar } from './Sidebar';
 import { storesService } from '@/api/owner/stores';
 import { ordersService } from '@/api/owner/orders';
+import { deliveryMethodsService } from '@/api/owner/deliveryMethods';
+import { brandsService } from '@/api/owner/brands';
+import { categoriesService } from '@/api/owner/categories';
+import { client } from '@/api/client';
+import { SetupGuideModal, type SetupProgress } from '../components/SetupGuideModal';
 import { RealTimeOrderPopup } from '../components/order/popupOrderRealTime';
 import { SocialMediaTab } from '../components/Store_Settings/SocialMediaTab';
 import { BannersTab } from '../components/BannersTab';
@@ -469,6 +474,121 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       .then(data => setProfile(data))
       .catch(err => console.warn('Failed to refresh owner profile', err));
   };
+
+  // Setup Guide Checklist State
+  const [isSetupGuideOpen, setIsSetupGuideOpen] = useState(false);
+  const [setupProgress, setSetupProgress] = useState<SetupProgress>({
+    shippingMethod: false,
+    customerLogin: false,
+    categorySetup: false,
+    brandSetup: false,
+    addNewProduct: false,
+    generalSetup: false,
+    languageSetup: false,
+    percentage: 0
+  });
+
+  const checkSetupStatus = async () => {
+    if (!profile) return;
+    const isAdmin = profile?.user?.role === 'admin';
+    const ownerIdStr = localStorage.getItem('selected_owner_id');
+    const activeOwnerId = isAdmin && ownerIdStr ? (isNaN(Number(ownerIdStr)) ? ownerIdStr : parseInt(ownerIdStr, 10)) : (profile?.user?.hashid || profile?.user?.id);
+    if (!activeOwnerId) return;
+
+    try {
+      // 1. Shipping Method
+      let shippingMethod = false;
+      try {
+        const methods = await deliveryMethodsService.getMyDeliveryMethods();
+        shippingMethod = Array.isArray(methods) && methods.some(m => m.is_active);
+      } catch (err) {
+        console.warn('Failed to check shipping methods for setup guide', err);
+      }
+
+      // 2. Customer Login (firebase, SMTP Gmail, OAuth, or Telegram Bot configuration check)
+      const storeSettings = settings || {};
+      const customerLogin = !!(
+        storeSettings.firebase_api_key || 
+        storeSettings.otp_email_configuration?.smtp_host ||
+        storeSettings.social_login_setup_oauth?.client_id ||
+        storeSettings.telegram_bot_notifications?.bot_token
+      );
+
+      // 3. Category Setup
+      let categorySetup = false;
+      try {
+        const cats = await categoriesService.getMyCategories(1, 0, activeOwnerId);
+        categorySetup = !!(cats && cats.categories && cats.categories.length > 0);
+      } catch (err) {
+        console.warn('Failed to check categories for setup guide', err);
+      }
+
+      // 4. Brand Setup
+      let brandSetup = false;
+      try {
+        const brands = await brandsService.getBrands(1, 0, activeOwnerId);
+        brandSetup = !!(brands && brands.length > 0);
+      } catch (err) {
+        console.warn('Failed to check brands for setup guide', err);
+      }
+
+      // 5. Add New Product (menu items check)
+      let addNewProduct = false;
+      try {
+        const url = `/products?limit=1&created_by=${activeOwnerId}`;
+        const items = await client.get<any[]>(url);
+        addNewProduct = !!(items && items.length > 0);
+      } catch (err) {
+        console.warn('Failed to check products for setup guide', err);
+      }
+
+      // 6. General Setup (store name modified from default & logo configured)
+      const generalSetup = !!(
+        storeSettings.store_name && 
+        storeSettings.store_name !== 'Store' &&
+        storeSettings.logo_url
+      );
+
+      const steps = [
+        shippingMethod,
+        customerLogin,
+        categorySetup,
+        addNewProduct,
+        generalSetup,
+      ];
+      const completedCount = steps.filter(Boolean).length;
+      const percentage = Math.round((completedCount / steps.length) * 100);
+
+      setSetupProgress({
+        shippingMethod,
+        customerLogin,
+        categorySetup,
+        addNewProduct,
+        generalSetup,
+        percentage
+      });
+    } catch (err) {
+      console.warn('Error checking setup status', err);
+    }
+  };
+
+  useEffect(() => {
+    checkSetupStatus();
+  }, [profile, settings, activeTab]);
+
+  useEffect(() => {
+    const handleOpenSetupGuide = () => {
+      setIsSetupGuideOpen(true);
+    };
+    window.addEventListener('open_setup_guide', handleOpenSetupGuide);
+    window.addEventListener('settings_updated', checkSetupStatus);
+    window.addEventListener('data_updated', checkSetupStatus);
+    return () => {
+      window.removeEventListener('open_setup_guide', handleOpenSetupGuide);
+      window.removeEventListener('settings_updated', checkSetupStatus);
+      window.removeEventListener('data_updated', checkSetupStatus);
+    };
+  }, [profile, settings]);
 
   const [isCategorySetupOpen, setIsCategorySetupOpen] = useState<boolean>(() => {
     const savedOpen = localStorage.getItem('is_category_setup_open');
@@ -895,6 +1015,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
             setIsMobileMenuOpen={setIsMobileMenuOpen}
             onLogout={handleLogoutClick}
             unreadChatCount={unreadChatCount}
+            setupProgressPercent={setupProgress.percentage}
           />
         </aside>
       )}
@@ -938,6 +1059,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
             onLogout={handleLogoutClick}
             mobile
             unreadChatCount={unreadChatCount}
+            setupProgressPercent={setupProgress.percentage}
           />
         </aside>
       )}
@@ -1316,6 +1438,17 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
         </main>
       </div>
       <RealTimeOrderPopup ownerId={activeOwnerId} storeId={settings?.id} />
+      <SetupGuideModal
+        isOpen={isSetupGuideOpen}
+        onClose={() => setIsSetupGuideOpen(false)}
+        progress={setupProgress}
+        onStartStep={(tab) => {
+          if (tab === 'menu-items') {
+            localStorage.setItem('menu_items_view', 'list');
+          }
+          setActiveTab(tab as any);
+        }}
+      />
       <Toast ref={setToastRef} position="bottom-right" />
     </div>
   );
