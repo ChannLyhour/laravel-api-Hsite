@@ -999,6 +999,26 @@ export const MenuItemsTab: React.FC<MenuItemsTabProps> = ({ ownerId, storeId }) 
                 </button>
               </td>
               <HelperTableActions
+                isFeatured={!!item.is_featured}
+                onToggleFeatured={async () => {
+                  const newFeatured = !item.is_featured;
+                  try {
+                    await menuItemsService.updateMenuItem(item.id, {
+                      name: item.name,
+                      description: item.description || '',
+                      price: item.price,
+                      image_url: item.image || undefined,
+                      status: item.status,
+                      category_id: item.category_id,
+                      is_featured: newFeatured,
+                    });
+                    setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_featured: newFeatured } : i));
+                    toast.success(newFeatured ? `Set "${item.name}" as Featured on homepage!` : `Removed "${item.name}" from homepage featured.`);
+                  } catch (err) {
+                    console.error(err);
+                    toast.error('Failed to update product featured status.');
+                  }
+                }}
                 onBarcode={() => toast.success(`Generated Barcode for ${item.name}`)}
                 onView={() => handleOpenShowModal(item)}
                 onEdit={() => handleOpenEditModal(item)}

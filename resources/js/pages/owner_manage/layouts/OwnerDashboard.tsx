@@ -80,7 +80,6 @@ import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptio
 import { LimitedStockTab } from '../components/catalog/LimitedStockTab';
 import { RestockRequestsTab } from '../components/catalog/RestockRequestsTab';
 import { BulkImportTab } from '../components/catalog/BulkImportTab';
-import { VendorProductsTab } from '../components/catalog/VendorProductsTab';
 import { ProductGalleryTab } from '../components/catalog/ProductGalleryTab';
 
 interface AdminDashboardProps {
@@ -781,7 +780,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'settings-delivery-zones': return <DeliveryZonesTab />;
       case 'stock-overview': return <StockManagementTab defaultView="overview" ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'stock-items': return <StockManagementTab defaultView="items" ownerId={activeOwnerId} storeId={settings?.id} />;
-      case 'stock-low': return <StockManagementTab defaultView="low" ownerId={activeOwnerId} storeId={settings?.id} />;
+      case 'stock-low': return <StockManagementTab defaultView="items" ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'stock-movements': return <StockManagementTab defaultView="movements" ownerId={activeOwnerId} storeId={settings?.id} />;
 
       case 'stock-fifo': return <StockManagementTab defaultView="fifo" ownerId={activeOwnerId} storeId={settings?.id} />;
@@ -796,10 +795,6 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
       case 'catalog-limited-stock': return <LimitedStockTab ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'catalog-restock-requests': return <RestockRequestsTab ownerId={activeOwnerId} storeId={settings?.id} />;
       case 'catalog-bulk-import': return <BulkImportTab />;
-      case 'catalog-vendor-new': return <VendorProductsTab defaultSubView="new" />;
-      case 'catalog-vendor-update': return <VendorProductsTab defaultSubView="update" />;
-      case 'catalog-vendor-approved': return <VendorProductsTab defaultSubView="approved" />;
-      case 'catalog-vendor-denied': return <VendorProductsTab defaultSubView="denied" />;
       case 'catalog-product-gallery': return <ProductGalleryTab ownerId={activeOwnerId} storeId={settings?.id} />;
 
       case 'marketing-banners': return <BannersTab ownerId={activeOwnerId} />;

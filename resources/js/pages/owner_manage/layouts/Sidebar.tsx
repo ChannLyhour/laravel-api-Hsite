@@ -743,101 +743,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                 </div>
 
-                {/* VENDOR PRODUCTS */}
-                <div>
-                  <p className="text-[10px] font-black text-indigo-200/60 uppercase tracking-widest px-3 mb-1">
-                    VENDOR PRODUCTS
-                  </p>
-                  <div className="space-y-0.5">
-                    {/* New Products Request */}
-                    <button
-                      onClick={() => {
-                        setActiveTab('catalog-vendor-new');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      title="New Products Request"
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
-                        activeTab === 'catalog-vendor-new'
-                          ? 'bg-white/10 text-white'
-                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <FiClock className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                        <span className="truncate">New Products Request</span>
-                      </div>
-                      <span className="text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded-full shrink-0">
-                        36
-                      </span>
-                    </button>
-
-                    {/* Product Update Request */}
-                    <button
-                      onClick={() => {
-                        setActiveTab('catalog-vendor-update');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      title="Product Update Request"
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
-                        activeTab === 'catalog-vendor-update'
-                          ? 'bg-white/10 text-white'
-                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <FiActivity className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                        <span className="truncate">Product Update Request</span>
-                      </div>
-                      <span className="text-[10px] font-bold bg-white/25 text-white px-1.5 py-0.5 rounded-full shrink-0">
-                        0
-                      </span>
-                    </button>
-
-                    {/* Approved Products */}
-                    <button
-                      onClick={() => {
-                        setActiveTab('catalog-vendor-approved');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      title="Approved Products"
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
-                        activeTab === 'catalog-vendor-approved'
-                          ? 'bg-white/10 text-white'
-                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <FiCheckCircle className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                        <span className="truncate">Approved Products</span>
-                      </div>
-                      <span className="text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded-full shrink-0">
-                        172
-                      </span>
-                    </button>
-
-                    {/* Denied Products */}
-                    <button
-                      onClick={() => {
-                        setActiveTab('catalog-vendor-denied');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      title="Denied Products"
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[5px] text-[12px] font-bold transition-all border-none bg-transparent cursor-pointer ${
-                        activeTab === 'catalog-vendor-denied'
-                          ? 'bg-white/10 text-white'
-                          : 'text-indigo-100 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <FiXCircle className="w-4 h-4 text-indigo-200/80 shrink-0" />
-                        <span className="truncate">Denied Products</span>
-                      </div>
-                      <span className="text-[10px] font-bold bg-white/25 text-white px-1.5 py-0.5 rounded-full shrink-0">
-                        0
-                      </span>
-                    </button>
-                  </div>
-                </div>
 
                 {/* ORGANIZATION */}
                 <div>
@@ -1479,15 +1384,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Fixed bottom upgrade plan section */}
           {showSubmenu && (
-            <div className="p-3 mx-3 mb-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-lg flex flex-col items-center gap-1.5 text-center animate-fade-in group">
-              <div className="p-2 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-lg shadow-sm group-hover:scale-110 transition-all duration-300">
-                <FiZap className="w-4 h-4 text-white" />
+            <div className="p-4 mx-3 mb-4 rounded-2xl border border-slate-200/80 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm flex flex-col items-center gap-2.5 text-center animate-fade-in group transition-all">
+              <div className="w-10 h-10 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-xl shadow-xs flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                <FiZap className="w-5 h-5 text-white" />
               </div>
               <div className="space-y-0.5">
-                <span className="text-[9px] font-black text-indigo-200/50 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
                   Current Plan
                 </span>
-                <h4 className="text-[11px] font-extrabold text-white capitalize">
+                <h4 className="text-xs font-black text-slate-800 dark:text-white capitalize tracking-tight">
                   {(stores?.subscription_tier || 'free') === 'free' ? 'Free Trial' : (stores?.subscription_tier || 'free')} Plan
                 </h4>
               </div>
@@ -1496,7 +1401,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   setActiveTab('upgrade-plan');
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full mt-1.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-95 border-none cursor-pointer text-center select-none shadow-xs hover:shadow-md animate-pulse"
+                className="w-full mt-0.5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[11px] font-extrabold uppercase tracking-wider rounded-[8px] transition-all active:scale-[0.98] border-none cursor-pointer text-center select-none shadow-xs hover:shadow-md"
               >
                 Upgrade Store
               </button>

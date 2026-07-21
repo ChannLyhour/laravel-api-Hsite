@@ -159,9 +159,9 @@ export const Special_Product: React.FC<SpecialProductProps> = ({
   storeName = '',
   onNavigate,
 }) => {
-  // Filter out products marked as is_special
+  // Filter out products marked as is_special or is_featured
   const specialProducts = useMemo(() => {
-    return items.filter(item => !!item.is_special);
+    return items.filter(item => !!item.is_special || !!item.is_featured);
   }, [items]);
 
   if (specialProducts.length === 0) {

@@ -39,6 +39,8 @@ export interface ProductsResponse {
   shipping_cost?: string | number;
   multiply_qty_shipping?: boolean;
   social_media_link?: SocialMediaLinks | null;
+  is_special?: boolean;
+  is_featured?: boolean;
 }
 
 export interface SocialMediaLinks {

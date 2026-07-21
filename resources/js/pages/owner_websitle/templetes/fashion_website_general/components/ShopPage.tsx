@@ -245,7 +245,9 @@ export const ListProdoct: React.FC<ListProdoctProps> = ({
 
 
   const displayItems = useMemo(() => {
-    return (items || []).map(item => mapToUIItem(item));
+    return (items || [])
+      .filter(item => item.is_featured !== false && (item.is_featured as any) !== 0 && (item.is_featured as any) !== '0')
+      .map(item => mapToUIItem(item));
   }, [items]);
 
   const filterBadges = useMemo(() => {

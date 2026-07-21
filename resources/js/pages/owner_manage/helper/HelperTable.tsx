@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiSearch, FiDownload, FiSliders, FiPlus, FiChevronLeft, FiChevronRight, FiGrid, FiList, FiTag, FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiSearch, FiDownload, FiSliders, FiPlus, FiChevronLeft, FiChevronRight, FiGrid, FiList, FiTag, FiEye, FiEdit2, FiTrash2, FiStar } from 'react-icons/fi';
 import '@/pages/owner_manage/style/font.css';
 import { useTranslation } from '@/pages/owner_manage/lang/i18n';
 
@@ -477,10 +477,13 @@ interface HelperTableActionsProps {
   onView?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onToggleFeatured?: () => void;
+  isFeatured?: boolean;
   barcodeTitle?: string;
   viewTitle?: string;
   editTitle?: string;
   deleteTitle?: string;
+  featuredTitle?: string;
 }
 
 export const HelperTableActions: React.FC<HelperTableActionsProps> = ({
@@ -488,14 +491,30 @@ export const HelperTableActions: React.FC<HelperTableActionsProps> = ({
   onView,
   onEdit,
   onDelete,
+  onToggleFeatured,
+  isFeatured = false,
   barcodeTitle = 'Barcode',
   viewTitle = 'View',
   editTitle = 'Edit',
   deleteTitle = 'Delete',
+  featuredTitle,
 }) => {
   return (
     <td className="py-3.5 px-5 text-right">
       <div className="flex justify-end items-center gap-1.5">
+        {onToggleFeatured && (
+          <button
+            onClick={onToggleFeatured}
+            className={`p-2 border rounded-[5px] transition-colors cursor-pointer ${
+              isFeatured 
+                ? 'bg-amber-50 border-amber-300 text-amber-500 hover:bg-amber-100 shadow-2xs' 
+                : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-amber-500'
+            }`}
+            title={featuredTitle || (isFeatured ? 'Featured on Homepage' : 'Mark as Featured')}
+          >
+            <FiStar className={`w-3.5 h-3.5 ${isFeatured ? 'fill-amber-500' : ''}`} />
+          </button>
+        )}
         {onBarcode && (
           <button
             onClick={onBarcode}

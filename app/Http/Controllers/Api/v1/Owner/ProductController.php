@@ -46,6 +46,7 @@ class ProductController extends Controller
                 'image_url' => 'nullable',
                 'status' => 'required|in:available,unavailable,active,draft,archived',
                 'is_special' => 'nullable|boolean',
+                'is_featured' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'created_by' => 'nullable|integer|exists:users,id',
                 'social_media_link' => 'nullable|array',
@@ -65,6 +66,7 @@ class ProductController extends Controller
                 'barcode' => 'nullable|string|max:50',
                 'status' => 'required|in:active,draft,archived',
                 'is_special' => 'nullable|boolean',
+                'is_featured' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'created_by' => 'nullable|integer|exists:users,id',
                 'has_options' => 'nullable|boolean',
@@ -175,6 +177,7 @@ class ProductController extends Controller
                     'barcode' => null,
                     'status' => $status,
                     'is_special' => filter_var($request->is_special ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'is_featured' => filter_var($request->is_featured ?? false, FILTER_VALIDATE_BOOLEAN),
                     'created_by' => $userId,
                     'social_media_link' => $request->social_media_link ?? null,
                 ]);
@@ -220,6 +223,7 @@ class ProductController extends Controller
                     'barcode' => $request->barcode,
                     'status' => $request->status,
                     'is_special' => filter_var($request->is_special ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'is_featured' => filter_var($request->is_featured ?? false, FILTER_VALIDATE_BOOLEAN),
                     'created_by' => $userId,
                     'has_options' => $request->has_options ?? false,
                     'product_type' => $request->product_type ?? 'physical',
@@ -534,6 +538,7 @@ class ProductController extends Controller
                 'image_url' => 'nullable',
                 'status' => 'sometimes|required|in:available,unavailable,active,draft,archived',
                 'is_special' => 'nullable|boolean',
+                'is_featured' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'social_media_link' => 'nullable|array',
                 
@@ -553,6 +558,7 @@ class ProductController extends Controller
                 'barcode' => 'nullable|string|max:50',
                 'status' => 'sometimes|required|in:active,draft,archived',
                 'is_special' => 'nullable|boolean',
+                'is_featured' => 'nullable|boolean',
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'has_options' => 'nullable|boolean',
                 'product_type' => 'nullable|string|max:50',
@@ -686,6 +692,7 @@ class ProductController extends Controller
                     'category_id' => $request->has('category_id') ? $request->category_id : $product->category_id,
                     'status' => $status,
                     'is_special' => $request->has('is_special') ? filter_var($request->is_special, FILTER_VALIDATE_BOOLEAN) : $product->is_special,
+                    'is_featured' => $request->has('is_featured') ? filter_var($request->is_featured, FILTER_VALIDATE_BOOLEAN) : $product->is_featured,
                     'social_media_link' => $request->has('social_media_link') ? $request->social_media_link : $product->social_media_link,
                 ]);
 
@@ -755,6 +762,7 @@ class ProductController extends Controller
                     'barcode' => $request->has('barcode') ? $request->barcode : $product->barcode,
                     'status' => $request->status ?? $product->status,
                     'is_special' => $request->has('is_special') ? filter_var($request->is_special, FILTER_VALIDATE_BOOLEAN) : $product->is_special,
+                    'is_featured' => $request->has('is_featured') ? filter_var($request->is_featured, FILTER_VALIDATE_BOOLEAN) : $product->is_featured,
                     'category_id' => $request->has('category_id') ? $request->category_id : $product->category_id,
                     'has_options' => $request->has('has_options') ? $request->has_options : $product->has_options,
                     'product_type' => $request->product_type ?? $product->product_type,

@@ -361,39 +361,40 @@ export const StockFifoBatches: React.FC<StockFifoBatchesProps> = ({
 
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 w-full text-left">
-      {/* Intro info card on FIFO */}
-      <div className="bg-gradient-to-br from-indigo-500/5 to-purple-500/3 border border-indigo-500/10 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_-4px_rgba(99,102,241,0.02)]">
-        <h4 className="text-xs sm:text-sm font-extrabold text-indigo-800 flex items-center gap-2">
-          <FiDatabase className="w-5 h-5 text-indigo-500" />
-          <span>ការគ្រប់គ្រងស្តុកតាមបាច់ FIFO (FIFO Stock Batch Management)</span>
-        </h4>
-        <p className="text-slate-500 text-3xs font-semibold leading-relaxed">
-          វិធីសាស្ត្រ **FIFO (First In, First Out)** ធានាថារាល់ទំនិញដែលបាននាំចូលមុន នឹងត្រូវលក់ចេញមុនគេបង្អស់។ នេះអនុញ្ញាតឱ្យម្ចាស់អាជីវកម្មតាមដានតម្លៃដើមនាំចូលដែលប្រែប្រួល និងគណនាប្រាក់ចំណេញអាជីវកម្មបានច្បាស់លាស់ល្អឥតខ្ចោះ។
-        </p>
-      </div>
+      {/* Tabs / Filter states - System & Website Settings Style */}
+      <div className="flex border-b border-slate-200 overflow-x-auto pb-px gap-6 no-scrollbar select-none">
+        <button
+          onClick={() => { setStatusFilter('all'); setCurrentPage(1); }}
+          className={`flex items-center gap-2 pb-3.5 text-xs font-black uppercase tracking-wider cursor-pointer border-none bg-transparent whitespace-nowrap transition-all duration-200 outline-none ${
+            statusFilter === 'all'
+              ? 'text-[#0f53a1] border-b-2 border-[#0f53a1]'
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <span>All Batches</span>
+        </button>
 
-      {/* Tabs / Filter states */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-lg self-start">
-          <button
-            onClick={() => { setStatusFilter('all'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 text-3xs font-bold rounded cursor-pointer border-none transition-all ${statusFilter === 'all' ? 'bg-white text-slate-800 shadow-3xs' : 'bg-transparent text-slate-450 hover:text-slate-700'}`}
-          >
-            All Batches
-          </button>
-          <button
-            onClick={() => { setStatusFilter('active'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 text-3xs font-bold rounded cursor-pointer border-none transition-all ${statusFilter === 'active' ? 'bg-white text-slate-800 shadow-3xs' : 'bg-transparent text-slate-450 hover:text-slate-700'}`}
-          >
-            Active Batches
-          </button>
-          <button
-            onClick={() => { setStatusFilter('consumed'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 text-3xs font-bold rounded cursor-pointer border-none transition-all ${statusFilter === 'consumed' ? 'bg-white text-slate-800 shadow-3xs' : 'bg-transparent text-slate-450 hover:text-slate-700'}`}
-          >
-            Consumed Batches
-          </button>
-        </div>
+        <button
+          onClick={() => { setStatusFilter('active'); setCurrentPage(1); }}
+          className={`flex items-center gap-2 pb-3.5 text-xs font-black uppercase tracking-wider cursor-pointer border-none bg-transparent whitespace-nowrap transition-all duration-200 outline-none ${
+            statusFilter === 'active'
+              ? 'text-[#0f53a1] border-b-2 border-[#0f53a1]'
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <span>Active Batches</span>
+        </button>
+
+        <button
+          onClick={() => { setStatusFilter('consumed'); setCurrentPage(1); }}
+          className={`flex items-center gap-2 pb-3.5 text-xs font-black uppercase tracking-wider cursor-pointer border-none bg-transparent whitespace-nowrap transition-all duration-200 outline-none ${
+            statusFilter === 'consumed'
+              ? 'text-[#0f53a1] border-b-2 border-[#0f53a1]'
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <span>Consumed Batches</span>
+        </button>
       </div>
 
       <HelperTable<BatchRow>
@@ -443,7 +444,7 @@ export const StockFifoBatches: React.FC<StockFifoBatchesProps> = ({
 
             <div className="mb-6">
               <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center space-x-2">
-                <FiPlus className="text-orange-500 w-5 h-5 shrink-0" />
+                <FiPlus className="text-[#0f53a1] w-5 h-5 shrink-0" />
                 <span>នាំចូលបាច់ទំនិញថ្មី (Import New Batch)</span>
               </h3>
               <p className="text-slate-500 text-xs font-semibold mt-1">
@@ -459,7 +460,7 @@ export const StockFifoBatches: React.FC<StockFifoBatchesProps> = ({
                 <select
                   value={selectedVariantId || ''}
                   onChange={(e) => setSelectedVariantId(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800 bg-white"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0f53a1]/20 focus:border-[#0f53a1] font-medium text-slate-800 bg-white"
                   required
                 >
                   {allVariants.map(v => (
@@ -480,7 +481,7 @@ export const StockFifoBatches: React.FC<StockFifoBatchesProps> = ({
                     min="1"
                     value={importQty}
                     onChange={(e) => setImportQty(Math.max(1, parseInt(e.target.value) || 0))}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0f53a1]/20 focus:border-[#0f53a1] font-medium text-slate-800"
                     required
                   />
                 </div>
@@ -495,13 +496,13 @@ export const StockFifoBatches: React.FC<StockFifoBatchesProps> = ({
                     min="0"
                     value={importCost}
                     onChange={(e) => setImportCost(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0f53a1]/20 focus:border-[#0f53a1] font-medium text-slate-800"
                     required
                   />
                 </div>
               </div>
 
-              <div className="bg-orange-50/50 border border-orange-100 rounded-[5px] p-3 text-[11px] text-orange-700 leading-relaxed font-semibold">
+              <div className="bg-[#0f53a1]/5 border border-[#0f53a1]/15 rounded-[5px] p-3 text-[11px] text-[#0f53a1] leading-relaxed font-semibold">
                 ⚠️ **ចំណាំ៖** ការនាំចូលនេះនឹងបន្ថែមបរិមាណស្តុក `{importQty}` គ្រឿងទៅលើស្តុកសរុបបច្ចុប្បន្នរបស់ Variant និងបង្កើតបាច់ទំនិញថ្មីដែលមានតម្លៃដើម `{importCost.toFixed(2)}$` សម្រាប់ប្រើប្រាស់កាត់ស្តុក FIFO។
               </div>
 
@@ -555,7 +556,7 @@ export const StockFifoBatches: React.FC<StockFifoBatchesProps> = ({
 
             <div className="mb-6">
               <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center space-x-2">
-                <FiEdit className="text-orange-500 w-5 h-5 shrink-0" />
+                <FiEdit className="text-[#0f53a1] w-5 h-5 shrink-0" />
                 <span>កែប្រែបាច់ទំនិញ (Edit Stock Batch)</span>
               </h3>
               <p className="text-slate-500 text-xs font-semibold mt-1">
@@ -574,7 +575,7 @@ export const StockFifoBatches: React.FC<StockFifoBatchesProps> = ({
                     min="0"
                     value={editInitialQty}
                     onChange={(e) => setEditInitialQty(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0f53a1]/20 focus:border-[#0f53a1] font-medium text-slate-800"
                     required
                   />
                 </div>
@@ -589,7 +590,7 @@ export const StockFifoBatches: React.FC<StockFifoBatchesProps> = ({
                     max={editInitialQty}
                     value={editRemainingQty}
                     onChange={(e) => setEditRemainingQty(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0f53a1]/20 focus:border-[#0f53a1] font-medium text-slate-800"
                     required
                   />
                 </div>
@@ -605,12 +606,12 @@ export const StockFifoBatches: React.FC<StockFifoBatchesProps> = ({
                   min="0"
                   value={editCost}
                   onChange={(e) => setEditCost(Math.max(0, parseFloat(e.target.value) || 0))}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium text-slate-800"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0f53a1]/20 focus:border-[#0f53a1] font-medium text-slate-800"
                   required
                 />
               </div>
 
-              <div className="bg-orange-50/50 border border-orange-100 rounded-[5px] p-3 text-[11px] text-orange-700 leading-relaxed font-semibold">
+              <div className="bg-[#0f53a1]/5 border border-[#0f53a1]/15 rounded-[5px] p-3 text-[11px] text-[#0f53a1] leading-relaxed font-semibold">
                 ⚠️ **ចំណាំ៖** ការផ្លាស់ប្តូរចំនួននៅសល់ (Remaining Qty) នឹងកែប្រែចំនួនស្តុកសរុបរបស់ Variant នេះនៅលើប្រព័ន្ធដោយស្វ័យប្រវត្ត។
               </div>
 

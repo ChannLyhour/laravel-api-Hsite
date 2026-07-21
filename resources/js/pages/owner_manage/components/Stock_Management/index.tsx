@@ -5,9 +5,9 @@ import type { MenuItem, ProductVariant } from '@/api/owner/categories';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { StockOverview } from './StockOverview';
 import { StockItems } from './StockItems';
-import { StockLowAlerts } from './StockLowAlerts';
 import { StockFifoBatches } from './StockFifoBatches';
 import { HelperFilter, type FilterSection } from '../../helper/HelperFilter';
+import { useTranslation } from '@/pages/owner_manage/lang/i18n';
 import '@/pages/owner_manage/style/font.css';
 
 interface StockManagementProps {
@@ -21,6 +21,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   ownerId,
   storeId,
 }) => {
+  const { t } = useTranslation();
   const [view, setView] = useState<'overview' | 'items' | 'low' | 'movements' | 'fifo'>(defaultView);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,11 +160,11 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center space-x-2">
-            <FiBox className="text-orange-500 w-6 h-6 shrink-0" />
-            <span>គ្រប់គ្រងស្តុក (Stock Management)</span>
+            <FiBox className="text-[#0f53a1] w-6 h-6 shrink-0" />
+            <span>{t('stock.title')}</span>
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm mt-1">
-            តាមដាន កែប្រែបរិមាណ និងវិភាគស្ថិតិស្តុកទំនិញទាំងអស់របស់ហាងអ្នកឱ្យមានប្រសិទ្ធភាព។
+            {t('stock.subtitle')}
           </p>
         </div>
       </div>
@@ -177,7 +178,6 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             const sidebarTabs: Record<string, string> = {
               overview: 'stock-overview',
               items: 'stock-items',
-              low: 'stock-low',
               movements: 'stock-movements',
               fifo: 'stock-fifo'
             };
@@ -203,18 +203,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         />
       )}
 
-      {view === 'low' && (
-        <StockLowAlerts
-          items={items}
-          onUpdateStock={handleUpdateStock}
-          loading={loading}
-        />
-      )}
-
       {view === 'movements' && (
-        <div className="bg-white border rounded-[10px] p-8 shadow-[0_2px_8px_rgba(0,0,0,0.02)] text-center space-y-4 max-w-lg mx-auto mt-6">
+        <div className="bg-white border border-slate-100 rounded-[10px] p-8 shadow-sm text-center space-y-4 max-w-lg mx-auto mt-6">
           <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mx-auto">
-            <FiActivity className="w-8 h-8" />
+            <FiActivity className="w-8 h-8 text-[#0f53a1]" />
           </div>
           <div className="space-y-1.5">
             <h3 className="text-sm sm:text-base font-extrabold text-slate-800">Stock Movements History</h3>
@@ -223,7 +215,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             </p>
           </div>
           <div className="pt-2">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-100">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#0f53a1]/10 text-[#0f53a1] border border-[#0f53a1]/20">
               Coming Soon
             </span>
           </div>

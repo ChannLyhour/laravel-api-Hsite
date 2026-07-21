@@ -177,7 +177,7 @@ export const StockItems: React.FC<StockItemsProps> = ({
                 title="View FIFO Batches"
               >
                 {isExpanded ? (
-                  <FiChevronDown className="w-4 h-4 text-orange-500" />
+                  <FiChevronDown className="w-4 h-4 text-[#0f53a1]" />
                 ) : (
                   <FiChevronRight className="w-4 h-4" />
                 )}
@@ -219,7 +219,7 @@ export const StockItems: React.FC<StockItemsProps> = ({
                 min="0"
                 value={editQty}
                 onChange={(e) => setEditQty(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-20 px-2 py-1 text-center border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 rounded-md outline-none text-xs font-bold text-slate-800 transition-all"
+                className="w-20 px-2 py-1 text-center border border-slate-200 focus:border-[#0f53a1] focus:ring-2 focus:ring-[#0f53a1]/10 rounded-md outline-none text-xs font-bold text-slate-800 transition-all"
               />
             ) : (
               <span className={`px-2.5 py-0.5 rounded-[4px] text-xs font-black ${isOutOfStock
@@ -241,7 +241,7 @@ export const StockItems: React.FC<StockItemsProps> = ({
                 min="0"
                 value={editThreshold}
                 onChange={(e) => setEditThreshold(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-20 px-2 py-1 text-center border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 rounded-md outline-none text-xs font-bold text-slate-800 transition-all"
+                className="w-20 px-2 py-1 text-center border border-slate-200 focus:border-[#0f53a1] focus:ring-2 focus:ring-[#0f53a1]/10 rounded-md outline-none text-xs font-bold text-slate-800 transition-all"
               />
             ) : (
               <span className="text-[12px] font-bold text-slate-400">{threshold}</span>
@@ -284,7 +284,7 @@ export const StockItems: React.FC<StockItemsProps> = ({
             ) : (
               <button
                 onClick={() => handleStartEdit(row)}
-                className="p-2 border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-lg transition-all cursor-pointer flex items-center justify-center ml-auto hover:scale-105 active:scale-95 duration-150 bg-white shadow-3xs"
+                className="p-2 border border-[#0f53a1]/20 text-[#0f53a1] hover:bg-[#0f53a1]/5 rounded-lg transition-all cursor-pointer flex items-center justify-center ml-auto hover:scale-105 active:scale-95 duration-150 bg-white shadow-3xs"
                 title="Quick Edit"
               >
                 <FiEdit2 className="w-3.5 h-3.5" />
@@ -294,12 +294,12 @@ export const StockItems: React.FC<StockItemsProps> = ({
         </tr>
 
         {isExpanded && (
-          <tr className="bg-slate-50/40 border-l-2 border-orange-500">
+          <tr className="bg-slate-50/40 border-l-2 border-[#0f53a1]">
             <td colSpan={7} className="py-3 px-6 text-left">
               <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-3xs space-y-3">
                 <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                   <h5 className="text-[11px] font-black text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
-                    <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-[#0f53a1] animate-pulse"></span>
                     <span>បាច់ទំនិញលម្អិត FIFO (FIFO Stock Batches)</span>
                   </h5>
                   <span className="text-[9px] text-slate-400 font-bold bg-slate-100 px-2 py-0.5 rounded-[4px]">

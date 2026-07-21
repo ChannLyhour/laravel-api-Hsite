@@ -348,18 +348,20 @@ export const ProductBagdeGrid: React.FC<ProductBagdeGridProps> = ({
   toggleFavorite,
   gridCols,
 }) => {
-  // Filter out inactive products
+  // Filter out inactive products AND products hidden from website homepage (is_featured === false)
   const activeItems = useMemo(() => {
     return items.filter((item) => {
       if (!item) return false;
       const status = typeof item.status === 'string' ? item.status.toLowerCase() : item.status;
-      return (
+      const isActive = (
         status !== false &&
         status !== 'false' &&
         status !== 'inactive' &&
         status !== 'archived' &&
         status !== 'draft'
       );
+      const isHomepageVisible = item.is_featured !== false && (item.is_featured as any) !== 0 && (item.is_featured as any) !== '0';
+      return isActive && isHomepageVisible;
     });
   }, [items]);
 
@@ -367,11 +369,19 @@ export const ProductBagdeGrid: React.FC<ProductBagdeGridProps> = ({
     AOS.refreshHard();
   }, [activeItems]);
 
-  // Group products dynamically by their badges
+  // Group products dynamically by their badges & featured status
   const groupedItems = useMemo(() => {
     const groups: Record<string, any[]> = {};
 
     activeItems.forEach((item) => {
+      // Group featured products for homepage showcase
+      if (item.is_featured) {
+        if (!groups['Featured Products']) {
+          groups['Featured Products'] = [];
+        }
+        groups['Featured Products'].push(item);
+      }
+
       let badgeName = '';
       if (item.badge && item.badge.name) {
         // Only group by badge if the badge itself is active

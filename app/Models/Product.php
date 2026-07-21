@@ -16,6 +16,7 @@ class Product extends Model
         'barcode',
         'status',
         'is_special',
+        'is_featured',
         'created_by',
         'has_options',
         'product_type',
@@ -34,6 +35,7 @@ class Product extends Model
     protected $casts = [
         'has_options' => 'boolean',
         'is_special' => 'boolean',
+        'is_featured' => 'boolean',
         'multiply_qty_shipping' => 'boolean',
         'min_order_qty' => 'integer',
         'brand_id' => 'integer',

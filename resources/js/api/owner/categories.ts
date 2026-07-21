@@ -113,6 +113,7 @@ export interface MenuItem {
   compare_at_price?: string | null;
   addons?: ProductAddon[];
   is_special?: boolean;
+  is_featured?: boolean;
   category?: Category | null;
   social_media_link?: SocialMediaLinks | null;
 }
@@ -151,6 +152,7 @@ export interface Root2 {
   code?: string | null;
   addons?: ProductAddon[];
   is_special?: boolean;
+  is_featured?: boolean;
   category?: Category | null;
   social_media_link?: SocialMediaLinks | null;
   min_order_qty?: number;
@@ -367,6 +369,7 @@ export interface ProductsResponse {
   addons?: ProductAddon[];
   social_media_link?: SocialMediaLinks | null;
   is_special?: boolean;
+  is_featured?: boolean;
   category?: any;
 }
 
@@ -453,6 +456,7 @@ function mapProducts(item: ProductsResponse): MenuItem {
     multiply_qty_shipping: !!item.multiply_qty_shipping,
     addons: item.addons || [],
     is_special: !!item.is_special,
+    is_featured: !!item.is_featured,
     category: item.category,
     social_media_link: (() => {
       if (!item.social_media_link) return null;
@@ -512,6 +516,7 @@ export const menuItemsService = {
     multiply_qty_shipping?: boolean;
     addons?: ProductAddon[];
     is_special?: boolean;
+    is_featured?: boolean;
     social_media_link?: SocialMediaLinks | null;
   }): Promise<MenuItem> {
     const fd = new FormData();
@@ -566,6 +571,9 @@ export const menuItemsService = {
     }
     if (data.is_special !== undefined) {
       fd.append('is_special', data.is_special ? '1' : '0');
+    }
+    if (data.is_featured !== undefined) {
+      fd.append('is_featured', data.is_featured ? '1' : '0');
     }
 
     const hasStructured = data.translations && data.translations.length > 0 && data.variants && data.variants.length > 0;
@@ -668,6 +676,7 @@ export const menuItemsService = {
     multiply_qty_shipping?: boolean;
     addons?: ProductAddon[];
     is_special?: boolean;
+    is_featured?: boolean;
     social_media_link?: SocialMediaLinks | null;
   }): Promise<MenuItem> {
     const fd = new FormData();
@@ -722,6 +731,9 @@ export const menuItemsService = {
     }
     if (data.is_special !== undefined) {
       fd.append('is_special', data.is_special ? '1' : '0');
+    }
+    if (data.is_featured !== undefined) {
+      fd.append('is_featured', data.is_featured ? '1' : '0');
     }
 
     const hasStructured = data.translations && data.translations.length > 0 && data.variants && data.variants.length > 0;

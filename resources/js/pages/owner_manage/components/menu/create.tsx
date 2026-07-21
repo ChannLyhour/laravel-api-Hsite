@@ -142,6 +142,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
 
   const [itemStatus, setItemStatus] = useState<string>(() => getDraftField('itemStatus', 'active'));
   const [isSpecial, setIsSpecial] = useState<boolean>(() => getDraftField('isSpecial', false));
+  const [isFeatured, setIsFeatured] = useState<boolean>(() => getDraftField('isFeatured', true));
   const [submitting, setSubmitting] = useState(false);
 
   // Product Attributes & Options
@@ -449,6 +450,7 @@ export const CreatePage: React.FC<CreatePageProps> = ({
         category_id: Number(finalCategoryId),
         created_by: ownerId,
         is_special: isSpecial,
+        is_featured: isFeatured,
 
         // Structured options
         sku: productSku,
@@ -1585,6 +1587,25 @@ export const CreatePage: React.FC<CreatePageProps> = ({
                 <label htmlFor="isSpecial" className="text-xs sm:text-sm font-bold text-slate-700 cursor-pointer select-none">
                   {t('menu.special_product')}
                 </label>
+              </div>
+
+              {/* Show Product on Homepage Checkbox */}
+              <div className="flex items-center gap-2.5 pt-2 border-t border-slate-100">
+                <input
+                  type="checkbox"
+                  id="isFeatured"
+                  checked={isFeatured}
+                  onChange={(e) => setIsFeatured(e.target.checked)}
+                  className="w-4.5 h-4.5 text-[#1455ac] border-slate-300 rounded focus:ring-[#1455ac] cursor-pointer"
+                />
+                <div>
+                  <label htmlFor="isFeatured" className="text-xs sm:text-sm font-bold text-slate-700 cursor-pointer select-none block">
+                    Show Product on Website Homepage
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-medium block">
+                    Uncheck to hide this product from your website homepage.
+                  </span>
+                </div>
               </div>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { FiBox, FiAlertTriangle, FiLayers, FiEdit2 } from 'react-icons/fi';
 import type { MenuItem, ProductVariant } from '@/api/owner/categories';
 import { resolveImageUrl } from '@/api/imageUtils';
 import { HelperTable, type HelperTableColumn } from '../../helper/HelperTable';
+import { useTranslation } from '@/pages/owner_manage/lang/i18n';
 import '@/pages/owner_manage/style/font.css';
 
 interface StockOverviewProps {
@@ -16,6 +17,7 @@ export const StockOverview: React.FC<StockOverviewProps> = ({
   onQuickRestock,
   onNavigateToTab,
 }) => {
+  const { t } = useTranslation();
   // Aggregate stats
   const totalProducts = items.length;
   
@@ -135,59 +137,59 @@ export const StockOverview: React.FC<StockOverviewProps> = ({
 
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 w-full text-left">
-      {/* Overview Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Overview Stats Cards - Business Analytics Style */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Products */}
-        <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] flex items-center space-x-4.5 hover:-translate-y-1 hover:shadow-md transition-all duration-300 group">
-          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/15 flex items-center justify-center text-blue-600 shrink-0 shadow-3xs group-hover:scale-110 duration-300 transition-transform">
-            <FiLayers className="w-5.5 h-5.5" />
-          </div>
+        <div className="rounded-[12px] border border-blue-500/20 bg-blue-500/10 dark:bg-blue-500/5 p-5 shadow-2xs hover:shadow-xs transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Products</p>
-            <h3 className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{totalProducts}</h3>
-            <p className="text-slate-450 text-4xs font-bold mt-0.5">{totalVariants} unique variants</p>
+            <p className="text-[13px] sm:text-[14px] font-bold text-slate-800 mb-1.5">{t('stock.total_products')}</p>
+            <p className="text-[24px] sm:text-[26px] font-black text-slate-900 tracking-tight leading-none">{totalProducts}</p>
+            <p className="text-[11px] font-semibold text-slate-500 mt-1.5">{totalVariants} unique variants</p>
+          </div>
+          <div className="w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0 text-blue-600 bg-white/80 dark:bg-slate-900 shadow-2xs">
+            <FiLayers className="w-5 h-5" />
           </div>
         </div>
 
-        {/* Total Units */}
-        <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] flex items-center space-x-4.5 hover:-translate-y-1 hover:shadow-md transition-all duration-300 group">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-600 shrink-0 shadow-3xs group-hover:scale-110 duration-300 transition-transform">
-            <FiBox className="w-5.5 h-5.5" />
-          </div>
+        {/* Total Stock Qty */}
+        <div className="rounded-[12px] border border-emerald-500/20 bg-emerald-500/10 dark:bg-emerald-500/5 p-5 shadow-2xs hover:shadow-xs transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Stock Qty</p>
-            <h3 className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{totalStockUnits}</h3>
-            <p className="text-slate-450 text-4xs font-bold mt-0.5">Physical items in hand</p>
+            <p className="text-[13px] sm:text-[14px] font-bold text-slate-800 mb-1.5">{t('stock.total_stock_qty')}</p>
+            <p className="text-[24px] sm:text-[26px] font-black text-slate-900 tracking-tight leading-none">{totalStockUnits}</p>
+            <p className="text-[11px] font-semibold text-slate-500 mt-1.5">{t('stock.physical_items_in_hand')}</p>
+          </div>
+          <div className="w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0 text-emerald-600 bg-white/80 dark:bg-slate-900 shadow-2xs">
+            <FiBox className="w-5 h-5" />
           </div>
         </div>
 
         {/* Low Stock Items */}
         <div 
-          onClick={() => onNavigateToTab('low')}
-          className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] flex items-center space-x-4.5 cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all duration-300 group hover:border-amber-300"
+          onClick={() => onNavigateToTab('items')}
+          className="rounded-[12px] border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/5 p-5 shadow-2xs hover:shadow-xs transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-between cursor-pointer group"
         >
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/15 flex items-center justify-center text-amber-600 shrink-0 shadow-3xs group-hover:scale-110 duration-300 transition-transform">
-            <FiAlertTriangle className="w-5.5 h-5.5" />
-          </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Low Stock Items</p>
-            <h3 className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{lowStockCount}</h3>
-            <p className="text-amber-600 text-4xs font-bold mt-0.5 group-hover:underline flex items-center gap-0.5">Requires Attention &rarr;</p>
+            <p className="text-[13px] sm:text-[14px] font-bold text-slate-800 mb-1.5">{t('stock.low_stock_items')}</p>
+            <p className="text-[24px] sm:text-[26px] font-black text-slate-900 tracking-tight leading-none">{lowStockCount}</p>
+            <p className="text-[11px] font-semibold text-amber-600 mt-1.5 group-hover:underline flex items-center gap-0.5">{t('stock.requires_attention')} &rarr;</p>
+          </div>
+          <div className="w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0 text-amber-600 bg-white/80 dark:bg-slate-900 shadow-2xs">
+            <FiAlertTriangle className="w-5 h-5" />
           </div>
         </div>
 
         {/* Out of Stock */}
         <div 
-          onClick={() => onNavigateToTab('low')}
-          className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] flex items-center space-x-4.5 cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all duration-300 group hover:border-rose-350"
+          onClick={() => onNavigateToTab('items')}
+          className="rounded-[12px] border border-rose-500/20 bg-rose-500/10 dark:bg-rose-500/5 p-5 shadow-2xs hover:shadow-xs transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-between cursor-pointer group"
         >
-          <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/15 flex items-center justify-center text-rose-600 shrink-0 shadow-3xs group-hover:scale-110 duration-300 transition-transform">
-            <FiAlertTriangle className="w-5.5 h-5.5" />
-          </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Out of Stock</p>
-            <h3 className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{outOfStockCount}</h3>
-            <p className="text-rose-600 text-4xs font-bold mt-0.5 group-hover:underline flex items-center gap-0.5">Needs Reorder &rarr;</p>
+            <p className="text-[13px] sm:text-[14px] font-bold text-slate-800 mb-1.5">{t('stock.out_of_stock')}</p>
+            <p className="text-[24px] sm:text-[26px] font-black text-slate-900 tracking-tight leading-none">{outOfStockCount}</p>
+            <p className="text-[11px] font-semibold text-rose-600 mt-1.5 group-hover:underline flex items-center gap-0.5">{t('stock.needs_reorder')} &rarr;</p>
+          </div>
+          <div className="w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0 text-rose-600 bg-white/80 dark:bg-slate-900 shadow-2xs">
+            <FiAlertTriangle className="w-5 h-5" />
           </div>
         </div>
       </div>
@@ -195,11 +197,11 @@ export const StockOverview: React.FC<StockOverviewProps> = ({
       <HelperTable<typeof lowStockItems[0]>
         columns={columns}
         data={currentRows}
-        title="Critical Alerts & Quick Restock"
+        title={t('stock.critical_alerts_title')}
         count={totalItems}
         addButton={{
-          label: 'View All Alerts',
-          onClick: () => onNavigateToTab('low')
+          label: t('stock.view_all_alerts'),
+          onClick: () => onNavigateToTab('items')
         }}
         renderRow={renderRow}
         currentPage={currentPage}
@@ -211,8 +213,8 @@ export const StockOverview: React.FC<StockOverviewProps> = ({
           setItemsPerPage(size);
           setCurrentPage(1);
         }}
-        emptyStateText="All stock levels are optimal!"
-        emptyStateSubtext="No items are currently below low stock thresholds."
+        emptyStateText={t('stock.perfect_status')}
+        emptyStateSubtext={t('stock.perfect_status_sub')}
       />
     </div>
   );

@@ -88,23 +88,10 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
 
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 w-full text-left">
-      {/* Overview/Warning Alert Header */}
-      <div className="bg-rose-500/5 border border-rose-500/10 rounded-2xl p-5 flex items-start space-x-4 shadow-[0_4px_20px_-4px_rgba(244,63,94,0.02)]">
-        <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600 shrink-0 shadow-3xs">
-          <FiAlertTriangle className="w-5 h-5 text-rose-500" />
-        </div>
-        <div>
-          <h4 className="text-xs sm:text-sm font-extrabold text-rose-800">Critical Stock Warning!</h4>
-          <p className="text-slate-500 text-3xs font-semibold leading-relaxed mt-1">
-            The items listed below have fallen below safety threshold limits or are completely out of stock. Customers will not be able to purchase out-of-stock items, which could cause a decrease in store revenue. Please update stock levels immediately.
-          </p>
-        </div>
-      </div>
-
       {/* Grid listing */}
       {loading ? (
         <div className="py-20 text-center flex flex-col items-center justify-center space-y-3 bg-white border rounded-2xl">
-          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-[#0f53a1] border-t-transparent rounded-full animate-spin" />
           <p className="text-xs font-bold text-slate-400">Loading critical alerts...</p>
         </div>
       ) : lowStockRows.length === 0 ? (
@@ -197,7 +184,7 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
                         min="0"
                         value={editQty}
                         onChange={(e) => setEditQty(Math.max(0, parseInt(e.target.value) || 0))}
-                        className="w-24 px-2 py-1.5 text-center border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 rounded-md outline-none text-xs font-bold text-slate-800 transition-all"
+                        className="w-24 px-2 py-1.5 text-center border border-slate-200 focus:border-[#0f53a1] focus:ring-2 focus:ring-[#0f53a1]/10 rounded-md outline-none text-xs font-bold text-slate-800 transition-all"
                         placeholder="Quantity"
                       />
                       <button
@@ -231,7 +218,7 @@ export const StockLowAlerts: React.FC<StockLowAlertsProps> = ({
                       <button
                         disabled={isSaving}
                         onClick={() => handleQuickAdd(row.variant, suggestedReorder)}
-                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 text-white rounded-lg text-4xs font-black shadow-sm shadow-orange-500/10 cursor-pointer border-none text-center flex-1 sm:flex-initial"
+                        className="px-4 py-2 bg-[#0f53a1] hover:bg-[#0b4789] hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 text-white rounded-lg text-4xs font-black shadow-sm cursor-pointer border-none text-center flex-1 sm:flex-initial"
                       >
                         {isSaving ? 'Processing...' : `Add Suggested (+${suggestedReorder})`}
                       </button>

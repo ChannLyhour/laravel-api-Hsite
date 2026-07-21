@@ -79,9 +79,9 @@ export const StockAbcAnalysis: React.FC<StockAbcAnalysisProps> = ({
   return (
     <div className="space-y-6 font-kuntomruy animate-fade-in text-slate-700 w-full text-left">
       {/* Informational intro card in Khmer */}
-      <div className="bg-gradient-to-br from-orange-500/5 to-amber-500/3 border border-orange-500/10 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_-4px_rgba(245,158,11,0.02)]">
-        <h4 className="text-xs sm:text-sm font-extrabold text-orange-800 flex items-center gap-2">
-          <FiTrendingUp className="w-5 h-5 text-orange-500" />
+      <div className="bg-gradient-to-br from-[#0f53a1]/5 to-indigo-500/3 border border-[#0f53a1]/10 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_-4px_rgba(15,83,161,0.02)]">
+        <h4 className="text-xs sm:text-sm font-extrabold text-[#0f53a1] flex items-center gap-2">
+          <FiTrendingUp className="w-5 h-5 text-[#0f53a1]" />
           <span>ការវិភាគស្តុក ABC (ABC Inventory Analysis)</span>
         </h4>
         <p className="text-slate-500 text-3xs font-semibold leading-relaxed">
@@ -111,7 +111,7 @@ export const StockAbcAnalysis: React.FC<StockAbcAnalysisProps> = ({
 
       {loading ? (
         <div className="py-20 text-center flex flex-col items-center justify-center space-y-3 bg-white border rounded-2xl">
-          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-[#0f53a1] border-t-transparent rounded-full animate-spin" />
           <p className="text-xs font-bold text-slate-400">Analyzing stock values...</p>
         </div>
       ) : variants.length === 0 ? (
