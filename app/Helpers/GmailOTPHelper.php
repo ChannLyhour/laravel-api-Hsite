@@ -72,50 +72,15 @@ class GmailOTPHelper
             $cleanMailPassword = $mailPassword ? str_replace(' ', '', $mailPassword) : '';
             $cleanGmailPassword = $gmailPassword ? str_replace(' ', '', $gmailPassword) : '';
 
-            $isResendApi = (strtolower(trim((string) $mailMailer)) === 'resend') || str_starts_with($cleanMailPassword, 're_') || !empty(env('RESEND_KEY'));
-            $isStoreSendmail = !$isResendApi && (strtolower(trim((string) $mailMailer)) === 'sendmail');
-            $isStoreSmtpConfigured = !$isResendApi && !$isStoreSendmail && $mailHost && $mailUsername && !empty($cleanMailPassword);
-            $isStoreGmailConfigured = !$isResendApi && ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') && $gmailEmail && !empty($cleanGmailPassword);
+            $isStoreSendmail = (strtolower(trim((string) $mailMailer)) === 'sendmail');
+            $isStoreSmtpConfigured = !$isStoreSendmail && $mailHost && $mailUsername && !empty($cleanMailPassword);
+            $isStoreGmailConfigured = ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') && $gmailEmail && !empty($cleanGmailPassword);
 
             // Final parameters for sending email
             $finalFromEmail = null;
             $finalFromName = $storeName;
 
-            if ($isResendApi) {
-                Log::info("GmailOTPHelper::sendOTP - Sending via Resend HTTPS API (Port 443) for owner user ID {$ownerUserId}.");
-                $apiKey = (str_starts_with($cleanMailPassword, 're_') ? $cleanMailPassword : null) ?: env('RESEND_KEY');
-                $finalFromEmail = $mailFromAddress ?: 'onboarding@resend.dev';
-                $finalFromName = $mailFromName ?: $storeName;
-
-                $subject = "🔐 Order Verification Code - #{$order->order_no} | {$finalFromName}";
-                $htmlContent = self::buildEmailTemplate($order, $otpCode, $settings, $finalFromName, '');
-
-                $ch = curl_init('https://api.resend.com/emails');
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Authorization: Bearer ' . $apiKey,
-                    'Content-Type: application/json',
-                ]);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-                    'from' => "{$finalFromName} <{$finalFromEmail}>",
-                    'to' => [$recipientEmail],
-                    'subject' => $subject,
-                    'html' => $htmlContent,
-                ]));
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                $res = curl_exec($ch);
-                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                curl_close($ch);
-
-                if ($httpCode >= 200 && $httpCode < 300) {
-                    Log::info("📧 [RESEND HTTPS OTP SENT] Order #{$order->id} (" . ($order->order_no ?? $order->id) . ") | OTP: {$otpCode} | Recipient: {$recipientEmail} | Response: {$res}");
-                    return;
-                } else {
-                    Log::error("❌ [RESEND HTTPS OTP FAILED] Order #{$order->id}: HTTP {$httpCode} - {$res}");
-                }
-            } elseif ($isStoreSendmail) {
+            if ($isStoreSendmail) {
                 Log::info("GmailOTPHelper::sendOTP - Configuring dynamic Sendmail/Postfix for owner user ID {$ownerUserId}.");
                 config([
                     'mail.default' => 'sendmail',
