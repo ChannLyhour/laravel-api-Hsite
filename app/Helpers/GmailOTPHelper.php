@@ -72,9 +72,9 @@ class GmailOTPHelper
             $cleanMailPassword = $mailPassword ? str_replace(' ', '', $mailPassword) : '';
             $cleanGmailPassword = $gmailPassword ? str_replace(' ', '', $gmailPassword) : '';
 
-            $isStoreSendmail = (strtolower(trim((string) $mailMailer)) === 'sendmail');
+            $isStoreSendmail = (strtolower(trim((string) $mailMailer)) === 'sendmail') || env('MAIL_MAILER') === 'sendmail';
             $isStoreSmtpConfigured = !$isStoreSendmail && $mailHost && $mailUsername && !empty($cleanMailPassword);
-            $isStoreGmailConfigured = ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') && $gmailEmail && !empty($cleanGmailPassword);
+            $isStoreGmailConfigured = !$isStoreSendmail && ($gmailEnabled === '1' || $gmailEnabled === 1 || $gmailEnabled === 'true') && $gmailEmail && !empty($cleanGmailPassword);
 
             // Final parameters for sending email
             $finalFromEmail = null;
