@@ -85,7 +85,7 @@ class GmailOTPHelper
                 Log::info("GmailOTPHelper::sendOTP - Sending via Resend HTTPS API (Port 443) for owner user ID {$ownerUserId}.");
                 $apiKey = (str_starts_with($cleanMailPassword, 're_') ? $cleanMailPassword : null) ?: env('RESEND_KEY');
                 $isUnverifiedDomain = $mailFromAddress && (str_contains($mailFromAddress, '@gmail.com') || str_contains($mailFromAddress, '@yahoo.com') || str_contains($mailFromAddress, '@hotmail.com') || str_contains($mailFromAddress, '@outlook.com'));
-                $finalFromEmail = ($mailFromAddress && !$isUnverifiedDomain) ? $mailFromAddress : 'onboarding@resend.dev';
+                $finalFromEmail = ($mailFromAddress && !$isUnverifiedDomain) ? $mailFromAddress : 'noreply@vhsitekh.site';
                 $finalFromName = $mailFromName ?: $storeName;
 
                 $subject = "🔐 Order Verification Code - #{$order->order_no} | {$finalFromName}";
