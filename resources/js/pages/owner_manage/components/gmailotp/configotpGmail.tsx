@@ -54,8 +54,8 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
      const [gmailEnabled, setGmailEnabled] = useState(false);
      const [mailMailer, setMailMailer] = useState('smtp');
      const [mailHost, setMailHost] = useState('');
-     const [mailPort, setMailPort] = useState('587');
-     const [mailEncryption, setMailEncryption] = useState('tls');
+     const [mailPort, setMailPort] = useState('465');
+     const [mailEncryption, setMailEncryption] = useState('ssl');
      const [mailUsername, setMailUsername] = useState('');
      const [mailPassword, setMailPassword] = useState('');
      const [showPassword, setShowPassword] = useState(false);
@@ -73,15 +73,15 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                     const store = await storesService.getStore(activeOwnerId);
                     if (store) {
                          setGmailEnabled(
-                              store.gmail_enabled === '1' || 
-                              store.gmail_enabled === 1 || 
-                              store.gmail_enabled === 'true' || 
+                              store.gmail_enabled === '1' ||
+                              store.gmail_enabled === 1 ||
+                              store.gmail_enabled === 'true' ||
                               store.gmail_enabled === true
                          );
                          setMailMailer(store.mail_mailer || 'smtp');
                          setMailHost(store.mail_host || '');
-                         setMailPort(store.mail_port || '587');
-                         setMailEncryption(store.mail_encryption || 'tls');
+                         setMailPort(store.mail_port || '465');
+                         setMailEncryption(store.mail_encryption || 'ssl');
                          setMailUsername(store.mail_username || '');
                          setMailPassword(store.mail_password || '');
                          setMailFromAddress(store.mail_from_address || '');
@@ -99,15 +99,15 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                     console.warn('Failed to load SMTP config from API, loading local backup.', err);
                     const settings = getStoredSettings(activeOwnerId);
                     setGmailEnabled(
-                         settings.gmail_enabled === '1' || 
-                         settings.gmail_enabled === 1 || 
-                         settings.gmail_enabled === 'true' || 
+                         settings.gmail_enabled === '1' ||
+                         settings.gmail_enabled === 1 ||
+                         settings.gmail_enabled === 'true' ||
                          settings.gmail_enabled === true
                     );
                     setMailMailer(settings.mail_mailer || 'smtp');
                     setMailHost(settings.mail_host || '');
-                    setMailPort(settings.mail_port || '587');
-                    setMailEncryption(settings.mail_encryption || 'tls');
+                    setMailPort(settings.mail_port || '465');
+                    setMailEncryption(settings.mail_encryption || 'ssl');
                     setMailUsername(settings.mail_username || '');
                     setMailPassword(settings.mail_password || '');
                     setMailFromAddress(settings.mail_from_address || '');
@@ -128,8 +128,8 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
           if (preset === 'gmail') {
                setMailMailer('smtp');
                setMailHost('smtp.gmail.com');
-               setMailPort('587');
-               setMailEncryption('tls');
+               setMailPort('465');
+               setMailEncryption('ssl');
                toast.info('Gmail SMTP preset applied. Please fill in your Gmail email and App Password.');
           } else if (preset === 'sendmail') {
                setMailMailer('sendmail');
@@ -212,14 +212,12 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                          <button
                               type="button"
                               onClick={() => setGmailEnabled(!gmailEnabled)}
-                              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                   gmailEnabled ? 'bg-orange-500' : 'bg-slate-200'
-                              }`}
+                              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${gmailEnabled ? 'bg-orange-500' : 'bg-slate-200'
+                                   }`}
                          >
                               <span
-                                   className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                                        gmailEnabled ? 'translate-x-5' : 'translate-x-0'
-                                   }`}
+                                   className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${gmailEnabled ? 'translate-x-5' : 'translate-x-0'
+                                        }`}
                               />
                          </button>
                          <span className={`text-xs font-black uppercase ${gmailEnabled ? 'text-emerald-500' : 'text-slate-400'}`}>
