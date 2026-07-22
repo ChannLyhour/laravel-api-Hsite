@@ -103,7 +103,10 @@ class GmailOTPHelper
                 Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store SMTP settings for owner user ID {$ownerUserId}.");
                 $resolvedPort = intval($mailPort ?: 587);
                 $resolvedEnc = $mailEncryption ?: 'tls';
-                if ($mailHost === 'smtp.gmail.com' && ($resolvedPort == 587 || empty($mailEncryption) || $mailEncryption === 'tls')) {
+                if ($resolvedPort == 2525) {
+                    $resolvedEnc = 'tls';
+                } elseif ($mailHost === 'smtp.gmail.com' && ($resolvedPort == 587 || empty($mailEncryption))) {
+                    // Default to SSL 465 for Gmail unless port 2525 is explicitly set
                     $resolvedPort = 465;
                     $resolvedEnc = 'ssl';
                 }
@@ -130,8 +133,8 @@ class GmailOTPHelper
                 $finalFromName = $mailFromName ?: $storeName;
             } elseif ($isStoreGmailConfigured) {
                 Log::info("GmailOTPHelper::sendOTP - Configuring dynamic SMTP using store Gmail settings for owner user ID {$ownerUserId}.");
-                $gmailPort = ($mailPort && $mailPort != '587') ? intval($mailPort) : 465;
-                $gmailEnc = $gmailPort == 465 ? 'ssl' : 'tls';
+                $gmailPort = intval($mailPort ?: 465);
+                $gmailEnc = ($gmailPort == 465) ? 'ssl' : 'tls';
                 config([
                     'mail.default' => 'smtp',
                     'mail.mailers.smtp.transport' => 'smtp',

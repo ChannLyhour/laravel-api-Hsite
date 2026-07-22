@@ -307,7 +307,7 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                                         type="text"
                                         value={mailPort}
                                         onChange={e => setMailPort(e.target.value)}
-                                        placeholder="e.g. 587"
+                                        placeholder="e.g. 2525, 587, or 465"
                                         className="w-full px-4 py-2.5 border rounded-[5px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-semibold"
                                         required={mailMailer === 'smtp'}
                                         disabled={mailMailer === 'log' || mailMailer === 'sendmail'}

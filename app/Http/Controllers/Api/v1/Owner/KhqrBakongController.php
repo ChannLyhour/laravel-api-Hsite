@@ -112,15 +112,9 @@ class KhqrBakongController extends Controller
             }
         }
         try {
-            // Use the official Bakong KHQR SDK
+            // Keep exact payment amount for dynamic QR generation
             $currencyCode = ($currency === 'KHR') ? 116 : 840;
             $amountVal = (float)$amount;
-
-            // For Individual P2P Bakong accounts, generate static QR codes (amount = 0.0)
-            $isIndividual = (strpos($bakongAccountId, '@') !== false) && !str_contains($bakongAccountId, '@retail') && !str_contains($bakongAccountId, '@merchant');
-            if ($isIndividual) {
-                $amountVal = 0.0;
-            }
 
             $qrString = CustomKHQR::generate(
                 $bakongAccountId,
@@ -168,10 +162,10 @@ class KhqrBakongController extends Controller
             $apiKey = $apiKey ?: config('bakong.api_token');
             $apiUrl = rtrim($apiUrl ?: config('bakong.api_url'), '/');
 
-            // Force override API URL based on Sandbox mode for NBC testing
-            if ($isSandbox && $apiUrl === 'https://api-bakong.nbc.gov.kh') {
-                $apiUrl = 'https://sit-api-bakong.nbc.gov.kh';
-            } elseif (!$isSandbox && $apiUrl === 'https://sit-api-bakong.nbc.gov.kh') {
+            // Force override & normalize API URL based on Sandbox / Production mode
+            if ($isSandbox) {
+                $apiUrl = 'https://sit-api-bakong.nbc.org.kh';
+            } else {
                 $apiUrl = 'https://api-bakong.nbc.gov.kh';
             }
 
@@ -321,10 +315,10 @@ class KhqrBakongController extends Controller
         $apiKey = $apiKey ?: config('bakong.api_token');
         $apiUrl = rtrim($apiUrl ?: config('bakong.api_url'), '/');
 
-        // Force override API URL based on Sandbox mode for NBC testing
-        if ($isSandbox && $apiUrl === 'https://api-bakong.nbc.gov.kh') {
-            $apiUrl = 'https://sit-api-bakong.nbc.gov.kh';
-        } elseif (!$isSandbox && $apiUrl === 'https://sit-api-bakong.nbc.gov.kh') {
+        // Force override & normalize API URL based on Sandbox / Production mode
+        if ($isSandbox) {
+            $apiUrl = 'https://sit-api-bakong.nbc.org.kh';
+        } else {
             $apiUrl = 'https://api-bakong.nbc.gov.kh';
         }
 
@@ -393,7 +387,7 @@ class KhqrBakongController extends Controller
 
         try {
             $apiUrlToCheck = $apiUrl . '/v1/check_transaction_by_md5';
-            $httpClient = Http::withHeaders([
+            $httpClient = Http::timeout(5)->withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->withToken($apiKey);

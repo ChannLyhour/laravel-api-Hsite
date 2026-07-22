@@ -19,22 +19,9 @@ class CustomKHQR
             }
         }
 
-        $isIndividual = (strpos($bakongAccountId, '@') !== false) && !str_contains($bakongAccountId, '@retail') && !str_contains($bakongAccountId, '@merchant');
+        $isMerchant = str_contains($bakongAccountId, '@retail') || str_contains($bakongAccountId, '@merchant');
 
-        if ($isIndividual) {
-            $individualInfo = new \Piseth\BakongKhqr\Models\IndividualInfo(
-                $bakongAccountId,
-                $merchantName ?: 'Merchant',
-                $merchantCity ?: 'Phnom Penh',
-                $acquiringBank,
-                null, // accountInformation
-                (int)$currencyCode,
-                (float)$amount,
-                $billNo
-            );
-            $res = \Piseth\BakongKhqr\BakongKHQR::generateIndividual($individualInfo);
-            return $res->data['qr'];
-        } else {
+        if ($isMerchant) {
             $merchantID = '123456';
             if (strpos($bakongAccountId, '@') !== false) {
                 $parts = explode('@', $bakongAccountId);
@@ -52,6 +39,19 @@ class CustomKHQR
                 $billNo
             );
             $res = \Piseth\BakongKhqr\BakongKHQR::generateMerchant($merchantInfo);
+            return $res->data['qr'];
+        } else {
+            $individualInfo = new \Piseth\BakongKhqr\Models\IndividualInfo(
+                $bakongAccountId,
+                $merchantName ?: 'Merchant',
+                $merchantCity ?: 'Phnom Penh',
+                $acquiringBank,
+                null, // accountInformation
+                (int)$currencyCode,
+                0.0, // Individual P2P requires static initiation (Tag 11) to avoid NBC SERVER-ERR
+                $billNo
+            );
+            $res = \Piseth\BakongKhqr\BakongKHQR::generateIndividual($individualInfo);
             return $res->data['qr'];
         }
     }
