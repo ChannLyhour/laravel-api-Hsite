@@ -52,11 +52,16 @@ export const Firebase_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) => {
 
   useEffect(() => {
     const settings = getStoredSettings();
-    setApiKey(settings.firebase_api_key || '');
-    setProjectId(settings.firebase_project_id || '');
-    setAuthDomain(settings.firebase_auth_domain || '');
-    setMessagingSenderId(settings.firebase_messaging_sender_id || '');
-    setAppId(settings.firebase_app_id || '');
+    let fbSetup: any = settings.firebase_setup || {};
+    if (typeof fbSetup === 'string') {
+      try { fbSetup = JSON.parse(fbSetup); } catch (e) { fbSetup = {}; }
+    }
+
+    setApiKey(settings.firebase_api_key || fbSetup.firebase_api_key || '');
+    setProjectId(settings.firebase_project_id || fbSetup.firebase_project_id || '');
+    setAuthDomain(settings.firebase_auth_domain || fbSetup.firebase_auth_domain || '');
+    setMessagingSenderId(settings.firebase_messaging_sender_id || fbSetup.firebase_messaging_sender_id || '');
+    setAppId(settings.firebase_app_id || fbSetup.firebase_app_id || '');
     setLoading(false);
   }, []);
 
@@ -64,13 +69,28 @@ export const Firebase_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) => {
     e.preventDefault();
     setSaving(true);
 
-    const success = await saveSettingsToStore({
-      firebase_api_key: apiKey,
-      firebase_project_id: projectId,
-      firebase_auth_domain: authDomain,
-      firebase_messaging_sender_id: messagingSenderId,
-      firebase_app_id: appId,
-    }, ownerId, profile);
+    const cleanApiKey = apiKey.trim();
+    const cleanProjectId = projectId.trim();
+    const cleanAuthDomain = authDomain.trim();
+    const cleanMessagingSenderId = messagingSenderId.trim();
+    const cleanAppId = appId.trim();
+
+    const payload = {
+      firebase_api_key: cleanApiKey,
+      firebase_project_id: cleanProjectId,
+      firebase_auth_domain: cleanAuthDomain,
+      firebase_messaging_sender_id: cleanMessagingSenderId,
+      firebase_app_id: cleanAppId,
+      firebase_setup: {
+        firebase_api_key: cleanApiKey,
+        firebase_project_id: cleanProjectId,
+        firebase_auth_domain: cleanAuthDomain,
+        firebase_messaging_sender_id: cleanMessagingSenderId,
+        firebase_app_id: cleanAppId,
+      }
+    };
+
+    const success = await saveSettingsToStore(payload, ownerId, profile);
 
     setSaving(false);
     if (success) {
