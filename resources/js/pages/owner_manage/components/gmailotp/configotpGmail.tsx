@@ -124,13 +124,19 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
      }, [activeOwnerId]);
 
      // Auto-presets helper
-     const applyPreset = (preset: 'gmail' | 'sendmail' | 'log' | 'custom') => {
+     const applyPreset = (preset: 'gmail' | 'brevo' | 'sendmail' | 'log' | 'custom') => {
           if (preset === 'gmail') {
                setMailMailer('smtp');
                setMailHost('smtp.gmail.com');
                setMailPort('465');
                setMailEncryption('ssl');
                toast.info('Gmail SMTP preset applied. Please fill in your Gmail email and App Password.');
+          } else if (preset === 'brevo') {
+               setMailMailer('smtp');
+               setMailHost('smtp-relay.brevo.com');
+               setMailPort('587');
+               setMailEncryption('tls');
+               toast.info('Brevo (Sendinblue) SMTP preset applied. Enter your Brevo Login & Master SMTP Key.');
           } else if (preset === 'sendmail') {
                setMailMailer('sendmail');
                setMailHost('localhost');
@@ -243,6 +249,13 @@ export const ConfigOTPGmailTab: React.FC<TabProps> = ({ ownerId, profile }) => {
                               className="px-3.5 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 font-extrabold text-[11px] rounded-[4px] border-none cursor-pointer transition-all active:scale-98"
                          >
                               {t('smtp.preset_gmail')}
+                         </button>
+                         <button
+                              type="button"
+                              onClick={() => applyPreset('brevo')}
+                              className="px-3.5 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-extrabold text-[11px] rounded-[4px] border-none cursor-pointer transition-all active:scale-98"
+                         >
+                              Brevo (Sendinblue) SMTP
                          </button>
                          <button
                               type="button"
