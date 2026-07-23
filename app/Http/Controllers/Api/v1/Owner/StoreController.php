@@ -634,6 +634,7 @@ class StoreController extends Controller
             'firebase_auth_domain',
             'firebase_messaging_sender_id',
             'firebase_app_id',
+            'otp_email_configuration',
             'guest_checkout',
             'pusher_app_id',
             'pusher_app_key',

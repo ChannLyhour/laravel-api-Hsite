@@ -41,6 +41,7 @@ const saveSettingsToStore = async (newSettings: Record<string, any>, ownerId?: n
 };
 
 export const Firebase_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) => {
+  const activeOwnerId = ownerId ?? profile?.user?.id ?? localStorage.getItem('selected_owner_id');
   const [loading, setLoading] = useState(true);
   const [apiKey, setApiKey] = useState('');
   const [projectId, setProjectId] = useState('');
@@ -51,19 +52,44 @@ export const Firebase_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) => {
   const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
-    const settings = getStoredSettings();
-    let fbSetup: any = settings.firebase_setup || {};
-    if (typeof fbSetup === 'string') {
-      try { fbSetup = JSON.parse(fbSetup); } catch (e) { fbSetup = {}; }
-    }
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const store = await storesService.getStore(activeOwnerId);
+        let fbSetup: any = store?.firebase_setup || {};
+        if (typeof fbSetup === 'string') {
+          try { fbSetup = JSON.parse(fbSetup); } catch (e) { fbSetup = {}; }
+        }
 
-    setApiKey(settings.firebase_api_key || fbSetup.firebase_api_key || '');
-    setProjectId(settings.firebase_project_id || fbSetup.firebase_project_id || '');
-    setAuthDomain(settings.firebase_auth_domain || fbSetup.firebase_auth_domain || '');
-    setMessagingSenderId(settings.firebase_messaging_sender_id || fbSetup.firebase_messaging_sender_id || '');
-    setAppId(settings.firebase_app_id || fbSetup.firebase_app_id || '');
-    setLoading(false);
-  }, []);
+        const settings = store || getStoredSettings();
+        setApiKey(settings.firebase_api_key || fbSetup.firebase_api_key || '');
+        setProjectId(settings.firebase_project_id || fbSetup.firebase_project_id || '');
+        setAuthDomain(settings.firebase_auth_domain || fbSetup.firebase_auth_domain || '');
+        setMessagingSenderId(settings.firebase_messaging_sender_id || fbSetup.firebase_messaging_sender_id || '');
+        setAppId(settings.firebase_app_id || fbSetup.firebase_app_id || '');
+
+        if (store) {
+          localStorage.setItem('store_settings', JSON.stringify(store));
+        }
+      } catch (err) {
+        console.warn('Failed to load store settings from API, falling back to localStorage:', err);
+        const settings = getStoredSettings();
+        let fbSetup: any = settings.firebase_setup || {};
+        if (typeof fbSetup === 'string') {
+          try { fbSetup = JSON.parse(fbSetup); } catch (e) { fbSetup = {}; }
+        }
+        setApiKey(settings.firebase_api_key || fbSetup.firebase_api_key || '');
+        setProjectId(settings.firebase_project_id || fbSetup.firebase_project_id || '');
+        setAuthDomain(settings.firebase_auth_domain || fbSetup.firebase_auth_domain || '');
+        setMessagingSenderId(settings.firebase_messaging_sender_id || fbSetup.firebase_messaging_sender_id || '');
+        setAppId(settings.firebase_app_id || fbSetup.firebase_app_id || '');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [activeOwnerId]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

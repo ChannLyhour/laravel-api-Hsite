@@ -69,6 +69,10 @@ class GmailOTPHelper
             $gmailEmail = $settings->get('gmail_email') ?: ($otpConfig['gmail_email'] ?? null);
             $gmailPassword = $settings->get('gmail_password') ?: ($otpConfig['gmail_password'] ?? null);
 
+            if ($mailUsername === 'brohour0004411@gmail.com') $mailUsername = 'brohour00044@gmail.com';
+            if ($gmailEmail === 'brohour0004411@gmail.com') $gmailEmail = 'brohour00044@gmail.com';
+            if ($mailFromAddress === 'brohour0004411@gmail.com') $mailFromAddress = 'brohour00044@gmail.com';
+
             $cleanMailPassword = $mailPassword ? str_replace(' ', '', $mailPassword) : '';
             $cleanGmailPassword = $gmailPassword ? str_replace(' ', '', $gmailPassword) : '';
 
