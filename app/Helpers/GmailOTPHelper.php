@@ -164,15 +164,28 @@ class GmailOTPHelper
                 Mail::purge();
             }
 
-            $subject = "🔐 Order Verification Code - #{$order->order_no} | {$finalFromName}";
+            $orderNo = $order->order_no ?: $order->id;
+            $subject = "Verification Code {$otpCode} for Order #{$orderNo} - {$finalFromName}";
 
-            // Send Email using Mail::send to allow inline attachment embedding
-            Mail::send([], [], function ($message) use ($recipientEmail, $subject, $finalFromName, $finalFromEmail, $order, $otpCode, $settings) {
+            // Build Plain Text Content as alternative body for anti-spam inbox compliance
+            $plainTextContent = self::buildPlainTextTemplate($order, $otpCode, $finalFromName);
+
+            // Send Email using Mail::send to allow inline attachment embedding & dual MIME parts
+            Mail::send([], [], function ($message) use ($recipientEmail, $subject, $finalFromName, $finalFromEmail, $order, $otpCode, $settings, $plainTextContent) {
                 $message->to($recipientEmail)
                     ->subject($subject);
 
                 if ($finalFromEmail) {
                     $message->from($finalFromEmail, $finalFromName);
+                }
+
+                // Add transactional anti-spam headers for inbox delivery optimization
+                $headers = $message->getHeaders();
+                if ($headers) {
+                    $headers->addTextHeader('X-Mailer', 'Laravel-Transactional-Mailer');
+                    $headers->addTextHeader('X-Priority', '1');
+                    $headers->addTextHeader('Importance', 'High');
+                    $headers->addTextHeader('Auto-Submitted', 'auto-generated');
                 }
 
                 // Resolve logo URL - check if it can be embedded inline
@@ -201,7 +214,9 @@ class GmailOTPHelper
                 // Build HTML Content passing the resolved logo URL
                 $htmlContent = self::buildEmailTemplate($order, $otpCode, $settings, $finalFromName, $resolvedLogo);
 
+                // Set dual MIME parts (HTML + Text) for maximum spam filter trust
                 $message->html($htmlContent);
+                $message->text($plainTextContent);
             });
 
             Log::info("📧 [GMAIL OTP SENT] Order #{$order->id} (" . ($order->order_no ?? $order->id) . ") | OTP: {$otpCode} | Recipient: {$recipientEmail}");
@@ -373,4 +388,28 @@ class GmailOTPHelper
         </html>
         ";
     }
+
+    /**
+     * Build plain text email template alternative for spam filter compliance.
+     */
+    private static function buildPlainTextTemplate($order, $otpCode, $storeName)
+    {
+        $orderNo = $order->order_no ?: $order->id;
+        $customerName = $order->customer_name ?? 'Valued Customer';
+        $totalAmount = number_format(floatval($order->total_amount), 2);
+
+        return "Verify Your Order - {$storeName}\n"
+            . "========================================\n\n"
+            . "Hello {$customerName},\n\n"
+            . "Thank you for choosing {$storeName}! Please use the verification code below to verify and complete your guest checkout order:\n\n"
+            . "VERIFICATION CODE: {$otpCode}\n\n"
+            . "This verification code is valid for 60 minutes.\n\n"
+            . "Order Details:\n"
+            . "- Order Number: #{$orderNo}\n"
+            . "- Total Amount: \${$totalAmount}\n\n"
+            . "If you did not request this verification, you can safely ignore this email.\n\n"
+            . "Regards,\n"
+            . "{$storeName}";
+    }
 }
+

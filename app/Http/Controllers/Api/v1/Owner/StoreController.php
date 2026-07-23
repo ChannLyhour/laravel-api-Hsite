@@ -57,6 +57,8 @@ class StoreController extends Controller
                     'financial_configurations',
                     'store_operations_content',
                     'checkout_form_visibility',
+                    'otp_email_configuration',
+                    'firebase_setup',
                     'location_store'
                 ]) && is_array($value)) {
                     foreach ($value as $subKey => $subVal) {
@@ -221,6 +223,8 @@ class StoreController extends Controller
                     'financial_configurations',
                     'store_operations_content',
                     'checkout_form_visibility',
+                    'otp_email_configuration',
+                    'firebase_setup',
                     'location_store'
                 ]) && is_array($value)) {
                     foreach ($value as $subKey => $subVal) {
@@ -472,6 +476,8 @@ class StoreController extends Controller
                 'financial_configurations',
                 'store_operations_content',
                 'checkout_form_visibility',
+                'otp_email_configuration',
+                'firebase_setup',
                 'location_store'
             ]) && (is_array($value) || is_object($value))) {
                 foreach ($value as $subKey => $subVal) {
