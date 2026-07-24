@@ -1074,7 +1074,7 @@ class StoreController extends Controller
                 ],
                 'defaultValues' => [
                     'payway_link' => 'https://link.payway.com.kh/ABAPAYvu485790W',
-                    'khpay_api_key' => env('KHPAY_API_KEY', ''),
+                    'khpay_api_key' => '',
                     'khpay_account_id' => 'lyhour_chann@bkrt',
                     'khpay_merchant_name' => 'OuR20s Collection',
                     'khpay_merchant_city' => 'Siem Reap',
