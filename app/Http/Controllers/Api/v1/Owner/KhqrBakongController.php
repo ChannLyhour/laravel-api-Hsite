@@ -164,12 +164,12 @@ class KhqrBakongController extends Controller
 
             // Force override & normalize API URL based on Sandbox / Production mode
             if ($isSandbox) {
-                $apiUrl = 'https://sit-api-bakong.nbc.org.kh';
+                $apiUrl = 'https://sit-api-bakong.nbc.gov.kh';
             } else {
                 $apiUrl = 'https://api-bakong.nbc.gov.kh';
             }
 
-            $deeplink = 'https://bakong.nbc.org.kh/download';
+            $deeplink = 'https://bakong.nbc.gov.kh/download';
             if (!empty($apiKey)) {
                 try {
                     $apiUrl = rtrim($apiUrl, '/');
@@ -317,7 +317,7 @@ class KhqrBakongController extends Controller
 
         // Force override & normalize API URL based on Sandbox / Production mode
         if ($isSandbox) {
-            $apiUrl = 'https://sit-api-bakong.nbc.org.kh';
+            $apiUrl = 'https://sit-api-bakong.nbc.gov.kh';
         } else {
             $apiUrl = 'https://api-bakong.nbc.gov.kh';
         }

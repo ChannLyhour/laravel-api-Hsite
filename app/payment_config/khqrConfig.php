@@ -190,7 +190,7 @@ class khqrConfig
                          }
                     }
 
-                    $deeplink = 'https://bakong.nbc.org.kh/download';
+                    $deeplink = 'https://bakong.nbc.gov.kh/download';
                     if (!empty($bakongApiKey)) {
                          try {
                               $bakongApiUrl = rtrim($bakongApiUrl, '/');
