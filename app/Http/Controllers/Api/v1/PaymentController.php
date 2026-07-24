@@ -36,11 +36,15 @@ class PaymentController extends Controller
         ]);
 
         try {
-            // KHPay status verification check
-            if (str_starts_with($request->transaction_id, 'bk_') || str_starts_with($request->transaction_id, 'txn_')) {
+            // KHPay status verification check (supports TXN..., bk_..., ORD..., order IDs)
+            $tranIdLower = strtolower($request->transaction_id ?? '');
+            if (!empty($request->transaction_id) && (str_starts_with($tranIdLower, 'bk_') || str_starts_with($tranIdLower, 'txn_') || str_starts_with($tranIdLower, 'ord') || is_numeric($request->transaction_id))) {
                 $khpayCheck = \App\Helpers\KHPayHelper::checkPaymentStatus($request->transaction_id);
-                if ($khpayCheck && (!empty($khpayCheck['paid']) || (isset($khpayCheck['status']) && strtolower($khpayCheck['status']) === 'success'))) {
-                    $txn = PaymentTransaction::where('transaction_id', $request->transaction_id)->first();
+                if ($khpayCheck && (!empty($khpayCheck['paid']) || (isset($khpayCheck['status']) && strtolower($khpayCheck['status']) === 'success') || (isset($khpayCheck['data']['status']) && strtolower($khpayCheck['data']['status']) === 'success'))) {
+                    $txn = PaymentTransaction::where('transaction_id', $request->transaction_id)
+                        ->orWhere('order_id', $request->transaction_id)
+                        ->first();
+
                     if ($txn) {
                         $txn->update(['status' => 'success', 'raw_response' => json_encode($khpayCheck)]);
                         if ($txn->order) {
@@ -56,8 +60,9 @@ class PaymentController extends Controller
                     }
 
                     $customerToken = null;
-                    if ($txn && $txn->order && $txn->order->user_id) {
-                        $user = \App\Models\User::find($txn->order->user_id);
+                    $targetOrder = $txn ? $txn->order : \App\Models\Order::find($request->transaction_id);
+                    if ($targetOrder && $targetOrder->user_id) {
+                        $user = \App\Models\User::find($targetOrder->user_id);
                         if ($user) {
                             $customerToken = $user->createToken('customer_auth_token')->plainTextToken;
                         }
