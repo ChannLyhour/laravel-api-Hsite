@@ -96,7 +96,6 @@ class khqrConfig
                $paywayLink = !empty($abaValues['payway_link']) ? $abaValues['payway_link'] : 'https://link.payway.com.kh/ABAPAYvu485790W';
 
                // Try KHPay API first for Dynamic KHQR (works for both ABA & Bakong)
-               
                if (!empty($khpayApiKey)) {
                     $khpayRes = \App\Helpers\KHPayHelper::generateKHQR(
                          (float)$amount,

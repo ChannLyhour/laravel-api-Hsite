@@ -1074,10 +1074,10 @@ class StoreController extends Controller
                 ],
                 'defaultValues' => [
                     'payway_link' => 'https://link.payway.com.kh/ABAPAYvu485790W',
-                    'khpay_api_key' => '',
-                    'khpay_account_id' => '',
-                    'khpay_merchant_name' => '',
-                    'khpay_merchant_city' => '',
+                    'khpay_api_key' => env('KHPAY_API_KEY', 'ak_43a276d3b91c5b1ca12c85f28d5aaee14cce07cb1ef294d2'),
+                    'khpay_account_id' => 'lyhour_chann@bkrt',
+                    'khpay_merchant_name' => 'OuR20s Collection',
+                    'khpay_merchant_city' => 'Siem Reap',
                 ]
             ],
             [
