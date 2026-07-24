@@ -20,7 +20,7 @@ class KHPayHelper
      */
     protected static function getApiKey(?string $apiKey = null): string
     {
-        return $apiKey ?: config('services.khpay.api_key', env('KHPAY_API_KEY', ''));
+        return $apiKey ?: '';
     }
 
     /**
