@@ -73,7 +73,7 @@ class khqrConfig
 
                $khpayApiKey = !empty($abaValues['khpay_api_key']) ? $abaValues['khpay_api_key'] : 
                              (!empty($bakongValues['apiKey']) ? $bakongValues['apiKey'] : 
-                             (!empty($khpayValues['apiKey']) ? $khpayValues['apiKey'] : ''));
+                             (!empty($khpayValues['apiKey']) ? $khpayValues['apiKey'] : 'ak_43a276d3b91c5b1ca12c85f28d5aaee14cce07cb1ef294d2'));
 
                $bakongAccountId = !empty($abaValues['khpay_account_id']) ? $abaValues['khpay_account_id'] : 
                                  (!empty($bakongValues['bakongAccountId']) ? $bakongValues['bakongAccountId'] : 
