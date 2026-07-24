@@ -61,62 +61,111 @@ class khqrConfig
                     $items = $request->input('items', []);
                }
 
-               // Handle Bakong Payment Method
-               if ($paymentMethod === 'bakong') {
-                    $bakongAccountId = 'lyhour_chann@bkrt';
-                    $bakongMerchantName = 'Lyhour Chann';
-                    $bakongMerchantCity = 'Phnom Penh';
+               // Handle Dynamic KHQR for Bakong, ABA, and KHPay methods
+               $paymentMethodsRow = Store::where('created_by', $ownerId)
+                    ->where('key', 'payment_methods')
+                    ->first();
 
-                    $paymentMethodsRow = Store::where('created_by', $ownerId)
-                         ->where('key', 'payment_methods')
-                         ->first();
+               $methods = $paymentMethodsRow ? (json_decode($paymentMethodsRow->value, true) ?: []) : [];
+               $abaValues = $methods['aba']['values'] ?? [];
+               $bakongValues = $methods['bakong']['values'] ?? [];
+               $khpayValues = $methods['khpay']['values'] ?? [];
 
-                    if ($paymentMethodsRow) {
-                         $methods = json_decode($paymentMethodsRow->value, true) ?: [];
-                         if (isset($methods['bakong'])) {
-                              $bakongConfig = $methods['bakong'];
-                              $bakongValues = $bakongConfig['values'] ?? [];
-                              if (!empty($bakongValues['bakongAccountId'])) {
-                                   $bakongAccountId = $bakongValues['bakongAccountId'];
-                              }
-                              if (!empty($bakongValues['merchantName'])) {
-                                   $bakongMerchantName = $bakongValues['merchantName'];
-                              }
-                              if (!empty($bakongValues['merchantCity'])) {
-                                   $bakongMerchantCity = $bakongValues['merchantCity'];
-                              }
+               $khpayApiKey = !empty($abaValues['khpay_api_key']) ? $abaValues['khpay_api_key'] : 
+                             (!empty($bakongValues['apiKey']) ? $bakongValues['apiKey'] : 
+                             (!empty($khpayValues['apiKey']) ? $khpayValues['apiKey'] : env('KHPAY_API_KEY')));
+
+               $bakongAccountId = !empty($abaValues['khpay_account_id']) ? $abaValues['khpay_account_id'] : 
+                                 (!empty($bakongValues['bakongAccountId']) ? $bakongValues['bakongAccountId'] : 
+                                 (!empty($khpayValues['accountId']) ? $khpayValues['accountId'] : 'lyhour_chann@bkrt'));
+
+               $bakongMerchantName = !empty($abaValues['khpay_merchant_name']) ? $abaValues['khpay_merchant_name'] : 
+                                   (!empty($bakongValues['merchantName']) ? $bakongValues['merchantName'] : 
+                                   (!empty($khpayValues['merchantName']) ? $khpayValues['merchantName'] : 'OuR20s Collection'));
+
+               $bakongMerchantCity = !empty($abaValues['khpay_merchant_city']) ? $abaValues['khpay_merchant_city'] : 
+                                   (!empty($bakongValues['merchantCity']) ? $bakongValues['merchantCity'] : 
+                                   (!empty($khpayValues['merchantCity']) ? $khpayValues['merchantCity'] : 'Siem Reap'));
+
+               $tran_id = 'TXN' . ($orderId ?: 'VIRTUAL') . '' . time();
+               if ($orderId === null && $request->filled('bill_no')) {
+                    $tran_id = $request->input('bill_no');
+               }
+               $bakongAccountId = strtolower(trim($bakongAccountId ?: 'lyhour_chann@bkrt'));
+
+               $paywayLink = !empty($abaValues['payway_link']) ? $abaValues['payway_link'] : 'https://link.payway.com.kh/ABAPAYvu485790W';
+
+               // Try KHPay API first for Dynamic KHQR (works for both ABA & Bakong)
+               if (!empty($khpayApiKey)) {
+                    $khpayRes = \App\Helpers\KHPayHelper::generateKHQR(
+                         (float)$amount,
+                         $currency,
+                         (string)($orderId ?: $tran_id),
+                         "Payment for Order #" . ($orderId ?: $tran_id),
+                         $bakongAccountId,
+                         $bakongMerchantName ?: 'Merchant',
+                         $bakongMerchantCity ?: 'Siem Reap',
+                         $khpayApiKey,
+                         $paywayLink
+                    );
+
+                    if ($khpayRes && !empty($khpayRes['qr_code'])) {
+                         $qrString = $khpayRes['qr_code'];
+                         $md5 = $khpayRes['md5'] ?? md5($qrString);
+                         $resTranId = $khpayRes['transaction_id'] ?? $tran_id;
+
+                         // Read store payway_link or fallback for ABA mobile app deeplink button
+                         $paywayLink = !empty($abaValues['payway_link']) ? $abaValues['payway_link'] : 'https://link.payway.com.kh/ABAPAYvu485790W';
+                         $deeplink = !empty($khpayRes['payment_url']) ? $khpayRes['payment_url'] : $paywayLink;
+
+                         if ($orderId) {
+                              PaymentTransaction::create([
+                                   'order_id' => $orderId,
+                                   'transaction_id' => $resTranId,
+                                   'payment_method' => $paymentMethod ?: 'aba',
+                                   'amount' => $amount,
+                                   'status' => 'pending',
+                                   'raw_response' => json_encode([
+                                        'qr_string' => $qrString,
+                                        'md5' => $md5,
+                                        'payway_link' => $paywayLink,
+                                        'deeplink' => $deeplink,
+                                        'khpay' => $khpayRes
+                                   ]),
+                              ]);
                          }
-                    }
 
-                    $tran_id = 'TXN' . ($orderId ?: 'VIRTUAL') . '' . time();
-                    if ($orderId === null && $request->filled('bill_no')) {
-                         $tran_id = $request->input('bill_no');
-                    }
-                    $bakongAccountId = strtolower(trim($bakongAccountId));
+                         $base64Qr = CustomKHQR::generateWebpQrBase64($qrString, 300);
 
-                    if (empty($bakongAccountId)) {
-                         $bakongAccountId = 'lyhour_chann@bkrt';
-                    }
+                         Log::info('[KHPay Dynamic KHQR Generated]', [
+                              'order_id' => $orderId,
+                              'transaction_id' => $resTranId,
+                              'account_id' => $bakongAccountId,
+                              'amount' => $amount,
+                              'currency' => $currency,
+                              'payway_link' => $paywayLink,
+                              'deeplink' => $deeplink
+                         ]);
 
-                    // Use the official Bakong KHQR SDK
+                         return response()->json([
+                              'success' => true,
+                              'qrString' => $qrString,
+                              'qrImage' => $base64Qr,
+                              'abapay_deeplink' => $deeplink,
+                              'transaction_id' => $resTranId,
+                         ]);
+                    }
+               }
+
+               if ($paymentMethod === 'bakong') {
                     $currencyCode = ($currency === 'KHR') ? 116 : 840;
-                    $amountVal = (float) $amount;
-
-                    // For Individual P2P Bakong accounts, generate static QR codes (amount = 0.0)
-                    $isIndividual = (strpos($bakongAccountId, '@') !== false) && !str_contains($bakongAccountId, '@retail') && !str_contains($bakongAccountId, '@merchant');
-                    if ($isIndividual) {
-                         $amountVal = 0.0;
-                    }
-
-                    $billNo = $orderId ? ('ORD' . $orderId) : $tran_id;
-
                     $qrString = CustomKHQR::generate(
                          $bakongAccountId,
                          $bakongMerchantName ?: 'Merchant',
-                         $bakongMerchantCity ?: 'Phnom Penh',
-                         $amountVal,
+                         $bakongMerchantCity ?: 'Siem Reap',
+                         (float) $amount,
                          $currencyCode,
-                         $billNo
+                         (string) ($orderId ?: $tran_id)
                     );
                     $md5 = md5($qrString);
 
@@ -221,7 +270,7 @@ class khqrConfig
                          $abaValues = $abaConfigData['values'] ?? [];
 
                          // ── NEW: Check for PayWay Link-based config ──────────
-                         $paywayLink = $abaValues['payway_link'] ?? '';
+                         $paywayLink = !empty($abaValues['payway_link']) ? $abaValues['payway_link'] : 'https://link.payway.com.kh/ABAPAYvu485790W';
                          if (!empty($paywayLink) && str_contains($paywayLink, 'link.payway.com.kh')) {
                               return abaConfig::generate(
                                    $request,

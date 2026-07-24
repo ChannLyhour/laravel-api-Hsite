@@ -36,10 +36,57 @@ class PaymentController extends Controller
         ]);
 
         try {
+            // KHPay status verification check
+            if (str_starts_with($request->transaction_id, 'bk_') || str_starts_with($request->transaction_id, 'txn_')) {
+                $khpayCheck = \App\Helpers\KHPayHelper::checkPaymentStatus($request->transaction_id);
+                if ($khpayCheck && (!empty($khpayCheck['paid']) || (isset($khpayCheck['status']) && strtolower($khpayCheck['status']) === 'success'))) {
+                    $txn = PaymentTransaction::where('transaction_id', $request->transaction_id)->first();
+                    if ($txn) {
+                        $txn->update(['status' => 'success', 'raw_response' => json_encode($khpayCheck)]);
+                        if ($txn->order) {
+                            $txn->order->update(['payment_status' => 'Paid']);
+                            try {
+                                \Illuminate\Support\Facades\Cache::forget("telegram_sent_order_{$txn->order->id}");
+                                \App\Helpers\TelegramHelper::sendOrderNotification($txn->order);
+                                \App\Helpers\SendStatusTelegramboToCustomers::sendStatus($txn->order, 'PAID');
+                            } catch (\Throwable $e) {
+                                Log::error("Failed sending Telegram payment update: " . $e->getMessage());
+                            }
+                        }
+                    }
+
+                    $customerToken = null;
+                    if ($txn && $txn->order && $txn->order->user_id) {
+                        $user = \App\Models\User::find($txn->order->user_id);
+                        if ($user) {
+                            $customerToken = $user->createToken('customer_auth_token')->plainTextToken;
+                        }
+                    }
+
+                    return response()->json([
+                        'success' => true,
+                        'payment_status' => 'Paid',
+                        'customer_token' => $customerToken,
+                        'message' => 'Payment verified via KHPay API!',
+                        'raw' => $khpayCheck
+                    ]);
+                }
+            }
+
             $txn = PaymentTransaction::where('transaction_id', $request->transaction_id)->first();
             $order = null;
 
             if ($txn) {
+                if ($txn->isExpired()) {
+                    $txn->update(['status' => 'expired']);
+                    return response()->json([
+                        'success' => false,
+                        'status' => 'EXPIRED',
+                        'payment_status' => 'Expired',
+                        'message' => 'Transaction has expired. Please generate a fresh KHQR Code.'
+                    ], 400);
+                }
+
                 $order = $txn->order;
                 $ownerId = $order ? $order->store_id : 1;
                 $paymentMethod = $txn->payment_method;
@@ -55,8 +102,10 @@ class PaymentController extends Controller
                 }
             }
 
-            // Handle Bakong verification
-            if ($paymentMethod === 'bakong') {
+            // Handle Bakong / ABA KHQR verification (supports Bakong, ABA KHQR, and any KHQR with MD5)
+            $isBakongOrKhqr = ($paymentMethod === 'bakong' || $paymentMethod === 'aba' || $paymentMethod === 'aba_pay' || !empty($md5));
+
+            if ($isBakongOrKhqr) {
                 $wantsConfirm = $request->input('confirm') === true || $request->input('confirm') === 'true' || $request->input('confirm') == 1;
 
                 // Fetch Bakong API keys from store settings
@@ -95,34 +144,52 @@ class PaymentController extends Controller
 
                 // Facilitate mock testing for local environment without active token
                 if (env('APP_ENV') === 'local' && (empty($apiKey) || $apiKey === 'your_bakong_token_here' || $md5 === 'mock_success' || $request->transaction_id === 'mock_success')) {
-                    $mockResData = [
-                        'status' => ['code' => 0, 'errorCode' => null, 'message' => null],
-                        'data' => [
-                            'hash' => $md5,
-                            'amount' => $txn ? (float) $txn->amount : 0.0,
-                            'status' => 'SUCCESS'
-                        ]
-                    ];
-                    if ($txn) {
-                        $txn->update([
-                            'status' => 'success',
-                            'raw_response' => json_encode($mockResData),
-                        ]);
-                        if ($order) {
-                            $order->update(['payment_status' => 'Paid']);
+                    if ($wantsConfirm || $md5 === 'mock_success' || $request->transaction_id === 'mock_success') {
+                        $mockResData = [
+                            'status' => ['code' => 0, 'errorCode' => null, 'message' => null],
+                            'data' => [
+                                'hash' => $md5,
+                                'amount' => $txn ? (float) $txn->amount : 0.0,
+                                'status' => 'SUCCESS'
+                            ]
+                        ];
+                        if ($txn) {
+                            $txn->update([
+                                'status' => 'success',
+                                'raw_response' => json_encode($mockResData),
+                            ]);
+                            if ($order) {
+                                $order->update(['payment_status' => 'Paid']);
+                                try {
+                                    \Illuminate\Support\Facades\Cache::forget("telegram_sent_order_{$order->id}");
+                                    \App\Helpers\TelegramHelper::sendOrderNotification($order);
+                                    \App\Helpers\SendStatusTelegramboToCustomers::sendStatus($order, 'PAID');
+                                } catch (\Throwable $e) {
+                                    Log::error("Failed sending Telegram payment update: " . $e->getMessage());
+                                }
+                            }
                         }
-                    }
 
-                    return response()->json([
-                        'success' => true,
-                        'payment_status' => 'Paid',
-                        'message' => 'Bakong payment completed successfully (Local Mock)!',
-                        'raw' => $mockResData,
-                    ]);
+                        $customerToken = null;
+                        if ($order && $order->user_id) {
+                            $user = \App\Models\User::find($order->user_id);
+                            if ($user) {
+                                $customerToken = $user->createToken('customer_auth_token')->plainTextToken;
+                            }
+                        }
+
+                        return response()->json([
+                            'success' => true,
+                            'payment_status' => 'Paid',
+                            'customer_token' => $customerToken,
+                            'message' => 'Payment completed successfully (Local Mock)!',
+                            'raw' => $mockResData,
+                        ]);
+                    }
                 }
 
-                // 1. If we have a token, attempt a real API check
-                if ($apiKey || $md5) {
+                // 1. If we have a token or MD5, attempt a real API check via Bakong NBC Open API
+                if (!empty($md5) && (!empty($apiKey) || env('APP_ENV') !== 'local')) {
                     try {
                         $httpClient = Http::withHeaders([
                             'Content-Type' => 'application/json',
@@ -137,8 +204,9 @@ class PaymentController extends Controller
                             'md5' => $md5
                         ]);
 
-                        Log::info('[Bakong Check Transaction] Response received', [
+                        Log::info('[KHQR Check Transaction] Response received', [
                             'transaction_id' => $request->transaction_id,
+                            'payment_method' => $paymentMethod,
                             'status' => $response->status(),
                             'body' => $response->json()
                         ]);
@@ -149,7 +217,7 @@ class PaymentController extends Controller
                             $dataField = $resData['data'] ?? [];
                             $statusVal = $dataField['status'] ?? '';
 
-                            if ($code === 0 && (strtolower($statusVal) === 'success' || $statusVal === 'SUCCESS')) {
+                            if ($code === 0 && (empty($statusVal) || strtolower($statusVal) === 'success' || $statusVal === 'SUCCESS')) {
                                 if ($txn) {
                                     $txn->update([
                                         'status' => 'success',
@@ -157,43 +225,77 @@ class PaymentController extends Controller
                                     ]);
                                     if ($order) {
                                         $order->update(['payment_status' => 'Paid']);
+                                        try {
+                                            \Illuminate\Support\Facades\Cache::forget("telegram_sent_order_{$order->id}");
+                                            \App\Helpers\TelegramHelper::sendOrderNotification($order);
+                                            \App\Helpers\SendStatusTelegramboToCustomers::sendStatus($order, 'PAID');
+                                        } catch (\Throwable $e) {
+                                            Log::error("Failed sending Telegram payment update: " . $e->getMessage());
+                                        }
                                     }
                                 }
 
-                                return response()->json([
-                                    'success' => true,
-                                    'payment_status' => 'Paid',
-                                    'message' => 'Bakong payment completed successfully!',
-                                    'raw' => $resData,
-                                ]);
+                                 $customerToken = null;
+                                 if ($order && $order->user_id) {
+                                     $user = \App\Models\User::find($order->user_id);
+                                     if ($user) {
+                                         $customerToken = $user->createToken('customer_auth_token')->plainTextToken;
+                                     }
+                                 }
+
+                                 return response()->json([
+                                     'success' => true,
+                                     'payment_status' => 'Paid',
+                                     'customer_token' => $customerToken,
+                                     'message' => 'KHQR payment completed successfully!',
+                                     'raw' => $resData,
+                                 ]);
                             }
                         }
                     } catch (\Exception $e) {
-                        Log::error('[Bakong checkTransaction] Real API call exception: ' . $e->getMessage());
+                        Log::error('[KHQR checkTransaction] Real API call exception: ' . $e->getMessage());
                     }
                 }
 
-                // 2. Fallback to mock confirmation if requested
-                if ($wantsConfirm) {
-                    if ($txn) {
-                        $txn->update(['status' => 'success']);
-                        if ($order) {
-                            $order->update(['payment_status' => 'Paid']);
+                // If payment method is strictly Bakong and not confirmed, return pending here
+                if ($paymentMethod === 'bakong') {
+                    if ($wantsConfirm) {
+                        if ($txn) {
+                            $txn->update(['status' => 'success']);
+                            if ($order) {
+                                $order->update(['payment_status' => 'Paid']);
+                                try {
+                                    \Illuminate\Support\Facades\Cache::forget("telegram_sent_order_{$order->id}");
+                                    \App\Helpers\TelegramHelper::sendOrderNotification($order);
+                                    \App\Helpers\SendStatusTelegramboToCustomers::sendStatus($order, 'PAID');
+                                } catch (\Throwable $e) {
+                                    Log::error("Failed sending Telegram payment update: " . $e->getMessage());
+                                }
+                            }
                         }
+
+                        $customerToken = null;
+                        if ($order && $order->user_id) {
+                            $user = \App\Models\User::find($order->user_id);
+                            if ($user) {
+                                $customerToken = $user->createToken('customer_auth_token')->plainTextToken;
+                            }
+                        }
+
+                        return response()->json([
+                            'success' => true,
+                            'payment_status' => 'Paid',
+                            'customer_token' => $customerToken,
+                            'message' => 'Bakong payment completed successfully (Mock Mode)!',
+                        ]);
                     }
 
                     return response()->json([
                         'success' => true,
-                        'payment_status' => 'Paid',
-                        'message' => 'Bakong payment completed successfully (Mock Mode)!',
+                        'payment_status' => 'Unpaid',
+                        'message' => 'Bakong payment is still pending.',
                     ]);
                 }
-
-                return response()->json([
-                    'success' => true,
-                    'payment_status' => 'Unpaid',
-                    'message' => 'Bakong payment is still pending.',
-                ]);
             }
 
             // Load store API credentials
@@ -213,7 +315,7 @@ class PaymentController extends Controller
                     $abaValues = $abaConfig['values'] ?? [];
 
                     // ── NEW: Check for PayWay Link-based config ──────────
-                    $paywayLink = $abaValues['payway_link'] ?? '';
+                    $paywayLink = !empty($abaValues['payway_link']) ? $abaValues['payway_link'] : 'https://link.payway.com.kh/ABAPAYvu485790W';
                     if (!empty($paywayLink) && str_contains($paywayLink, 'link.payway.com.kh')) {
                         $isPaywayLinkMode = true;
                     }

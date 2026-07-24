@@ -44,7 +44,13 @@ class SendOrderOtpCommand extends Command
         $isRealEmail = $custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL) && !str_contains($custEmail, '@temp-customer.com');
 
         if (!$otpCode) {
-            // Send regular order notification to store owner
+            // Send regular order notification to store owner (Only if paid or non-digital method like COD)
+            $isDigitalPayment = in_array(strtolower($order->payment_method ?? ''), ['bakong', 'aba', 'khqr', 'card']);
+            if ($isDigitalPayment && strtolower($order->payment_status ?? '') === 'unpaid') {
+                Log::info("⏸️ [TELEGRAM NOTIFICATION HELD] Order #{$order->id} ({$order->order_no}) is Unpaid {$order->payment_method}. Waiting for Paid status before sending to store owner.");
+                return 0;
+            }
+
             try {
                 TelegramHelper::sendOrderNotification($order);
             } catch (\Exception $ex) {

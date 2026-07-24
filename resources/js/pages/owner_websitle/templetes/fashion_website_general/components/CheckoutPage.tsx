@@ -983,6 +983,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const [selectedPayment, setSelectedPayment] = useState<string>('');
     const [preferredContact, setPreferredContact] = useState<string>('');
     const [contactInput, setContactInput] = useState<string>('');
+    const [pendingCustomerToken, setPendingCustomerToken] = useState<string | null>(null);
 
 
 
@@ -1700,6 +1701,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 }}
                 onConfirmPayment={() => {
                     setIsKHQROpen(false);
+                    // Log in customer ONLY AFTER KHQR payment is scanned & paid!
+                    if (pendingCustomerToken) {
+                        localStorage.setItem('aura_customer_token', pendingCustomerToken);
+                        window.dispatchEvent(new Event('aura_token_changed'));
+                        setPendingCustomerToken(null);
+                    }
                     if (clearCart) clearCart();
                     clearGuestCheckoutCache();
                     setOrderSuccess(true);
@@ -1727,10 +1734,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     onSuccess={(token) => {
                         setIsOtpOpen(false);
 
-                        // If token is returned, store it and trigger login
+                        // Keep token in pendingCustomerToken if KHQR, so we DO NOT log in until paid!
                         if (token) {
-                            localStorage.setItem('aura_customer_token', token);
-                            window.dispatchEvent(new Event('aura_token_changed'));
+                            if (selectedPayment === 'aba' || selectedPayment === 'bakong') {
+                                setPendingCustomerToken(token);
+                            } else {
+                                localStorage.setItem('aura_customer_token', token);
+                                window.dispatchEvent(new Event('aura_token_changed'));
+                            }
                         }
 
                         // Now finalize checkout flow
@@ -1761,10 +1772,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     onSuccess={(token) => {
                         setIsOtpOpen(false);
 
-                        // If token is returned, store it and trigger login
+                        // Keep token in pendingCustomerToken if KHQR, so we DO NOT log in until paid!
                         if (token) {
-                            localStorage.setItem('aura_customer_token', token);
-                            window.dispatchEvent(new Event('aura_token_changed'));
+                            if (selectedPayment === 'aba' || selectedPayment === 'bakong') {
+                                setPendingCustomerToken(token);
+                            } else {
+                                localStorage.setItem('aura_customer_token', token);
+                                window.dispatchEvent(new Event('aura_token_changed'));
+                            }
                         }
 
                         // Now finalize checkout flow

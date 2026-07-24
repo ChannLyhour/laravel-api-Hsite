@@ -65,6 +65,52 @@ interface PaymentGateway {
 }
 
 
+const FALLBACK_GATEWAYS: PaymentGateway[] = [
+     {
+          id: 'aba',
+          name: 'ABA PAY',
+          description: 'Config 1: ABA Bank Support KHQR (PayWay Link) | Config 2: Config with KHPAY',
+          logoColor: 'bg-[#005d7e]',
+          textColor: 'text-white',
+          logoText: 'ABA',
+          fields: [
+               { key: 'payway_link', label: 'ABA Merchant Link (PayWay Link)', type: 'text', placeholder: 'https://link.payway.com.kh/ABAPAYvu485790W', hint: 'Config 1: Paste your ABA Merchant sharing link from ABA PayWay app.' },
+               { key: 'khpay_api_key', label: 'KHPay API Token (Bearer Key)', type: 'password', required: false, placeholder: 'ak_43a276d3b91c5b1ca12c...', hint: 'Config 2: API Key from khpay.site for dynamic KHQR generation & status checking.' },
+               { key: 'khpay_account_id', label: 'Bakong / KHPay Account ID', type: 'text', required: false, placeholder: 'lyhour_chann@bkrt', hint: 'Config 2: Your Bakong ID registered on KHPay.' },
+               { key: 'khpay_merchant_name', label: 'Merchant Name', type: 'text', required: false, placeholder: 'OuR20s Collection', hint: 'Config 2: Display merchant name for KHQR payments.' },
+               { key: 'khpay_merchant_city', label: 'Merchant City', type: 'text', required: false, placeholder: 'Siem Reap', hint: 'Config 2: Merchant city for KHQR payments.' }
+          ]
+     },
+     {
+          id: 'bakong',
+          name: 'Bakong KHQR',
+          description: 'Scan to pay with Bakong App or any KHQR supported bank',
+          logoColor: 'bg-[#b30006]',
+          textColor: 'text-white',
+          logoText: 'Bakong',
+          fields: [
+               { key: 'bakongAccountId', label: 'Your Production Bakong Account ID', type: 'text' },
+               { key: 'merchantName', label: 'Merchant ID / Username', type: 'text' },
+               { key: 'merchantCity', label: 'Merchant City', type: 'text' },
+               { key: 'apiKey', label: 'API Token / Secret Key', type: 'password', required: false },
+               { key: 'apiUrl', label: 'API Base URL', type: 'text', required: false }
+          ]
+     },
+     {
+          id: 'acleda',
+          name: 'ACLEDA PAY',
+          description: 'Pay securely with ACLEDA.',
+          logoColor: 'bg-[#0d3b66]',
+          textColor: 'text-amber-400',
+          logoText: 'ACLEDA',
+          fields: [
+               { key: 'merchantId', label: 'Merchant ID', type: 'text' },
+               { key: 'apiKey', label: 'API Key', type: 'password' },
+               { key: 'apiUrl', label: 'API Base URL', type: 'text' }
+          ]
+     }
+];
+
 export const Payment_Gateways_SetupTab: React.FC<TabProps> = ({ ownerId, profile }) => {
      const { t } = useTranslation();
      const [loading, setLoading] = useState(true);
@@ -82,9 +128,12 @@ export const Payment_Gateways_SetupTab: React.FC<TabProps> = ({ ownerId, profile
                     const fetched = await storesService.getPaymentGateways();
                     if (Array.isArray(fetched) && fetched.length > 0) {
                          availableGateways = fetched;
+                    } else {
+                         availableGateways = FALLBACK_GATEWAYS;
                     }
                } catch (err) {
                     console.warn('Failed to fetch gateways from API, using defaults.', err);
+                    availableGateways = FALLBACK_GATEWAYS;
                }
                setGateways(availableGateways);
 

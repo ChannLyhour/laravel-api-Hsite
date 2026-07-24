@@ -115,6 +115,10 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                          response.payment_status === 'PAID'
                     );
                     if (isPaid) {
+                         if (response.customer_token) {
+                              localStorage.setItem('aura_customer_token', response.customer_token);
+                              window.dispatchEvent(new Event('aura_token_changed'));
+                         }
                          toast.success('Payment Received Successfully!');
                          onConfirmPayment();
                     }
@@ -138,6 +142,10 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                               confirm: true,
                          });
                          if (response.success && (response.payment_status === 'Paid' || response.payment_status === 'PAID')) {
+                              if (response.customer_token) {
+                                   localStorage.setItem('aura_customer_token', response.customer_token);
+                                   window.dispatchEvent(new Event('aura_token_changed'));
+                              }
                               toast.success('Sandbox Payment Confirmed!');
                               onConfirmPayment();
                               return;
@@ -161,175 +169,144 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
      const methodKey = paymentMethod?.toLowerCase() || 'aba';
      const isHttpUrl = qrString && (qrString.startsWith('http://') || qrString.startsWith('https://'));
      
-     let themeColor = '#0B3B5B'; // ABA default dark blue
-     let buttonBg = 'bg-[#005D7E] hover:bg-[#004b66]';
      let titleText = isHttpUrl ? 'ABA PAY' : 'ABA KHQR';
      let payButtonText = 'Pay in ABA Mobile';
+     let buttonBg = 'bg-[#005D7E] hover:bg-[#004b66]';
      
      if (methodKey === 'bakong') {
-          themeColor = '#b30006';
-          buttonBg = 'bg-[#b30006] hover:bg-[#8f0005]';
           titleText = 'Bakong KHQR';
           payButtonText = 'Pay in Bakong App';
+          buttonBg = 'bg-[#b30006] hover:bg-[#8f0005]';
      } else if (methodKey === 'acleda') {
-          themeColor = '#0D3B66'; // ACLEDA navy blue
-          buttonBg = 'bg-[#0D3B66] hover:bg-[#0a2c4d]';
           titleText = 'ACLEDA KHQR';
           payButtonText = 'Pay in ACLEDA Mobile';
+          buttonBg = 'bg-[#0D3B66] hover:bg-[#0a2c4d]';
      } else if (methodKey === 'wing') {
-          themeColor = '#84bd00'; // Wing green
-          buttonBg = 'bg-[#84bd00] hover:bg-[#6a9700]';
           titleText = 'Wing KHQR';
           payButtonText = 'Pay in Wing Bank App';
+          buttonBg = 'bg-[#84bd00] hover:bg-[#6a9700]';
      } else if (methodKey === 'chipmong') {
-          themeColor = '#009b72'; // Chip Mong teal
-          buttonBg = 'bg-[#009b72] hover:bg-[#007c5b]';
           titleText = 'Chip Mong KHQR';
           payButtonText = 'Pay in Chip Mong App';
-     } else if (methodKey === 'transfer') {
-          themeColor = '#475569'; // Slate
-          buttonBg = 'bg-[#475569] hover:bg-[#334155]';
-          titleText = 'Bank Transfer KHQR';
-          payButtonText = 'Open Banking App';
-     } else if (methodKey === 'cod') {
-          themeColor = '#0f172a'; // Dark slate
-          buttonBg = 'bg-[#0f172a] hover:bg-[#1e293b]';
-          titleText = 'Cash on Delivery';
-          payButtonText = 'Confirm COD';
+          buttonBg = 'bg-[#009b72] hover:bg-[#007c5b]';
      }
 
-     const scanInstructionText = isHttpUrl
-          ? 'Scan with your Phone Camera or Google Lens to pay'
-          : 'Scan with any Mobile Banking App supporting KHQR to pay';
+     const scanInstructionText = `Scan with ${methodKey === 'aba' ? 'ABA Mobile' : (methodKey === 'bakong' ? 'Bakong App' : 'Mobile Banking')}, or other Mobile Banking App supporting KHQR`;
 
      if (!isOpen) return null;
 
      return createPortal(
-          <div className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 select-none animate-fade-in font-sans">
-               <div className="bg-white w-full max-w-[380px] rounded-[5px] shadow-2xl overflow-hidden relative animate-scale-in">
-                    {/* Header with Theme Color */}
-                    <div 
-                         className="px-5 py-4 flex items-center justify-between text-white"
-                         style={{ backgroundColor: themeColor }}
-                    >
-                         <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                                   <FiSmartphone className="w-4.5 h-4.5" />
-                              </div>
-                              <div>
-                                   <h2 className="text-sm font-black tracking-tight leading-none">{titleText}</h2>
-                                   <p className="text-[10px] font-bold opacity-70 mt-1 uppercase tracking-wider">Digital Payment</p>
-                              </div>
-                         </div>
+          <div className="fixed inset-0 z-[99999] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-fade-in font-sans">
+               <div className="bg-white w-full max-w-[360px] rounded-[20px] shadow-2xl overflow-hidden relative animate-scale-in border border-slate-100">
+                    {/* Header */}
+                    <div className="px-6 pt-5 pb-2 flex items-center justify-between text-slate-800">
+                         <h2 className="text-base font-semibold text-slate-800 tracking-tight">{titleText}</h2>
                          <button 
                               onClick={onClose}
-                              className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors border-none bg-transparent text-white cursor-pointer"
+                              className="text-cyan-500 hover:text-cyan-600 transition-colors p-1 border-none bg-transparent cursor-pointer flex items-center justify-center"
                          >
-                              <FiX className="w-5 h-5" />
+                              <FiX className="w-5 h-5 stroke-[2.5]" />
                          </button>
                     </div>
 
-                    <div className="p-8 flex flex-col items-center">
-                         {/* Ticket Header (Red KHQR tag with diagonal cut) */}
-                         <div 
-                              className="w-[calc(100%+40px)] bg-[#E61E25] py-3.5 px-4 flex justify-center items-center -mt-5 mb-5 select-none"
-                              style={{ clipPath: 'polygon(0 0, 100% 0, 100% 72%, 92% 100%, 0 100%)' }}
-                         >
-                              <span className="text-white font-sans font-black tracking-[0.2em] text-[15px] flex items-center justify-center">
-                                   KHQR
-                              </span>
-                         </div>
+                    <div className="px-6 pt-2 pb-6 flex flex-col items-center">
+                         {/* Ticket Card Container */}
+                         <div className="w-full bg-white rounded-[16px] border border-slate-200/80 shadow-md overflow-hidden flex flex-col items-center relative">
+                              {/* Top Red KHQR Header */}
+                              <div className="w-full bg-[#E61E25] py-2.5 flex justify-center items-center text-white select-none">
+                                   <span className="font-sans font-black tracking-[0.2em] text-sm leading-none">
+                                        KHQR
+                                   </span>
+                              </div>
 
-                         {/* Merchant & Amount Info Section */}
-                         <div className="w-full text-center space-y-1 mt-1">
-                              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest truncate max-w-full">
-                                   {merchantName}
-                              </p>
-                              <div className="flex items-baseline justify-center gap-1.5 mt-2">
-                                   <span className="text-3.5xl font-black text-slate-800 tracking-tight leading-none">
-                                        {currency === 'USD' ? amount.toFixed(2) : new Intl.NumberFormat('km-KH').format(Math.round(amount * 4100))}
-                                   </span>
-                                   <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                                        {currency}
-                                   </span>
+                              {/* Merchant & Amount Details */}
+                              <div className="w-full text-center px-4 pt-4">
+                                   <p className="text-[12px] font-medium text-slate-600 truncate max-w-full">
+                                        {merchantName}
+                                   </p>
+                                   <div className="flex items-baseline justify-center gap-1.5 mt-1">
+                                        <span className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none">
+                                             {currency === 'USD' ? amount.toFixed(2) : new Intl.NumberFormat('km-KH').format(Math.round(amount * 4100))}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase">
+                                             {currency}
+                                        </span>
+                                   </div>
+                              </div>
+
+                              {/* Dashed Separator */}
+                              <div className="w-full border-t border-dashed border-slate-200 my-3.5" />
+
+                              {/* QR Code Display Area */}
+                              <div className="relative w-48 h-48 mb-4 flex items-center justify-center bg-white p-1 select-none">
+                                   {isLoadingQr ? (
+                                        <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
+                                             <FiLoader className="w-7 h-7 animate-spin text-slate-600" />
+                                             <span className="text-[10px] font-bold tracking-wider uppercase">Generating QR...</span>
+                                        </div>
+                                   ) : qrError ? (
+                                        <div className="flex flex-col items-center justify-center text-center p-2 text-red-500 gap-2">
+                                             <span className="text-2xl">⚠️</span>
+                                             <span className="text-[10px] font-bold leading-tight">{qrError}</span>
+                                             <button
+                                                  onClick={refreshQr}
+                                                  className="mt-1 text-[9px] font-bold uppercase tracking-wider text-blue-600 underline border-none bg-transparent cursor-pointer"
+                                             >Retry</button>
+                                        </div>
+                                   ) : (qrImage || qrString) ? (
+                                        <div className="relative w-full h-full select-none">
+                                             <img
+                                                  src={qrImage || `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrString || '')}`}
+                                                  alt={titleText}
+                                                  className="w-full h-full object-contain pointer-events-none"
+                                             />
+                                        </div>
+                                   ) : (
+                                        <div className="text-slate-400 text-xs uppercase tracking-wider font-bold">No QR Code</div>
+                                   )}
                               </div>
                          </div>
 
-                         {/* Left and Right Ticket Cutouts and Dashed Separator */}
-                         <div className="w-full relative my-5 flex items-center justify-between select-none">
-                              <div className="absolute -left-[30px] w-5 h-5 bg-white border border-slate-200/60 rounded-[5px] z-10" />
-                              <div className="w-full border-t border-dashed border-slate-300" />
-                              <div className="absolute -right-[30px] w-5 h-5 bg-white border border-slate-200/60 rounded-[5px] z-10" />
-                         </div>
+                         {/* Instruction text below ticket */}
+                         <p className="text-[11px] font-normal text-slate-400 text-center leading-relaxed max-w-[240px] mt-4 mb-1 select-none">
+                              {scanInstructionText}
+                         </p>
 
-                         {/* QR Code Container */}
-                         <div className="relative w-56 h-56 my-2 flex items-center justify-center bg-white p-2 select-none border border-slate-100 rounded-[5px] shadow-sm">
-                              {isLoadingQr ? (
-                                   <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
-                                        <FiLoader className="w-8 h-8 animate-spin text-[#005D7E]" />
-                                        <span className="text-[10px] font-bold tracking-wider uppercase">Generating QR...</span>
-                                   </div>
-                              ) : qrError ? (
-                                   <div className="flex flex-col items-center justify-center text-center p-2 text-red-500 gap-2">
-                                        <span className="text-2xl">⚠️</span>
-                                        <span className="text-[10px] font-bold leading-tight">{qrError}</span>
-                                        <button
-                                             onClick={refreshQr}
-                                             className="mt-1 text-[9px] font-bold uppercase tracking-wider text-blue-600 underline border-none bg-transparent cursor-pointer"
-                                        >Retry</button>
-                                   </div>
-                              ) : (qrImage || qrString) ? (
-                                   <div className="relative w-full h-full select-none">
-                                        <img
-                                             src={qrImage || `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrString || '')}`}
-                                             alt={titleText}
-                                             className="w-full h-full object-contain pointer-events-none"
-                                        />
-                                   </div>
-                              ) : (
-                                   <div className="text-slate-400 text-2xs uppercase tracking-wider font-bold">No QR Code</div>
-                              )}
-                         </div>
-
-                    {/* Scan instructions text */}
-                    <p className="text-[11px] font-semibold text-slate-400 text-center leading-relaxed max-w-[240px] mt-5 mb-1 select-none">
-                         {scanInstructionText}
-                    </p>
-
-                    {/* Control Actions */}
-                    <div className="w-full flex flex-col gap-2.5 mt-6">
+                         {/* Optional Deep-link or Sandbox controls */}
                          {abapayDeeplink && (
                               <a
                                    href={abapayDeeplink}
                                    target="_blank"
                                    rel="noopener noreferrer"
-                                   className={`w-full py-3 ${buttonBg} text-white rounded-[5px] text-xs font-bold uppercase tracking-wider text-center no-underline shadow-sm transition-all duration-200 flex items-center justify-center gap-2 border-none cursor-pointer active:scale-[0.98]`}
+                                   className={`w-full mt-3 py-2.5 ${buttonBg} text-white rounded-[10px] text-xs font-bold uppercase tracking-wider text-center no-underline shadow-xs transition-all duration-200 flex items-center justify-center gap-2 border-none cursor-pointer active:scale-[0.98]`}
                               >
                                    <FiSmartphone className="w-4 h-4" />
                                    {payButtonText}
                               </a>
                          )}
-                         <button
-                              onClick={handleVerify}
-                              disabled={isVerifying || isLoadingQr}
-                              className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-[5px] text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-sm focus:outline-none flex items-center justify-center gap-2 border-none disabled:opacity-50 active:scale-[0.98]"
-                         >
-                              {isVerifying ? (
-                                   <>
-                                        <FiLoader className="w-4 h-4 animate-spin" />
-                                        Verifying...
-                                   </>
-                              ) : (
-                                   <>
-                                        <FiCheck className="w-4 h-4 stroke-[3]" />
-                                        Confirm Sandbox Payment
-                                   </>
-                              )}
-                         </button>
-                     </div>
-                </div>
-           </div>
-      </div>,
+
+                         {import.meta.env.DEV && (
+                              <button
+                                   onClick={handleVerify}
+                                   disabled={isVerifying || isLoadingQr}
+                                   className="w-full mt-2.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-[10px] text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer shadow-xs focus:outline-none flex items-center justify-center gap-2 border-none disabled:opacity-50 active:scale-[0.98]"
+                              >
+                                   {isVerifying ? (
+                                        <>
+                                             <FiLoader className="w-4 h-4 animate-spin" />
+                                             Verifying...
+                                        </>
+                                   ) : (
+                                        <>
+                                             <FiCheck className="w-4 h-4 stroke-[2.5]" />
+                                             Confirm Sandbox Payment
+                                        </>
+                                   )}
+                              </button>
+                         )}
+                    </div>
+               </div>
+          </div>,
           document.body
      );
 };

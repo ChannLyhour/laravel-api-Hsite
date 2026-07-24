@@ -514,9 +514,14 @@ class OrderController extends Controller
             }
         }
 
-        // Send Telegram notification to the store owner
+        // Send Telegram notification to the store owner (only if paid or COD)
         try {
-            \App\Helpers\TelegramHelper::sendOrderNotification($order);
+            $isDigitalPayment = in_array(strtolower($order->payment_method ?? ''), ['bakong', 'aba', 'khqr', 'card']);
+            if (!$isDigitalPayment || strtolower($order->payment_status ?? '') === 'paid') {
+                \App\Helpers\TelegramHelper::sendOrderNotification($order);
+            } else {
+                \Illuminate\Support\Facades\Log::info("⏸️ [TELEGRAM NOTIFICATION HELD AFTER OTP] Order #{$order->id} ({$order->order_no}) is Unpaid {$order->payment_method}. Waiting for payment completion.");
+            }
         } catch (\Exception $ex) {
             \Illuminate\Support\Facades\Log::warning("Telegram order notification failed: " . $ex->getMessage());
         }

@@ -55,6 +55,7 @@ export const EditPage: React.FC<EditPageProps> = ({
           ...(gateway.defaultValues || {}),
           ...(config.values || {})
      });
+     const [activeTab, setActiveTab] = useState<'aba' | 'khpay'>('aba');
      const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
      const [saving, setSaving] = useState(false);
 
@@ -76,6 +77,14 @@ export const EditPage: React.FC<EditPageProps> = ({
      };
 
      const credentialsFields = gateway.fields;
+     const displayedFields = credentialsFields.filter(field => {
+          if (gateway.id !== 'aba') return true;
+          if (activeTab === 'aba') {
+               return field.key === 'payway_link';
+          } else {
+               return field.key.startsWith('khpay_');
+          }
+     });
 
      return (
           <div className="space-y-6 font-kuntomruy animate-fade-in w-full">
@@ -113,6 +122,48 @@ export const EditPage: React.FC<EditPageProps> = ({
                                         </p>
                                    </div>
 
+                                   {/* Tab Switcher for ABA vs KHPAY */}
+                                   {gateway.id === 'aba' && (
+                                        <div className="space-y-3 border-b border-slate-200/80 pb-4 pt-1">
+                                             <div className="flex flex-wrap items-center gap-2">
+                                                  <button
+                                                       type="button"
+                                                       onClick={() => setActiveTab('aba')}
+                                                       className={`px-4 py-2 text-xs font-extrabold rounded-[6px] transition-all cursor-pointer border-none flex items-center gap-2 ${
+                                                            activeTab === 'aba'
+                                                                 ? 'bg-[#005D7E] text-white shadow-md'
+                                                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                       }`}
+                                                  >
+                                                       <span>Config 1: Account ABA Bank Support KHQR</span>
+                                                  </button>
+                                                  <button
+                                                       type="button"
+                                                       onClick={() => setActiveTab('khpay')}
+                                                       className={`px-4 py-2 text-xs font-extrabold rounded-[6px] transition-all cursor-pointer border-none flex items-center gap-2 ${
+                                                            activeTab === 'khpay'
+                                                                 ? 'bg-[#E61E25] text-white shadow-md'
+                                                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                       }`}
+                                                  >
+                                                       <span>Config 2: Config with KHPAY</span>
+                                                  </button>
+                                             </div>
+
+                                             {activeTab === 'aba' ? (
+                                                  <div className="p-3 bg-cyan-50 border border-cyan-200/60 rounded-[6px] text-xs text-cyan-900 leading-relaxed font-medium">
+                                                       <strong className="font-extrabold text-[#005D7E] block mb-0.5">Config 1: ABA Bank Account (PayWay Link / KHQR)</strong>
+                                                       Paste your official ABA PayWay merchant sharing link (<code className="bg-cyan-100/80 px-1 py-0.5 rounded font-mono text-[11px]">https://link.payway.com.kh/ABAPAY...</code>) to accept payments into your ABA Bank account with KHQR support.
+                                                  </div>
+                                             ) : (
+                                                  <div className="p-3 bg-red-50 border border-red-200/60 rounded-[6px] text-xs text-red-900 leading-relaxed font-medium">
+                                                       <strong className="font-extrabold text-[#E61E25] block mb-0.5">Config 2: Config with KHPAY (Dynamic KHQR API)</strong>
+                                                       Provide your KHPAY API Token and Bakong Account ID from <code className="bg-red-100/80 px-1 py-0.5 rounded font-mono text-[11px]">khpay.site</code> for real-time dynamic KHQR generation and automatic payment status checks.
+                                                  </div>
+                                             )}
+                                        </div>
+                                   )}
+
                                    {/* Operational Mode Toggle */}
                                    <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-700 block">Operational Mode</label>
@@ -142,7 +193,7 @@ export const EditPage: React.FC<EditPageProps> = ({
 
                                    {/* Credentials Inputs */}
                                    <div className="space-y-4 pt-2">
-                                        {credentialsFields.map(field => (
+                                        {displayedFields.map(field => (
                                              <div key={field.key} className="space-y-1.5 text-left">
                                                   <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
                                                        <span>{field.label}</span>

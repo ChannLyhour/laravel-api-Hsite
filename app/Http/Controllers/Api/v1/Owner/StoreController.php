@@ -1061,15 +1061,23 @@ class StoreController extends Controller
             [
                 'id' => 'aba',
                 'name' => 'ABA PAY',
-                'description' => 'Pay via ABA Merchant PayWay Link',
+                'description' => 'Config 1: ABA Bank Support KHQR (PayWay Link) | Config 2: Config with KHPAY',
                 'logoColor' => 'bg-[#005d7e]',
                 'textColor' => 'text-white',
                 'logoText' => 'ABA',
                 'fields' => [
-                    ['key' => 'payway_link', 'label' => 'ABA Merchant Link (PayWay)', 'type' => 'text', 'placeholder' => 'https://link.payway.com.kh/ABAPAYV74740762', 'hint' => 'Paste your ABA Merchant sharing link from ABA PayWay app.'],
+                    ['key' => 'payway_link', 'label' => 'ABA Merchant Link (PayWay Link)', 'type' => 'text', 'placeholder' => 'https://link.payway.com.kh/ABAPAYvu485790W', 'hint' => 'Config 1: Paste your ABA Merchant sharing link from ABA PayWay app.'],
+                    ['key' => 'khpay_api_key', 'label' => 'KHPay API Token (Bearer Key)', 'type' => 'password', 'required' => false, 'placeholder' => 'ak_43a276d3b91c5b1ca12c...', 'hint' => 'Config 2: API Key from khpay.site for dynamic KHQR generation & status checking.'],
+                    ['key' => 'khpay_account_id', 'label' => 'Bakong / KHPay Account ID', 'type' => 'text', 'required' => false, 'placeholder' => 'lyhour_chann@bkrt', 'hint' => 'Config 2: Your Bakong ID registered on KHPay.'],
+                    ['key' => 'khpay_merchant_name', 'label' => 'Merchant Name', 'type' => 'text', 'required' => false, 'placeholder' => 'OuR20s Collection', 'hint' => 'Config 2: Display merchant name for KHQR payments.'],
+                    ['key' => 'khpay_merchant_city', 'label' => 'Merchant City', 'type' => 'text', 'required' => false, 'placeholder' => 'Siem Reap', 'hint' => 'Config 2: Merchant city for KHQR payments.'],
                 ],
                 'defaultValues' => [
-                    'payway_link' => '',
+                    'payway_link' => 'https://link.payway.com.kh/ABAPAYvu485790W',
+                    'khpay_api_key' => '',
+                    'khpay_account_id' => '',
+                    'khpay_merchant_name' => '',
+                    'khpay_merchant_city' => '',
                 ]
             ],
             [

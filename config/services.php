@@ -31,4 +31,9 @@ return [
         ],
     ],
 
+    'khpay' => [
+        'api_key' => env('KHPAY_API_KEY', ''),
+        'base_url' => env('KHPAY_BASE_URL', 'https://khpay.site/api/v1'),
+    ],
+
 ];
