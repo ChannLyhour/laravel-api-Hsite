@@ -2,7 +2,8 @@
   "$schema": "https://www.schemastore.org/package.json",
   "private": true,
   "scripts": {
-    "build": "vite build --mode cloudflare",
+    "build": "vite build",
+    "build:cf": "vite build --mode cloudflare",
     "dev": "vite",
     "deploy": "npm run build && wrangler deploy",
     "preview": "npm run build && wrangler dev"
