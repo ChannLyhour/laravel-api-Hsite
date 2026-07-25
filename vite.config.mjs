@@ -41,9 +41,10 @@ export default defineConfig(({ mode }) => {
                 '@Security': path.resolve(__dirname, './resources/Security'),
             },
         },
-        publicDir: isCloudflare ? false : 'public',
+        publicDir: isCloudflare ? false : false,
         build: {
             outDir: isCloudflare ? 'dist' : 'public/build',
+            chunkSizeWarningLimit: 4000,
         },
         server: {
             cors: true,
