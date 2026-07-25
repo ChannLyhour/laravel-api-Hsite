@@ -1,27 +1,24 @@
-/* Global Font Family Rule for Fashion Website */
-body,
-.fashion-website-container,
-.font-kontomruy,
-.font-sans,
-[class*="font-"] {
+/* Font Family Rule for Fashion Website */
+.fashion-website-container {
     font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', 'Inter', system-ui, sans-serif;
 }
 
-/* Remove Heavy Typography Effects (uppercase, letter-spacing, line clamping & text truncation) */
-.uppercase,
-[class*="uppercase"] {
+/* Remove Heavy Typography Effects (uppercase, letter-spacing, line clamping & text truncation) inside Fashion Website container */
+.fashion-website-container .uppercase,
+.fashion-website-container [class*="uppercase"] {
     text-transform: none !important;
 }
 
-.tracking-widest,
-.tracking-wider,
-[class*="tracking-"] {
+.fashion-website-container .tracking-widest,
+.fashion-website-container .tracking-wider,
+.fashion-website-container [class*="tracking-"] {
     letter-spacing: normal !important;
 }
 
-.line-clamp-1,
-.truncate,
-[class*="line-clamp-"] {
+.fashion-website-container .line-clamp-1,
+.fashion-website-container .truncate,
+.fashion-website-container [class*="line-clamp-"] {
+    line-clamp: unset !important;
     -webkit-line-clamp: unset !important;
     white-space: normal !important;
     overflow: visible !important;

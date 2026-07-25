@@ -59,7 +59,7 @@ import { brandsService } from '@/api/owner/brands';
 import { categoriesService } from '@/api/owner/categories';
 import { client } from '@/api/client';
 import { SetupGuideModal, type SetupProgress } from '../pages/SetupGuideModal';
-import { RealTimeOrderPopup } from '../pages/order/popupOrderRealTime';
+import { RealTimeOrderPopup, playNotificationChime } from '../pages/order/popupOrderRealTime';
 import { SocialMediaTab } from '../pages/Store_Settings/SocialMediaTab';
 import { BannersTab } from '../pages/BannersTab';
 import { CouponsTab, FlashDealsTab, GenericDealsTab, SendNotificationTab, PushNotificationsSetupTab, AnnouncementTab } from '../pages/MarketingPlaceholders';
@@ -388,9 +388,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                   : c.other_user.name;
 
                 // Play custom chime sound
-                import('@/pages/owner_manage/pages/order/popupOrderRealTime').then(m => {
-                  if (m.playNotificationChime) m.playNotificationChime();
-                }).catch(() => { });
+                playNotificationChime();
 
                 // Alert notification with 10s duration
                 toast.custom((t) => (
