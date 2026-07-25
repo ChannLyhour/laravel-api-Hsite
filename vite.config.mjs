@@ -45,6 +45,11 @@ export default defineConfig(({ mode }) => {
         build: {
             outDir: isCloudflare ? 'dist' : 'public/build',
             chunkSizeWarningLimit: 4000,
+            rolldownOptions: {
+                checks: {
+                    pluginTimings: false,
+                },
+            },
         },
         server: {
             cors: true,
