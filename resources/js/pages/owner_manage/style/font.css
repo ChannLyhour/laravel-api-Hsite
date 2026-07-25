@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Kontomruy+Pro:ital,wght@0,100..700;1,100..700&display=swap');
 
-.font-kuntomruy {
+.font-kuntomruy,
+body, button, input, select, textarea {
   font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', system-ui, -apple-system, sans-serif !important;
 }
 
