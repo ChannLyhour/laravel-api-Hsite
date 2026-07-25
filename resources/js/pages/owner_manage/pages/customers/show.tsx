@@ -4,7 +4,7 @@ import { type Customer } from '@/api/owner/customers';
 import { resolveImageUrl } from '@/api/imageUtils';
 import '@/pages/owner_manage/style/font.css';
 import { customerOrdersService } from '@/api/created_by/getOrderCustomerbyid';
-import { type Order } from '@/pages/owner_manage/components/order/show';
+import { type Order } from '@/pages/owner_manage/pages/order/show';
 import { HelperTable } from '../../helper/HelperTable';
 import type { HelperTableColumn } from '../../helper/HelperTable';
 

@@ -620,7 +620,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           {/* Premium Price-Tag Badge */}
           {discount && (
             <div className="absolute top-4 right-4 z-20 pointer-events-none select-none">
-              <span className="inline-block bg-[#E61E25] text-white text-[10px] sm:text-[11px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider leading-none shadow-md">
+              <span className="inline-block bg-[#E61E25] text-white text-[10px] sm:text-[11px] font-medium px-2.5 py-1 rounded-full leading-none shadow-md">
                 {discount}
               </span>
             </div>
@@ -692,7 +692,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
 
           {/* Brand Tag Bottom Center */}
           <div
-            className="absolute right-2 bottom-6 text-[8px] tracking-[0.25em] text-stone-400 font-bold uppercase pointer-events-none select-none"
+            className="absolute right-2 bottom-6 text-[8px] text-stone-400 font-medium pointer-events-none select-none"
             style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
           >
             {stores?.store_name || storeName} / Studio
@@ -740,12 +740,12 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           <div className="space-y-1.5 pt-2">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-baseline gap-2.5">
-                <span className="text-[#E61E25] text-2xl font-extrabold tracking-tight">
+                <span className="text-[#E61E25] text-2xl font-medium">
                   $
                   {price.toFixed(2)}
                 </span>
                 {discount && (
-                  <span className="text-[#E61E25] text-[10px] font-bold uppercase tracking-wider bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded-full">
+                  <span className="text-[#E61E25] text-[10px] font-medium bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded-full">
                     {discount}
                   </span>
                 )}
@@ -757,14 +757,14 @@ export const DetailPage: React.FC<DetailPageProps> = ({
               </div>
               {(product as any).badge && (
                 <span
-                  className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm"
+                  className="px-2.5 py-0.5 rounded-full text-[10px] font-medium shadow-sm"
                   style={{ backgroundColor: (product as any).badge.background_color, color: (product as any).badge.text_color }}
                 >
                   {(product as any).badge.name}
                 </span>
               )}
               {isOutOfStock && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50">
                   Out of Stock
                 </span>
               )}
@@ -777,10 +777,8 @@ export const DetailPage: React.FC<DetailPageProps> = ({
               <TextSp
                 as="h2"
                 size={{ mobile: 'xl', tablet: '2xl' }}
-                weight="bold"
+                weight="medium"
                 color="text-stone-900 dark:text-white"
-                uppercase
-                tracking="tight"
                 leading="snug"
                 align="left"
               >
@@ -813,7 +811,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           {/* Colors List */}
           {product.has_options && colors.length > 0 && (
             <div className="space-y-2">
-              <span className="text-stone-500 dark:text-stone-400 text-xs font-bold uppercase tracking-wider block text-left">
+              <span className="text-stone-500 dark:text-stone-400 text-xs font-medium block text-left">
                 {colors.length} {colors.length === 1 ? 'Color' : 'Colors'} available
               </span>
               <div className="flex flex-wrap gap-2">
@@ -837,10 +835,10 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                           className="flex-1 w-full bg-cover bg-center rounded-md"
                           style={{ backgroundColor: resolveColorHex(product, color) }}
                         />
-                        <div className="h-4.5 w-full bg-white dark:bg-stone-950 flex items-center justify-center text-[10px] font-bold text-stone-600 dark:text-stone-400 uppercase truncate px-0.5 relative">
+                        <div className="h-4.5 w-full bg-white dark:bg-stone-950 flex items-center justify-center text-[10px] font-medium text-stone-600 dark:text-stone-400 px-0.5 relative">
                           {color.startsWith('#') ? color.slice(0, 4) : color}
                           {imgCount > 0 && (
-                            <span className="absolute -top-3.5 right-0.5 bg-stone-950 dark:bg-white text-white dark:text-stone-950 text-[7px] px-1 rounded-full scale-75 leading-none py-0.5 font-extrabold">
+                            <span className="absolute -top-3.5 right-0.5 bg-stone-950 dark:bg-white text-white dark:text-stone-950 text-[7px] px-1 rounded-full scale-75 leading-none py-0.5 font-medium">
                               {imgCount}
                             </span>
                           )}
@@ -856,9 +854,9 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           {/* Option / Size List */}
           {product.has_options && sizes.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 text-xs font-bold uppercase tracking-wider">
+              <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 text-xs font-medium">
                 <span>{nonColorAttributeName}</span>
-                <span className="text-stone-400 dark:text-stone-500 text-[11px] font-medium lowercase tracking-normal">
+                <span className="text-stone-400 dark:text-stone-500 text-[11px] font-medium">
                   select {nonColorAttributeName.toLowerCase()}
                 </span>
               </div>
@@ -871,8 +869,8 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                       key={sz}
                       disabled={!isAvailable}
                       onClick={() => setSelectedSize(sz)}
-                      className={`py-2 text-center text-xs font-semibold rounded-lg transition-all border ${isSelected
-                        ? 'bg-stone-950 dark:bg-stone-50 text-white dark:text-stone-950 border-stone-950 dark:border-stone-50 shadow-md scale-102 font-bold'
+                      className={`py-2 text-center text-xs font-medium rounded-lg transition-all border ${isSelected
+                        ? 'bg-stone-950 dark:bg-stone-50 text-white dark:text-stone-950 border-stone-950 dark:border-stone-50 shadow-md scale-102'
                         : isAvailable
                           ? 'bg-white dark:bg-stone-900 hover:bg-stone-50 dark:hover:bg-stone-800 text-stone-850 dark:text-stone-200 border-stone-200 dark:border-stone-800 hover:border-stone-800 dark:hover:border-stone-400 cursor-pointer'
                           : 'bg-stone-50/50 dark:bg-stone-900/50 text-stone-400 dark:text-stone-600 border-stone-200 dark:border-stone-800 line-through opacity-40 cursor-not-allowed'
@@ -889,9 +887,9 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           {/* Addons List */}
           {product.addons && product.addons.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 text-xs font-bold uppercase tracking-wider">
+              <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 text-xs font-medium">
                 <span>Product Add-ons</span>
-                <span className="text-stone-400 dark:text-stone-500 text-[11px] font-medium lowercase tracking-normal">
+                <span className="text-stone-400 dark:text-stone-500 text-[11px] font-medium">
                   optional extras
                 </span>
               </div>
@@ -918,7 +916,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                         {/* Checkbox Icon */}
                         <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'bg-stone-950 dark:bg-stone-200 border-stone-950 dark:border-stone-200 text-white dark:text-stone-950' : 'border-stone-300 dark:border-stone-700'
                           }`}>
-                           {isSelected && <span className="text-[9px] font-black leading-none">✓</span>}
+                           {isSelected && <span className="text-[9px] font-medium leading-none">✓</span>}
                         </div>
 
                         {/* Optional Addon Image */}
@@ -930,11 +928,11 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                           />
                         )}
 
-                        <span className="text-xs font-bold text-stone-800 dark:text-stone-200 uppercase tracking-wide">
+                        <span className="text-xs font-medium text-stone-800 dark:text-stone-200">
                           {addon.addon_name}
                         </span>
                       </div>
-                      <span className="text-xs font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                      <span className="text-xs font-medium text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
                         {(() => {
                           const price = parseFloat(String(addon.additional_price)) || 0;
                           const discountVal = parseFloat(String(addon.discount || 0)) || 0;
@@ -964,7 +962,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
 
           {/* Quantity selector */}
           <div className="space-y-2 mb-2 flex flex-col items-end w-full">
-            <span className="text-stone-500 dark:text-stone-400 text-xs font-bold uppercase tracking-wider block text-right w-full">
+            <span className="text-stone-500 dark:text-stone-400 text-xs font-medium block text-right w-full">
               Quantity
             </span>
             <div className="flex items-center w-[120px] rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 p-0.5 overflow-hidden">
@@ -974,23 +972,23 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                   const minQty = product.min_order_qty && product.min_order_qty > 1 ? product.min_order_qty : 1;
                   setDetailQuantity(prev => Math.max(minQty, prev - 1));
                 }}
-                className="w-8 h-8 rounded-md hover:bg-stone-200/60 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white transition-all flex items-center justify-center font-semibold border-none cursor-pointer text-xs active:scale-90"
+                className="w-8 h-8 rounded-md hover:bg-stone-200/60 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white transition-all flex items-center justify-center font-medium border-none cursor-pointer text-xs active:scale-90"
               >
                 <FiMinus />
               </button>
-              <span className="flex-1 text-center font-bold text-xs text-stone-900 dark:text-stone-100 select-none">
+              <span className="flex-1 text-center font-medium text-xs text-stone-900 dark:text-stone-100 select-none">
                 {detailQuantity}
               </span>
               <button
                 type="button"
                 onClick={() => setDetailQuantity(prev => prev + 1)}
-                className="w-8 h-8 rounded-md hover:bg-stone-200/60 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white transition-all flex items-center justify-center font-semibold border-none cursor-pointer text-xs active:scale-90"
+                className="w-8 h-8 rounded-md hover:bg-stone-200/60 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white transition-all flex items-center justify-center font-medium border-none cursor-pointer text-xs active:scale-90"
               >
                 <FiPlus />
               </button>
             </div>
             {product.min_order_qty && product.min_order_qty > 1 && (
-              <span className="text-[#E61E25] text-[10px] font-bold uppercase tracking-wider block mt-1">
+              <span className="text-[#E61E25] text-[10px] font-medium block mt-1">
                 ⚠️ Order minimum for Customer: {product.min_order_qty} units
               </span>
             )}
@@ -999,7 +997,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
           {/* Collapsible item description */}
           <div className="border-t border-stone-200/60 dark:border-stone-800/60 pt-3">
             <details className="group cursor-pointer select-none">
-              <summary className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 outline-none list-none [&::-webkit-details-marker]:hidden">
+              <summary className="flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400 outline-none list-none [&::-webkit-details-marker]:hidden">
                 <span>Product details</span>
                 <span className="transition-transform duration-200 group-open:rotate-180">
                   <FiChevronRight className="w-3.5 h-3.5 rotate-90 text-stone-450" />
@@ -1019,7 +1017,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
 
             return (
               <div className="border-t border-stone-200/60 dark:border-stone-800/60 pt-4 mt-4 text-left">
-                <span className="text-stone-500 dark:text-stone-400 text-xs font-bold uppercase tracking-wider block mb-2.5">
+                <span className="text-stone-500 dark:text-stone-400 text-xs font-medium block mb-2.5">
                   Related Social Posts
                 </span>
                 <div className="flex flex-wrap gap-2.5">
@@ -1028,7 +1026,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                       href={links.facebook}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#1877F2]/10 border border-stone-200 dark:border-stone-800 hover:border-[#1877F2]/30 text-stone-800 dark:text-stone-200 hover:text-[#1877F2] dark:hover:text-[#1877F2] rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#1877F2]/10 border border-stone-200 dark:border-stone-800 hover:border-[#1877F2]/30 text-stone-800 dark:text-stone-200 hover:text-[#1877F2] dark:hover:text-[#1877F2] rounded-lg text-xs font-medium transition-all hover:scale-105"
                     >
                       <FaFacebookF className="w-3.5 h-3.5" />
                       Facebook
@@ -1039,7 +1037,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                       href={links.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#E1306C]/10 border border-stone-200 dark:border-stone-800 hover:border-[#E1306C]/30 text-stone-800 dark:text-stone-200 hover:text-[#E1306C] dark:hover:text-[#E1306C] rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#E1306C]/10 border border-stone-200 dark:border-stone-800 hover:border-[#E1306C]/30 text-stone-800 dark:text-stone-200 hover:text-[#E1306C] dark:hover:text-[#E1306C] rounded-lg text-xs font-medium transition-all hover:scale-105"
                     >
                       <FaInstagram className="w-3.5 h-3.5" />
                       Instagram
@@ -1050,7 +1048,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                       href={links.tiktok}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-stone-200 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-600 text-stone-800 dark:text-stone-200 rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-stone-200 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-600 text-stone-800 dark:text-stone-200 rounded-lg text-xs font-medium transition-all hover:scale-105"
                     >
                       <FaTiktok className="w-3.5 h-3.5" />
                       TikTok
@@ -1061,7 +1059,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                       href={links.telegram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#229ED9]/10 border border-stone-200 dark:border-stone-800 hover:border-[#229ED9]/30 text-stone-800 dark:text-stone-200 hover:text-[#229ED9] dark:hover:text-[#229ED9] rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#229ED9]/10 border border-stone-200 dark:border-stone-800 hover:border-[#229ED9]/30 text-stone-800 dark:text-stone-200 hover:text-[#229ED9] dark:hover:text-[#229ED9] rounded-lg text-xs font-medium transition-all hover:scale-105"
                     >
                       <FaTelegramPlane className="w-3.5 h-3.5" />
                       Telegram
@@ -1072,7 +1070,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                       href={links.youtube}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#FF0000]/10 border border-stone-200 dark:border-stone-800 hover:border-[#FF0000]/30 text-stone-800 dark:text-stone-200 hover:text-[#FF0000] dark:hover:text-[#FF0000] rounded-lg text-xs font-extrabold transition-all hover:scale-105"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-stone-50 dark:bg-stone-900 hover:bg-[#FF0000]/10 border border-stone-200 dark:border-stone-800 hover:border-[#FF0000]/30 text-stone-800 dark:text-stone-200 hover:text-[#FF0000] dark:hover:text-[#FF0000] rounded-lg text-xs font-medium transition-all hover:scale-105"
                     >
                       <FaYoutube className="w-3.5 h-3.5" />
                       YouTube
@@ -1134,7 +1132,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                   setIsLoading(false);
                 }
               }}
-              className={`flex-1 py-3.5 sm:py-4 font-bold text-xs uppercase tracking-wider sm:tracking-widest rounded-xl transition-all duration-200 border-none shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98] ${(isSelectionComplete ? isOutOfStock : false)
+              className={`flex-1 py-3.5 sm:py-4 font-medium text-xs rounded-xl transition-all duration-200 border-none shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98] ${(isSelectionComplete ? isOutOfStock : false)
                 ? 'bg-stone-100 dark:bg-stone-900 text-stone-400 dark:text-stone-600 cursor-not-allowed'
                 : 'btn-shine-swipe bg-stone-950 dark:bg-stone-100 text-white dark:text-stone-950 hover:bg-[#E61E25] dark:hover:bg-[#E61E25] dark:hover:text-white cursor-pointer'
                 }`}
@@ -1191,7 +1189,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
                   setIsLoading(false);
                 }
               }}
-              className={`flex-1 py-3.5 sm:py-4 font-bold text-xs uppercase tracking-wider sm:tracking-widest rounded-xl transition-all duration-200 border-none shadow-sm hover:shadow-md hover:shadow-red-500/10 flex items-center justify-center gap-2 active:scale-[0.98] ${(isSelectionComplete ? isOutOfStock : false)
+              className={`flex-1 py-3.5 sm:py-4 font-medium text-xs rounded-xl transition-all duration-200 border-none shadow-sm hover:shadow-md hover:shadow-red-500/10 flex items-center justify-center gap-2 active:scale-[0.98] ${(isSelectionComplete ? isOutOfStock : false)
                 ? 'bg-stone-100 dark:bg-stone-900 text-stone-400 dark:text-stone-600 cursor-not-allowed'
                 : 'bg-[#E61E25] hover:bg-[#c1151b] dark:hover:bg-[#ff2e36] text-white cursor-pointer'
                 }`}
@@ -1226,7 +1224,7 @@ export const DetailPage: React.FC<DetailPageProps> = ({
               onClose();
             }
           }}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-stone-900 uppercase tracking-widest border-none bg-transparent cursor-pointer transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-500 hover:text-stone-900 border-none bg-transparent cursor-pointer transition-colors"
         >
           <FiChevronLeft className="w-4 h-4" /> Back to Shop
         </button>

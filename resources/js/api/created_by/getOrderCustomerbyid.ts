@@ -1,7 +1,7 @@
 import { client } from '../client';
 import { mapBackendOrder } from '../owner/orders';
 import type { BackendOrder } from '../owner/orders';
-import type { Order } from '@/pages/owner_manage/components/order/show';
+import type { Order } from '@/pages/owner_manage/pages/order/show';
 
 /**
  * Service to retrieve order history for a specific customer or the currently authenticated user.

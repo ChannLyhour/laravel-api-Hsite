@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FiPrinter, FiX } from 'react-icons/fi';
-import type { Order } from '@/pages/owner_manage/components/order/show';
+import type { Order } from '@/pages/owner_manage/pages/order/show';
 import { TextSp } from '../../../helpers/TextSp';
 import { adminSettingApi } from '@/api/admin/setting';
 import { storesService } from '@/api/owner/stores';

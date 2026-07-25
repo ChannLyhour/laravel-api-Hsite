@@ -199,8 +199,6 @@ const BadgeGridRow: React.FC<BadgeGridRowProps> = ({
           weight="black"
           font="kontomruy"
           color={getHeaderTextColor(badgeName)}
-          uppercase
-          tracking="wider"
         >
           {badgeName}
         </TextSp>
@@ -220,8 +218,6 @@ const BadgeGridRow: React.FC<BadgeGridRowProps> = ({
             weight="black"
             font="kontomruy"
             color="text-stone-900 dark:text-stone-100 hover:text-stone-600 dark:hover:text-stone-400"
-            uppercase
-            tracking="widest"
           >
             Shop More
           </TextSp>
@@ -286,7 +282,7 @@ const BadgeGridRow: React.FC<BadgeGridRowProps> = ({
                   : 'w-full sm:w-[calc((100%-16px)/3)] lg:w-[calc((100%-24px)/4)] sm:shrink-0 sm:snap-start'
               }
             >
-              <div data-aos="fade-up" data-aos-duration="2000" data-aos-offset="10">
+              <div data-aos="fade-up" data-aos-duration="1000" data-aos-offset="10">
                 <CardProduct
                   item={item}
                   ownerUserId={ownerUserId}
@@ -323,8 +319,6 @@ const BadgeGridRow: React.FC<BadgeGridRowProps> = ({
             <TextSp
               size="xs"
               weight="black"
-              uppercase
-              tracking="widest"
             >
               Shop More
             </TextSp>
@@ -469,8 +463,6 @@ export const ProductBagdeGrid: React.FC<ProductBagdeGridProps> = ({
             size="xs"
             weight="extrabold"
             color="text-stone-800 dark:text-stone-200"
-            uppercase
-            tracking="wider"
           >
             Collection is empty
           </TextSp>

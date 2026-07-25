@@ -57,7 +57,7 @@ export const FashionHomeScreen: React.FC<FashionHomeScreenProps> = ({
         : 'bg-white/90 border-stone-100 text-stone-900 shadow-3xs'
         }`}>
         <div className="shrink-0 mr-3">
-          <h1 className={`text-base font-serif tracking-widest uppercase ${isDarkTheme ? 'text-white' : 'text-stone-900'}`}>
+          <h1 className={`text-base font-bold ${isDarkTheme ? 'text-white' : 'text-stone-900'}`}>
             {settings?.store_name || storeName || 'AURA'}
           </h1>
         </div>

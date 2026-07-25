@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { ordersService } from '@/api/owner/orders';
-import type { Order } from '@/pages/owner_manage/components/order/show';
+import type { Order } from '@/pages/owner_manage/pages/order/show';
 
 // Audio Chime Generator using browser Web Audio API
 export const playNotificationChime = () => {

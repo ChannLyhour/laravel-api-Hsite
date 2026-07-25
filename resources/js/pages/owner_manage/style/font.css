@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Kontomruy+Pro:ital,wght@0,100..700;1,100..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Kontomruy+Pro:ital,wght@0,100..700;1,100..700&display=swap');
 
 .font-kuntomruy {
-  font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', system-ui, -apple-system, sans-serif !important;
 }
 
 /* ── Heading colors (Page & Section level) ────────────────────────────────── */
@@ -137,6 +137,6 @@ h1, h2, h3, h4, h5, h6 {
 /* ── Main Content Container ────────────────────────────────────────────────── */
 .main-content-container,
 .main-content-container * {
-  font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important;
+  font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important;
 }
 

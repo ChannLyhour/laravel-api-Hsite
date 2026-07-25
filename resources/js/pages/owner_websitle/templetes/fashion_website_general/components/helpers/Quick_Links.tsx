@@ -72,10 +72,10 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
                          </div>
 
                          <div className="flex flex-col items-center gap-0.5">
-                              <span className={`text-[11px] sm:text-[13px] font-black uppercase tracking-wider ${isDarkTheme ? 'text-stone-200' : 'text-stone-850'} leading-none`}>
+                              <span className={`text-[11px] sm:text-[13px] font-medium ${isDarkTheme ? 'text-stone-200' : 'text-stone-850'} leading-none`}>
                                    {isKhmer ? 'ហាង' : 'Shop'}
                               </span>
-                              <span className="text-[7px] sm:text-[8.5px] text-stone-400 font-bold uppercase tracking-wider leading-none mt-0.5">
+                              <span className="text-[7px] sm:text-[8.5px] text-stone-400 font-medium leading-none mt-0.5">
                                    {isKhmer ? 'ហាងលក់ទំនិញ' : 'Enter Boutique'}
                               </span>
                          </div>
@@ -99,10 +99,10 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
                          </div>
 
                          <div className="flex flex-col items-center gap-0.5">
-                              <span className={`text-[11px] sm:text-[13px] font-black uppercase tracking-wider ${isDarkTheme ? 'text-stone-200' : 'text-stone-850'} leading-none`}>
+                              <span className={`text-[11px] sm:text-[13px] font-medium ${isDarkTheme ? 'text-stone-200' : 'text-stone-850'} leading-none`}>
                                    {isKhmer ? 'ប្រភេទ' : 'Categories'}
                               </span>
-                              <span className="text-[7px] sm:text-[8.5px] text-stone-400 font-bold uppercase tracking-wider leading-none mt-0.5">
+                              <span className="text-[7px] sm:text-[8.5px] text-stone-400 font-medium leading-none mt-0.5">
                                    {isKhmer ? 'ស្វែងរកផលិតផល' : 'Browse Catalog'}
                               </span>
                          </div>
@@ -119,7 +119,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
                     >
                          {/* Notification Badge */}
                          {couponsCount > 0 && (
-                              <div className="absolute -top-1 -right-1 min-w-[18px] h-4.5 px-1 bg-[#E61E25] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-red-500/10 z-10">
+                              <div className="absolute -top-1 -right-1 min-w-[18px] h-4.5 px-1 bg-[#E61E25] text-white text-[9px] font-medium rounded-full flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-red-500/10 z-10">
                                    {couponsCount}
                               </div>
                          )}
@@ -141,10 +141,10 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
                          </div>
 
                          <div className="flex flex-col items-center gap-0.5">
-                              <span className={`text-[11px] sm:text-[13px] font-black uppercase tracking-wider ${isDarkTheme ? 'text-stone-200' : 'text-stone-850'} leading-none`}>
+                              <span className={`text-[11px] sm:text-[13px] font-medium ${isDarkTheme ? 'text-stone-200' : 'text-stone-850'} leading-none`}>
                                    {isKhmer ? 'ប័ណ្ណ' : 'Coupon'}
                               </span>
-                              <span className="text-[7px] sm:text-[8.5px] text-stone-400 font-bold uppercase tracking-wider leading-none mt-0.5">
+                              <span className="text-[7px] sm:text-[8.5px] text-stone-400 font-medium leading-none mt-0.5">
                                    {isKhmer ? 'ទទួលបានការបញ្ចុះតម្លៃ' : 'Claim savings'}
                               </span>
                          </div>

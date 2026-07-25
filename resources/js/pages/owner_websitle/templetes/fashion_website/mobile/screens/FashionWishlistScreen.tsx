@@ -24,7 +24,7 @@ export const FashionWishlistScreen: React.FC<FashionWishlistScreenProps> = ({
 
   return (
     <div className="p-4 space-y-6 flex-grow flex flex-col pb-20 animate-fade-in overflow-hidden">
-      <h2 className={`text-base font-serif tracking-widest uppercase flex items-center space-x-2 shrink-0 ${isDarkTheme ? 'text-white' : 'text-stone-900'}`}>
+      <h2 className={`text-base font-bold flex items-center space-x-2 shrink-0 ${isDarkTheme ? 'text-white' : 'text-stone-900'}`}>
         <FiHeart className="w-4 h-4 shrink-0 text-rose-500 fill-current" />
         <span>My Wishlist ({favoritedItems.length})</span>
       </h2>
@@ -71,7 +71,7 @@ export const FashionWishlistScreen: React.FC<FashionWishlistScreenProps> = ({
                   {/* Descriptions */}
                   <div className="p-3 flex-grow flex flex-col justify-between space-y-2">
                     <div className="space-y-0.5">
-                      <h4 className={`text-[11px] font-semibold line-clamp-1 group-hover:text-stone-500 transition-colors ${
+                      <h4 className={`text-[11px] font-semibold group-hover:text-stone-500 transition-colors ${
                         isDarkTheme ? 'text-stone-200' : 'text-stone-800'
                       }`}>
                         {item.name}
@@ -113,7 +113,7 @@ export const FashionWishlistScreen: React.FC<FashionWishlistScreenProps> = ({
         <div className="text-center py-24 space-y-3 flex-grow flex flex-col justify-center items-center">
           <FiHeart className="text-stone-400 w-12 h-12 stroke-[1.25]" />
           <div>
-            <h4 className={`text-sm font-serif uppercase tracking-widest ${isDarkTheme ? 'text-white' : 'text-stone-800'}`}>Your Wishlist is Empty</h4>
+            <h4 className={`text-sm font-bold ${isDarkTheme ? 'text-white' : 'text-stone-800'}`}>Your Wishlist is Empty</h4>
             <p className="text-stone-400 text-[10px] font-semibold mt-1">Bookmark garments by tapping the heart icon.</p>
           </div>
         </div>

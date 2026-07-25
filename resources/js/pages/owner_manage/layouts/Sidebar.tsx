@@ -43,9 +43,9 @@ import { stockManagementService } from '@/api/owner/stockManagement';
 import { useTranslation } from '../lang/i18n';
 import { getStoreUrl, slugifyStoreName } from '@Security/Owner/configUrl';
 import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
-import CopyShareLink from '../components/Quick_Links/copy_share_link';
-import VisitLiveStore from '../components/Quick_Links/visit_live_store';
-import LocalShopSale from '../components/Quick_Links/Local_Shop_Sale';
+import CopyShareLink from '../pages/Quick_Links/copy_share_link';
+import VisitLiveStore from '../pages/Quick_Links/visit_live_store';
+import LocalShopSale from '../pages/Quick_Links/Local_Shop_Sale';
 import { TotalProductCount } from './Badge_count/totalProductCount';
 
 type TabId = 'overview' | 'pos' | 'categories' | 'sub-categories' | 'sub-sub-categories' | 'brands' | 'product-badges' | 'menu-items' | 'orders' | 'orders-pending' | 'orders-processing' | 'orders-delivering' | 'orders-completed' | 'orders-cancelled' | 'posts' | 'pages-builder' | 'settings' | 'policies' | 'attributes' | 'theme' | 'customers' | 'customer-reviews' | 'sharinglink' | 'social-media' | 'settings-delivery-methods' | 'settings-delivery-zones' | 'settings-thirdparty-payment' | 'settings-thirdparty-firebase' | 'settings-thirdparty-pusher' | 'settings-thirdparty-marketing' | 'settings-thirdparty-oauth' | 'settings-thirdparty-telegram' | 'settings-thirdparty-gmailotp' | 'marketing-banners' | 'marketing-coupons' | 'marketing-flash-deals' | 'marketing-featured-deal' | 'marketing-clearance-sale' | 'marketing-send-notification' | 'marketing-push-notification' | 'marketing-announcement' | 'partner-stores' | 'inbox' | 'profile-owner' | 'customize-system' | 'stock-overview' | 'stock-items' | 'stock-low' | 'stock-movements' | 'stock-fifo' | 'upgrade-plan' | 'catalog-limited-stock' | 'catalog-restock-requests' | 'catalog-bulk-import' | 'catalog-vendor-new' | 'catalog-vendor-update' | 'catalog-vendor-approved' | 'catalog-vendor-denied' | 'catalog-product-gallery';
@@ -405,7 +405,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         .child-sidebar-container {
           background-color: #ffffff !important;
           color: #0f172a !important;
-          font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important;
+          font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important;
           font-optical-sizing: auto !important;
         }
         .child-sidebar-header {

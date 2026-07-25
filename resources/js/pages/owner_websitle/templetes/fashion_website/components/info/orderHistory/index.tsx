@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fi';
 import { toast } from '../../../utils/toast';
 import { customerOrdersService } from '@/api/created_by/getOrderCustomerbyid';
-import type { Order } from '@/pages/owner_manage/components/order/show';
+import type { Order } from '@/pages/owner_manage/pages/order/show';
 import { useTranslation } from '../../../utils/translate';
 import { OrderHistoryShow, resolveItemImage } from './show';
 import { Receipt } from './Receipt/Receipt';

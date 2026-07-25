@@ -1,3 +1,33 @@
+/* Global Font Family Rule for Fashion Website */
+body,
+.fashion-website-container,
+.font-kontomruy,
+.font-sans,
+[class*="font-"] {
+    font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', 'Inter', system-ui, sans-serif;
+}
+
+/* Remove Heavy Typography Effects (uppercase, letter-spacing, line clamping & text truncation) */
+.uppercase,
+[class*="uppercase"] {
+    text-transform: none !important;
+}
+
+.tracking-widest,
+.tracking-wider,
+[class*="tracking-"] {
+    letter-spacing: normal !important;
+}
+
+.line-clamp-1,
+.truncate,
+[class*="line-clamp-"] {
+    -webkit-line-clamp: unset !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
 /* Input, Select, and Textarea Focus Outline Style - Black */
 input:focus,
 select:focus,

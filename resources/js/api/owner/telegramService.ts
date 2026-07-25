@@ -1,4 +1,4 @@
-import type { Order } from "@/pages/owner_manage/components/order/show";
+import type { Order } from "@/pages/owner_manage/pages/order/show";
 import { storesService } from "./stores";
 
 // ── Types ─────────────────────────────────────────────────

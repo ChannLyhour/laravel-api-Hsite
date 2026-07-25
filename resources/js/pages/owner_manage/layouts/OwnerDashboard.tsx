@@ -28,29 +28,29 @@ import {
   FiBox,
   FiTrendingUp,
 } from 'react-icons/fi';
-import { OverviewTab } from '../components/OverviewTab';
-import { CategoriesTab } from '../components/categories/categories';
-import { SubcategoriesTab } from '../components/categories/Subcategories';
-import { SubSubcategoriesTab } from '../components/categories/SubSubcategories';
-import { MenuItemsTab } from '../components/MenuItemsTab';
-import { OrdersTab } from '../components/OrdersTab';
-import { PostsTab } from '../components/PostsTab';
-import { SettingsTab } from '../components/Store_Settings/Store_SettingsTab';
-import { AttributesTab } from '../components/AttributesTab';
-import { ChatInboxTab } from '../components/ChatInboxTab';
+import { OverviewTab } from '../pages/OverviewTab';
+import { CategoriesTab } from '../pages/categories/categories';
+import { SubcategoriesTab } from '../pages/categories/Subcategories';
+import { SubSubcategoriesTab } from '../pages/categories/SubSubcategories';
+import { MenuItemsTab } from '../pages/MenuItemsTab';
+import { OrdersTab } from '../pages/OrdersTab';
+import { PostsTab } from '../pages/PostsTab';
+import { SettingsTab } from '../pages/Store_Settings/Store_SettingsTab';
+import { AttributesTab } from '../pages/AttributesTab';
+import { ChatInboxTab } from '../pages/ChatInboxTab';
 import { useConfirm } from '@/components/ConfirmProvider';
 import { authService } from '@/api/auth';
 import { chatService } from '@/api/owner/chat';
 import { toast, setToastRef } from '../utils/toast';
 import { Toast } from 'primereact/toast';
-import { Storefront_ThemeTab } from '../components/Store_Settings/Storefront_ThemeTab';
-import { PagesBuilderTab } from '../components/PagesBuilderTab';
-import { PoliciesTab } from '../components/PoliciesTab';
-import { BrandsTab } from '../components/BrandsTab';
-import { ProductBadgesTab } from '../components/ProductBadgesTab';
-import { CustomersTab } from '../components/CustomersTab';
-import { CustomerReviewsTab } from '../components/CustomerReviewsTab';
-import { PosTab } from '../components/PosTab';
+import { Storefront_ThemeTab } from '../pages/Store_Settings/Storefront_ThemeTab';
+import { PagesBuilderTab } from '../pages/PagesBuilderTab';
+import { PoliciesTab } from '../pages/PoliciesTab';
+import { BrandsTab } from '../pages/BrandsTab';
+import { ProductBadgesTab } from '../pages/ProductBadgesTab';
+import { CustomersTab } from '../pages/CustomersTab';
+import { CustomerReviewsTab } from '../pages/CustomerReviewsTab';
+import { PosTab } from '../pages/PosTab';
 import { Sidebar } from './Sidebar';
 import { storesService } from '@/api/owner/stores';
 import { ordersService } from '@/api/owner/orders';
@@ -58,34 +58,34 @@ import { deliveryMethodsService } from '@/api/owner/deliveryMethods';
 import { brandsService } from '@/api/owner/brands';
 import { categoriesService } from '@/api/owner/categories';
 import { client } from '@/api/client';
-import { SetupGuideModal, type SetupProgress } from '../components/SetupGuideModal';
-import { RealTimeOrderPopup } from '../components/order/popupOrderRealTime';
-import { SocialMediaTab } from '../components/Store_Settings/SocialMediaTab';
-import { BannersTab } from '../components/BannersTab';
-import { CouponsTab, FlashDealsTab, GenericDealsTab, SendNotificationTab, PushNotificationsSetupTab, AnnouncementTab } from '../components/MarketingPlaceholders';
-import { PartnerStoresTab } from '../components/PartnerStoresTab';
-import { ThirdPartyFirebaseTab, ThirdPartyMarketingTab } from '../components/ThirdPartySetupTab';
-import { TelegramBotSettings } from '../components/telegrambot/TelegramBotSettings';
-import { Social_Login_SetupTab } from '../components/Store_Settings/Social_Login_SetupTab';
-import { Pusher_ConfigurationTab } from '../components/Store_Settings/Pusher_ConfigurationTab';
-import { Payment_Gateways_SetupTab } from '../components/Store_Settings/Payment_Gateways_SetupTab';
+import { SetupGuideModal, type SetupProgress } from '../pages/SetupGuideModal';
+import { RealTimeOrderPopup } from '../pages/order/popupOrderRealTime';
+import { SocialMediaTab } from '../pages/Store_Settings/SocialMediaTab';
+import { BannersTab } from '../pages/BannersTab';
+import { CouponsTab, FlashDealsTab, GenericDealsTab, SendNotificationTab, PushNotificationsSetupTab, AnnouncementTab } from '../pages/MarketingPlaceholders';
+import { PartnerStoresTab } from '../pages/PartnerStoresTab';
+import { ThirdPartyFirebaseTab, ThirdPartyMarketingTab } from '../pages/ThirdPartySetupTab';
+import { TelegramBotSettings } from '../pages/telegrambot/TelegramBotSettings';
+import { Social_Login_SetupTab } from '../pages/Store_Settings/Social_Login_SetupTab';
+import { Pusher_ConfigurationTab } from '../pages/Store_Settings/Pusher_ConfigurationTab';
+import { Payment_Gateways_SetupTab } from '../pages/Store_Settings/Payment_Gateways_SetupTab';
 import { TranslationProvider, useTranslation } from '../lang/i18n';
 import { getStoreUrl, getStoreSlugFromDomain } from '@Security/Owner/configUrl';
 import { resolveImageUrl } from '@/api/imageUtils';
-import { ProfileOwnerTab } from '../components/ProfileOwnerTab';
-import { CustomizeSystemTab } from '../components/Store_Settings/CustomizeSystemTab';
-import { DeliveryMethodsTab } from '../components/Delivery_Methods';
-import { DeliveryZonesTab } from '../components/Delivery_Zones';
-import { ConfigOTPGmailTab } from '../components/gmailotp/configotpGmail';
-import { StockManagementTab } from '../components/StockManagementTab';
-import { SharingLinkShow } from '../components/sharinglink/show';
+import { ProfileOwnerTab } from '../pages/ProfileOwnerTab';
+import { CustomizeSystemTab } from '../pages/Store_Settings/CustomizeSystemTab';
+import { DeliveryMethodsTab } from '../pages/Delivery_Methods';
+import { DeliveryZonesTab } from '../pages/Delivery_Zones';
+import { ConfigOTPGmailTab } from '../pages/gmailotp/configotpGmail';
+import { StockManagementTab } from '../pages/StockManagementTab';
+import { SharingLinkShow } from '../pages/sharinglink/show';
 import { UpgradePlanShow } from './upgrade_plan/show';
 import { defaultPlanFeatures } from '@/pages/admin_manage/components/subscriptions/index';
 
-import { LimitedStockTab } from '../components/catalog/LimitedStockTab';
-import { RestockRequestsTab } from '../components/catalog/RestockRequestsTab';
-import { BulkImportTab } from '../components/catalog/BulkImportTab';
-import { ProductGalleryTab } from '../components/catalog/ProductGalleryTab';
+import { LimitedStockTab } from '../pages/catalog/LimitedStockTab';
+import { RestockRequestsTab } from '../pages/catalog/RestockRequestsTab';
+import { BulkImportTab } from '../pages/catalog/BulkImportTab';
+import { ProductGalleryTab } from '../pages/catalog/ProductGalleryTab';
 
 interface AdminDashboardProps {
   token: string | null;
@@ -388,7 +388,7 @@ const DashboardContent: React.FC<AdminDashboardProps> = ({
                   : c.other_user.name;
 
                 // Play custom chime sound
-                import('@/pages/owner_manage/components/order/popupOrderRealTime').then(m => {
+                import('@/pages/owner_manage/pages/order/popupOrderRealTime').then(m => {
                   if (m.playNotificationChime) m.playNotificationChime();
                 }).catch(() => { });
 

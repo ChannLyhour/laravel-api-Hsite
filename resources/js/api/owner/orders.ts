@@ -1,5 +1,5 @@
 import { client } from '../client';
-import type { Order, OrderItem } from '@/pages/owner_manage/components/order/show';
+import type { Order, OrderItem } from '@/pages/owner_manage/pages/order/show';
 export type { Order, OrderItem };
 
 export interface BackendOrderItem {

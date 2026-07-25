@@ -12,7 +12,7 @@ import {
      FiTruck,
 } from 'react-icons/fi';
 import { resolveImageUrl } from '@/api/imageUtils';
-import type { Order } from '@/pages/owner_manage/components/order/show';
+import type { Order } from '@/pages/owner_manage/pages/order/show';
 import { useTranslation } from '../../../utils/translate';
 
 // Fallback images for fashion/boutique

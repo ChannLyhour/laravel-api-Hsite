@@ -272,7 +272,7 @@ const CardProductInner: React.FC<CardProductProps> = ({
             data-aos-anchor-placement={disableAos ? undefined : "top-bottom"}
             data-aos-offset={disableAos ? undefined : 10}
             data-aos-delay={disableAos ? undefined : aosDelay}
-            className={`group flex flex-col justify-between space-y-0.5 relative rounded-[3px] border cursor-pointer ${isLarge
+            className={`group flex flex-col justify-between space-y-0.5 relative rounded-[3px] border cursor-pointer ${fontClass} ${isLarge
                 ? 'bg-white dark:bg-stone-900 border-amber-500/30 p-5 shadow-md ring-1 ring-amber-500/10 space-y-3'
                 : 'bg-transparent p-0 border-transparent shadow-none'
                 }`}
@@ -369,13 +369,13 @@ const CardProductInner: React.FC<CardProductProps> = ({
                 {(discountLabel || (showBadge && item.badge) || isLarge) && (
                     <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1.5 z-10 pointer-events-none select-none">
                         {discountLabel && (
-                            <span className="w-fit bg-[#E61E25] text-white text-[10px] sm:text-[11px] font-bold uppercase px-2.5 py-1 rounded-full leading-none shadow-md">
+                            <span className="w-fit bg-[#E61E25] text-white text-[10px] sm:text-[11px] px-2.5 py-1 rounded-full leading-none shadow-md">
                                 {discountLabel}
                             </span>
                         )}
                         {isLarge && (   
                             <span className="w-fit bg-gradient-to-r from-amber-500 to-yellow-600 text-white border border-amber-400 px-2.5 py-1 rounded-full leading-none shadow-md flex items-center gap-1">
-                                👑 <TextSp size="3xs" weight="black" uppercase tracking="wider" font={font}>TOP SELLER</TextSp>
+                                👑 <TextSp size="3xs" weight="medium" font={font}>TOP SELLER</TextSp>
                             </span>
                         )}
                         {showBadge && item.badge && (
@@ -386,7 +386,7 @@ const CardProductInner: React.FC<CardProductProps> = ({
                                     color: item.badge.text_color || '#FFFFFF',
                                 }}
                             >
-                                <TextSp size="2xs" weight="black" uppercase tracking="wider" font={font}>
+                                <TextSp size="2xs" weight="medium" font={font}>
                                     {item.badge.name}
                                 </TextSp>
                             </span>
@@ -399,10 +399,8 @@ const CardProductInner: React.FC<CardProductProps> = ({
                     <div className="absolute inset-0 bg-stone-950/20 backdrop-blur-3xs flex items-center justify-center select-none pointer-events-none z-10">
                         <TextSp
                             size="xs"
-                            weight="black"
+                            weight="normal"
                             color="text-stone-900"
-                            uppercase
-                            tracking="widest"
                             className="bg-white/90 border border-stone-200 px-4 py-2 rounded-[2px] shadow-lg"
                             font={font}
                         >
@@ -427,14 +425,12 @@ const CardProductInner: React.FC<CardProductProps> = ({
                                 const startY = e.clientY || e.currentTarget.getBoundingClientRect().top + 20;
                                 window.dispatchEvent(new CustomEvent('animate_to_cart', { detail: { startX, startY } }));
                             }}
-                            className="w-full py-2 bg-stone-950/90 hover:bg-[#E61E25] text-white text-[10px] font-black uppercase tracking-widest rounded-[2px] shadow-md transition-colors duration-300 cursor-pointer border-none flex items-center justify-center gap-1.5"
+                            className="w-full py-2 bg-stone-950/90 hover:bg-[#E61E25] text-white text-[10px] font-medium rounded-[2px] shadow-md transition-colors duration-300 cursor-pointer border-none flex items-center justify-center gap-1.5"
                         >
                             <FiShoppingBag className="w-3.5 h-3.5" />
                             <TextSp
                                 size="xs"
-                                weight="black"
-                                uppercase
-                                tracking="widest"
+                                weight="medium"
                                 font={font}
                             >
                                 Add to Bag
@@ -451,7 +447,7 @@ const CardProductInner: React.FC<CardProductProps> = ({
                     <div className={`flex items-baseline space-x-1.5 text-left ${fontClass}`}>
                         <TextSp
                             size={isLarge ? 'lg' : 'xl'}
-                            weight="bold"
+                            weight="normal"
                             color="text-[#E61E25]"
                             font={font}
                         >
@@ -460,7 +456,7 @@ const CardProductInner: React.FC<CardProductProps> = ({
                         {comparePrice && (
                             <TextSp
                                 size={isLarge ? 'xs' : '2xs'}
-                                weight="semibold"
+                                weight="normal"
                                 color="text-stone-400"
                                 className="line-through"
                                 font={font}
@@ -489,7 +485,7 @@ const CardProductInner: React.FC<CardProductProps> = ({
                 <TextSp
                     as="p"
                     size={isLarge ? { mobile: '8px', tablet: 'sm' } : { mobile: '14px', tablet: '2xs' }}
-                    weight="black"
+                    weight="normal"
                     color="text-stone-900 group-hover:text-[#E61E25] pb-4"
                     font={'kontomruy'}
                     // uppercase
@@ -519,7 +515,7 @@ const CardProductInner: React.FC<CardProductProps> = ({
                                     />
                                 ))}
                                 {colors.length > 4 && (
-                                    <span className="text-[8px] text-stone-400 font-extrabold leading-none">
+                                    <span className="text-[8px] text-stone-400 font-normal leading-none">
                                         +{colors.length - 4}
                                     </span>
                                 )}
@@ -532,13 +528,13 @@ const CardProductInner: React.FC<CardProductProps> = ({
                                 {sizes.slice(0, 3).map((sz: string, szIdx: number) => (
                                     <span
                                         key={szIdx}
-                                        className="text-[8px] font-black text-stone-400 bg-stone-50 border border-stone-200/50 px-1.5 py-0.5 rounded-[2px] uppercase leading-none"
+                                        className="text-[8px] font-normal text-stone-400 bg-stone-50 border border-stone-200/50 px-1.5 py-0.5 rounded-[2px] uppercase leading-none"
                                     >
                                         {sz}
                                     </span>
                                 ))}
                                 {sizes.length > 3 && (
-                                    <span className="text-[8px] text-stone-400 font-extrabold leading-none">
+                                    <span className="text-[8px] text-stone-400 font-normal leading-none">
                                         +{sizes.length - 3}
                                     </span>
                                 )}
