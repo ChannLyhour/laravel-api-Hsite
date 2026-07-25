@@ -5,6 +5,8 @@
     "build": "vite build",
     "build:cf": "vite build --mode cloudflare",
     "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit && vite build",
     "deploy": "npm run build && wrangler deploy",
     "preview": "npm run build && wrangler dev"
   },
