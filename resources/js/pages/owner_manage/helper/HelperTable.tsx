@@ -127,7 +127,7 @@ export function HelperTable<T>({
     <div
       ref={tableRef}
       className="space-y-4 font-kuntomruy animate-fade-in"
-      style={{ fontFamily: "'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important" }}
+      style={{ fontFamily: "'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', system-ui, -apple-system, sans-serif !important" }}
     >
       {/* ── Main Table Card ─────────────────────────────────── */}
       <div className="custom-card-container rounded-[5px] shadow-xs overflow-hidden border">

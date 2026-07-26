@@ -138,6 +138,6 @@ h1, h2, h3, h4, h5, h6 {
 /* ── Main Content Container ────────────────────────────────────────────────── */
 .main-content-container,
 .main-content-container * {
-  font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important;
+  font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', system-ui, -apple-system, sans-serif !important;
 }
 

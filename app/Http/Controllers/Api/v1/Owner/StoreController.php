@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use App\Helpers\UploadHelper;
+use Illuminate\Support\Facades\DB;
 
 class StoreController extends Controller
 {
@@ -102,7 +103,7 @@ class StoreController extends Controller
             ->get();
 
         // 2. Fetch product counts for each owner (only active storefronts with products)
-        $productCounts = \App\Models\Product::select('created_by', \DB::raw('count(*) as total'))
+        $productCounts = \App\Models\Product::select('created_by', DB::raw('count(*) as total'))
             ->whereIn('created_by', $users->pluck('id'))
             ->groupBy('created_by')
             ->pluck('total', 'created_by')

@@ -12,6 +12,7 @@ use App\Models\ProductAttributeValue;
 use App\Models\ProductAddon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Helpers\UploadHelper;
 
@@ -34,7 +35,7 @@ class ProductController extends Controller
         }
 
         // Detect if payload is legacy format or new structured format
-        \Log::info('Product store payload: ' . json_encode($request->except(['image', 'images', 'imageFile'])));
+        Log::info('Product store payload: ' . json_encode($request->except(['image', 'images', 'imageFile'])));
         $isLegacy = ! $request->has('translations') && ! $request->has('variants');
 
         if ($isLegacy) {
@@ -526,7 +527,7 @@ class ProductController extends Controller
             }
         }
 
-        \Log::info('Product update payload for ID ' . $id . ': ' . json_encode($request->except(['image', 'images', 'imageFile'])));
+        Log::info('Product update payload for ID ' . $id . ': ' . json_encode($request->except(['image', 'images', 'imageFile'])));
         $isLegacy = ! $request->has('translations') && ! $request->has('variants');
 
         if ($isLegacy) {

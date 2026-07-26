@@ -405,7 +405,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         .child-sidebar-container {
           background-color: #ffffff !important;
           color: #0f172a !important;
-          font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', sans-serif !important;
+          font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', system-ui, -apple-system, sans-serif !important;
           font-optical-sizing: auto !important;
         }
         .child-sidebar-header {
