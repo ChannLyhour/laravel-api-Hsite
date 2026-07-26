@@ -3,6 +3,8 @@
 .font-kuntomruy,
 body, button, input, select, textarea {
   font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', system-ui, -apple-system, sans-serif !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
 }
 
 /* ── Heading colors (Page & Section level) ────────────────────────────────── */
