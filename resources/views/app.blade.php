@@ -5,7 +5,7 @@
 
   // Fallback defaults
   $metaTitle = "VHsite";
-  $metaDesc = "Create and manage your digital restaurant menu and online storefront effortlessly with VHsite.";
+  $metaDesc = "Create and manage your digital online store effortlessly with VHsite platform.";
   $metaImage = asset('favicon.svg');
 
   // List of root platform domains
@@ -159,6 +159,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Kontomruy+Pro:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
 
   <!-- Primary Meta Tags -->
   <title>{{ $metaTitle }}</title>
