@@ -34,7 +34,7 @@ import { deliveryMethodsService, type DeliveryMethod } from '@/api/owner/deliver
 import { deliveryZonesService, type DeliveryZone } from '@/api/owner/deliveryZones';
 import { socialMediaService } from '@/api/owner/socialMedia';
 import { FaTelegramPlane } from 'react-icons/fa';
-import { paymentsService } from '@/api/owner/method/payments';
+import { paywayService } from '../services/paywayService';
 
 import abaLogo from '@/pages/main_website/Company_bank/aba.png';
 import bakongLogo from '@/pages/main_website/Company_bank/bakong.png';
@@ -896,7 +896,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     useEffect(() => {
         if (ownerUserId) {
-            paymentsService.getActiveMethods(ownerUserId)
+            paywayService.getActiveMethods(ownerUserId)
                 .then(setRawPaymentMethods)
                 .catch(err => console.error('Failed to fetch payment methods:', err));
         }
