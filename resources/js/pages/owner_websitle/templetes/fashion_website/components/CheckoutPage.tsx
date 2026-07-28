@@ -952,7 +952,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             }
 
             let descEl = p.desc;
-            if (p.key === 'card') {
+            let nameStr = p.name;
+            if (p.key === 'aba') {
+                nameStr = 'ABA PAY';
+                descEl = descEl || 'Scan to pay with ABA Mobile';
+            } else if (p.key === 'card') {
                 descEl = (
                     <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="text-[8px] bg-blue-50 text-blue-700 font-bold px-0.5 rounded">VISA</span>
@@ -961,15 +965,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     </div>
                 );
             } else if (p.key === 'transfer') {
-                descEl = <span className="font-kuntomruy">ទូទាត់តាមគណនីធនាគារ</span>;
+                descEl = <span className="font-sans">ទូទាត់តាមគណនីធនាគារ</span>;
             } else if (p.key === 'cod') {
-                descEl = <span className="font-kuntomruy">បង់ប្រាក់នៅពេលទទួលបានទំនិញ</span>;
+                descEl = <span className="font-sans">បង់ប្រាក់នៅពេលទទួលបានទំនិញ</span>;
             }
 
             return {
                 key: p.key,
                 logo: logoEl,
-                name: p.name,
+                name: nameStr,
                 desc: descEl
             };
         });
@@ -1468,7 +1472,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     // Guest checkout check
     if (!isGuestCheckoutEnabled && !isLoggedIn) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-sm shadow-2xs min-h-[50vh] mt-8 font-kuntomruy">
+            <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-sm shadow-2xs min-h-[50vh] mt-8 font-sans">
                 <h2 className="text-lg font-black text-stone-900 uppercase">Login Required</h2>
                 <p className="text-sm text-stone-500 mt-2">You must be logged in to checkout in this store.</p>
                 <button
@@ -1484,7 +1488,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }
 
     return (
-        <div className="min-h-screen bg-stone-50 font-kuntomruy pb-16 relative">
+        <div className="min-h-screen bg-stone-50 font-sans pb-16 relative">
 
             <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -1786,7 +1790,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
             {/* Order Success Popup Modal */}
             {orderSuccess && createPortal(
-                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-stone-950/45 backdrop-blur-2xs p-4 font-kuntomruy animate-fade-in">
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-stone-950/45 backdrop-blur-2xs p-4 font-sans animate-fade-in">
                     <div
                         className="fixed inset-0 cursor-default"
                         onClick={() => {

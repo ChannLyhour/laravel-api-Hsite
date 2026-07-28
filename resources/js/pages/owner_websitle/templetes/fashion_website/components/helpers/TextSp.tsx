@@ -194,7 +194,7 @@ const leadingToClass = (leading?: TextSpProps['leading']): string => {
 
 const fontToClass = (font?: TextSpProps['font']): string => {
      if (!font) return '';
-     return font === 'sans' ? 'font-sans' : 'font-kontomruy';
+     return 'font-sans';
 };
 
 // Custom hook to detect current viewport category: mobile (< 768px), tablet (>= 768px and < 1024px), desktop (>= 1024px)

@@ -335,7 +335,7 @@ export const FashionDetailScreen: React.FC<FashionDetailScreenProps> = ({
         {/* Title and Prices */}
         <div className="space-y-2">
           <div className="text-[9px] font-black uppercase tracking-widest text-stone-400">STUDIO COLECTION</div>
-          <h2 className="text-xl font-serif tracking-wide uppercase leading-tight">{selectedProduct.name}</h2>
+          <h2 className="text-xl font-sans tracking-wide uppercase leading-tight">{selectedProduct.name}</h2>
           <div className="flex items-baseline space-x-2">
             <span className="text-lg font-black text-rose-600">${price.toFixed(2)}</span>
             {compareAt && (

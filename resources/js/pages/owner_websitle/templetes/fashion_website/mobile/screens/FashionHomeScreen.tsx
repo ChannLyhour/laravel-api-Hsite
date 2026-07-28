@@ -141,7 +141,7 @@ export const FashionHomeScreen: React.FC<FashionHomeScreenProps> = ({
           />
           <div className="absolute inset-0 bg-black/35 flex flex-col justify-end p-4 text-white">
             <span className="text-[7px] font-black uppercase tracking-[0.25em] text-stone-200 leading-none">LATEST COLLECTION</span>
-            <h2 className="text-base font-serif tracking-wide leading-tight mt-1 mb-2">{banners[0].title || "Summer Essentials"}</h2>
+            <h2 className="text-base font-sans tracking-wide leading-tight mt-1 mb-2">{banners[0].title || "Summer Essentials"}</h2>
             {banners[0].description && (
               <p className="text-[9px] text-stone-200/90 max-w-[75%] font-medium line-clamp-2">{banners[0].description}</p>
             )}
@@ -160,7 +160,7 @@ export const FashionHomeScreen: React.FC<FashionHomeScreenProps> = ({
           />
           <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-4 text-white">
             <span className="text-[7px] font-black uppercase tracking-[0.25em] text-stone-200 leading-none">NEW EDITORIAL</span>
-            <h2 className="text-base font-serif tracking-wide leading-tight mt-1 mb-2">Summer Essentials 2026</h2>
+            <h2 className="text-base font-sans tracking-wide leading-tight mt-1 mb-2">Summer Essentials 2026</h2>
             <p className="text-[9px] text-stone-200/90 max-w-[75%] font-medium">Explore hand-tailored linen matching sets and accessories.</p>
             <div className="mt-3 flex items-center text-[9px] font-black tracking-widest uppercase space-x-1 hover:underline cursor-pointer">
               <span>Shop Campaign</span>

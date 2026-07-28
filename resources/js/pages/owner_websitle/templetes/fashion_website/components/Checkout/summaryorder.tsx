@@ -204,7 +204,7 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
 
                {/* Mobile Order Summary Fade-Up Modal in Center */}
                {isMobileModalOpen && createPortal(
-                    <div className="fixed inset-0 z-[99999] max-w-md mx-auto left-0 right-0 flex items-center justify-center p-4 lg:hidden font-kuntomruy">
+                    <div className="fixed inset-0 z-[99999] max-w-md mx-auto left-0 right-0 flex items-center justify-center p-4 lg:hidden font-sans">
                          {/* Backdrop */}
                          <div
                               className="absolute inset-0 bg-stone-950/40 backdrop-blur-2xs"

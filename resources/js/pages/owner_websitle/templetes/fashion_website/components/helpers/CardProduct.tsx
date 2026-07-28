@@ -53,7 +53,7 @@ const CardProductInner: React.FC<CardProductProps> = ({
     aosDelay,
     disableAos = false,
 }) => {
-    const fontClass = font ? (font === 'sans' ? 'font-sans' : font === 'kontomruy' ? 'font-kontomruy' : font) : 'font-sans';
+    const fontClass = 'font-sans';
     const colors = item.colors || getProductColors(item) || [];
     const sizes = item.sizes || getProductSizes(item) || [];
 

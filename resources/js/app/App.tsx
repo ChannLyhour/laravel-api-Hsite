@@ -41,6 +41,8 @@ const getTenantDomain = (): string | null => {
   // List of root platform domains
   const platformDomains = [
     'lvh.me',
+    '192.168.1.3',
+    '192.168.1.3.nip.io',
     'store-frontend-v-hsite.vercel.app',
     'vhsite-storefront.vercel.app',
     'vhsite.com',

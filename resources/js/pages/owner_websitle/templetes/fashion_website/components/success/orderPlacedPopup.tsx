@@ -32,7 +32,7 @@ export const OrderPlacedPopup: React.FC<OrderPlacedPopupProps> = ({
      if (!orderSuccess) return null;
 
      return createPortal(
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-stone-950/45 backdrop-blur-2xs p-4 font-kuntomruy animate-fade-in">
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-stone-950/45 backdrop-blur-2xs p-4 font-sans animate-fade-in">
                <div
                     className="fixed inset-0 cursor-default"
                     onClick={() => {

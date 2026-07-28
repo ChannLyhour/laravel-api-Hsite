@@ -147,7 +147,7 @@ export const FashionPhoneView: React.FC<FashionPhoneViewProps> = ({
                 <FiCheckCircle className="w-10 h-10 animate-bounce" />
               </div>
               <div className="space-y-2.5">
-                <h3 className={`text-lg font-serif tracking-widest uppercase ${isDarkTheme ? 'text-white' : 'text-stone-900'}`}>Order Confirmed</h3>
+                <h3 className={`text-lg font-sans tracking-widest uppercase ${isDarkTheme ? 'text-white' : 'text-stone-900'}`}>Order Confirmed</h3>
                 <p className="text-stone-400 text-2xs leading-relaxed max-w-xs font-semibold">
                   Thank you for shopping at our boutique storefront. Your items are being packed and will arrive in 1 to 3 days!
                 </p>

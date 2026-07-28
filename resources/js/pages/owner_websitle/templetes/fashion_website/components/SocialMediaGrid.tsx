@@ -147,7 +147,7 @@ export const SocialMediaGrid: React.FC<SocialMediaGridProps> = ({
                                    <FiShare2 className="w-3.5 h-3.5 text-stone-600 dark:text-stone-300" />
                                    Connect With Us
                               </span>
-                              <h2 className="text-3xl sm:text-4xl font-serif text-stone-900 dark:text-stone-100 tracking-tight animate-pulse">
+                              <h2 className="text-3xl sm:text-4xl font-sans text-stone-900 dark:text-stone-100 tracking-tight animate-pulse">
                                    <span className="italic text-stone-900 dark:text-stone-100">Social Channels</span>
                               </h2>
                          </div>
@@ -171,7 +171,7 @@ export const SocialMediaGrid: React.FC<SocialMediaGridProps> = ({
                               <FiShare2 className="w-3.5 h-3.5 text-stone-600 dark:text-stone-300" />
                               Connect With Us
                          </span>
-                         <h2 className="text-3xl sm:text-4xl font-serif text-stone-900 dark:text-stone-100 tracking-tight">
+                         <h2 className="text-3xl sm:text-4xl font-sans text-stone-900 dark:text-stone-100 tracking-tight">
                               <span className="italic text-stone-900 dark:text-stone-100">Social Channels</span>
                          </h2>
                     </div>

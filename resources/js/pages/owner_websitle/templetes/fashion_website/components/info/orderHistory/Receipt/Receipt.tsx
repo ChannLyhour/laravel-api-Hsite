@@ -202,7 +202,7 @@ export const Receipt: React.FC<ReceiptProps> = ({ isOpen, onClose, order, locale
                          color="text-stone-950"
                          uppercase
                          tracking="widest"
-                         className="font-kontomruy text-[10px] sm:text-xs"
+                         className="font-sans text-[10px] sm:text-xs"
                     >
                          {`${t('invoice.title') || 'Invoice'} #${orderId}`}
                     </TextSp>

@@ -41,7 +41,7 @@ export const ImageDetailProduct: React.FC<ImageDetailProductProps> = ({
                          color="text-stone-950"
                          uppercase
                          tracking="widest"
-                         className="font-kontomruy text-[10px] sm:text-xs"
+                         className="font-sans text-[10px] sm:text-xs"
                     >
                          {productName}
                     </TextSp>

@@ -34,11 +34,13 @@ export const STATIC_PATHS = [
 export function isSubdomainMode(): boolean {
   if (typeof window === 'undefined') return false;
   const hostname = window.location.hostname;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '192.168.1.3' || hostname === '192.168.1.3.nip.io') {
     return false;
   }
   const platformDomains = [
     'lvh.me',
+    '192.168.1.3',
+    '192.168.1.3.nip.io',
     'store-frontend-v-hsite.vercel.app',
     'vhsite-storefront.vercel.app',
     'vhsite.com',
@@ -176,7 +178,13 @@ export function getStoreUrl(
 
       if (isLocal) {
         const portSuffix = port ? `:${port}` : "";
-        resolvedUrl = `${protocol}//${cleanSubdomainSlug}.lvh.me${portSuffix}`;
+        let baseHost = "lvh.me";
+        if (hostname.includes(".nip.io")) {
+          baseHost = hostname.substring(hostname.indexOf("192.168."));
+        } else if (hostname.startsWith("192.168.") || hostname.startsWith("10.")) {
+          baseHost = `${hostname}.nip.io`;
+        }
+        resolvedUrl = `${protocol}//${cleanSubdomainSlug}.${baseHost}${portSuffix}`;
       } else {
         const platformDomains = [
           "store-frontend-v-hsite.vercel.app",

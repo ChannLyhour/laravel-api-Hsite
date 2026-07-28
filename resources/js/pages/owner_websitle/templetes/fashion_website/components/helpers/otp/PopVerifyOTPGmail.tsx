@@ -129,7 +129,7 @@ export const PopVerifyOTPGmail: React.FC<PopVerifyOTPGmailProps> = ({
      };
 
      return (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-stone-950/45 backdrop-blur-2xs p-4 font-kuntomruy animate-fade-in">
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-stone-950/45 backdrop-blur-2xs p-4 font-sans animate-fade-in">
                <div className="fixed inset-0 cursor-default" onClick={onClose} />
                <div className="bg-white p-6 sm:p-10 rounded-[6px] border border-stone-200/60 shadow-2xl max-w-md w-full text-center space-y-6 relative z-10 animate-modal-zando">
                     {/* Header Close */}

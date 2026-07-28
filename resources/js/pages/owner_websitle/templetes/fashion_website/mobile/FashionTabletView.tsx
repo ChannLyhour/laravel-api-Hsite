@@ -228,7 +228,7 @@ export const FashionTabletView: React.FC<FashionTabletViewProps> = ({
               <FiCheckCircle className="w-12 h-12 animate-bounce" />
             </div>
             <div className="space-y-2.5">
-              <h3 className="text-xl font-serif tracking-widest uppercase">Order Confirmed Successfully</h3>
+              <h3 className="text-xl font-sans tracking-widest uppercase">Order Confirmed Successfully</h3>
               <p className="text-stone-400 text-xs max-w-md mx-auto">
                 Thank you for placing your boutique purchase with us. Your garment selections are locked and are now prepared for delivery. Expected time is 1 to 3 days!
               </p>
@@ -259,7 +259,7 @@ export const FashionTabletView: React.FC<FashionTabletViewProps> = ({
             }`}>
               <div>
                 <span className="text-[8px] font-black text-stone-400 uppercase tracking-widest block font-sans">TABLET STUDIO PANEL</span>
-                <h1 className="text-lg font-serif tracking-wider uppercase">{settings?.store_name || storeName || 'AURA'}</h1>
+                <h1 className="text-lg font-sans tracking-wider uppercase">{settings?.store_name || storeName || 'AURA'}</h1>
               </div>
 
               <div className="flex items-center space-x-4">
@@ -469,7 +469,7 @@ export const FashionTabletView: React.FC<FashionTabletViewProps> = ({
                     <img src={getProductImage(selectedProduct)} alt={selectedProduct.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="space-y-1.5 py-0.5">
-                    <h3 className="text-sm font-serif uppercase tracking-wide leading-tight">{selectedProduct.name}</h3>
+                    <h3 className="text-sm font-sans uppercase tracking-wide leading-tight">{selectedProduct.name}</h3>
                     <div className="flex items-baseline space-x-2">
                       <span className="text-sm font-bold text-rose-600">${activeDetailPrice.toFixed(2)}</span>
                     </div>
@@ -593,7 +593,7 @@ export const FashionTabletView: React.FC<FashionTabletViewProps> = ({
             ) : (
               // ── Right Column: Shopping Bag listings and checkout ──
               <div className="flex flex-col h-full overflow-hidden p-5 space-y-4">
-                <h2 className="text-sm font-serif tracking-widest uppercase flex items-center space-x-2 shrink-0 border-b border-stone-200 dark:border-stone-800 pb-2">
+                <h2 className="text-sm font-sans tracking-widest uppercase flex items-center space-x-2 shrink-0 border-b border-stone-200 dark:border-stone-800 pb-2">
                   <FiShoppingBag className="w-4 h-4 shrink-0 text-rose-600" />
                   <span>Your Shopping Bag ({cart.reduce((sum, item) => sum + item.qty, 0)})</span>
                 </h2>
@@ -779,7 +779,7 @@ export const FashionTabletView: React.FC<FashionTabletViewProps> = ({
                   <div className="text-center py-20 space-y-2 flex-grow flex flex-col justify-center items-center">
                     <FiShoppingBag className="text-stone-400 w-10 h-10 stroke-[1.25]" />
                     <div>
-                      <h4 className="text-xs font-serif uppercase tracking-widest">Bag is empty</h4>
+                      <h4 className="text-xs font-sans uppercase tracking-widest">Bag is empty</h4>
                       <p className="text-stone-400 text-[9.5px] font-semibold mt-1">Select items in the catalog to add to bag.</p>
                     </div>
                   </div>

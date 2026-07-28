@@ -1,6 +1,7 @@
-/* Font Family Rule for Fashion Website */
-.fashion-website-container {
-    font-family: 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', 'Inter', system-ui, sans-serif;
+/* Font Family Rule for Fashion Website - English/Latin: Inter, Khmer: Kantumruy Pro */
+.fashion-website-container,
+.fashion-website-container * {
+    font-family: 'Inter', 'Kantumruy Pro', 'Kontomruy Pro', 'Kuntomruy Pro', system-ui, -apple-system, sans-serif !important;
 }
 
 /* Remove Heavy Typography Effects (uppercase, letter-spacing, line clamping & text truncation) inside Fashion Website container */

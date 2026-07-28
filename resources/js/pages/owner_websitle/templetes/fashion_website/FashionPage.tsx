@@ -492,7 +492,7 @@ export const FashionPage: React.FC<FashionPageProps> = ({
   });
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] text-[#1C1C1C] font-sans antialiased flex flex-col min-h-screen relative">
+    <div className="fashion-website-container min-h-screen bg-[#F9F9F9] text-[#1C1C1C] font-sans antialiased flex flex-col min-h-screen relative">
       <LineLoading isLoading={loading || isAuthLoading || isLoadingCart || loadingPromotions} />
       {/* Mega Menu Dropdown Navbar Component */}
       <NavbarPage

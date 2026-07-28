@@ -76,7 +76,7 @@ export const FashionCartScreen: React.FC<FashionCartScreenProps> = ({
   return (
     <div className="p-4 space-y-6 flex-grow flex flex-col pb-20 animate-fade-in overflow-hidden">
       {/* Header */}
-      <h2 className={`text-base font-serif tracking-widest uppercase flex items-center space-x-2 shrink-0 ${isDarkTheme ? 'text-white' : 'text-stone-900'}`}>
+      <h2 className={`text-base font-sans tracking-widest uppercase flex items-center space-x-2 shrink-0 ${isDarkTheme ? 'text-white' : 'text-stone-900'}`}>
         <FiShoppingBag className="w-4 h-4 shrink-0 text-rose-600" />
         <span>Shopping Bag ({cart.reduce((sum, item) => sum + item.qty, 0)})</span>
       </h2>
@@ -335,7 +335,7 @@ export const FashionCartScreen: React.FC<FashionCartScreenProps> = ({
         <div className="text-center py-24 space-y-3 flex-grow flex flex-col justify-center items-center">
           <FiShoppingBag className="text-stone-400 w-12 h-12 stroke-[1.25]" />
           <div>
-            <h4 className={`text-sm font-serif uppercase tracking-widest ${isDarkTheme ? 'text-white' : 'text-stone-800'}`}>Your Bag is Empty</h4>
+            <h4 className={`text-sm font-sans uppercase tracking-widest ${isDarkTheme ? 'text-white' : 'text-stone-800'}`}>Your Bag is Empty</h4>
             <p className="text-stone-400 text-[10px] font-semibold mt-1">Browse our collections to add items!</p>
           </div>
         </div>

@@ -12,6 +12,8 @@
   $platformDomains = [
     'localhost',
     '127.0.0.1',
+    '192.168.1.3',
+    '192.168.1.3.nip.io',
     'lvh.me',
     'store-frontend-v-hsite.vercel.app',
     'vhsite-storefront.vercel.app',
