@@ -765,7 +765,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     });
 
     const checkoutDeliveryAddress = storeSettings?.checkout_delivery_address || 'open';
-    const checkoutPreferredContact = storeSettings?.checkout_preferred_contact || 'open';
+    const checkoutPreferredContact = 'close';
     const preferredContactPhone = storeSettings?.preferred_contact_phone !== false && storeSettings?.preferred_contact_phone !== 'false' && storeSettings?.preferred_contact_phone !== '0';
     const preferredContactTelegram = storeSettings?.preferred_contact_telegram !== false && storeSettings?.preferred_contact_telegram !== 'false' && storeSettings?.preferred_contact_telegram !== '0';
     const preferredContactWhatsapp = storeSettings?.preferred_contact_whatsapp !== false && storeSettings?.preferred_contact_whatsapp !== 'false' && storeSettings?.preferred_contact_whatsapp !== '0';
@@ -979,7 +979,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         });
     }, [rawPaymentMethods]);
 
-    const [selectedPayment, setSelectedPayment] = useState<string>('');
+    const [selectedPayment, setSelectedPayment] = useState<string>('aba');
     const [preferredContact, setPreferredContact] = useState<string>('');
     const [contactInput, setContactInput] = useState<string>('');
     const [pendingCustomerToken, setPendingCustomerToken] = useState<string | null>(null);
@@ -1109,11 +1109,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 return;
             }
             setCurrentStep(2);
-        } else if (currentStep === 2) {
-            if (validateStep2()) {
-                setCurrentStep(3);
-            }
-        } else if (currentStep === 3) {
+        } else {
             if (validateStep2() && validateStep3()) {
                 executeOrderSubmission();
             }
@@ -1511,6 +1507,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         currentStep={currentStep}
                         displayCartItems={displayCartItems}
                         selectedPayment={selectedPayment}
+                        setSelectedPayment={setSelectedPayment}
+                        paymentMethods={paymentMethods}
+                        note={note}
+                        setNote={setNote}
+                        validationError={validationError}
+                        paymentRef={paymentRef}
                         handleSubtotalAction={handleSubtotalAction}
                         coupons={coupons}
                     />
@@ -1600,20 +1602,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         </div>
                     )}
 
-                    {/* Tab 3: Payment Selection & Notes */}
-                    <PaymentTab
-                        selectedPayment={selectedPayment}
-                        setSelectedPayment={setSelectedPayment}
-                        paymentMethods={paymentMethods}
-                        note={note}
-                        setNote={setNote}
-                        isCheckingOut={isCheckingOut}
-                        onSubmit={handleCheckout}
-                        validationError={validationError}
-                        paymentRef={paymentRef}
-                        isActive={currentStep === 3}
-                        onEdit={() => setCurrentStep(3)}
-                    />
+
                 </section>
 
             </main>

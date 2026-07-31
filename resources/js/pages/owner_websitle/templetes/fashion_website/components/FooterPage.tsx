@@ -18,6 +18,7 @@ import type { Policy } from '@/api/owner/policies';
 import abaLogo from '@/pages/main_website/Company_bank/aba.png';
 import bakongLogo from '@/pages/main_website/Company_bank/bakong.png';
 import acledaLogo from '@/pages/main_website/Company_bank/acleda.png';
+import { PaymentEnable } from './footer/payment_enable';
 
 
 
@@ -207,7 +208,7 @@ export const FooterPage: React.FC<FooterPageProps> = ({
             <img 
               src={resolveImageUrl(configValues.logo_url)} 
               alt={p.name} 
-              className="w-10 h-7 rounded border border-stone-200 bg-white object-contain p-[2px]" 
+              className="h-[20px] w-auto rounded-[3px] border border-stone-200 bg-white object-contain p-[1px]" 
             />
           )
         };
@@ -217,50 +218,44 @@ export const FooterPage: React.FC<FooterPageProps> = ({
       let fallbackLogo = null;
       if (p.key === 'aba') {
         fallbackLogo = (
-          <img src={abaLogo} alt="ABA Bank" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
+          <img src={abaLogo} alt="ABA Bank" className="h-[20px] w-auto rounded-[3px] object-contain bg-white border border-stone-200 p-[1px]" />
         );
       } else if (p.key === 'bakong') {
         fallbackLogo = (
-          <img src={bakongLogo} alt="Bakong KHQR" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
+          <img src={bakongLogo} alt="Bakong KHQR" className="h-[20px] w-auto rounded-[3px] object-contain bg-white border border-stone-200 p-[1px]" />
         );
       } else if (p.key === 'card') {
         fallbackLogo = (
-          <div className="w-10 h-7 rounded shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200/85 select-none">
-            <div className="grid grid-cols-2 gap-[1px] p-[1px]">
-              <span className="text-[5.5px] font-black text-blue-800 leading-none">VISA</span>
-              <span className="text-[5.5px] font-black text-red-500 leading-none">MC</span>
-              <span className="text-[5.5px] font-black text-green-700 leading-none">JCB</span>
-              <span className="text-[5.5px] font-black text-blue-900 leading-none">UP</span>
+          <div className="h-[20px] rounded-[3px] shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200/85 select-none px-1">
+            <div className="flex items-center gap-[2px]">
+              <span className="text-[6px] font-black text-blue-800 leading-none">VISA</span>
+              <span className="text-[6px] font-black text-red-500 leading-none">MC</span>
+              <span className="text-[6px] font-black text-green-700 leading-none">JCB</span>
+              <span className="text-[6px] font-black text-blue-900 leading-none">UP</span>
             </div>
           </div>
         );
       } else if (p.key === 'acleda') {
         fallbackLogo = (
-          <img src={acledaLogo} alt="ACLEDA Bank" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
+          <img src={acledaLogo} alt="ACLEDA Bank" className="h-[20px] w-auto rounded-[3px] object-contain bg-white border border-stone-200 p-[1px]" />
         );
       } else if (p.key === 'wing') {
         fallbackLogo = (
-          <img src="https://www.wingbank.com.kh/wp-content/uploads/2021/11/Wing-Bank-Logo-Vertical.png" alt="Wing Bank" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
+          <img src="https://www.wingbank.com.kh/wp-content/uploads/2021/11/Wing-Bank-Logo-Vertical.png" alt="Wing Bank" className="h-[20px] w-auto rounded-[3px] object-contain bg-white border border-stone-200 p-[1px]" />
         );
       } else if (p.key === 'chipmong') {
         fallbackLogo = (
-          <img src="https://www.chipmongbank.com/assets/img/logo.png" alt="Chip Mong Bank" className="w-10 h-7 rounded object-contain bg-white border border-stone-200 p-[2px]" />
+          <img src="https://www.chipmongbank.com/assets/img/logo.png" alt="Chip Mong Bank" className="h-[20px] w-auto rounded-[3px] object-contain bg-white border border-stone-200 p-[1px]" />
         );
       } else if (p.key === 'transfer') {
         fallbackLogo = (
-          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200 select-none">
-            <span className="text-[13px]">🏦</span>
-          </div>
-        );
-      } else if (p.key === 'cod') {
-        fallbackLogo = (
-          <div className="w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200 select-none">
-            <span className="text-[13px]">💵</span>
+          <div className="h-[20px] px-1 rounded-[3px] overflow-hidden shrink-0 flex items-center justify-center bg-stone-100 border border-stone-200 select-none">
+            <span className="text-[10px]">🏦</span>
           </div>
         );
       } else {
         fallbackLogo = (
-          <div className={`w-10 h-7 rounded overflow-hidden shrink-0 flex items-center justify-center font-bold text-[8px] select-none uppercase ${p.bg || 'bg-stone-100 border border-stone-200'}`}>
+          <div className={`h-[20px] px-1.5 rounded-[3px] overflow-hidden shrink-0 flex items-center justify-center font-bold text-[7.5px] select-none uppercase ${p.bg || 'bg-stone-100 border border-stone-200'}`}>
             {p.key}
           </div>
         );
@@ -282,7 +277,7 @@ export const FooterPage: React.FC<FooterPageProps> = ({
   };
 
   return (
-    <footer className="bg-stone-50 text-stone-600 pt-16 pb-8 mt-auto border-t border-stone-200/80 font-sans">
+    <footer className="fashion-website-container bg-stone-50 text-stone-600 pt-16 pb-8 mt-auto border-t border-stone-200/80 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Main Footer Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-10 gap-x-8 lg:gap-12">
@@ -480,19 +475,7 @@ export const FooterPage: React.FC<FooterPageProps> = ({
           <p className="m-0 text-center lg:text-left">© {new Date().getFullYear()} {storeInfo?.store_name || storeName}. All Rights Reserved.</p>
           
           {/* Enabled Payment Gateways Logos */}
-          {enabledPayments.length > 0 && (
-            <div className="flex items-center justify-center flex-wrap gap-2.5 animate-fade-in select-none">
-              {enabledPayments.map((p) => (
-                <div 
-                  key={p.key} 
-                  title={p.name}
-                  className="transition-transform duration-300 hover:scale-105"
-                >
-                  {p.logo}
-                </div>
-              ))}
-            </div>
-          )}
+          <PaymentEnable enabledPayments={enabledPayments} />
 
           
         </div>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiCheck, FiLoader, FiSmartphone } from 'react-icons/fi';
+import { FiX, FiLoader } from 'react-icons/fi';
 import { toast } from '../../utils/toast';
 import { client } from '@/api/client';
+import { AbaBankQrSandbox } from './option-paid/aba-bank';
 
 interface PopupPaymentKHQRProps {
      isOpen: boolean;
@@ -20,7 +21,7 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
      onClose,
      onConfirmPayment,
      amount,
-     merchantName = 'Our20s Collection',
+     merchantName = 'MY SHOP',
      currency = 'USD',
      orderId,
      paymentMethod = 'aba',
@@ -62,7 +63,6 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
           const fetchQrCode = async () => {
                setIsLoadingQr(true);
                setQrError(null);
-               // Always clear stale QR before fetching fresh one
                localStorage.removeItem('walkin_payment_qr');
                try {
                     const response = await client.post<any>('/payments/generate-qr', {
@@ -75,7 +75,6 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                          setQrImage(response.qrImage || null);
                          setTransactionId(response.transaction_id);
                          setAbapayDeeplink(response.abapay_deeplink);
-                         // Sync to walkin display
                          localStorage.setItem('walkin_payment_qr', JSON.stringify({
                               qrString: response.qrString,
                               qrImage: response.qrImage || null,
@@ -131,7 +130,6 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
           return () => clearInterval(interval);
      }, [isOpen, transactionId, onConfirmPayment]);
 
-
      const handleVerify = async () => {
           setIsVerifying(true);
           try {
@@ -155,7 +153,6 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                     }
                }
 
-               // Fallback simulation
                await new Promise((resolve) => setTimeout(resolve, 1500));
                toast.success('Sandbox Payment Confirmed (Simulated)!');
                onConfirmPayment();
@@ -166,82 +163,88 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
           }
      };
 
-     const methodKey = paymentMethod?.toLowerCase() || 'aba';
-     const isHttpUrl = qrString && (qrString.startsWith('http://') || qrString.startsWith('https://'));
-     
-     let titleText = 'ABA PAY / KHQR';
-     let payButtonText = 'Pay in ABA Mobile';
-     let buttonBg = 'bg-[#005D7E] hover:bg-[#004b66]';
-     
-     if (methodKey === 'bakong') {
-          titleText = 'Bakong KHQR';
-          payButtonText = 'Pay in Bakong App';
-          buttonBg = 'bg-[#b30006] hover:bg-[#8f0005]';
-     } else if (methodKey === 'acleda') {
-          titleText = 'ACLEDA KHQR';
-          payButtonText = 'Pay in ACLEDA Mobile';
-          buttonBg = 'bg-[#0D3B66] hover:bg-[#0a2c4d]';
-     } else if (methodKey === 'wing') {
-          titleText = 'Wing KHQR';
-          payButtonText = 'Pay in Wing Bank App';
-          buttonBg = 'bg-[#84bd00] hover:bg-[#6a9700]';
-     } else if (methodKey === 'chipmong') {
-          titleText = 'Chip Mong KHQR';
-          payButtonText = 'Pay in Chip Mong App';
-          buttonBg = 'bg-[#009b72] hover:bg-[#007c5b]';
-     }
-
-     const scanInstructionText = `Scan with ${methodKey === 'aba' ? 'ABA Mobile or any banking app supporting KHQR' : (methodKey === 'bakong' ? 'Bakong App' : 'Mobile Banking')}`;
-
      if (!isOpen) return null;
 
+     if (paymentMethod === 'aba' || paymentMethod === 'aba_pay') {
+          return (
+               <AbaBankQrSandbox
+                    isOpen={isOpen}
+                    onClose={onClose}
+                    onSuccess={onConfirmPayment}
+                    amount={amount}
+                    currency={currency}
+                    merchantName={merchantName}
+                    orderId={orderId}
+               />
+          );
+     }
+
      return createPortal(
-          <div className="fixed inset-0 z-[99999] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-fade-in font-sans">
-               <div className="bg-white w-full max-w-[360px] rounded-[20px] shadow-2xl overflow-hidden relative animate-scale-in border border-slate-100">
-                    {/* Header */}
-                    <div className="px-6 pt-5 pb-2 flex items-center justify-between text-slate-800">
-                         <h2 className="text-base font-semibold text-slate-800 tracking-tight">{titleText}</h2>
+          <div className="fixed inset-0 z-[99999] bg-[#081B37]/60 backdrop-blur-xs flex flex-col items-center justify-center p-4 select-none animate-fade-in font-kuntomruy">
+               
+               {/* ABA PAYWAY Floating Header Logo */}
+               <div className="w-full max-w-[340px] flex justify-end mb-3 select-none pr-1">
+                    <img
+                         src="/assets/payment_logo/PayWay Logo.svg"
+                         alt="ABA PAYWAY"
+                         className="h-6 sm:h-7 w-auto object-contain drop-shadow-sm select-none"
+                    />
+               </div>
+
+               {/* Main White Modal Box Container */}
+               <div className="bg-white w-full max-w-[340px] rounded-3xl shadow-2xl overflow-hidden relative animate-scale-in border border-stone-100/50">
+                    {/* Modal Header Bar */}
+                    <div className="px-6 pt-5 pb-3 flex items-center justify-between bg-white">
+                         <h2 className="text-sm font-black text-stone-900 tracking-tight">ABA KHQR</h2>
                          <button 
                               onClick={onClose}
-                              className="text-cyan-500 hover:text-cyan-600 transition-colors p-1 border-none bg-transparent cursor-pointer flex items-center justify-center"
+                              className="text-[#0BBCD4] hover:text-[#0999ac] transition-colors p-1 border-none bg-transparent cursor-pointer flex items-center justify-center"
                          >
                               <FiX className="w-5 h-5 stroke-[2.5]" />
                          </button>
                     </div>
 
-                    <div className="px-6 pt-2 pb-6 flex flex-col items-center">
-                         {/* Ticket Card Container */}
-                         <div className="w-full bg-white rounded-[16px] border border-slate-200/80 shadow-md overflow-hidden flex flex-col items-center relative">
-                              {/* Top Red KHQR Header */}
-                              <div className="w-full bg-[#E61E25] py-2.5 flex justify-center items-center text-white select-none">
-                                   <span className="font-sans font-black tracking-[0.2em] text-sm leading-none">
-                                        KHQR
-                                   </span>
+                    {/* Inner Ticket Card Box */}
+                    <div className="px-5 pb-5">
+                         <div className="w-full bg-white rounded-2xl border border-stone-200/90 shadow-md overflow-hidden flex flex-col items-center relative">
+                              
+                              {/* Red KHQR Header Banner (#E21A1A with exact notch cut) */}
+                              <div className="w-full h-12 bg-white rounded-t-2xl relative flex items-center justify-center text-white select-none overflow-hidden">
+                                   <div 
+                                        className="absolute inset-0 bg-[#E21A1A]"
+                                        style={{
+                                             clipPath: 'polygon(0 0, 100% 0, 100% 100%, 84% 74%, 0 74%)'
+                                        }}
+                                   />
+                                   <div className="relative z-10 flex items-center justify-center pb-2">
+                                        {/* Official Scaled KHQR White Logo Vector */}
+                                        <svg viewBox="13.4 3.95 6.3 1.6" className="h-6.5 sm:h-7 w-auto drop-shadow-xs" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                             <path d="M17.435 4.55882V5.03676H16.9654C16.9184 5.03676 16.8832 5.00091 16.8832 4.95312V4.55882C16.8832 4.51103 16.9184 4.47518 16.9654 4.47518H17.3411C17.3998 4.46324 17.435 4.51103 17.435 4.55882Z" fill="white"/>
+                                             <path d="M13.7104 4.6662L14.3677 3.99725H14.6841L13.98 4.71405L14.7202 5.50311H14.3911L13.7104 4.79803V5.50311H13.4399V3.99725H13.7104V4.6662ZM15.2007 4.63007H15.9526V3.99725H16.2104V5.50311H15.9526V4.84589H15.2007V5.50311H14.9312V3.99725H15.2007V4.63007ZM18.9351 3.99725C19.3459 3.9973 19.6743 4.33203 19.6743 4.75018H19.4399C19.4399 4.46346 19.2168 4.23656 18.9351 4.23651C18.712 4.23651 18.5241 4.37984 18.4536 4.59491C18.442 4.64267 18.4302 4.70247 18.4302 4.75018V5.50311H18.4185C18.2893 5.50311 18.1948 5.39506 18.1948 5.27557V4.75018C18.1948 4.54706 18.2775 4.34376 18.4302 4.20038C18.5711 4.06896 18.7472 3.99725 18.9351 3.99725ZM19.6743 5.50311H19.3462L19.2632 5.41913L19.0874 5.23944L18.8413 4.98846H19.1694L19.6743 5.50311ZM17.7378 3.99725C17.8549 3.9975 17.9602 4.09277 17.9604 4.22382V5.34784L17.7261 5.10858V4.39178C17.7261 4.30814 17.655 4.23651 17.5728 4.23651H16.8687C16.7865 4.23651 16.7163 4.30814 16.7163 4.39178V5.10858C16.7164 5.19215 16.7865 5.26385 16.8687 5.26385H17.5728L17.8081 5.49042H16.7163C16.5989 5.49042 16.4927 5.39523 16.4927 5.26385V4.22382C16.4929 4.1045 16.5873 3.99725 16.7163 3.99725H17.7378Z" fill="white"/>
+                                        </svg>
+                                   </div>
                               </div>
 
                               {/* Merchant & Amount Details */}
-                              <div className="w-full text-center px-4 pt-4">
-                                   <p className="text-[12px] font-medium text-slate-600 truncate max-w-full">
+                              <div className="w-full text-center px-4 pt-3 pb-1">
+                                   <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider truncate max-w-full">
                                         {merchantName}
                                    </p>
                                    <div className="flex items-baseline justify-center gap-1.5 mt-1">
-                                        <span className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none">
-                                             {currency === 'USD' ? amount.toFixed(2) : new Intl.NumberFormat('km-KH').format(Math.round(amount * 4100))}
-                                        </span>
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase">
-                                             {currency}
+                                        <span className="text-2xl font-black text-stone-900 tracking-tight leading-none">
+                                             $ {currency === 'USD' ? amount.toFixed(2) : new Intl.NumberFormat('km-KH').format(Math.round(amount * 4100))}
                                         </span>
                                    </div>
                               </div>
 
-                              {/* Dashed Separator */}
-                              <div className="w-full border-t border-dashed border-slate-200 my-3.5" />
+                              {/* Dashed Separator Line */}
+                              <div className="w-full border-t border-dashed border-stone-300/80 my-3.5" />
 
-                              {/* QR Code Display Area */}
-                              <div className="relative w-48 h-48 mb-4 flex items-center justify-center bg-white p-1 select-none">
+                              {/* QR Code Container with Centered USD ($) Badge */}
+                              <div className="relative w-48 h-48 mb-4 flex items-center justify-center bg-white p-2 select-none">
                                    {isLoadingQr ? (
-                                        <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
-                                             <FiLoader className="w-7 h-7 animate-spin text-slate-600" />
+                                        <div className="flex flex-col items-center justify-center text-stone-400 gap-2">
+                                             <FiLoader className="w-7 h-7 animate-spin text-stone-600" />
                                              <span className="text-[10px] font-bold tracking-wider uppercase">Generating QR...</span>
                                         </div>
                                    ) : qrError ? (
@@ -254,55 +257,41 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                                              >Retry</button>
                                         </div>
                                    ) : (qrImage || qrString) ? (
-                                        <div className="relative w-full h-full select-none">
+                                        <div className="relative w-full h-full select-none flex items-center justify-center">
                                              <img
                                                   src={qrImage || `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrString || '')}`}
-                                                  alt={titleText}
-                                                  className="w-full h-full object-contain pointer-events-none"
+                                                  alt="ABA KHQR"
+                                                  className="w-full h-full object-contain pointer-events-none rounded-lg"
                                              />
+                                             {/* Circular USD ($) Badge in center of QR Code */}
+                                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                  <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center border-2 border-white shadow-sm">
+                                                       <span className="text-white font-black text-xs font-sans leading-none">$</span>
+                                                  </div>
+                                             </div>
                                         </div>
                                    ) : (
-                                        <div className="text-slate-400 text-xs uppercase tracking-wider font-bold">No QR Code</div>
+                                        <div className="text-stone-400 text-xs uppercase tracking-wider font-bold">No QR Code</div>
                                    )}
                               </div>
                          </div>
 
                          {/* Instruction text below ticket */}
-                         <p className="text-[11px] font-normal text-slate-400 text-center leading-relaxed max-w-[240px] mt-4 mb-1 select-none">
-                              {scanInstructionText}
+                         <p className="text-[11px] font-medium text-stone-400 text-center leading-relaxed max-w-[260px] mx-auto mt-4 mb-1 select-none">
+                              Scan with Bakong App or Mobile Banking app that support KHQR
                          </p>
 
-                         {/* Optional Deep-link or Sandbox controls */}
-                         {abapayDeeplink && (
-                              <a
-                                   href={abapayDeeplink}
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   className={`w-full mt-3 py-2.5 ${buttonBg} text-white rounded-[10px] text-xs font-bold uppercase tracking-wider text-center no-underline shadow-xs transition-all duration-200 flex items-center justify-center gap-2 border-none cursor-pointer active:scale-[0.98]`}
-                              >
-                                   <FiSmartphone className="w-4 h-4" />
-                                   {payButtonText}
-                              </a>
-                         )}
-
+                         {/* Sandbox Verification (Subtle link for DEV testing) */}
                          {import.meta.env.DEV && (
-                              <button
-                                   onClick={handleVerify}
-                                   disabled={isVerifying || isLoadingQr}
-                                   className="w-full mt-2.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-[10px] text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer shadow-xs focus:outline-none flex items-center justify-center gap-2 border-none disabled:opacity-50 active:scale-[0.98]"
-                              >
-                                   {isVerifying ? (
-                                        <>
-                                             <FiLoader className="w-4 h-4 animate-spin" />
-                                             Verifying...
-                                        </>
-                                   ) : (
-                                        <>
-                                             <FiCheck className="w-4 h-4 stroke-[2.5]" />
-                                             Confirm Sandbox Payment
-                                        </>
-                                   )}
-                              </button>
+                              <div className="mt-3 text-center">
+                                   <button
+                                        onClick={handleVerify}
+                                        disabled={isVerifying || isLoadingQr}
+                                        className="text-[11px] font-bold text-stone-400 hover:text-stone-900 underline border-none bg-transparent cursor-pointer transition-colors"
+                                   >
+                                        {isVerifying ? 'Verifying Sandbox Payment...' : '✓ Confirm Sandbox Payment'}
+                                   </button>
+                              </div>
                          )}
                     </div>
                </div>

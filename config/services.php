@@ -31,9 +31,4 @@ return [
         ],
     ],
 
-    'khpay' => [
-        'api_key' => '',
-        'base_url' => 'https://khpay.site/api/v1',
-    ],
-
 ];

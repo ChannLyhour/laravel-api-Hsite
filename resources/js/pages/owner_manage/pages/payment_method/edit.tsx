@@ -9,8 +9,8 @@ import bakongLogo from '@/pages/main_website/Company_bank/bakong.png';
 import acledaLogo from '@/pages/main_website/Company_bank/acleda.png';
 
 const DEFAULT_LOGOS: Record<string, string> = {
-     aba: abaLogo,
-     bakong: bakongLogo,
+     aba: '/assets/payment_enable/aba.svg',
+     bakong: '/assets/payment_enable/bakong-bank.svg',
      acleda: acledaLogo,
 };
 
@@ -55,7 +55,6 @@ export const EditPage: React.FC<EditPageProps> = ({
           ...(gateway.defaultValues || {}),
           ...(config.values || {})
      });
-     const [activeTab, setActiveTab] = useState<'aba' | 'khpay'>('aba');
      const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
      const [saving, setSaving] = useState(false);
 
@@ -78,12 +77,7 @@ export const EditPage: React.FC<EditPageProps> = ({
 
      const credentialsFields = gateway.fields;
      const displayedFields = credentialsFields.filter(field => {
-          if (gateway.id !== 'aba') return true;
-          if (activeTab === 'aba') {
-               return field.key === 'payway_link';
-          } else {
-               return field.key.startsWith('khpay_');
-          }
+          return true;
      });
 
      return (
@@ -122,45 +116,17 @@ export const EditPage: React.FC<EditPageProps> = ({
                                         </p>
                                    </div>
 
-                                   {/* Tab Switcher for ABA vs KHPAY */}
+                                   {/* Gateway Description Banner */}
                                    {gateway.id === 'aba' && (
-                                        <div className="space-y-3 border-b border-slate-200/80 pb-4 pt-1">
-                                             <div className="flex flex-wrap items-center gap-2">
-                                                  <button
-                                                       type="button"
-                                                       onClick={() => setActiveTab('aba')}
-                                                       className={`px-4 py-2 text-xs font-extrabold rounded-[6px] transition-all cursor-pointer border-none flex items-center gap-2 ${
-                                                            activeTab === 'aba'
-                                                                 ? 'bg-[#005D7E] text-white shadow-md'
-                                                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                                       }`}
-                                                  >
-                                                       <span>Config 1: Account ABA Bank Support KHQR</span>
-                                                  </button>
-                                                  <button
-                                                       type="button"
-                                                       onClick={() => setActiveTab('khpay')}
-                                                       className={`px-4 py-2 text-xs font-extrabold rounded-[6px] transition-all cursor-pointer border-none flex items-center gap-2 ${
-                                                            activeTab === 'khpay'
-                                                                 ? 'bg-[#E61E25] text-white shadow-md'
-                                                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                                       }`}
-                                                  >
-                                                       <span>Config 2: Config with KHPAY</span>
-                                                  </button>
-                                             </div>
-
-                                             {activeTab === 'aba' ? (
-                                                  <div className="p-3 bg-cyan-50 border border-cyan-200/60 rounded-[6px] text-xs text-cyan-900 leading-relaxed font-medium">
-                                                       <strong className="font-extrabold text-[#005D7E] block mb-0.5">Config 1: ABA Bank Account (PayWay Link / KHQR)</strong>
-                                                       Paste your official ABA PayWay merchant sharing link (<code className="bg-cyan-100/80 px-1 py-0.5 rounded font-mono text-[11px]">https://link.payway.com.kh/ABAPAY...</code>) to accept payments into your ABA Bank account with KHQR support.
-                                                  </div>
-                                             ) : (
-                                                  <div className="p-3 bg-red-50 border border-red-200/60 rounded-[6px] text-xs text-red-900 leading-relaxed font-medium">
-                                                       <strong className="font-extrabold text-[#E61E25] block mb-0.5">Config 2: Config with KHPAY (Dynamic KHQR API)</strong>
-                                                       Provide your KHPAY API Token and Bakong Account ID from <code className="bg-red-100/80 px-1 py-0.5 rounded font-mono text-[11px]">khpay.site</code> for real-time dynamic KHQR generation and automatic payment status checks.
-                                                  </div>
-                                             )}
+                                        <div className="p-3 bg-cyan-50 border border-cyan-200/60 rounded-[6px] text-xs text-cyan-900 leading-relaxed font-medium">
+                                             <strong className="font-extrabold text-[#005D7E] block mb-0.5">ABA Bank Account (PayWay Link / KHQR)</strong>
+                                             Paste your official ABA PayWay merchant sharing link (<code className="bg-cyan-100/80 px-1 py-0.5 rounded font-mono text-[11px]">https://link.payway.com.kh/ABAPAY...</code>) to accept payments into your ABA Bank account with KHQR support.
+                                        </div>
+                                   )}
+                                   {gateway.id === 'bakong' && (
+                                        <div className="p-3 bg-red-50 border border-red-200/60 rounded-[6px] text-xs text-red-900 leading-relaxed font-medium">
+                                             <strong className="font-extrabold text-[#E61E25] block mb-0.5">Bakong KHQR Configuration</strong>
+                                             Enter your Bakong Account ID (<code className="bg-red-100/80 px-1 py-0.5 rounded font-mono text-[11px]">username@bkrt</code>), Merchant Name, and Merchant City to generate Bakong KHQR payment codes.
                                         </div>
                                    )}
 
@@ -266,9 +232,19 @@ export const EditPage: React.FC<EditPageProps> = ({
                                         <span>Provider Profile</span>
                                    </h3>
                                    <div className="flex items-center gap-3 bg-black/[0.02] p-2.5 rounded-[5px] border border-black/10">
-                                        <div className={`w-12 h-8 rounded-[4px] shrink-0 flex items-center justify-center font-black text-center shadow-xs select-none leading-none px-1 ${gateway.logoColor} ${gateway.textColor} ${gateway.logoText.length > 5 ? 'text-[8px]' : 'text-[10px]'}`}>
-                                             {gateway.logoText}
-                                        </div>
+                                         {DEFAULT_LOGOS[gateway.id] ? (
+                                              <div className="w-12 h-8 rounded-[4px] shrink-0 border border-black/5 bg-black/[0.03] flex items-center justify-center overflow-hidden shadow-xs">
+                                                   <img
+                                                        src={DEFAULT_LOGOS[gateway.id]}
+                                                        alt={`${gateway.name} Logo`}
+                                                        className="w-full h-full object-contain p-1"
+                                                   />
+                                              </div>
+                                         ) : (
+                                              <div className={`w-12 h-8 rounded-[4px] shrink-0 flex items-center justify-center font-black text-center shadow-xs select-none leading-none px-1 ${gateway.logoColor} ${gateway.textColor} ${gateway.logoText.length > 5 ? 'text-[8px]' : 'text-[10px]'}`}>
+                                                   {gateway.logoText}
+                                              </div>
+                                         )}
                                         <div className="text-xs">
                                              <p className="font-extrabold text-slate-800">{gateway.name}</p>
                                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase inline-block mt-0.5 ${config.enabled

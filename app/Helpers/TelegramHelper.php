@@ -88,7 +88,12 @@ class TelegramHelper
         }
         $itemsText = implode("\n", $itemLines);
 
-        $paymentMethod = $order->payment_method === 'cod' ? 'Cash on Delivery' : $order->payment_method;
+        $paymentMethod = match(strtolower($order->payment_method ?? '')) {
+            'aba', 'aba_pay', 'aba khqr' => 'ABA KHQR',
+            'bakong', 'bakong khqr' => 'Bakong KHQR',
+            'cod' => 'Cash on Delivery',
+            default => $order->payment_method ?? 'ABA KHQR'
+        };
         $paymentIcon = $order->payment_status === 'Paid' ? '✅' : '⏳';
         $paymentStatus = $order->payment_status ?? 'Unpaid';
 

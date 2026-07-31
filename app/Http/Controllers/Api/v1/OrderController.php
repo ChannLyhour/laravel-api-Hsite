@@ -208,7 +208,7 @@ class OrderController extends Controller
                     'coupon_code' => $request->coupon_code,
                     'total_amount' => $request->total_amount,
                     'payment_status' => 'Unpaid',
-                    'payment_method' => $request->payment_method ?? 'cod',
+                    'payment_method' => $request->payment_method ?? 'aba',
                     'store_id' => $request->store_id,
                 ]);
 
@@ -516,7 +516,7 @@ class OrderController extends Controller
 
         // Send Telegram notification to the store owner (only if paid or COD)
         try {
-            $isDigitalPayment = in_array(strtolower($order->payment_method ?? ''), ['bakong', 'aba', 'khqr', 'card']);
+            $isDigitalPayment = in_array(strtolower($order->payment_method ?? ''), ['bakong', 'aba', 'khqr', 'card', 'aba khqr', 'bakong khqr']);
             if (!$isDigitalPayment || strtolower($order->payment_status ?? '') === 'paid') {
                 \App\Helpers\TelegramHelper::sendOrderNotification($order);
             } else {

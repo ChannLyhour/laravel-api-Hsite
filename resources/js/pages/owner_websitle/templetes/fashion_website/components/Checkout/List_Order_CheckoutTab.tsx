@@ -34,7 +34,7 @@ export const List_Order_CheckoutTab: React.FC<ListOrderCheckoutTabProps> = ({
     onNavigate,
 }) => {
     return (
-        <div className={`bg-white rounded-3xl border transition-all duration-300 ${!isLocked ? 'border-stone-950 shadow-[0_8px_30px_rgba(0,0,0,0.035)] p-6' : 'border-stone-100 shadow-[0_4px_20px_rgba(0,0,0,0.015)] p-6'}`}>
+        <div className={`bg-white rounded-3xl border transition-all duration-300 font-kuntomruy ${!isLocked ? 'border-stone-950 shadow-[0_8px_30px_rgba(0,0,0,0.035)] p-6' : 'border-stone-100 shadow-[0_4px_20px_rgba(0,0,0,0.015)] p-6'}`}>
             <div 
                 onClick={isLocked ? onEdit : undefined}
                 className={`flex items-center justify-between pb-4 border-b border-stone-100 ${isLocked ? 'cursor-pointer select-none' : ''}`}

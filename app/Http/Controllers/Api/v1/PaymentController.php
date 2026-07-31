@@ -24,6 +24,15 @@ class PaymentController extends Controller
     }
 
     /**
+     * Create ABA PayWay Sandbox purchase payload & hash.
+     */
+    public function createAbaPurchase (Request $request)
+    {
+        $abaClass = new \App\Http\Controllers\Api\v1\Owner\aba\aba();
+        return $abaClass->createPurchase($request);
+    }
+
+    /**
      * Check transaction status on PayWay Sandbox.
      */
     public function checkTransaction (Request $request)
@@ -36,48 +45,6 @@ class PaymentController extends Controller
         ]);
 
         try {
-            // KHPay status verification check (supports TXN..., bk_..., ORD..., order IDs)
-            $tranIdLower = strtolower($request->transaction_id ?? '');
-            if (!empty($request->transaction_id) && (str_starts_with($tranIdLower, 'bk_') || str_starts_with($tranIdLower, 'txn_') || str_starts_with($tranIdLower, 'ord') || is_numeric($request->transaction_id))) {
-                $khpayCheck = \App\Helpers\KHPayHelper::checkPaymentStatus($request->transaction_id);
-                if ($khpayCheck && (!empty($khpayCheck['paid']) || (isset($khpayCheck['status']) && strtolower($khpayCheck['status']) === 'success') || (isset($khpayCheck['data']['status']) && strtolower($khpayCheck['data']['status']) === 'success'))) {
-                    $txn = PaymentTransaction::where('transaction_id', $request->transaction_id)
-                        ->orWhere('order_id', $request->transaction_id)
-                        ->first();
-
-                    if ($txn) {
-                        $txn->update(['status' => 'success', 'raw_response' => json_encode($khpayCheck)]);
-                        if ($txn->order) {
-                            $txn->order->update(['payment_status' => 'Paid']);
-                            try {
-                                \Illuminate\Support\Facades\Cache::forget("telegram_sent_order_{$txn->order->id}");
-                                \App\Helpers\TelegramHelper::sendOrderNotification($txn->order);
-                                \App\Helpers\SendStatusTelegramboToCustomers::sendStatus($txn->order, 'PAID');
-                            } catch (\Throwable $e) {
-                                Log::error("Failed sending Telegram payment update: " . $e->getMessage());
-                            }
-                        }
-                    }
-
-                    $customerToken = null;
-                    $targetOrder = $txn ? $txn->order : \App\Models\Order::find($request->transaction_id);
-                    if ($targetOrder && $targetOrder->user_id) {
-                        $user = \App\Models\User::find($targetOrder->user_id);
-                        if ($user) {
-                            $customerToken = $user->createToken('customer_auth_token')->plainTextToken;
-                        }
-                    }
-
-                    return response()->json([
-                        'success' => true,
-                        'payment_status' => 'Paid',
-                        'customer_token' => $customerToken,
-                        'message' => 'Payment verified via KHPay API!',
-                        'raw' => $khpayCheck
-                    ]);
-                }
-            }
-
             $txn = PaymentTransaction::where('transaction_id', $request->transaction_id)->first();
             $order = null;
 
@@ -304,8 +271,8 @@ class PaymentController extends Controller
             }
 
             // Load store API credentials
-            $merchantId = 'ec454848';
-            $apiKey = 'ec454848b598b9e6e00ea3535cf04b122f87a875';
+            $merchantId = 'ec477316';
+            $apiKey = '8c5b65561de1d1664859d7621fa3ca8d6c99a707';
             $apiUrl = 'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction';
             $isPaywayLinkMode = false;
 
@@ -319,36 +286,11 @@ class PaymentController extends Controller
                     $abaConfig = $methods['aba'];
                     $abaValues = $abaConfig['values'] ?? [];
 
-                    // ── NEW: Check for PayWay Link-based config ──────────
-                    $paywayLink = !empty($abaValues['payway_link']) ? $abaValues['payway_link'] : 'https://link.payway.com.kh/ABAPAYvu485790W';
-                    if (!empty($paywayLink) && str_contains($paywayLink, 'link.payway.com.kh')) {
-                        $isPaywayLinkMode = true;
+                    if (!empty($abaValues['merchantId'])) {
+                        $merchantId = $abaValues['merchantId'];
                     }
-
-                    // ── Legacy: API credential-based config ──────────
-                    if (!$isPaywayLinkMode) {
-                        if (!empty($abaValues['merchantId'])) {
-                            $merchantId = $abaValues['merchantId'];
-                        } elseif (!empty($abaConfig['merchantId'])) {
-                            $merchantId = $abaConfig['merchantId'];
-                        }
-
-                        if (!empty($abaValues['apiKey'])) {
-                            $apiKey = $abaValues['apiKey'];
-                        } elseif (!empty($abaConfig['apiKey'])) {
-                            $apiKey = $abaConfig['apiKey'];
-                        }
-
-                        $rawUrl = $abaValues['apiUrl'] ?? $abaConfig['apiUrl'] ?? null;
-                        if (!empty($rawUrl)) {
-                            $url = trim($rawUrl);
-                            if (!str_contains($url, '/payments/check-transaction') && !str_contains($url, '/payments/purchase')) {
-                                $url = rtrim($url, '/') . '/api/payment-gateway/v1/payments/check-transaction';
-                            } else {
-                                $url = str_replace('/payments/purchase', '/payments/check-transaction', $url);
-                            }
-                            $apiUrl = $url;
-                        }
+                    if (!empty($abaValues['apiKey'])) {
+                        $apiKey = $abaValues['apiKey'];
                     }
                 }
             }
@@ -386,10 +328,8 @@ class PaymentController extends Controller
                 'tran_id' => $request->transaction_id,
             ];
 
-            // Correct PayWay check-transaction hash sequence:
-            // req_time + merchant_id + tran_id
-            $hashStr = $req_time . $merchantId . $request->transaction_id;
-            $postFields['hash'] = base64_encode(hash_hmac('sha512', $hashStr, $apiKey, true));
+            // Correct PayWay check-transaction hash sequence using ABA helper
+            $postFields['hash'] = \App\Http\Controllers\Api\v1\Owner\aba\aba::generateCheckHash($req_time, $merchantId, $request->transaction_id, $apiKey);
 
             Log::info('[PayWay] Checking transaction: ' . $apiUrl, $postFields);
 
@@ -400,48 +340,6 @@ class PaymentController extends Controller
             ]);
             if (!app()->isProduction() || str_contains($apiUrl, 'sandbox')) {
                 $httpClient = $httpClient->withoutVerifying();
-            }
-
-            // MOCK MODE FALLBACK: If merchantId is sandbox prefix 'ec', url contains sandbox, or is custom PayWay link
-            $isSandbox = str_contains($apiUrl, 'sandbox') || str_starts_with($merchantId, 'ec') || str_contains($apiUrl, 'link.payway.com.kh');
-            if ($isSandbox && $request->input('real') !== 'true' && $request->input('real') !== 1 && $request->input('real') !== '1') {
-                $mockResData = [
-                    'status' => 0,
-                    'description' => 'Success',
-                    'amount' => $txn ? $txn->amount : $request->input('amount', 0),
-                    'tran_id' => $request->transaction_id,
-                ];
-
-                // Only complete payment if user clicked "Confirm Sandbox Payment" (confirm parameter is true)
-                if ($request->input('confirm') === true || $request->input('confirm') === 'true' || $request->input('confirm') == 1) {
-                    if ($txn) {
-                        $txn->update([
-                            'status' => 'success',
-                            'raw_response' => json_encode($mockResData),
-                        ]);
-
-                        if ($order) {
-                            $order->update([
-                                'payment_status' => 'Paid',
-                            ]);
-                        }
-                    }
-
-                    return response()->json([
-                        'success' => true,
-                        'payment_status' => 'Paid',
-                        'message' => 'Payment completed successfully (Mock Mode)!',
-                        'raw' => $mockResData,
-                    ]);
-                }
-
-                // Background polling check returns pending
-                return response()->json([
-                    'success' => true,
-                    'payment_status' => 'Unpaid',
-                    'message' => 'Payment is still pending (Mock Mode).',
-                    'raw' => $mockResData,
-                ]);
             }
 
             $response = $httpClient->post($apiUrl, $postFields);
@@ -607,46 +505,34 @@ class PaymentController extends Controller
             [
                 'key' => 'aba',
                 'logo' => asset('build/assets/bank/aba-pay-way.png'),
-                'name' => 'ABA PAY',
-                'desc' => 'Scan to pay with ABA Mobile',
+                'name' => 'ABA KHQR',
+                'desc' => 'Scan to pay with any banking app',
             ],
             [
                 'key' => 'bakong',
                 'logo' => asset('build/assets/bank/bakong-khqr.png'),
                 'name' => 'Bakong KHQR',
-                'desc' => 'Scan to pay with Bakong App or any KHQR supported bank',
+                'desc' => 'Tap to pay with Bakong Bank',
             ],
-            [
-                'key' => 'acleda',
-                'logo' => asset('build/assets/bank/acleda.png'),
-                'name' => 'ACLEDA PAY',
-                'desc' => 'Pay securely with ACLEDA.',
-            ],
-            [
-                'key' => 'cod',
-                'logo' => 'emoji:💵',
-                'name' => 'Cash on Delivery',
-                'desc' => 'បង់ប្រាក់នៅពេលទទួលបានទំនិញ',
-            ]
         ];
 
         $activeMethods = [];
         foreach ($methodsBase as $p) {
             $key = $p['key'];
             $config = $settings[$key] ?? null;
-            $enabled = false;
+            $enabled = true;
 
-            if ($config) {
-                $enabled = filter_var($config['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            if ($config && isset($config['enabled'])) {
+                $enabled = filter_var($config['enabled'], FILTER_VALIDATE_BOOLEAN);
             } else {
                 $legacyRow = Store::where('created_by', $realOwnerId)
                     ->where('key', 'payment_gw_' . $key)
                     ->first();
                 if ($legacyRow) {
                     $parsed = json_decode($legacyRow->value, true);
-                    $enabled = filter_var($parsed['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                    $enabled = filter_var($parsed['enabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
                 } else {
-                    $enabled = ($key === 'cod' || $key === 'transfer');
+                    $enabled = true;
                 }
             }
 
