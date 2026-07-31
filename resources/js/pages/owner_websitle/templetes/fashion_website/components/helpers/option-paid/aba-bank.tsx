@@ -1,8 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX, FiRefreshCw, FiCheckCircle, FiCopy, FiExternalLink, FiLoader, FiShield, FiSmartphone } from 'react-icons/fi';
+import { QRCodeSVG } from 'qrcode.react';
 import { toast } from '@/pages/owner_manage/utils/toast';
 import { client } from '@/api/client';
+
+interface CustomKHQRProps {
+     qrString: string | null;
+     size?: number;
+     currency?: string;
+}
+
+const CustomKHQR: React.FC<CustomKHQRProps> = ({ qrString, size = 192, currency = 'USD' }) => {
+     if (!qrString) return null;
+     return (
+          <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+               <QRCodeSVG
+                    value={qrString}
+                    size={size}
+                    level="H"
+                    className="w-full h-full object-contain"
+               />
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-8 h-8 rounded-full overflow-hidden border-[1.5px] border-white shadow-sm bg-white flex items-center justify-center">
+                         <img
+                              src="/assets/payment_enable/bakong-bank.svg"
+                              alt="KHQR"
+                              className="w-full h-full object-cover"
+                         />
+                    </div>
+               </div>
+          </div>
+     );
+};
 
 export interface AbaBankQrSandboxProps {
      isOpen?: boolean;
@@ -37,7 +67,7 @@ export const AbaBankQrSandbox: React.FC<AbaBankQrSandboxProps> = ({
      const [isPaid, setIsPaid] = useState<boolean>(false);
      const [countdown, setCountdown] = useState<number>(1800); // 30 minutes
 
-     const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+     const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
      // Format time MM:SS
      const formatTime = (seconds: number) => {
@@ -217,160 +247,134 @@ export const AbaBankQrSandbox: React.FC<AbaBankQrSandboxProps> = ({
 
      if (!isOpen) return null;
 
-     const modalContent = (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in font-kuntomruy">
-               <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-stone-200">
+                         const modalContent = (
+          <div className="fixed inset-0 z-[99999] bg-[#081B37]/60 backdrop-blur-xs flex flex-col items-center justify-center p-4 select-none animate-fade-in font-kuntomruy">
+               
+               {/* ABA PAYWAY Floating Header Logo (Top Right Aligned) */}
+               <div className="w-full max-w-[340px] flex justify-end mb-3 select-none pr-1">
+                    <img
+                         src="/assets/payment_logo/PayWay Logo.svg"
+                         alt="ABA PAYWAY"
+                         className="h-6 sm:h-7 w-auto object-contain drop-shadow-sm select-none"
+                    />
+               </div>
 
-                    {/* Top ABA Header Bar */}
-                    <div className="bg-[#005D7E] text-white px-6 py-4 flex items-center justify-between">
-                         <div className="flex items-center space-x-3">
-                              <img
-                                   src="/assets/payment_enable/bakong-bank.svg"
-                                   alt="ABA Bank"
-                                   className="w-8 h-8 rounded-lg bg-white p-0.5 object-contain"
-                              />
-                              <div>
-                                   <div className="flex items-center space-x-2">
-                                        <h3 className="font-extrabold text-base tracking-tight">ABA Bank PayWay</h3>
-                                        <span className="bg-[#E61E25] text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">
-                                             SANDBOX
-                                        </span>
-                                   </div>
-                                   <p className="text-[11px] text-cyan-100 font-medium">Scan KHQR or Pay via ABA App</p>
-                              </div>
-                         </div>
+               {/* Main White Modal Box Container */}
+               <div className="bg-white w-full max-w-[340px] rounded-3xl shadow-2xl overflow-hidden relative animate-scale-in border border-stone-100/50">
+                    {/* Modal Header Bar */}
+                    <div className="px-6 pt-5 pb-4 flex items-center justify-between bg-white">
+                         <h2 className="text-sm font-black text-stone-900 tracking-tight">ABA KHQR</h2>
                          {onClose && (
-                              <button
+                              <button 
                                    onClick={onClose}
-                                   className="text-white/80 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors border-none bg-transparent cursor-pointer"
+                                   className="text-[#0BBCD4] hover:text-[#0999ac] transition-colors p-1 border-none bg-transparent cursor-pointer flex items-center justify-center"
                               >
-                                   <FiX className="w-5 h-5" />
+                                   <FiX className="w-5 h-5 stroke-[2.5]" />
                               </button>
                          )}
                     </div>
 
-                    {/* Body Content */}
-                    <div className="p-6 space-y-5 text-center">
-
-                         {/* Merchant & Amount Information */}
-                         <div className="bg-stone-50 border border-stone-100 rounded-2xl p-4 space-y-1">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400">
-                                   Merchant ID: <strong className="text-stone-800 font-mono">ec477316</strong> ({merchantName})
-                              </span>
-                              <div className="text-2xl font-black text-stone-900 tracking-tight">
-                                   {currency === 'KHR' ? `${amount.toLocaleString()} KHR` : `$${amount.toFixed(2)} USD`}
-                              </div>
-                              {transactionId && (
-                                   <span className="text-[10px] text-stone-400 font-medium block font-mono">
-                                        Tran ID: {transactionId}
-                                   </span>
-                              )}
-                         </div>
-
-                         {/* QR Code Section */}
-                         <div className="flex flex-col items-center justify-center space-y-3">
-                              {loading ? (
-                                   <div className="w-56 h-56 rounded-2xl bg-stone-100 border border-stone-200 flex flex-col items-center justify-center space-y-3">
-                                        <FiLoader className="w-8 h-8 text-[#005D7E] animate-spin" />
-                                        <span className="text-xs font-bold text-stone-500">Generating ABA KHQR...</span>
+                    {/* Inner Ticket Card & Footer Area */}
+                    <div className="px-5 pb-6">
+                         {/* Ticket Card Box */}
+                         <div className="w-full bg-white rounded-3xl border border-stone-200/80 shadow-md overflow-hidden flex flex-col items-center relative">
+                              {isPaid ? (
+                                   <div className="py-14 flex flex-col items-center justify-center text-emerald-600 gap-2">
+                                        <FiCheckCircle className="w-14 h-14" />
+                                        <span className="text-sm font-black">Payment Complete!</span>
                                    </div>
-                              ) : isPaid ? (
-                                   <div className="w-56 h-56 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col items-center justify-center space-y-2 text-emerald-600 animate-scale-up">
-                                        <FiCheckCircle className="w-16 h-16" />
-                                        <span className="text-sm font-extrabold">Payment Complete!</span>
-                                        <span className="text-[11px] text-emerald-700 font-medium">Recorded in ABA Sandbox Dashboard</span>
-                                   </div>
-                              ) : qrImage ? (
-                                   <div className="relative p-3 bg-white border-2 border-[#005D7E]/20 rounded-2xl shadow-md group">
-                                        <img
-                                             src={qrImage}
-                                             alt="ABA Sandbox KHQR Code"
-                                             className="w-52 h-52 object-contain rounded-lg"
-                                        />
-                                        <div className="mt-2 flex items-center justify-between px-1 text-[11px] font-bold text-stone-500">
-                                             <span className="flex items-center gap-1 text-[#005D7E]">
-                                                  <FiShield className="w-3.5 h-3.5" /> KHQR Valid
-                                             </span>
-                                             <span className="font-mono text-stone-700 font-bold">{formatTime(countdown)}</span>
-                                        </div>
-                                   </div>
-                              ) : (
-                                   <div className="w-56 h-56 rounded-2xl bg-stone-50 border border-dashed border-stone-300 flex flex-col items-center justify-center p-4 text-center space-y-2">
-                                        <p className="text-xs font-bold text-stone-500">{errorMessage || 'Unable to display QR code'}</p>
+                              ) : errorMessage ? (
+                                   <div className="py-12 flex flex-col items-center justify-center text-center p-4 text-red-500 gap-2">
+                                        <span className="text-3xl">⚠️</span>
+                                        <span className="text-xs font-bold leading-tight">{errorMessage}</span>
                                         <button
                                              onClick={fetchSandboxQr}
-                                             className="px-3 py-1.5 bg-[#005D7E] text-white text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer border-none"
-                                        >
-                                             <FiRefreshCw className="w-3.5 h-3.5" /> Retry
-                                        </button>
+                                             className="mt-2 text-xs font-bold uppercase tracking-wider text-blue-600 underline border-none bg-transparent cursor-pointer"
+                                        >Retry</button>
+                                   </div>
+                              ) : (
+                                   <div className="w-full flex flex-col items-center">
+                                        {/* Red KHQR Header Banner (#E21A1A with exact notch cut) */}
+                                        <div className="w-full h-14 bg-white rounded-t-3xl relative flex items-center justify-center text-white select-none overflow-hidden">
+                                             <div 
+                                                  className="absolute inset-0 bg-[#E21A1A]"
+                                                  style={{
+                                                       clipPath: 'polygon(0 0, 100% 0, 100% 100%, 85% 68%, 0 68%)'
+                                                  }}
+                                             />
+                                             <div className="relative z-10 flex items-center justify-center pb-3">
+                                                  <svg viewBox="13.4 3.95 6.3 1.6" className="h-4 sm:h-4 w-auto drop-shadow-xs" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                       <path d="M17.435 4.55882V5.03676H16.9654C16.9184 5.03676 16.8832 5.00091 16.8832 4.95312V4.55882C16.8832 4.51103 16.9184 4.47518 16.9654 4.47518H17.3411C17.3998 4.46324 17.435 4.51103 17.435 4.55882Z" fill="white"/>
+                                                       <path d="M13.7104 4.6662L14.3677 3.99725H14.6841L13.98 4.71405L14.7202 5.50311H14.3911L13.7104 4.79803V5.50311H13.4399V3.99725H13.7104V4.6662ZM15.2007 4.63007H15.9526V3.99725H16.2104V5.50311H15.9526V4.84589H15.2007V5.50311H14.9312V3.99725H15.2007V4.63007ZM18.9351 3.99725C19.3459 3.9973 19.6743 4.33203 19.6743 4.75018H19.4399C19.4399 4.46346 19.2168 4.23656 18.9351 4.23651C18.712 4.23651 18.5241 4.37984 18.4536 4.59491C18.442 4.64267 18.4302 4.70247 18.4302 4.75018V5.50311H18.4185C18.2893 5.50311 18.1948 5.39506 18.1948 5.27557V4.75018C18.1948 4.54706 18.2775 4.34376 18.4302 4.20038C18.5711 4.06896 18.7472 3.99725 18.9351 3.99725ZM19.6743 5.50311H19.3462L19.2632 5.41913L19.0874 5.41913L18.8413 4.98846H19.1694L19.6743 5.50311ZM17.7378 3.99725C17.8549 3.9975 17.9602 4.09277 17.9604 4.22382V5.34784L17.7261 5.10858V4.39178C17.7261 4.30814 17.655 4.23651 17.5728 4.23651H16.8687C16.7865 4.23651 16.7163 4.30814 16.7163 4.39178V5.10858C16.7164 5.19215 16.7865 5.26385 16.8687 5.26385H17.5728L17.8081 5.49042H16.7163C16.5989 5.49042 16.4927 5.39523 16.4927 5.26385V4.22382C16.4929 4.1045 16.5873 3.99725 16.7163 3.99725H17.7378Z" fill="white"/>
+                                                  </svg>
+                                             </div>
+                                        </div>
+
+                                        {/* Merchant Name & Amount (Left Aligned) */}
+                                        <div className="w-full text-left px-6 pt-4 pb-1">
+                                             <p className="text-[11px] font-bold text-stone-600 uppercase tracking-wider truncate max-w-full">
+                                                  {merchantName}
+                                             </p>
+                                             <div className="flex items-baseline justify-start gap-1 mt-1">
+                                                  <span className="text-2xl font-black text-stone-900 tracking-tight leading-none">
+                                                       $ {currency === 'USD' ? amount.toFixed(2) : new Intl.NumberFormat('km-KH').format(Math.round(amount * 4100))}
+                                                  </span>
+                                             </div>
+                                        </div>
+
+                                        {/* Dashed Separator Line */}
+                                        <div className="w-full border-t border-dashed border-stone-300/80 my-4" />
+
+                                        {/* QR Code Container with Black Badge */}
+                                        <div className="relative w-52 h-52 mb-6 flex items-center justify-center bg-white p-2 select-none">
+                                             {loading ? (
+                                                  <div className="flex flex-col items-center justify-center text-stone-400 gap-2">
+                                                       <FiLoader className="w-7 h-7 animate-spin text-stone-600" />
+                                                       <span className="text-[10px] font-bold tracking-wider uppercase">Generating...</span>
+                                                  </div>
+                                             ) : qrString ? (
+                                                  <CustomKHQR
+                                                       qrString={qrString}
+                                                       size={192}
+                                                       currency={currency}
+                                                  />
+                                             ) : (
+                                                  <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
+                                                       <img
+                                                            src={qrImage || ''}
+                                                            alt="ABA KHQR"
+                                                            className="w-full h-auto object-contain pointer-events-none"
+                                                            style={{
+                                                                 clipPath: 'inset(38% 5% 12% 5%)',
+                                                                 transform: 'scale(1.5)',
+                                                            }}
+                                                       />
+                                                  </div>
+                                             )}
+                                        </div>
                                    </div>
                               )}
                          </div>
 
-                         {/* Action Buttons */}
-                         {!isPaid && (
-                              <div className="space-y-2.5 pt-1">
-                                   {/* Official PayWay Form Submission Button */}
+                         {/* Bottom Footer Info Outside Card */}
+                         <div className="w-full pt-4 pb-1 text-center">
+                              <p className="text-[11px] font-medium text-stone-500 leading-relaxed">
+                                   Scan with Bakong App or Mobile Banking app<br />that support KHQR
+                              </p>
+                         </div>
+
+                         {/* Sandbox Verification (DEV only) */}
+                         {import.meta.env.DEV && !isPaid && (
+                              <div className="mt-3 text-center">
                                    <button
-                                        type="button"
-                                        onClick={handleOpenPaywayCheckout}
-                                        disabled={!purchaseData}
-                                        className="w-full py-3 bg-[#E61E25] hover:bg-[#c4151b] text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer border-none disabled:opacity-50"
+                                        onClick={handleManualVerify}
+                                        disabled={verifying || loading}
+                                        className="text-[11px] font-bold text-stone-400 hover:text-stone-900 underline border-none bg-transparent cursor-pointer transition-colors disabled:opacity-50"
                                    >
-                                        <FiExternalLink className="w-4 h-4" />
-                                        <span>Open Official PayWay Portal</span>
+                                        {verifying ? 'Verifying Sandbox Payment...' : '✓ Confirm Sandbox Payment'}
                                    </button>
-
-                                   {deeplink && (
-                                        <a
-                                             href={deeplink}
-                                             onClick={handleOpenAbamobile}
-                                             target="_blank"
-                                             rel="noopener noreferrer"
-                                             className="w-full py-2.5 bg-[#005D7E] hover:bg-[#004a65] text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer no-underline"
-                                        >
-                                             <FiSmartphone className="w-4 h-4" />
-                                             <span>Pay via ABA Mobile App</span>
-                                        </a>
-                                   )}
-
-                                   <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                             type="button"
-                                             onClick={handleManualVerify}
-                                             disabled={verifying || loading}
-                                             className="py-2.5 bg-stone-900 hover:bg-black text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer border-none disabled:opacity-50"
-                                        >
-                                             {verifying ? (
-                                                  <>
-                                                       <FiLoader className="w-3.5 h-3.5 animate-spin" />
-                                                       <span>Checking...</span>
-                                                  </>
-                                             ) : (
-                                                  <>
-                                                       <FiCheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                                                       <span>I Have Paid</span>
-                                                  </>
-                                             )}
-                                        </button>
-
-                                        <button
-                                             type="button"
-                                             onClick={handleCopyPayload}
-                                             className="py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-stone-200"
-                                        >
-                                             <FiCopy className="w-3.5 h-3.5 text-stone-500" />
-                                             <span>Copy Code</span>
-                                        </button>
-                                   </div>
                               </div>
                          )}
-
-                         {/* Footer Disclaimer */}
-                         <div className="text-[10px] text-stone-400 pt-2 border-t border-stone-100 flex items-center justify-center gap-1 font-medium">
-                              <FiShield className="w-3 h-3 text-cyan-600" />
-                              <span>ABA PayWay Sandbox Merchant ID: ec477316</span>
-                         </div>
                     </div>
                </div>
           </div>

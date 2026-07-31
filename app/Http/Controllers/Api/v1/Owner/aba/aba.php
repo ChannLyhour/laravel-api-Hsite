@@ -192,7 +192,7 @@ class aba extends Controller
 
             $reqTime = date('YmdHis');
             $orderId = $request->input('order_id');
-            $tranId = 'TXN-' . ($orderId ?: 'SANDBOX') . '-' . time();
+            $tranId = substr('TXN' . ($orderId ?: rand(1000, 9999)) . time(), 0, 20);
 
             $amountFormatted = number_format((float)$request->input('amount'), 2, '.', '');
             $currency = strtoupper($request->input('currency', 'USD'));

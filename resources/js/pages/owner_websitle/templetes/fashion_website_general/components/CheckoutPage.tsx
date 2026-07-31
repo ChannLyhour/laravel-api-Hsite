@@ -1922,6 +1922,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     currentStep={currentStep}
                     displayCartItems={displayCartItems}
                     selectedPayment={selectedPayment}
+                    setSelectedPayment={setSelectedPayment}
+                    paymentMethods={paymentMethods}
+                    note={note}
+                    setNote={setNote}
+                    validationError={validationError}
+                    paymentRef={paymentRef}
                     handleSubtotalAction={handleSubtotalAction}
                     coupons={coupons}
                 />

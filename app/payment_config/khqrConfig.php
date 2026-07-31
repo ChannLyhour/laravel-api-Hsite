@@ -203,11 +203,11 @@ class khqrConfig
                     }
                }
 
-               // Generate payload details
+               // Generate payload details (PayWay requires tran_id to be max 20 characters)
                $req_time = date('YmdHis');
-               $tran_id = 'TXN-' . ($orderId ?: 'VIRTUAL') . '-' . time();
+               $tran_id = substr('TXN' . ($orderId ?: rand(1000, 9999)) . time(), 0, 20);
                if ($orderId === null && $request->filled('bill_no')) {
-                    $tran_id = $request->input('bill_no');
+                    $tran_id = substr($request->input('bill_no'), 0, 20);
                }
                $amountFormatted = $currency === 'KHR'
                     ? (string) round($amount)
@@ -247,60 +247,64 @@ class khqrConfig
                }
                $itemsBase64 = base64_encode(json_encode($itemsList));
 
-               $shipping = '0.00';
-               $type = 'purchase';
+               $purchase_type = 'purchase';
                $payment_option = 'abapay_khqr';
-               $return_url = '';
-               $cancel_url = '';
-               $continue_success_url = '';
+               $callback_url = base64_encode(url('/api/v1/payment/aba/callback'));
                $return_deeplink = '';
                $custom_fields = '';
+               $return_params = '';
+               $payout = '';
+               $lifetime = 6;
+               $qr_image_template = 'template3_color';
 
-               $hash = \App\Http\Controllers\Api\v1\Owner\aba\aba::generatePurchaseHash(
-                    $req_time,
-                    $merchantId,
-                    $tran_id,
-                    $amountFormatted,
-                    $itemsBase64,
-                    $shipping,
-                    $first_name,
-                    $last_name,
-                    $email,
-                    $phone,
-                    $type,
-                    $payment_option,
-                    $return_url,
-                    $cancel_url,
-                    $continue_success_url,
-                    $return_deeplink,
-                    $currency,
-                    $custom_fields,
-                    $apiKey
-               );
+               // Correct PayWay generate-qr hash sequence (19 parameters):
+               $hashStr = $req_time
+                    . $merchantId
+                    . $tran_id
+                    . $amountFormatted
+                    . $itemsBase64
+                    . $first_name
+                    . $last_name
+                    . $email
+                    . $phone
+                    . $purchase_type
+                    . $payment_option
+                    . $callback_url
+                    . $return_deeplink
+                    . $currency
+                    . $custom_fields
+                    . $return_params
+                    . $payout
+                    . $lifetime
+                    . $qr_image_template;
+
+               $hash = base64_encode(hash_hmac('sha512', $hashStr, $apiKey, true));
 
                $postFields = [
                     'req_time' => $req_time,
                     'merchant_id' => $merchantId,
                     'tran_id' => $tran_id,
-                    'amount' => $amountFormatted,
-                    'items' => $itemsBase64,
-                    'shipping' => $shipping,
-                    'firstname' => $first_name,
-                    'lastname' => $last_name,
+                    'first_name' => $first_name,
+                    'last_name' => $last_name,
                     'email' => $email,
                     'phone' => $phone,
-                    'type' => $type,
+                    'amount' => (float)$amountFormatted,
+                    'purchase_type' => $purchase_type,
                     'payment_option' => $payment_option,
-                    'return_url' => $return_url,
-                    'cancel_url' => $cancel_url,
-                    'continue_success_url' => $continue_success_url,
-                    'return_deeplink' => $return_deeplink,
+                    'items' => $itemsBase64,
                     'currency' => $currency,
-                    'custom_fields' => $custom_fields,
+                    'callback_url' => $callback_url,
+                    'return_deeplink' => null,
+                    'custom_fields' => null,
+                    'return_params' => null,
+                    'payout' => null,
+                    'lifetime' => $lifetime,
+                    'qr_image_template' => $qr_image_template,
                     'hash' => $hash,
                ];
 
-               Log::info('[PayWay] Sending Purchase API request to: ' . $apiUrl, $postFields);
+               $apiUrl = 'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/generate-qr';
+               Log::info('[PayWay] Sending QR Generate API request to: ' . $apiUrl, $postFields);
 
                $httpClient = Http::withHeaders([
                     'Content-Type' => 'application/json',

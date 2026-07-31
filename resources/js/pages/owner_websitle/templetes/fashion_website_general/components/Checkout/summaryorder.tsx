@@ -208,21 +208,7 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                          )}
                     </div>
 
-                    {/* Note to Order Section */}
-                    {setNote && (
-                         <div className="pt-2 space-y-2">
-                              <h3 className="text-xs font-black text-stone-955 uppercase tracking-widest">
-                                   Add Note to Order (Optional)
-                              </h3>
-                              <textarea
-                                   value={note}
-                                   onChange={(e) => setNote(e.target.value)}
-                                   placeholder="Note"
-                                   rows={3}
-                                   className="w-full p-3 border border-stone-200 rounded-2xl text-xs font-semibold text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-400/20 focus:border-stone-400 bg-white resize-none transition-all duration-200"
-                              />
-                         </div>
-                    )}
+
                </div>
 
                <div className="space-y-2.5 pt-1">

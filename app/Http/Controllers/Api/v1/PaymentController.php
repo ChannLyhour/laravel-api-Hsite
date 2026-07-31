@@ -344,6 +344,32 @@ class PaymentController extends Controller
 
             $response = $httpClient->post($apiUrl, $postFields);
 
+            if ($response->failed() || !isset($response->json()['status'])) {
+                $check2Url = str_replace('/check-transaction', '/check-transaction-2', $apiUrl);
+                $check2Response = $httpClient->post($check2Url, $postFields);
+                if ($check2Response->successful() && isset($check2Response->json()['status'])) {
+                    $response = $check2Response;
+                } else {
+                    $mcRefUrl = str_replace('/check-transaction', '/get-transactions-by-mc-ref', $apiUrl);
+                    $mcRefFields = [
+                        'req_time' => $req_time,
+                        'merchant_id' => $merchantId,
+                        'merchant_ref' => $request->transaction_id,
+                        'hash' => \App\Http\Controllers\Api\v1\Owner\aba\aba::generateCheckHash($req_time, $merchantId, $request->transaction_id, $apiKey)
+                    ];
+                    $mcRefResponse = $httpClient->post($mcRefUrl, $mcRefFields);
+                    if ($mcRefResponse->successful() && isset($mcRefResponse->json()['status'])) {
+                        $response = $mcRefResponse;
+                    } else {
+                        $detailUrl = str_replace('/check-transaction', '/transaction-detail', $apiUrl);
+                        $detailResponse = $httpClient->post($detailUrl, $postFields);
+                        if ($detailResponse->successful()) {
+                            $response = $detailResponse;
+                        }
+                    }
+                }
+            }
+
             if ($response->failed()) {
                 return response()->json([
                     'success' => false,
@@ -354,9 +380,14 @@ class PaymentController extends Controller
             $resData = $response->json();
             Log::info('[PayWay] Check Response: ', $resData ?? []);
 
-            if (isset($resData['status'])) {
-                $statusVal = (int) $resData['status'];
-                if ($statusVal === 0) {
+            $paymentStatus = strtolower((string)($resData['data']['payment_status'] ?? ''));
+            $paymentStatusCode = isset($resData['data']['payment_status_code']) ? (int)$resData['data']['payment_status_code'] : -1;
+            $statusCode = isset($resData['status']['code']) ? (string)$resData['status']['code'] : (isset($resData['status']) ? (string)$resData['status'] : '');
+
+            $isPaid = ($paymentStatus === 'approved' || $paymentStatus === 'success' || $paymentStatusCode === 0 || $statusCode === '00' || $statusCode === '0');
+
+            if ($isPaid || isset($resData['status'])) {
+                if ($isPaid) {
                     // Paid
                     if ($txn) {
                         $txn->update([
@@ -378,8 +409,8 @@ class PaymentController extends Controller
                         'raw' => $resData,
                     ]);
                 } else if (
-                    $statusVal === 1 ||
-                    $statusVal === 2 ||
+                    $statusVal === '1' ||
+                    $statusVal === '2' ||
                     strtolower($resData['description'] ?? '') === 'pending' ||
                     strtolower($resData['payment_status'] ?? '') === 'pending'
                 ) {
@@ -419,6 +450,61 @@ class PaymentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Internal Server Error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Close / Cancel transaction on ABA PayWay Sandbox.
+     */
+    public function closeTransaction (Request $request)
+    {
+        $request->validate([
+            'transaction_id' => 'required|string',
+            'store_id' => 'nullable|integer',
+        ]);
+
+        try {
+            $merchantId = 'ec477316';
+            $apiKey = '8c5b65561de1d1664859d7621fa3ca8d6c99a707';
+            $apiUrl = 'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/close-transaction';
+
+            $req_time = date('YmdHis');
+            $postFields = [
+                'req_time' => $req_time,
+                'merchant_id' => $merchantId,
+                'tran_id' => $request->transaction_id,
+                'hash' => \App\Http\Controllers\Api\v1\Owner\aba\aba::generateCheckHash($req_time, $merchantId, $request->transaction_id, $apiKey)
+            ];
+
+            Log::info('[PayWay] Closing transaction: ' . $apiUrl, $postFields);
+
+            $httpClient = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ]);
+            if (!app()->isProduction() || str_contains($apiUrl, 'sandbox')) {
+                $httpClient = $httpClient->withoutVerifying();
+            }
+
+            $response = $httpClient->post($apiUrl, $postFields);
+            $resData = $response->json();
+
+            $txn = PaymentTransaction::where('transaction_id', $request->transaction_id)->first();
+            if ($txn && $txn->status === 'pending') {
+                $txn->update(['status' => 'cancelled', 'raw_response' => json_encode($resData)]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction closed successfully.',
+                'raw' => $resData
+            ]);
+        } catch (\Exception $e) {
+            Log::error('[PayWay] Close Transaction Exception: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error closing transaction: ' . $e->getMessage()
             ], 500);
         }
     }

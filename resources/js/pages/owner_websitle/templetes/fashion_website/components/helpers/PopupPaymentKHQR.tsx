@@ -181,7 +181,7 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
 
      return createPortal(
           <div className="fixed inset-0 z-[99999] bg-[#081B37]/60 backdrop-blur-xs flex flex-col items-center justify-center p-4 select-none animate-fade-in font-kuntomruy">
-               
+
                {/* ABA PAYWAY Floating Header Logo */}
                <div className="w-full max-w-[340px] flex justify-end mb-3 select-none pr-1">
                     <img
@@ -196,7 +196,7 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                     {/* Modal Header Bar */}
                     <div className="px-6 pt-5 pb-3 flex items-center justify-between bg-white">
                          <h2 className="text-sm font-black text-stone-900 tracking-tight">ABA KHQR</h2>
-                         <button 
+                         <button
                               onClick={onClose}
                               className="text-[#0BBCD4] hover:text-[#0999ac] transition-colors p-1 border-none bg-transparent cursor-pointer flex items-center justify-center"
                          >
@@ -207,10 +207,10 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                     {/* Inner Ticket Card Box */}
                     <div className="px-5 pb-5">
                          <div className="w-full bg-white rounded-2xl border border-stone-200/90 shadow-md overflow-hidden flex flex-col items-center relative">
-                              
+
                               {/* Red KHQR Header Banner (#E21A1A with exact notch cut) */}
-                              <div className="w-full h-12 bg-white rounded-t-2xl relative flex items-center justify-center text-white select-none overflow-hidden">
-                                   <div 
+                              <div className="w-full h-14 bg-white rounded-t-2xl relative flex items-center justify-center text-white select-none overflow-hidden">
+                                   <div
                                         className="absolute inset-0 bg-[#E21A1A]"
                                         style={{
                                              clipPath: 'polygon(0 0, 100% 0, 100% 100%, 84% 74%, 0 74%)'
@@ -218,9 +218,9 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                                    />
                                    <div className="relative z-10 flex items-center justify-center pb-2">
                                         {/* Official Scaled KHQR White Logo Vector */}
-                                        <svg viewBox="13.4 3.95 6.3 1.6" className="h-6.5 sm:h-7 w-auto drop-shadow-xs" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                             <path d="M17.435 4.55882V5.03676H16.9654C16.9184 5.03676 16.8832 5.00091 16.8832 4.95312V4.55882C16.8832 4.51103 16.9184 4.47518 16.9654 4.47518H17.3411C17.3998 4.46324 17.435 4.51103 17.435 4.55882Z" fill="white"/>
-                                             <path d="M13.7104 4.6662L14.3677 3.99725H14.6841L13.98 4.71405L14.7202 5.50311H14.3911L13.7104 4.79803V5.50311H13.4399V3.99725H13.7104V4.6662ZM15.2007 4.63007H15.9526V3.99725H16.2104V5.50311H15.9526V4.84589H15.2007V5.50311H14.9312V3.99725H15.2007V4.63007ZM18.9351 3.99725C19.3459 3.9973 19.6743 4.33203 19.6743 4.75018H19.4399C19.4399 4.46346 19.2168 4.23656 18.9351 4.23651C18.712 4.23651 18.5241 4.37984 18.4536 4.59491C18.442 4.64267 18.4302 4.70247 18.4302 4.75018V5.50311H18.4185C18.2893 5.50311 18.1948 5.39506 18.1948 5.27557V4.75018C18.1948 4.54706 18.2775 4.34376 18.4302 4.20038C18.5711 4.06896 18.7472 3.99725 18.9351 3.99725ZM19.6743 5.50311H19.3462L19.2632 5.41913L19.0874 5.23944L18.8413 4.98846H19.1694L19.6743 5.50311ZM17.7378 3.99725C17.8549 3.9975 17.9602 4.09277 17.9604 4.22382V5.34784L17.7261 5.10858V4.39178C17.7261 4.30814 17.655 4.23651 17.5728 4.23651H16.8687C16.7865 4.23651 16.7163 4.30814 16.7163 4.39178V5.10858C16.7164 5.19215 16.7865 5.26385 16.8687 5.26385H17.5728L17.8081 5.49042H16.7163C16.5989 5.49042 16.4927 5.39523 16.4927 5.26385V4.22382C16.4929 4.1045 16.5873 3.99725 16.7163 3.99725H17.7378Z" fill="white"/>
+                                        <svg viewBox="13.4 3.95 6.3 1.6" className="h-4 sm:h-4 w-auto drop-shadow-xs" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                             <path d="M17.435 4.55882V5.03676H16.9654C16.9184 5.03676 16.8832 5.00091 16.8832 4.95312V4.55882C16.8832 4.51103 16.9184 4.47518 16.9654 4.47518H17.3411C17.3998 4.46324 17.435 4.51103 17.435 4.55882Z" fill="white" />
+                                             <path d="M13.7104 4.6662L14.3677 3.99725H14.6841L13.98 4.71405L14.7202 5.50311H14.3911L13.7104 4.79803V5.50311H13.4399V3.99725H13.7104V4.6662ZM15.2007 4.63007H15.9526V3.99725H16.2104V5.50311H15.9526V4.84589H15.2007V5.50311H14.9312V3.99725H15.2007V4.63007ZM18.9351 3.99725C19.3459 3.9973 19.6743 4.33203 19.6743 4.75018H19.4399C19.4399 4.46346 19.2168 4.23656 18.9351 4.23651C18.712 4.23651 18.5241 4.37984 18.4536 4.59491C18.442 4.64267 18.4302 4.70247 18.4302 4.75018V5.50311H18.4185C18.2893 5.50311 18.1948 5.39506 18.1948 5.27557V4.75018C18.1948 4.54706 18.2775 4.34376 18.4302 4.20038C18.5711 4.06896 18.7472 3.99725 18.9351 3.99725ZM19.6743 5.50311H19.3462L19.2632 5.41913L19.0874 5.23944L18.8413 4.98846H19.1694L19.6743 5.50311ZM17.7378 3.99725C17.8549 3.9975 17.9602 4.09277 17.9604 4.22382V5.34784L17.7261 5.10858V4.39178C17.7261 4.30814 17.655 4.23651 17.5728 4.23651H16.8687C16.7865 4.23651 16.7163 4.30814 16.7163 4.39178V5.10858C16.7164 5.19215 16.7865 5.26385 16.8687 5.26385H17.5728L17.8081 5.49042H16.7163C16.5989 5.49042 16.4927 5.39523 16.4927 5.26385V4.22382C16.4929 4.1045 16.5873 3.99725 16.7163 3.99725H17.7378Z" fill="white" />
                                         </svg>
                                    </div>
                               </div>
@@ -263,10 +263,14 @@ export const PopupPaymentKHQR: React.FC<PopupPaymentKHQRProps> = ({
                                                   alt="ABA KHQR"
                                                   className="w-full h-full object-contain pointer-events-none rounded-lg"
                                              />
-                                             {/* Circular USD ($) Badge in center of QR Code */}
+                                             {/* Bakong KHQR Badge in center of QR Code */}
                                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                  <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center border-2 border-white shadow-sm">
-                                                       <span className="text-white font-black text-xs font-sans leading-none">$</span>
+                                                  <div className="w-8 h-8 rounded-full overflow-hidden border-[1.5px] border-white shadow-sm bg-white flex items-center justify-center">
+                                                       <img
+                                                            src="/assets/payment_enable/bakong-bank.svg"
+                                                            alt="KHQR"
+                                                            className="w-full h-full object-cover"
+                                                       />
                                                   </div>
                                              </div>
                                         </div>

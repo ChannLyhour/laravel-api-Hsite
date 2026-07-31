@@ -220,20 +220,6 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                    </div>
                               </div>
 
-                              {/* Note section */}
-                              <div className="border-t border-stone-200/60 pt-6 space-y-3">
-                                   <h3 className="text-xs font-black text-stone-955 uppercase tracking-widest">
-                                        Add Note to Order (Optional)
-                                   </h3>
-                                   <textarea
-                                        value={note}
-                                        onChange={(e) => setNote(e.target.value)}
-                                        placeholder="Note"
-                                        rows={4}
-                                        className="w-full p-4 border border-stone-200 rounded-2xl text-xs font-semibold text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-400/20 focus:border-stone-400 bg-white resize-none transition-all duration-200"
-                                   />
-                              </div>
-
                               {/* Submit order */}
                               <div className="pt-6 border-t border-stone-200/60 flex justify-end">
                                    <button

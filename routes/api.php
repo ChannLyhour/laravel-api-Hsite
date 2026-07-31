@@ -192,6 +192,7 @@ Route::middleware(['identify-store'])->group(function () {
     // ABA PayWay integration routes
     Route::post('/payments/generate-qr', [PaymentController::class, 'generateQr']);
     Route::post('/payments/check-transaction', [PaymentController::class, 'checkTransaction']);
+    Route::post('/payments/close-transaction', [PaymentController::class, 'closeTransaction']);
     Route::post('/payments/aba/create-purchase', [PaymentController::class, 'createAbaPurchase']);
     Route::get('/payments/active-methods', [PaymentController::class, 'getActiveMethods']);
 
