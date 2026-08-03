@@ -151,7 +151,7 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                                    return (
                                         <label
                                              key={p.key}
-                                             className={`flex items-center gap-3.5 p-3.5 border rounded-2xl cursor-pointer transition-all duration-200 ${isSelected
+                                             className={`flex items-center gap-[10px] p-3.5 border rounded-[5px] cursor-pointer transition-all duration-200 ${isSelected
                                                   ? 'border-stone-400 bg-white shadow-2xs'
                                                   : validationError?.field === 'payment'
                                                        ? 'border-red-300 hover:border-red-400 hover:bg-white'
@@ -166,17 +166,6 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                                                   onChange={() => setSelectedPayment?.(p.key)}
                                                   className="sr-only"
                                              />
-                                             <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${
-                                                  isSelected
-                                                       ? 'border-stone-400 bg-stone-400 text-white'
-                                                       : validationError?.field === 'payment'
-                                                            ? 'border-red-400 bg-white'
-                                                            : 'border-stone-300 bg-white'
-                                             }`}>
-                                                  {isSelected && (
-                                                       <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                                                  )}
-                                             </div>
                                              {isAba ? (
                                                   <img
                                                        src="/assets/payment_select/ABA BANK.svg"
@@ -192,9 +181,20 @@ export const SummaryOrder: React.FC<SummaryOrderProps> = ({
                                              ) : (
                                                   p.logo
                                              )}
-                                             <div className="text-xs">
-                                                  <h4 className="font-bold text-stone-900 text-sm tracking-tight">{isAba ? 'ABA KHQR' : isBakong ? 'Pay via Bakong App' : p.name}</h4>
-                                                  <div className="text-[11px] text-stone-500 font-medium mt-0.5">{isAba ? 'Scan to pay with any banking app' : isBakong ? (p.desc || 'Tap to pay with Bakong') : p.desc}</div>
+                                             <div className="flex flex-col gap-[4px] flex-1 min-w-0">
+                                                  <h4 className="font-bold text-stone-900 text-sm tracking-tight leading-none">{isAba ? 'ABA KHQR' : isBakong ? 'Pay via Bakong App' : p.name}</h4>
+                                                  <div className="text-[11px] text-[#697386] font-medium leading-tight">{isAba ? 'Scan to pay with any banking app' : isBakong ? (p.desc || 'Tap to pay with Bakong') : p.desc}</div>
+                                             </div>
+                                             <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ml-auto ${
+                                                  isSelected
+                                                       ? 'border-stone-400 bg-stone-400 text-white'
+                                                       : validationError?.field === 'payment'
+                                                            ? 'border-red-400 bg-white'
+                                                            : 'border-stone-300 bg-white'
+                                             }`}>
+                                                  {isSelected && (
+                                                       <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                  )}
                                              </div>
                                         </label>
                                    );
